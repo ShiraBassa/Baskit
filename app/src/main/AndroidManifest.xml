@@ -12,7 +12,19 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Baskit">
         <activity
-            android:name=".MainActivity"
+            android:name=".Categories.CategoryActivity"
+            android:exported="false" />
+        <activity
+            android:name=".List.ListActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Home.SettingsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Home.HomeActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Login.LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
