@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".Categories.CategoryActivity"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:paddingHorizontal="10dp">
+
+    <LinearLayout
+        android:id="@+id/layout_screen_content"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginBottom="10dp"
+        android:orientation="vertical"
+        android:paddingHorizontal="15dp"
+        android:paddingTop="30dp"
+        android:paddingBottom="10dp">
+
+        <LinearLayout
+            android:id="@+id/layout_top_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:orientation="horizontal"
+            android:gravity="center_horizontal|top">
+
+            <ImageButton
+                android:id="@+id/btn_back"
+                android:layout_width="45dp"
+                android:layout_height="45dp"
+                android:layout_marginEnd="10dp"
+                android:scaleType="fitCenter"
+                android:background="@null"
+                android:src="@drawable/ic_back" />
+
+            <LinearLayout
+                android:id="@+id/layout_titles"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center_vertical|end">
+
+                <TextView
+                    android:id="@+id/tv_list_name"
+                    android:textColor="#000000"
+                    android:textSize="32sp"
+                    android:textStyle="bold"
+                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"
+                    android:text="רשימה"
+                    />
+
+                <TextView
+                    android:id="@+id/tv_category_name"
+                    android:textColor="#000000"
+                    android:textSize="48sp"
+                    android:textStyle="bold"
+                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"
+                    android:text="קטגוריה"
+                    />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/layout_items"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <!-- Unchecked RecyclerView -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_unchecked"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="2"
+                android:paddingHorizontal="10dp"
+                android:clipToPadding="false"
+                android:scrollbars="vertical" />
+
+            <!-- Divider -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/checked"
+                android:layout_marginBottom="15dp"/>
+
+            <!-- Checked RecyclerView -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_checked"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:paddingHorizontal="10dp"
+                android:clipToPadding="false"
+                android:scrollbars="vertical" />
+
+            <TextView
+                android:id="@+id/tv_total"
+                android:textColor="#000000"
+                android:textSize="32sp"
+                android:textStyle="bold"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="סך הכל: 100" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <include
+        android:id="@+id/bottom_bar"
+        layout="@layout/bottom_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+</LinearLayout>
