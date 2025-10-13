@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="350dp"
+    android:layout_height="400dp"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="10dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="40dp"
+        android:orientation="vertical"
+        android:gravity="center_vertical|start">
+
+        <ImageButton
+            android:id="@+id/btn_cancel"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginBottom="10dp"
+            android:scaleType="fitCenter"
+            android:background="@null"
+            android:src="@drawable/ic_cancel" />
+
+        <TextView
+            android:textColor="#000000"
+            android:textSize="48sp"
+            android:textStyle="bold"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:textAlignment="center"
+            android:text="צור רשימה"
+            />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginBottom="40dp"
+        android:orientation="vertical"
+        android:gravity="center_horizontal|top">
+
+        <EditText
+            android:id="@+id/et_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="50dp"
+            android:paddingHorizontal="10dp"
+            android:textColor="#000000"
+            android:textSize="36sp"
+            android:textDirection="rtl"
+            android:singleLine="true"
+            android:gravity="start"
+            android:textStyle="bold"
+            android:hint="שם"
+            />
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btn_create"
+        android:textColor="#000000"
+        android:textSize="40sp"
+        android:backgroundTint="@color/gray"
+        android:textStyle="bold"
+        android:paddingHorizontal="15dp"
+        android:paddingVertical="10dp"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:text="צור" />
+
+</LinearLayout>
