@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center">
+
+    <TextView
+        android:id="@+id/tv_price"
+        android:textColor="#000000"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_marginEnd="10dp"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:text="מחיר"
+        android:visibility="gone"/> <!-- There isn't a price yet -->
+
+
+    <TextView
+        android:id="@+id/tv_name"
+        android:textColor="#000000"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_height="wrap_content"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:text="סניף"
+        android:layout_marginBottom="10dp"
+        />
+
+</LinearLayout>
