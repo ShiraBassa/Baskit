@@ -22,14 +22,12 @@
         android:textStyle="bold" />
 
     <LinearLayout
-        android:id="@+id/layout_content"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
         android:orientation="vertical">
 
         <LinearLayout
-            android:id="@+id/layout_inputs"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="80dp"
@@ -38,7 +36,6 @@
             android:paddingHorizontal="30dp">
 
             <LinearLayout
-                android:id="@+id/layout_username"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="40dp"
@@ -49,20 +46,22 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="10dp"
-                    android:text="שם משתמש"
+                    android:text="אימייל"
                     android:textColor="#000000"
                     android:textSize="32sp"
                     android:textStyle="bold" />
 
                 <EditText
-                    android:id="@+id/et_username"
+                    android:id="@+id/et_email"
+                    android:singleLine="true"
                     android:layout_width="match_parent"
-                    android:layout_height="40dp" />
+                    android:layout_height="wrap_content"
+                    android:inputType="textEmailAddress"
+                    android:textSize="28sp"/>
 
             </LinearLayout>
 
             <LinearLayout
-                android:id="@+id/layout_password"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal|top"
@@ -79,8 +78,11 @@
 
                 <EditText
                     android:id="@+id/et_password"
+                    android:singleLine="true"
                     android:layout_width="match_parent"
-                    android:layout_height="40dp" />
+                    android:layout_height="wrap_content"
+                    android:textSize="28sp"
+                    android:inputType="textPassword"/>
 
             </LinearLayout>
 
