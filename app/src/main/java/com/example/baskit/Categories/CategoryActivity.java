@@ -1,30 +1,34 @@
 package com.example.baskit.Categories;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.baskit.DataRepository;
+import com.example.baskit.Firebase.FirebaseDBHandler;
 import com.example.baskit.MainComponents.Category;
+import com.example.baskit.MainComponents.Item;
 import com.example.baskit.MainComponents.List;
 import com.example.baskit.R;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 public class CategoryActivity extends AppCompatActivity
 {
-    DataRepository data;
     List list;
-    ArrayList<Category> categories;
+    Map<String, Category> categories;
     Category category;
 
     ItemsListHandler itemsListHandler;
-    View bottomBar;
     TextView tvListName, tvCategoryName;
     ImageButton btnFinished, btnBack;
+    Button btnAddItem;
+    FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -43,33 +47,57 @@ public class CategoryActivity extends AppCompatActivity
         if (list.hasCategory(category.getName()))
         {
             list.getCategory(category.getName()).setItems(itemsListHandler.getAllItems());
-            data.refreshList(list);
         }
     }
 
     private void init()
     {
-        bottomBar = findViewById(R.id.bottom_bar);
-        btnFinished = bottomBar.findViewById(R.id.btn_finished);
+        btnFinished = findViewById(R.id.btn_finished);
         btnBack = findViewById(R.id.btn_back);
         tvListName = findViewById(R.id.tv_list_name);
         tvCategoryName = findViewById(R.id.tv_category_name);
+        btnAddItem = findViewById(R.id.btn_add_item);
 
-        data = DataRepository.getInstance();
-        list = data.getList(getIntent().getStringExtra("listId"));
-        categories = list.getCategories();
-        category = list.getCategory(getIntent().getStringExtra("categoryName"));
+        dbHandler.getList(getIntent().getStringExtra("listId"), new FirebaseDBHandler.GetListCallback()
+        {
+            @Override
+            public void onListFetched(List newList)
+            {
+                CategoryActivity.this.list = newList;
 
-        tvListName.setText(list.getName());
-        tvCategoryName.setText(category.getName());
+                categories = CategoryActivity.this.list.getCategories();
+                category = newList.getCategory(getIntent().getStringExtra("categoryName"));
 
-        setButtons();
+                tvListName.setText(newList.getName());
+                tvCategoryName.setText(category.getName());
+                tvListName.setVisibility(View.VISIBLE);
+                tvCategoryName.setVisibility(View.VISIBLE);
 
-        itemsListHandler = new ItemsListHandler(this,
-                findViewById(R.id.recycler_unchecked),
-                findViewById(R.id.recycler_checked),
-                category.getItems(),
-                this::finishedCategory);
+                setButtons();
+
+                itemsListHandler = new ItemsListHandler(CategoryActivity.this,
+                        findViewById(R.id.recycler_unchecked),
+                        findViewById(R.id.recycler_checked),
+                        CategoryActivity.this::finishedCategory,
+                        newList,
+                        category);
+
+                dbHandler.listenToCategory(list, category, new FirebaseDBHandler.GetCategoryCallback()
+                {
+                    @Override
+                    public void onCategoryFetched(Category newCategory)
+                    {
+                        itemsListHandler.update(newCategory);
+                    }
+
+                    @Override
+                    public void onError(String error) {}
+                });
+            }
+
+            @Override
+            public void onError(String error) {}
+        });
     }
 
     private void setButtons()
@@ -91,12 +119,20 @@ public class CategoryActivity extends AppCompatActivity
                 finish();
             }
         });
+
+        btnAddItem.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View view)
+            {
+                itemsListHandler.addItem(new Item("2", "item"));
+            }
+        });
     }
 
     private void finishedCategory()
     {
         list.removeCategory(category.getName());
-        data.refreshList(list);
         finish();
     }
 }

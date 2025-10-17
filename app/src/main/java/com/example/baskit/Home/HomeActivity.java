@@ -7,25 +7,25 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.baskit.MainComponents.Category;
-import com.example.baskit.DataRepository;
-import com.example.baskit.MainComponents.Item;
+import com.example.baskit.Firebase.FirebaseAuthHandler;
+import com.example.baskit.Firebase.FirebaseDBHandler;
 import com.example.baskit.MainComponents.List;
 import com.example.baskit.List.ListActivity;
+import com.example.baskit.MainComponents.User;
 import com.example.baskit.R;
 
 import java.util.ArrayList;
 
 public class HomeActivity extends AppCompatActivity
 {
-    ArrayList<List> lists;
-    DataRepository data;
     RecyclerView listsRecycler;
     HomeGridAdapter listsGridAdapter;
 
@@ -35,6 +35,10 @@ public class HomeActivity extends AppCompatActivity
     Button adBtnCreate, btnCreateList;
     ImageButton adBtnCancel, btnSettings;
     EditText adEtName;
+    TextView tvTitle;
+    FirebaseAuthHandler authHandler;
+    FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
+    User user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -42,34 +46,51 @@ public class HomeActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
+        authHandler = FirebaseAuthHandler.getInstance();
+        user = authHandler.getUser();
+
         init();
+    }
+
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
+
+        user = authHandler.getUser();
     }
 
     private void init()
     {
         btnSettings = findViewById(R.id.btn_settings);
         btnCreateList = findViewById(R.id.btn_create_list);
+        tvTitle = findViewById(R.id.tv_title);
+
+        tvTitle.setText("היי " + authHandler.getUser().getName());
+
+        dbHandler.listenToUserName(user, new FirebaseDBHandler.GetUserNameCallback()
+        {
+            @Override
+            public void onUserNameFetched(String username)
+            {
+                user.setName(username);
+                tvTitle.setText("היי " + authHandler.getUser().getName());
+            }
+        });
+
         createListAlertDialog();
-
-        data = DataRepository.getInstance();
-        lists = data.getLists();
-
-        lists.add(new List("1", "בית"));
-        lists.add(new List("2", "חג"));
-        lists.add(new List("3", "ראש השנה"));
-        lists.add(new List("4", "פיקניק"));
-
-        lists.get(0).addCategory(new Category("בשר"));
-        lists.get(0).addCategory(new Category("מתוקים"));
-        lists.get(1).addCategory(new Category("מוצרי חלב"));
-        lists.get(1).getCategories().get(0).addItem(new Item("חלב"));
-        lists.get(1).getCategories().get(0).addItem(new Item("יוגורט"));
-        lists.get(1).addCategory(new Category("ירקות"));
-        lists.get(1).addCategory(new Category("פירות"));
 
         listsRecycler = findViewById(R.id.lists_grid);
 
-        setListsRecycler();
+        dbHandler.getListNames(user.getListIDs(), new FirebaseDBHandler.GetListNamesCallback()
+        {
+            @Override
+            public void onNamesFetched(ArrayList<String> listNames)
+            {
+                setListsRecycler(listNames);
+            }
+        });
+
         setButtons();
     }
 
@@ -94,19 +115,17 @@ public class HomeActivity extends AppCompatActivity
         });
     }
 
-    private void setListsRecycler()
+    private void setListsRecycler(ArrayList<String> listNamesRecycler)
     {
         listsRecycler.setLayoutManager(new GridLayoutManager(this, 3)); // 3 columns
 
-        listsGridAdapter = new HomeGridAdapter(lists, new HomeGridAdapter.OnItemClickListener()
+        listsGridAdapter = new HomeGridAdapter(listNamesRecycler, new HomeGridAdapter.OnItemClickListener()
         {
             @Override
             public void onItemClick(int position)
             {
-                data.refreshLists(lists);
-
                 Intent intent = new Intent(HomeActivity.this, ListActivity.class);
-                intent.putExtra("listId", lists.get(position).getId());
+                intent.putExtra("listId", user.getListIDs().get(position));
 
                 startActivity(intent);
             }
@@ -114,12 +133,24 @@ public class HomeActivity extends AppCompatActivity
             @Override
             public void onItemLongClick(int position)
             {
-                data.removeList(lists.get(position));
-                listsGridAdapter.remove(position);
+                dbHandler.removeList(user.getListIDs().get(position), user);
             }
         });
 
         listsRecycler.setAdapter(listsGridAdapter);
+        listsRecycler.setVisibility(View.VISIBLE);
+
+        dbHandler.listenToListNames(user.getId(), new FirebaseDBHandler.GetListNamesListenerCallback()
+        {
+            @Override
+            public void onInfoFetched(ArrayList<String> listNames)
+            {
+                if (listsGridAdapter != null)
+                {
+                    listsGridAdapter.updateList(listNames);
+                }
+            }
+        });
     }
 
     private void createListAlertDialog()
@@ -145,8 +176,7 @@ public class HomeActivity extends AppCompatActivity
 
     private void createList(String name)
     {
-        List list = new List(Integer.toString(lists.size()+1), name);
-        lists.add(list);
-        listsGridAdapter.add(list);
+        List list = new List(dbHandler.getUniqueId(), name);
+        dbHandler.addList(list, user);
     }
 }

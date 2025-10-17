@@ -2,6 +2,8 @@ package com.example.baskit.MainComponents;
 
 public class Item
 {
+    private final String ID_PREFIX = "item_";
+
     protected String id = "";
     protected String name = "";
     protected double price = 0;
@@ -9,8 +11,15 @@ public class Item
     protected boolean checked = false;
     protected Supermarket supermarket;
 
+    public Item(){}
+
     public Item(String name)
     {
+        this.name = name;
+    }
+
+    public Item(String id, String name) {
+        this.id = ID_PREFIX + id;
         this.name = name;
     }
 

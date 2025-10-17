@@ -1,13 +1,15 @@
 package com.example.baskit.MainComponents;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class List
 {
     private String id = "";
     private String name = "";
-    private ArrayList<String> users;
-    private ArrayList<Category> categories;
+    private ArrayList<String> userIDs;
+    private Map<String, Category> categories = new HashMap<>();
 
     public List() {}
 
@@ -15,13 +17,11 @@ public class List
     {
         this.id = id;
         this.name = name;
-        this.categories = new ArrayList<>();
     }
 
     public List(String name)
     {
         this.name = name;
-        this.categories = new ArrayList<>();
     }
 
     public String getId() {
@@ -40,52 +40,44 @@ public class List
         this.name = name;
     }
 
-    public ArrayList<String> getUsers() {
-        return users;
+    public ArrayList<String> getUserIDs() {
+        return userIDs;
     }
 
-    public void setUsers(ArrayList<String> users) {
-        this.users = users;
+    public void setUserIDs(ArrayList<String> userIDs) {
+        this.userIDs = userIDs;
     }
 
-    public ArrayList<Category> getCategories() {
+    public Map<String, Category> getCategories() {
         return categories;
     }
 
-    public void setCategories(ArrayList<Category> categories) {
+    public void setCategories(Map<String, Category> categories) {
         this.categories = categories;
     }
 
     public void addCategory(Category category)
     {
-        this.categories.add(category);
+        this.categories.put(category.getName(), category);
     }
 
     public void modifyCategory(String categoryName, Category category)
     {
-        categories.set(categories.indexOf(getCategory(categoryName)), category);
+        addCategory(category);
     }
 
     public Category getCategory(String categoryName)
     {
-        for (Category category : categories)
-        {
-            if (category.getName().equals(categoryName))
-            {
-                return category;
-            }
-        }
-
-        return null;
+        return categories.get(categoryName);
     }
 
     public boolean hasCategory(String categoryName)
     {
-        return getCategory(categoryName) != null;
+        return categories.containsKey(categoryName);
     }
 
     public void removeCategory(String categoryName)
     {
-        categories.removeIf(category -> category.getName().equals(categoryName));
+        categories.remove(categoryName);
     }
 }

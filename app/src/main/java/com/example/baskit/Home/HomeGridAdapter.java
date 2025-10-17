@@ -16,8 +16,7 @@ import java.util.stream.Collectors;
 
 public class HomeGridAdapter extends RecyclerView.Adapter<HomeGridAdapter.GridViewHolder>
 {
-    private ArrayList<List> lists;
-    private java.util.List<String> listNames;
+    private ArrayList<String> listNames;
     private OnItemClickListener listener;
 
     public interface OnItemClickListener
@@ -26,17 +25,9 @@ public class HomeGridAdapter extends RecyclerView.Adapter<HomeGridAdapter.GridVi
         void onItemLongClick(int position);
     }
 
-    public HomeGridAdapter(ArrayList<List> lists, OnItemClickListener listener) {
-        this.lists = lists;
+    public HomeGridAdapter(ArrayList<String> listNames, OnItemClickListener listener) {
+        this.listNames = listNames;
         this.listener = listener;
-        getListNames();
-    }
-
-    private void getListNames()
-    {
-        listNames = lists.stream()
-                .map(List::getName)
-                .collect(Collectors.toList());
     }
 
     public void remove(int position, boolean notifyItemRemoved)
@@ -60,7 +51,7 @@ public class HomeGridAdapter extends RecyclerView.Adapter<HomeGridAdapter.GridVi
 
         if (notifyItemInserted)
         {
-            this.notifyItemInserted(lists.size()-1);
+            this.notifyItemInserted(listNames.size()-1);
         }
     }
 
@@ -69,7 +60,8 @@ public class HomeGridAdapter extends RecyclerView.Adapter<HomeGridAdapter.GridVi
         this.add(list, true);
     }
 
-    public static class GridViewHolder extends RecyclerView.ViewHolder {
+    public static class GridViewHolder extends RecyclerView.ViewHolder
+    {
         public Button button;
 
         public GridViewHolder(Button button) {
@@ -127,7 +119,15 @@ public class HomeGridAdapter extends RecyclerView.Adapter<HomeGridAdapter.GridVi
     }
 
     @Override
-    public int getItemCount() {
+    public int getItemCount()
+    {
         return listNames.size();
+    }
+
+    public void updateList(ArrayList<String> newList)
+    {
+        this.listNames.clear();
+        this.listNames.addAll(newList);
+        notifyDataSetChanged();
     }
 }

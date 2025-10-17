@@ -1,5 +1,6 @@
 [versions]
-agp = "8.12.2"
+agp = "8.12.3"
+gradle = "8.12.3"
 junit = "4.13.2"
 junitVersion = "1.3.0"
 espressoCore = "3.7.0"
@@ -12,6 +13,7 @@ firebaseAuth = "24.0.1"
 firebaseDatabase = "22.0.1"
 
 [libraries]
+gradle = { module = "com.android.tools.build:gradle", version.ref = "gradle" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }

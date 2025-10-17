@@ -12,9 +12,10 @@ public class ItemsAdapterChecked extends ItemsAdapter
 {
     public ItemsAdapterChecked(ArrayList<Item> items,
                                OnItemClickListener listener,
+                               UpperClassFunctions upperClassFns,
                                ItemsListHandler.EmptyCategoryCase emptyCategory)
     {
-        super(items, listener, emptyCategory);
+        super(items, listener, upperClassFns, emptyCategory);
     }
 
     @Override

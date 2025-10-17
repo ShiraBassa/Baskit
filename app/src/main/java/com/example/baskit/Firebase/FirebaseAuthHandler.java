@@ -1,0 +1,240 @@
+package com.example.baskit.Firebase;
+
+import static com.example.baskit.Firebase.FBRefs.refAuth;
+import static com.example.baskit.Firebase.FBRefs.refUsers;
+
+import androidx.annotation.NonNull;
+
+import com.example.baskit.Login.ErrorType;
+import com.example.baskit.MainComponents.User;
+import com.google.firebase.FirebaseException;
+import com.google.firebase.FirebaseNetworkException;
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
+import com.google.firebase.auth.FirebaseAuthInvalidUserException;
+import com.google.firebase.auth.FirebaseAuthUserCollisionException;
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ValueEventListener;
+
+public class FirebaseAuthHandler
+{
+    private static FirebaseAuthHandler instance;
+    private static User user;
+
+    public interface AuthCallback
+    {
+        void onAuthSuccess();
+        void onAuthError(String msg, ErrorType type);
+    }
+
+    public static FirebaseAuthHandler getInstance()
+    {
+        if (instance == null)
+        {
+            instance = new FirebaseAuthHandler();
+        }
+
+        return instance;
+    }
+
+    public static void resetInstance()
+    {
+        user = null;
+        instance = null;
+        instance = new FirebaseAuthHandler();
+    }
+
+    public void checkCurrUser(AuthCallback callback)
+    {
+        FirebaseUser currUser = refAuth.getCurrentUser();
+
+        if (currUser == null)
+        {
+            callback.onAuthError("", ErrorType.NOT_LOGGED);
+            return;
+        }
+
+        currUser.reload().addOnCompleteListener(task ->
+        {
+            if (!task.isSuccessful())
+            {
+                refAuth.signOut();
+                callback.onAuthError("Session expired. Please log in again.", ErrorType.GENERAL);
+                return;
+            }
+
+            refUsers.child(currUser.getUid())
+                    .addListenerForSingleValueEvent(new ValueEventListener()
+                    {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot)
+                        {
+                            if (snapshot.exists())
+                            {
+                                user = snapshot.getValue(User.class);
+                            }
+                            else
+                            {
+                                user = new User(currUser.getUid(), currUser.getEmail());
+                                getUserInfo();
+                                refUsers.child(user.getId()).setValue(user);
+                            }
+
+                            callback.onAuthSuccess();
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error)
+                        {
+                            callback.onAuthError("DB error: " + error.getMessage(), ErrorType.GENERAL);
+                        }
+                    });
+        });
+    }
+
+    public void signInOrSignUp(String email, String password, AuthCallback callback)
+    {
+        refAuth.createUserWithEmailAndPassword(email, password)
+                .addOnCompleteListener(task ->
+                {
+                    if (task.isSuccessful())
+                    {
+                        FirebaseUser firebaseUser = refAuth.getCurrentUser();
+
+                        if (firebaseUser == null)
+                        {
+                            callback.onAuthError("Signup failed: no user info", ErrorType.GENERAL);
+                            return;
+                        }
+
+                        user = new User(firebaseUser.getUid(), email);
+                        getUserInfo();
+                        refUsers.child(user.getId()).setValue(user);
+
+                        callback.onAuthSuccess();
+                    }
+                    else
+                    {
+                        Exception e = task.getException();
+
+                        if (e instanceof FirebaseNetworkException)
+                        {
+                            callback.onAuthError("Network error. Please check your connection", ErrorType.GENERAL);
+                        }
+                        else if (e instanceof FirebaseAuthUserCollisionException)
+                        {
+                            // Already exists → try login instead
+                            signIn(email, password, callback);
+                        }
+                        else if (e instanceof FirebaseAuthInvalidUserException)
+                        {
+                            callback.onAuthError("Invalid email format", ErrorType.EMAIL);
+                        }
+                        else if (e instanceof FirebaseAuthWeakPasswordException)
+                        {
+                            callback.onAuthError("Password too weak", ErrorType.PASSWORD);
+                        }
+                        else if (e instanceof FirebaseAuthInvalidCredentialsException)
+                        {
+                            callback.onAuthError("General authentication failure", ErrorType.GENERAL);
+                        }
+                        else if (e instanceof FirebaseException)
+                        {
+                            String msg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
+
+                            if (msg.contains("password"))
+                            {
+                                callback.onAuthError("Password too weak", ErrorType.PASSWORD);
+                            }
+                            else if (msg.contains("email"))
+                            {
+                                callback.onAuthError("Invalid email format", ErrorType.EMAIL);
+                            }
+                            else if (msg.contains("network"))
+                            {
+                                callback.onAuthError("Network error. Please check your connection", ErrorType.GENERAL);
+                            }
+                            else
+                            {
+                                callback.onAuthError("An error occurred. Please try again later", ErrorType.GENERAL);
+                            }
+                        }
+                        else
+                        {
+                            callback.onAuthError("An error occurred. Please try again later", ErrorType.GENERAL);
+                        }
+                    }
+                });
+    }
+
+    private void signIn(String email, String password, AuthCallback callback)
+    {
+        refAuth.signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener(task ->
+                {
+                    if (!task.isSuccessful())
+                    {
+                        Exception e = task.getException();
+
+                        if (e instanceof FirebaseAuthInvalidCredentialsException)
+                        {
+                            callback.onAuthError("Invalid password", ErrorType.PASSWORD);
+                        }
+                        else if (e instanceof FirebaseNetworkException)
+                        {
+                            callback.onAuthError("Network error. Please check your connection", ErrorType.GENERAL);
+                        }
+                        else
+                        {
+                            callback.onAuthError("An error occurred. Please try again later", ErrorType.GENERAL);
+                        }
+
+                        return;
+                    }
+
+                    FirebaseUser firebaseUser = refAuth.getCurrentUser();
+
+                    if (firebaseUser == null)
+                    {
+                        callback.onAuthError("Login failed: no user info", ErrorType.GENERAL);
+                        return;
+                    }
+
+                    refUsers.child(firebaseUser.getUid()).get()
+                            .addOnCompleteListener(taskDB ->
+                            {
+                                if (taskDB.isSuccessful() && taskDB.getResult().exists())
+                                {
+                                    user = taskDB.getResult().getValue(User.class);
+                                    callback.onAuthSuccess();
+                                }
+                                else
+                                {
+                                    user = new User(firebaseUser.getUid(), firebaseUser.getEmail());
+                                    getUserInfo();
+                                    refUsers.child(user.getId()).setValue(user);
+
+                                    callback.onAuthSuccess();
+                                }
+                            });
+                });
+    }
+
+    public User getUser()
+    {
+        return user;
+    }
+
+    public void logOut()
+    {
+        refAuth.signOut();
+        resetInstance();
+    }
+
+    private void getUserInfo()
+    {
+        user.setName("משתמש");
+    }
+}

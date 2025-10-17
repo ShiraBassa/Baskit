@@ -20,17 +20,26 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
         void notifyCheckBox(Item item);
     }
 
+    public interface UpperClassFunctions
+    {
+        void updateItemCategory(Item item);
+        void removeItemCategory(Item item);
+    }
+
     ItemsListHandler.EmptyCategoryCase emptyCategory;
     protected ArrayList<Item> items;
     protected OnItemClickListener listener;
+    protected UpperClassFunctions upperClassFns;
 
     public ItemsAdapter(ArrayList<Item> items,
                         OnItemClickListener listener,
+                        UpperClassFunctions upperClassFns,
                         ItemsListHandler.EmptyCategoryCase emptyCategory)
     {
         this.emptyCategory = emptyCategory;
         this.items = new ArrayList<>();
         this.listener = listener;
+        this.upperClassFns = upperClassFns;
 
         for (Item item : items)
         {
@@ -103,6 +112,8 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
             item.setQuantity(item.raiseQuantity());
             holder.tvQuantity.setText(String.valueOf(item.getQuantity()));
             holder.btnDown.setBackgroundColor(Color.TRANSPARENT);
+
+            upperClassFns.updateItemCategory(item);
         });
 
         holder.btnDown.setOnClickListener(v ->
@@ -120,6 +131,7 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
             if (quantity == 0)
             {
                 removeItem(currPosition);
+                upperClassFns.removeItemCategory(item);
             }
             else
             {
@@ -130,12 +142,15 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
 
                 item.setQuantity(quantity);
                 holder.tvQuantity.setText(String.valueOf(item.getQuantity()));
+
+                upperClassFns.updateItemCategory(item);
             }
         });
 
         holder.btnCheckBox.setOnClickListener(v ->
         {
             listener.notifyCheckBox(item);
+            upperClassFns.updateItemCategory(item);
         });
     }
 
@@ -186,5 +201,12 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
     public int getItemCount()
     {
         return items.size();
+    }
+
+    public void updateItems(ArrayList<Item> newItems)
+    {
+        items.clear();
+        items.addAll(newItems);
+        notifyDataSetChanged();
     }
 }

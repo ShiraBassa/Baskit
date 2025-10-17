@@ -1,21 +1,24 @@
 package com.example.baskit.MainComponents;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Category
 {
-    private String name;
-    private boolean finished;
-    private ArrayList<Item> items;
+    private String name = "";
+    private boolean finished = false;
+    private Map<String, Item> items = new HashMap<>();
+
+    public Category() {}
 
     public Category(String name)
     {
         this.name = name;
-        this.items = new ArrayList<>();
         this.finished = true;
     }
 
-    public Category(String name, ArrayList<Item> items)
+    public Category(String name, Map<String, Item> items)
     {
         this.name = name;
         this.items = items;
@@ -26,7 +29,7 @@ public class Category
     {
         if (items != null && !items.isEmpty())
         {
-            for (Item item : items)
+            for (Item item : items.values())
             {
                 if (!item.isChecked())
                 {
@@ -47,11 +50,11 @@ public class Category
         this.name = name;
     }
 
-    public ArrayList<Item> getItems() {
+    public Map<String, Item> getItems() {
         return items;
     }
 
-    public void setItems(ArrayList<Item> items) {
+    public void setItems(Map<String, Item> items) {
         this.items = items;
 
         updateFinished();
@@ -64,7 +67,7 @@ public class Category
 
     public void addItem(Item item)
     {
-        this.items.add(item);
+        this.items.put(item.getId(), item);
 
         if (finished)
         {
@@ -80,7 +83,7 @@ public class Category
         }
         else
         {
-            for (Item item : items)
+            for (Item item : items.values())
             {
                 if (item.isChecked())
                 {
@@ -94,5 +97,10 @@ public class Category
 
     public boolean isFinished() {
         return finished;
+    }
+
+    public int getSize()
+    {
+        return this.items.size();
     }
 }

@@ -1,5 +1,6 @@
 package com.example.baskit.Home;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,14 +9,19 @@ import android.widget.LinearLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.baskit.Firebase.FBRefs;
+import com.example.baskit.Firebase.FirebaseAuthHandler;
+import com.example.baskit.Login.LoginActivity;
 import com.example.baskit.R;
 
 public class SettingsActivity extends AppCompatActivity
 {
+    FirebaseAuthHandler authHandler;
+
     LinearLayout supermarketsListContainer;
     LayoutInflater supermarketsListInflater;
 
-    ImageButton btnHome;
+    ImageButton btnHome, btnLogOut;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -23,21 +29,23 @@ public class SettingsActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
+        authHandler = FirebaseAuthHandler.getInstance();
         init();
     }
 
     private void init()
     {
         btnHome = findViewById(R.id.btn_home);
+        btnLogOut = findViewById(R.id.btn_log_out);
 
         supermarketsListContainer = findViewById(R.id.supermarkets_container);
         supermarketsListInflater = LayoutInflater.from(this);
 
         createFakeTable();
-        setButton();
+        setButtons();
     }
 
-    private void setButton()
+    private void setButtons()
     {
         btnHome.setOnClickListener(new View.OnClickListener()
         {
@@ -45,6 +53,21 @@ public class SettingsActivity extends AppCompatActivity
             public void onClick(View view)
             {
                 finish();
+            }
+        });
+
+        btnLogOut.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View view)
+            {
+                authHandler.logOut();
+
+                Intent intent = new Intent(SettingsActivity.this, LoginActivity.class);
+                intent.putExtra("fromLogout", true);
+
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
             }
         });
     }
