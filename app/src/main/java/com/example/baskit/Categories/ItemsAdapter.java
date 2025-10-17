@@ -12,6 +12,7 @@ import com.example.baskit.MainComponents.Item;
 import com.example.baskit.R;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
 {
@@ -89,6 +90,10 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
         {
             holder.btnDown.setBackgroundColor(Color.LTGRAY);
         }
+        else
+        {
+            holder.btnDown.setBackgroundColor(Color.TRANSPARENT);
+        }
 
         if (item.hasSupermarket())
         {
@@ -106,8 +111,8 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
     {
         holder.btnUp.setOnClickListener(v ->
         {
-            int currPosition = holder.getAdapterPosition(); // always current
-            if (currPosition == RecyclerView.NO_POSITION) return; // safety
+            int currPosition = holder.getAdapterPosition();
+            if (currPosition == RecyclerView.NO_POSITION) return;
 
             item.setQuantity(item.raiseQuantity());
             holder.tvQuantity.setText(String.valueOf(item.getQuantity()));
@@ -140,9 +145,7 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
                     holder.btnDown.setBackgroundColor(Color.LTGRAY);
                 }
 
-                item.setQuantity(quantity);
                 holder.tvQuantity.setText(String.valueOf(item.getQuantity()));
-
                 upperClassFns.updateItemCategory(item);
             }
         });
@@ -159,8 +162,14 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
         if (!items.contains(item))
         {
             items.add(item);
-            notifyItemInserted(items.size() - 1);
+            sortItems();
+            notifyDataSetChanged();
         }
+    }
+
+    private void sortItems()
+    {
+        Collections.sort(items, (i1, i2) -> i1.getId().compareTo(i2.getId()));
     }
 
     public void removeItem(int position)
@@ -183,7 +192,6 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
 
         if (position != -1)
         {
-            // Calls the synchronous removeItem(position) above
             removeItem(position);
         }
     }
@@ -207,6 +215,7 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
     {
         items.clear();
         items.addAll(newItems);
+        sortItems();
         notifyDataSetChanged();
     }
 }

@@ -42,6 +42,24 @@ public class Category
         this.finished = true;
     }
 
+    public int countUnchecked()
+    {
+        int count = 0;
+
+        if (items != null && !items.isEmpty())
+        {
+            for (Item item : items.values())
+            {
+                if (!item.isChecked())
+                {
+                    count++;
+                }
+            }
+        }
+
+        return count;
+    }
+
     public String getName() {
         return name;
     }

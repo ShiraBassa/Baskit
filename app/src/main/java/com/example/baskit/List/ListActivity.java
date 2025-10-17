@@ -203,7 +203,11 @@ public class ListActivity extends AppCompatActivity
                 // Update existing view
                 View categoryView = categoriesViews.get(key);
                 TextView tv_count = categoryView.findViewById(R.id.tv_count);
-                tv_count.setText(Integer.toString(category.getSize()));
+
+                if (tv_count != null)
+                {
+                    tv_count.setText(Integer.toString(category.countUnchecked()));
+                }
             }
             else
             {
@@ -215,13 +219,25 @@ public class ListActivity extends AppCompatActivity
 
     private void inflaterAddItem(Category category)
     {
-        View categoryView = categoriesListInflater.inflate(R.layout.category_list_item_default, categoriesListContainer, false);
+        View categoryView;
+        TextView tv_name;
 
-        TextView tv_name = categoryView.findViewById(R.id.tv_name);
-        TextView tv_count = categoryView.findViewById(R.id.tv_count);
+        if (!category.isFinished())
+        {
+            categoryView = categoriesListInflater.inflate(R.layout.category_list_item_default, categoriesListContainer, false);
 
-        tv_name.setText(category.getName());
-        tv_count.setText(Integer.toString(category.getSize()));
+            tv_name = categoryView.findViewById(R.id.tv_name);
+            TextView tv_count = categoryView.findViewById(R.id.tv_count);
+
+            tv_name.setText(category.getName());
+            tv_count.setText(Integer.toString(category.countUnchecked()));
+        }
+        else
+        {
+            categoryView = categoriesListInflater.inflate(R.layout.category_list_item_finished, categoriesListContainer, false);
+            tv_name = categoryView.findViewById(R.id.tv_name);
+            tv_name.setText(category.getName());
+        }
 
         tv_name.setOnClickListener(new View.OnClickListener()
         {
@@ -238,6 +254,5 @@ public class ListActivity extends AppCompatActivity
 
         categoriesListContainer.addView(categoryView);
         categoriesViews.put(category.getName(), categoryView);
-
     }
 }
