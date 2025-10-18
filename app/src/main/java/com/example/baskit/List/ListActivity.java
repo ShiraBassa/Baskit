@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -35,12 +36,21 @@ public class ListActivity extends AppCompatActivity
     LayoutInflater categoriesListInflater;
     FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
     Map<String, View> categoriesViews;
+    AddItemAlertDialog addItemAlertDialog;
+    Button btnAddItem;
+
+    ArrayList<String> allItemNames = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list);
+
+        allItemNames.add("פריט 1");
+        allItemNames.add("פריט 2");
+        allItemNames.add("פריט 3");
+        allItemNames.add("פריט 4");
 
         createInit();
     }
@@ -58,6 +68,7 @@ public class ListActivity extends AppCompatActivity
         tvListName = findViewById(R.id.tv_list_name);
         btnBack = findViewById(R.id.btn_back);
         btnFinished = findViewById(R.id.btn_finished);
+        btnAddItem = findViewById(R.id.btn_add_item);
 
         listId = getIntent().getStringExtra("listId");
 
@@ -65,6 +76,10 @@ public class ListActivity extends AppCompatActivity
         categoriesListInflater = LayoutInflater.from(this);
 
         setButton();
+        addItemAlertDialog = new AddItemAlertDialog(ListActivity.this,
+                ListActivity.this,
+                allItemNames,
+                ListActivity.this::addItem);
     }
 
     private void resumeInit()
@@ -87,10 +102,6 @@ public class ListActivity extends AppCompatActivity
                 tvListName.setVisibility(View.VISIBLE);
 
                 categories = ListActivity.this.list.getCategories();
-
-                //Category c = new Category("מוצרי חלב");
-                //c.addItem(new Item("2", "name"));
-                //dbHandler.addCategory(list, c);
 
                 if (categories == null)
                 {
@@ -167,6 +178,15 @@ public class ListActivity extends AppCompatActivity
                 resumeInit();
             }
         });
+
+        btnAddItem.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View view)
+            {
+                addItemAlertDialog.show();
+            }
+        });
     }
 
     private void setCategoriesInflater()
@@ -180,41 +200,53 @@ public class ListActivity extends AppCompatActivity
         }
     }
 
-    private void updateCategoriesInflater(Map<String, Category> newCategories) {
-        // Remove categories that were deleted
+    private void updateCategoriesInflater(Map<String, Category> newCategories)
+    {
         for (String key : categories.keySet())
         {
             if (!newCategories.containsKey(key))
             {
-                View toRemove = categoriesViews.get(key); // keep a map of key -> View
+                View toRemove = categoriesViews.get(key);
                 categoriesListContainer.removeView(toRemove);
                 categoriesViews.remove(key);
             }
         }
 
-        // Add or update categories
         for (Map.Entry<String, Category> entry : newCategories.entrySet())
         {
             String key = entry.getKey();
-            Category category = entry.getValue();
+            Category newCategory = entry.getValue();
+
+            boolean hasOld = categories.containsKey(key);
+            Category oldCategory = hasOld ? categories.get(key) : null;
 
             if (categoriesViews.containsKey(key))
             {
-                // Update existing view
-                View categoryView = categoriesViews.get(key);
-                TextView tv_count = categoryView.findViewById(R.id.tv_count);
-
-                if (tv_count != null)
+                if (oldCategory != null && oldCategory.isFinished() != newCategory.isFinished())
                 {
-                    tv_count.setText(Integer.toString(category.countUnchecked()));
+                    View oldView = categoriesViews.get(key);
+                    categoriesListContainer.removeView(oldView);
+                    categoriesViews.remove(key);
+                    inflaterAddItem(newCategory);
+                }
+                else
+                {
+                    View categoryView = categoriesViews.get(key);
+                    TextView tv_count = categoryView.findViewById(R.id.tv_count);
+
+                    if (tv_count != null)
+                    {
+                        tv_count.setText(Integer.toString(newCategory.countUnchecked()));
+                    }
                 }
             }
             else
             {
-                // Add new view
-                inflaterAddItem(category);
+                inflaterAddItem(newCategory);
             }
         }
+
+        categories = new HashMap<>(newCategories);
     }
 
     private void inflaterAddItem(Category category)
@@ -254,5 +286,17 @@ public class ListActivity extends AppCompatActivity
 
         categoriesListContainer.addView(categoryView);
         categoriesViews.put(category.getName(), categoryView);
+    }
+
+    public void addItem(Item item)
+    {
+        String category_name = "מוצרי חללב";
+
+        if (!list.hasCategory(category_name))
+        {
+            dbHandler.addCategory(list, new Category(category_name));
+        }
+
+        dbHandler.addItem(list, category_name, item);
     }
 }
