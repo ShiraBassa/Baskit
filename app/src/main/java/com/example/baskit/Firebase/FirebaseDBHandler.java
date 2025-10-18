@@ -205,6 +205,17 @@ public class FirebaseDBHandler
                 .setValue(item);
     }
 
+    public void addItem(List list, String category_name, Item item)
+    {
+        list.getCategory(category_name).addItem(item);
+        refLists.child(list.getId())
+                .child("categories")
+                .child(category_name)
+                .child("items")
+                .child(item.getId())
+                .setValue(item);
+    }
+
     public void listenToList(String listId, GetListCallback callback)
     {
         refLists.child(listId).addValueEventListener(new ValueEventListener()

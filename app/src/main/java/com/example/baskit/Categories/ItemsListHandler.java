@@ -94,7 +94,7 @@ public class ItemsListHandler implements ItemsAdapter.UpperClassFunctions
         this.recyclerChecked.setAdapter(checkedAdapter);
     }
 
-    public void addItem(Item item)
+    public void addItem(String item_category_name, Item item)
     {
         if (item.isChecked())
         {
