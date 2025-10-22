@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "236656313849",
+    "firebase_url": "https://baskit-b6600-default-rtdb.firebaseio.com",
+    "project_id": "baskit-b6600",
+    "storage_bucket": "baskit-b6600.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:236656313849:android:38ff5992272bacc8c9a928",
+        "android_client_info": {
+          "package_name": "com.example.baskit"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAD43anHVQriLEWtplOR9D8CM4Hatc3670"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
