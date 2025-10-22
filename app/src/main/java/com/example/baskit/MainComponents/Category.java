@@ -1,6 +1,7 @@
 package com.example.baskit.MainComponents;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -120,5 +121,12 @@ public class Category
     public int getSize()
     {
         return this.items.size();
+    }
+
+    public java.util.List<Item> getItemsSorted()
+    {
+        java.util.List<Item> sortedItems = new ArrayList<>(items.values());
+        sortedItems.sort(Comparator.comparing(Item::getName, String.CASE_INSENSITIVE_ORDER));
+        return sortedItems;
     }
 }

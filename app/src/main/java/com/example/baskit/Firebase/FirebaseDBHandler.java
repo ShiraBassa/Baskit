@@ -21,10 +21,17 @@ import java.util.Map;
 
 public class FirebaseDBHandler
 {
+    private FirebaseDBHandler() {}
+
     public interface GetListCallback
     {
         void onListFetched(List newList);
         void onError(String error);
+    }
+
+    public interface DBCallback {
+        void onComplete();
+        void onFailure(Exception e);
     }
 
     public interface GetCategoryCallback
@@ -183,10 +190,13 @@ public class FirebaseDBHandler
     public void addCategory(List list, Category category)
     {
         list.addCategory(category);
-        refLists.child(list.getId()).
-                child("categories").
-                child(category.getName()).
-                setValue(category);
+
+        DatabaseReference categoryRef = refLists
+                .child(list.getId())
+                .child("categories")
+                .child(category.getName());
+
+        categoryRef.setValue(category);
     }
 
     public String getUniqueId()
@@ -205,17 +215,25 @@ public class FirebaseDBHandler
                 .setValue(item);
     }
 
-    public void addItem(List list, String category_name, Item item)
+    public void addItem(List list, String category_name, Item item, DBCallback callback)
     {
         list.getCategory(category_name).addItem(item);
+
         refLists.child(list.getId())
                 .child("categories")
                 .child(category_name)
                 .child("items")
                 .child(item.getId())
-                .setValue(item);
+                .setValue(item)
+                .addOnSuccessListener(aVoid ->
+                {
+                    if (callback != null) callback.onComplete();
+                })
+                .addOnFailureListener(e ->
+                {
+                    if (callback != null) callback.onFailure(e);
+                });
     }
-
     public void listenToList(String listId, GetListCallback callback)
     {
         refLists.child(listId).addValueEventListener(new ValueEventListener()

@@ -1,5 +1,8 @@
 package com.example.baskit.MainComponents;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class Item
 {
     private final String ID_PREFIX = "item_";
@@ -86,6 +89,11 @@ public class Item
         this.id = id;
     }
 
+    public void updateId(String id)
+    {
+        this.id = ID_PREFIX + id;
+    }
+
     public int raiseQuantity()
     {
         return ++quantity;
@@ -112,5 +120,15 @@ public class Item
     @Override
     public String toString() {
         return name;
+    }
+
+    public Map<String, Object> toMap() {
+        Map<String, Object> result = new HashMap<>();
+        result.put("id", getId());
+        result.put("name", getName());
+        result.put("quantity", getQuantity());
+        result.put("checked", isChecked());
+        // Add any other fields your Item has
+        return result;
     }
 }

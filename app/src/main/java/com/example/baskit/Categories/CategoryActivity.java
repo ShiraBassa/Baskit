@@ -10,6 +10,7 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -18,8 +19,10 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.baskit.AI.AIHandler;
 import com.example.baskit.Firebase.FirebaseDBHandler;
 import com.example.baskit.List.AddItemAlertDialog;
+import com.example.baskit.List.ListActivity;
 import com.example.baskit.MainComponents.Category;
 import com.example.baskit.MainComponents.Item;
 import com.example.baskit.MainComponents.List;
@@ -42,8 +45,9 @@ public class CategoryActivity extends AppCompatActivity
     Button btnAddItem;
     FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
     AddItemAlertDialog addItemAlertDialog;
+    AIHandler aiHandler = AIHandler.getInstance();
 
-    ArrayList<String> allItemNames = new ArrayList<>();
+    Map<String, String> allItems = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -51,10 +55,10 @@ public class CategoryActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_category);
 
-        allItemNames.add("פריט 1");
-        allItemNames.add("פריט 2");
-        allItemNames.add("פריט 3");
-        allItemNames.add("פריט 4");
+        allItems.put("1", "חלב 3%");
+        allItems.put("2", "יוגורט");
+        allItems.put("3", "מלפפון");
+        allItems.put("4", "חזה עוף");
 
         init();
     }
@@ -96,7 +100,7 @@ public class CategoryActivity extends AppCompatActivity
                 setButtons();
                 addItemAlertDialog = new AddItemAlertDialog(CategoryActivity.this,
                         CategoryActivity.this,
-                        allItemNames,
+                        new ArrayList<>(allItems.values()),
                         CategoryActivity.this::addItem);
 
                 itemsListHandler = new ItemsListHandler(CategoryActivity.this,
@@ -173,13 +177,39 @@ public class CategoryActivity extends AppCompatActivity
 
     public void addItem(Item item)
     {
-        String category_name = "מוצרי חלב";
+        ProgressBar progressBar = findViewById(R.id.progressBar);
+        progressBar.setVisibility(View.VISIBLE);
 
-        if (!category_name.equals(category.getName()))
+        item.updateId(getKeyByValue(allItems, item.getName()));
+
+        new Thread(() ->
         {
-            return;
-        }
+            aiHandler.getCategoryName(item, CategoryActivity.this, new AIHandler.OnGeminiResult()
+            {
+                @Override
+                public void onResult(String categoryName)
+                {
+                    if (!categoryName.equals(category.getName()))
+                    {
+                        return;
+                    }
 
-        itemsListHandler.addItem("מוצרי חלב", item);
+                    itemsListHandler.addItem(item);
+                    runOnUiThread(() -> progressBar.setVisibility(View.GONE));
+                }
+            });
+        }).start();
+    }
+
+    private String getKeyByValue(Map<String, String> map, String value)
+    {
+        for (Map.Entry<String, String> entry : map.entrySet())
+        {
+            if (entry.getValue().equals(value))
+            {
+                return entry.getKey();
+            }
+        }
+        return null;
     }
 }

@@ -10,6 +10,7 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -36,6 +37,7 @@ public class AddItemAlertDialog
     ArrayList<String> allItemNames;
     Context context;
     AddItemInterface addItemInterface;
+    ProgressBar adProgressBar;
 
     public interface AddItemInterface
     {
@@ -57,6 +59,7 @@ public class AddItemAlertDialog
         adBtnDown = adLayout.findViewById(R.id.btn_down);
         adTvQuantity = adLayout.findViewById(R.id.tv_quantity);
         adLoutQuantity = adLayout.findViewById(R.id.lout_quantity);
+        adProgressBar = adLayout.findViewById(R.id.progressBar);
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(context, R.layout.add_item_dropdown_item, allItemNames)
         {
@@ -115,7 +118,7 @@ public class AddItemAlertDialog
                 {
                     if (typed.equals(name))
                     {
-                        selectedItem = new Item(name.replace("פריט ", ""), name);
+                        selectedItem = new Item(name);
                         selectedItem.setQuantity(1);
                         match = true;
                         break;
@@ -133,8 +136,7 @@ public class AddItemAlertDialog
 
         adSearchItem.setOnItemClickListener((parent, view, position, id) ->
         {
-            String name = allItemNames.get(position);
-            selectedItem = new Item(name.replace("פריט ", ""), name);
+            selectedItem = new Item(allItemNames.get(position));
             selectedItem.setQuantity(1);
 
             adLoutQuantity.setVisibility(View.VISIBLE);
@@ -153,7 +155,6 @@ public class AddItemAlertDialog
             if (selectedItem != null)
             {
                 addItemInterface.addItem(selectedItem);
-                adAddItem.dismiss();
             }
             else
             {
@@ -204,6 +205,38 @@ public class AddItemAlertDialog
         adSearchItem.setText("");
         adLoutQuantity.setVisibility(View.INVISIBLE);
         selectedItem = null;
+
+        adProgressBar.setVisibility(View.INVISIBLE);
+        adBtnAddItem.setClickable(true);
+        adBtnCancel.setClickable(true);
+        adBtnUp.setClickable(true);
+        adBtnDown.setClickable(true);
+
         adAddItem.show();
+    }
+
+    public void finish()
+    {
+        adAddItem.dismiss();
+    }
+
+    public void startProgressBar()
+    {
+        if (adProgressBar != null)
+        {
+            adProgressBar.setVisibility(View.VISIBLE);
+            adBtnAddItem.setClickable(false);
+            adBtnCancel.setClickable(false);
+            adBtnUp.setClickable(false);
+            adBtnDown.setClickable(false);
+        }
+    }
+
+    public void endProgressBar()
+    {
+        if (adProgressBar != null)
+        {
+            adProgressBar.setVisibility(View.INVISIBLE);
+        }
     }
 }

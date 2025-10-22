@@ -8,9 +8,13 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.baskit.AI.AIHandler;
 import com.example.baskit.Categories.CategoryActivity;
 import com.example.baskit.Firebase.FirebaseDBHandler;
 import com.example.baskit.MainComponents.Category;
@@ -38,8 +42,9 @@ public class ListActivity extends AppCompatActivity
     Map<String, View> categoriesViews;
     AddItemAlertDialog addItemAlertDialog;
     Button btnAddItem;
+    AIHandler aiHandler = AIHandler.getInstance();
 
-    ArrayList<String> allItemNames = new ArrayList<>();
+    Map<String, String> allItems = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -47,10 +52,10 @@ public class ListActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list);
 
-        allItemNames.add("פריט 1");
-        allItemNames.add("פריט 2");
-        allItemNames.add("פריט 3");
-        allItemNames.add("פריט 4");
+        allItems.put("1", "חלב 3%");
+        allItems.put("2", "יוגורט");
+        allItems.put("3", "מלפפון");
+        allItems.put("4", "חזה עוף");
 
         createInit();
     }
@@ -78,7 +83,7 @@ public class ListActivity extends AppCompatActivity
         setButton();
         addItemAlertDialog = new AddItemAlertDialog(ListActivity.this,
                 ListActivity.this,
-                allItemNames,
+                new ArrayList<>(allItems.values()),
                 ListActivity.this::addItem);
     }
 
@@ -290,13 +295,50 @@ public class ListActivity extends AppCompatActivity
 
     public void addItem(Item item)
     {
-        String category_name = "מוצרי חללב";
+        addItemAlertDialog.startProgressBar();
+        item.updateId(getKeyByValue(allItems, item.getName()));
 
-        if (!list.hasCategory(category_name))
+        aiHandler.getCategoryName(item, ListActivity.this, categoryName -> {
+
+            if (!list.hasCategory(categoryName))
+            {
+                dbHandler.addCategory(list, new Category(categoryName));
+            }
+
+            dbHandler.addItem(list, categoryName, item, new FirebaseDBHandler.DBCallback() {
+                @Override
+                public void onComplete()
+                {
+                    runOnUiThread(() ->
+                    {
+                        addItemAlertDialog.endProgressBar();
+                        addItemAlertDialog.finish();
+                    });
+                }
+
+                @Override
+                public void onFailure(Exception e)
+                {
+                    runOnUiThread(() ->
+                    {
+                        addItemAlertDialog.endProgressBar();
+                        addItemAlertDialog.finish();
+                        Toast.makeText(ListActivity.this, "Failed to add item: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    });
+                }
+            });
+        });
+    }
+
+    private String getKeyByValue(Map<String, String> map, String value)
+    {
+        for (Map.Entry<String, String> entry : map.entrySet())
         {
-            dbHandler.addCategory(list, new Category(category_name));
+            if (entry.getValue().equals(value))
+            {
+                return entry.getKey();
+            }
         }
-
-        dbHandler.addItem(list, category_name, item);
+        return null;
     }
 }
