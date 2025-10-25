@@ -92,10 +92,17 @@ public class FirebaseAuthHandler
                                     {
                                         String idToken = taskTwo.getResult().getToken();
                                         user.setToken(idToken);
-                                        apiHandler.setFirebaseToken(idToken);
-                                    }
 
-                                    callback.onAuthSuccess();
+                                        new Thread(() ->
+                                        {
+                                            apiHandler.setFirebaseToken(idToken);
+                                            callback.onAuthSuccess();
+                                        }).start();
+                                    }
+                                    else
+                                    {
+                                        callback.onAuthSuccess();
+                                    }
                                 });
                             }
                             else
@@ -274,10 +281,17 @@ public class FirebaseAuthHandler
                                         {
                                             String idToken = taskTwo.getResult().getToken();
                                             user.setToken(idToken);
-                                            apiHandler.setFirebaseToken(idToken);
-                                        }
 
-                                        callback.onAuthSuccess();
+                                            new Thread(() ->
+                                            {
+                                                apiHandler.setFirebaseToken(idToken);
+                                                callback.onAuthSuccess();
+                                            }).start();
+                                        }
+                                        else
+                                        {
+                                            callback.onAuthSuccess();
+                                        }
                                     });
                                 }
                                 else

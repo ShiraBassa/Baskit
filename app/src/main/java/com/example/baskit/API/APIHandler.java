@@ -67,10 +67,7 @@ public class APIHandler
 
             response.close();
         }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
+        catch (Exception e) {}
     }
 
     private String getRaw(String endpoint) throws IOException
@@ -232,5 +229,28 @@ public class APIHandler
         }
 
         return result;
+    }
+
+    public Map<String, Map<String, Map<String, Double>>> getItems()
+    {
+        Map<String, Map<String, Map<String, Double>>> allItems = new HashMap<>();
+
+        try
+        {
+            String itemsRaw = getRaw("/items");
+            JSONObject itemsJson = new JSONObject(itemsRaw);
+
+            for (Iterator<String> itemIter = itemsJson.keys(); itemIter.hasNext();)
+            {
+                String itemCode = itemIter.next();
+                JSONObject storesJson = itemsJson.getJSONObject(itemCode);
+                Map<String, Map<String, Double>> storeMap = parsePriceResponse(storesJson.toString());
+
+                allItems.put(itemCode, storeMap);
+            }
+        }
+        catch (Exception ignored) {}
+
+        return allItems;
     }
 }
