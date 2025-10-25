@@ -3,8 +3,11 @@ package com.example.baskit.Firebase;
 import static com.example.baskit.Firebase.FBRefs.refAuth;
 import static com.example.baskit.Firebase.FBRefs.refUsers;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 
+import com.example.baskit.API.APIHandler;
 import com.example.baskit.Login.ErrorType;
 import com.example.baskit.MainComponents.User;
 import com.google.firebase.FirebaseException;
@@ -18,10 +21,18 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
 
+import org.json.JSONException;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
 public class FirebaseAuthHandler
 {
     private static FirebaseAuthHandler instance;
     private static User user;
+    private final APIHandler apiHandler = APIHandler.getInstance();
 
     public interface AuthCallback
     {
@@ -74,15 +85,45 @@ public class FirebaseAuthHandler
                             if (snapshot.exists())
                             {
                                 user = snapshot.getValue(User.class);
+
+                                currUser.getIdToken(true).addOnCompleteListener(taskTwo ->
+                                {
+                                    if (taskTwo.isSuccessful())
+                                    {
+                                        String idToken = taskTwo.getResult().getToken();
+                                        user.setToken(idToken);
+                                        apiHandler.setFirebaseToken(idToken);
+                                    }
+
+                                    callback.onAuthSuccess();
+                                });
                             }
                             else
                             {
                                 user = new User(currUser.getUid(), currUser.getEmail());
-                                getUserInfo();
-                                refUsers.child(user.getId()).setValue(user);
-                            }
 
-                            callback.onAuthSuccess();
+                                currUser.getIdToken(true).addOnCompleteListener(taskTwo ->
+                                {
+                                    if (taskTwo.isSuccessful())
+                                    {
+                                        String idToken = taskTwo.getResult().getToken();
+                                        user.setToken(idToken);
+
+                                        new Thread(() ->
+                                        {
+                                            apiHandler.setFirebaseToken(idToken);
+                                            getUserInfo();
+
+                                            refUsers.child(user.getId()).setValue(user);
+                                            callback.onAuthSuccess();
+                                        }).start();
+                                    }
+                                    else
+                                    {
+                                        callback.onAuthSuccess();
+                                    }
+                                });
+                            }
                         }
 
                         @Override
@@ -110,10 +151,28 @@ public class FirebaseAuthHandler
                         }
 
                         user = new User(firebaseUser.getUid(), email);
-                        getUserInfo();
-                        refUsers.child(user.getId()).setValue(user);
 
-                        callback.onAuthSuccess();
+                        firebaseUser.getIdToken(true).addOnCompleteListener(taskTwo ->
+                        {
+                            if (taskTwo.isSuccessful())
+                            {
+                                String idToken = taskTwo.getResult().getToken();
+                                user.setToken(idToken);
+
+                                new Thread(() ->
+                                {
+                                    apiHandler.setFirebaseToken(idToken);
+                                    getUserInfo();
+
+                                    refUsers.child(user.getId()).setValue(user);
+                                    callback.onAuthSuccess();
+                                }).start();
+                            }
+                            else
+                            {
+                                callback.onAuthSuccess();
+                            }
+                        });
                     }
                     else
                     {
@@ -208,15 +267,44 @@ public class FirebaseAuthHandler
                                 if (taskDB.isSuccessful() && taskDB.getResult().exists())
                                 {
                                     user = taskDB.getResult().getValue(User.class);
-                                    callback.onAuthSuccess();
+
+                                    firebaseUser.getIdToken(true).addOnCompleteListener(taskTwo ->
+                                    {
+                                        if (taskTwo.isSuccessful())
+                                        {
+                                            String idToken = taskTwo.getResult().getToken();
+                                            user.setToken(idToken);
+                                            apiHandler.setFirebaseToken(idToken);
+                                        }
+
+                                        callback.onAuthSuccess();
+                                    });
                                 }
                                 else
                                 {
                                     user = new User(firebaseUser.getUid(), firebaseUser.getEmail());
-                                    getUserInfo();
-                                    refUsers.child(user.getId()).setValue(user);
 
-                                    callback.onAuthSuccess();
+                                    firebaseUser.getIdToken(true).addOnCompleteListener(taskTwo ->
+                                    {
+                                        if(taskTwo.isSuccessful())
+                                        {
+                                            String idToken = taskTwo.getResult().getToken();
+                                            user.setToken(idToken);
+
+                                            new Thread(() ->
+                                            {
+                                                apiHandler.setFirebaseToken(idToken);
+                                                getUserInfo();
+
+                                                refUsers.child(user.getId()).setValue(user);
+                                                callback.onAuthSuccess();
+                                            }).start();
+                                        }
+                                        else
+                                        {
+                                            callback.onAuthSuccess();
+                                        }
+                                    });
                                 }
                             });
                 });
@@ -231,10 +319,33 @@ public class FirebaseAuthHandler
     {
         refAuth.signOut();
         resetInstance();
+        apiHandler.resetInstance();
     }
 
     private void getUserInfo()
     {
         user.setName("משתמש");
+
+        try
+        {
+            ArrayList<String> all_cities = apiHandler.getCities();
+
+            ArrayList<String> cities = new ArrayList<>();
+            cities.add(all_cities.get(0));
+            apiHandler.setCities(cities);
+
+            ArrayList<String> all_stores = apiHandler.getStores();
+
+            ArrayList<String> stores = new ArrayList<>();
+            stores.add(all_stores.get(0));
+            apiHandler.setStores(stores);
+
+            Map<String, ArrayList<String>> all_branches = apiHandler.getBranches();
+
+            Map<String, ArrayList<String>> branches = new HashMap<>();
+            branches.put(stores.get(0), new ArrayList<>(java.util.List.of(all_branches.get(stores.get(0)).get(0))));
+            apiHandler.setBranches(branches);
+        }
+        catch (IOException | JSONException ignored) {}
     }
 }

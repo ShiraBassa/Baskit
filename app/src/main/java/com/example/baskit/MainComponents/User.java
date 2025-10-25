@@ -7,6 +7,7 @@ public class User
     protected String id = "";
     protected String email = "";
     protected String name = "";
+    private String token = "";
     protected ArrayList<String> cities = new ArrayList<>();
     protected ArrayList<String> listIDs = new ArrayList<>();
     protected ArrayList<Supermarket> supermarkets = new ArrayList<>();
@@ -80,5 +81,13 @@ public class User
     public void removeList(String listId)
     {
         listIDs.remove(listId);
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 }
