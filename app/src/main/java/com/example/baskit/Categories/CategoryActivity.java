@@ -12,6 +12,7 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -177,28 +178,49 @@ public class CategoryActivity extends AppCompatActivity
 
     public void addItem(Item item)
     {
-        ProgressBar progressBar = findViewById(R.id.progressBar);
-        progressBar.setVisibility(View.VISIBLE);
-
+        addItemAlertDialog.startProgressBar();
         item.updateId(getKeyByValue(allItems, item.getName()));
 
-        new Thread(() ->
+        aiHandler.getCategoryName(item, CategoryActivity.this, categoryName ->
         {
-            aiHandler.getCategoryName(item, CategoryActivity.this, new AIHandler.OnGeminiResult()
+            if (categoryName.equals(category.getName()))
             {
-                @Override
-                public void onResult(String categoryName)
+                if (!list.hasCategory(categoryName))
                 {
-                    if (!categoryName.equals(category.getName()))
+                    dbHandler.addCategory(list, new Category(categoryName));
+                }
+
+                dbHandler.addItem(list, categoryName, item, new FirebaseDBHandler.DBCallback()
+                {
+                    @Override
+                    public void onComplete()
                     {
-                        return;
+                        runOnUiThread(() ->
+                        {
+                            addItemAlertDialog.endProgressBar();
+                            addItemAlertDialog.finish();
+                        });
                     }
 
-                    itemsListHandler.addItem(item);
-                    runOnUiThread(() -> progressBar.setVisibility(View.GONE));
-                }
-            });
-        }).start();
+                    @Override
+                    public void onFailure(Exception e)
+                    {
+                        runOnUiThread(() ->
+                        {
+                            addItemAlertDialog.endProgressBar();
+                            addItemAlertDialog.finish();
+                            Toast.makeText(CategoryActivity.this, "שגיאה בניסיון להוסיף את הפריט", Toast.LENGTH_SHORT).show();
+                        });
+                    }
+                });
+            }
+            else
+            {
+                addItemAlertDialog.endProgressBar();
+                addItemAlertDialog.finish();
+                Toast.makeText(CategoryActivity.this, "לא בקטגוריה המתאימה (" + categoryName + ")", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private String getKeyByValue(Map<String, String> map, String value)
