@@ -21,6 +21,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.baskit.AI.AIHandler;
+import com.example.baskit.API.APIHandler;
 import com.example.baskit.Firebase.FirebaseDBHandler;
 import com.example.baskit.List.AddItemAlertDialog;
 import com.example.baskit.List.ListActivity;
@@ -47,8 +48,10 @@ public class CategoryActivity extends AppCompatActivity
     FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
     AddItemAlertDialog addItemAlertDialog;
     AIHandler aiHandler = AIHandler.getInstance();
+    APIHandler apiHandler = APIHandler.getInstance();
 
-    Map<String, String> allItems = new HashMap<>();
+    Map<String, Map<String, Map<String, Double>>> allItems;
+    Map<String, String> itemsCodeNames;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -56,12 +59,13 @@ public class CategoryActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_category);
 
-        allItems.put("1", "חלב 3%");
-        allItems.put("2", "יוגורט");
-        allItems.put("3", "מלפפון");
-        allItems.put("4", "חזה עוף");
+        new Thread(() ->
+        {
+            allItems = apiHandler.getItems();
+            itemsCodeNames = apiHandler.getItemsCodeName(new ArrayList<>(allItems.keySet()));
 
-        init();
+            runOnUiThread(this::init);
+        }).start();
     }
 
     @Override
@@ -101,7 +105,7 @@ public class CategoryActivity extends AppCompatActivity
                 setButtons();
                 addItemAlertDialog = new AddItemAlertDialog(CategoryActivity.this,
                         CategoryActivity.this,
-                        new ArrayList<>(allItems.values()),
+                        new ArrayList<>(itemsCodeNames.values()),
                         CategoryActivity.this::addItem);
 
                 itemsListHandler = new ItemsListHandler(CategoryActivity.this,
@@ -179,7 +183,7 @@ public class CategoryActivity extends AppCompatActivity
     public void addItem(Item item)
     {
         addItemAlertDialog.startProgressBar();
-        item.updateId(getKeyByValue(allItems, item.getName()));
+        item.updateId(getKeyByValue(itemsCodeNames, item.getName()));
 
         aiHandler.getCategoryName(item, CategoryActivity.this, categoryName ->
         {

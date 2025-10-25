@@ -1,12 +1,12 @@
 package com.example.baskit.AI;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
-import android.view.View;
 
 import com.example.baskit.MainComponents.Item;
+import com.google.android.gms.common.util.ArrayUtils;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 public class AIHandler
 {
@@ -63,7 +63,7 @@ public class AIHandler
 
     public void getCategoryName(String itemName, Activity activity, OnGeminiResult onGeminiResult)
     {
-        prompt = createPrompt(itemName);
+        prompt = createItemCategoryPrompt(itemName);
 
         geminiManager.sendTextPrompt(activity, prompt, new GeminiCallback()
         {
@@ -83,7 +83,8 @@ public class AIHandler
         getCategoryName(item.getName(), activity, onGeminiResult);
     }
 
-    private String createPrompt(String itemName)
+
+    private String createItemCategoryPrompt(String itemName)
     {
         return "אני יוצרת רשימת קניות מחולקת לפי מחלקות בסופר במטרה לארגן אותה." +
                 "תשלח לי את הקגוריה של המוצר הבא: " + '"' + itemName + '"' + "." +

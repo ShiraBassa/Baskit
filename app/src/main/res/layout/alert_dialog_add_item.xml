@@ -56,7 +56,7 @@
             android:layout_height="wrap_content"
             android:hint="חפש פריט"
             android:textColor="#000000"
-            android:textSize="36sp"
+            android:textSize="28sp"
             android:layout_marginHorizontal="10dp"
             android:layout_marginBottom="30dp"
             android:dropDownHeight="200dp"
@@ -66,6 +66,9 @@
             android:focusable="true"
             android:clickable="true"
             android:ellipsize="none"
+            android:textDirection="rtl"
+            android:singleLine="true"
+            android:gravity="start"
             android:scrollHorizontally="false" />
 
         <LinearLayout

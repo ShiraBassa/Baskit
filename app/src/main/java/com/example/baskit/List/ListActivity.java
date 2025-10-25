@@ -15,6 +15,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.baskit.AI.AIHandler;
+import com.example.baskit.API.APIHandler;
 import com.example.baskit.Categories.CategoryActivity;
 import com.example.baskit.Firebase.FirebaseDBHandler;
 import com.example.baskit.MainComponents.Category;
@@ -43,8 +44,11 @@ public class ListActivity extends AppCompatActivity
     AddItemAlertDialog addItemAlertDialog;
     Button btnAddItem;
     AIHandler aiHandler = AIHandler.getInstance();
+    APIHandler apiHandler = APIHandler.getInstance();
 
-    Map<String, String> allItems = new HashMap<>();
+    Map<String, Map<String, Map<String, Double>>> allItems;
+    Map<String, String> itemsCodeNames;
+    private boolean itemsLoaded = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -52,12 +56,17 @@ public class ListActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list);
 
-        allItems.put("1", "חלב 3%");
-        allItems.put("2", "יוגורט");
-        allItems.put("3", "מלפפון");
-        allItems.put("4", "חזה עוף");
+        new Thread(() ->
+        {
+            allItems = apiHandler.getItems();
+            itemsCodeNames = apiHandler.getItemsCodeName(new ArrayList<>(allItems.keySet()));
 
-        createInit();
+            runOnUiThread(() -> {
+                createInit();
+                itemsLoaded = true;  // mark that the thread finished
+                resumeInit();        // first-time call
+            });
+        }).start();
     }
 
     @Override
@@ -65,7 +74,9 @@ public class ListActivity extends AppCompatActivity
     {
         super.onResume();
 
-        resumeInit();
+        if (itemsLoaded) {
+            resumeInit();  // only run if the background thread has completed
+        }
     }
 
     private void createInit()
@@ -83,7 +94,7 @@ public class ListActivity extends AppCompatActivity
         setButton();
         addItemAlertDialog = new AddItemAlertDialog(ListActivity.this,
                 ListActivity.this,
-                new ArrayList<>(allItems.values()),
+                new ArrayList<>(itemsCodeNames.values()),
                 ListActivity.this::addItem);
     }
 
@@ -296,7 +307,7 @@ public class ListActivity extends AppCompatActivity
     public void addItem(Item item)
     {
         addItemAlertDialog.startProgressBar();
-        item.updateId(getKeyByValue(allItems, item.getName()));
+        item.updateId(getKeyByValue(itemsCodeNames, item.getName()));
 
         aiHandler.getCategoryName(item, ListActivity.this, categoryName -> {
 

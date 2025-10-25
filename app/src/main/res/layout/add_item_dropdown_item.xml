@@ -10,7 +10,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textColor="#000000"
-        android:textSize="24sp"
+        android:textSize="22sp"
+        android:textDirection="rtl"
+        android:singleLine="true"
+        android:gravity="start"
         android:text="שם"/>
 
 </LinearLayout>

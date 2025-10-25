@@ -6,6 +6,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -21,6 +22,7 @@ public class APIHandler
     private static APIHandler instance;
     private static final String SERVER_URL = "http://10.0.2.2:5000";
     private static String firebaseToken;
+    private static Map<String, Map<String, Map<String, Double>>> allItems;
     private final OkHttpClient client = new OkHttpClient();
 
     public APIHandler() {}
@@ -233,7 +235,7 @@ public class APIHandler
 
     public Map<String, Map<String, Map<String, Double>>> getItems()
     {
-        Map<String, Map<String, Map<String, Double>>> allItems = new HashMap<>();
+        allItems = new HashMap<>();
 
         try
         {
@@ -252,5 +254,59 @@ public class APIHandler
         catch (Exception ignored) {}
 
         return allItems;
+    }
+
+    public Map<String, Map<String, Map<String, Double>>> getItems(boolean forceRefresh)
+    {
+        if (forceRefresh || allItems == null)
+        {
+            return getItems();
+        }
+
+        return allItems;
+    }
+
+    public Map<String, String> getItemsCodeName(ArrayList<String> codes)
+    {
+        Map<String, String> itemsCodeName = new HashMap<>();
+        if (codes == null || codes.isEmpty()) return itemsCodeName;
+
+        try
+        {
+            JSONObject body = new JSONObject();
+            body.put("item_codes", new JSONArray(codes));
+
+            String responseRaw = postRawWithResponse("/items_code_name", body.toString());
+            JSONObject jsonResponse = new JSONObject(responseRaw);
+
+            for (Iterator<String> it = jsonResponse.keys(); it.hasNext();)
+            {
+                String code = it.next();
+                String name = jsonResponse.getString(code);
+                itemsCodeName.put(code, name);
+            }
+        }
+        catch (Exception ignored) {}
+
+        return itemsCodeName;
+    }
+
+    private String postRawWithResponse(String endpoint, String body) throws IOException
+    {
+        Request request = new Request.Builder()
+                .url(SERVER_URL + endpoint)
+                .addHeader("FirebaseToken", firebaseToken)
+                .post(RequestBody.create(body, MediaType.parse("application/json")))
+                .build();
+
+        try (Response response = client.newCall(request).execute())
+        {
+            if (!response.isSuccessful()) throw new IOException("POST failed: " + response);
+
+            ResponseBody rb = response.body();
+            if (rb == null) throw new IOException("Empty response body");
+
+            return rb.string();
+        }
     }
 }

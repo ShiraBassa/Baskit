@@ -74,11 +74,7 @@ public class AddItemAlertDialog
 
                 TextView tvName = convertView.findViewById(R.id.tvItemName);
                 String name = getItem(position);
-
-                if (name != null)
-                {
-                    tvName.setText(name);
-                }
+                tvName.setText(name);
 
                 return convertView;
             }
@@ -136,13 +132,16 @@ public class AddItemAlertDialog
 
         adSearchItem.setOnItemClickListener((parent, view, position, id) ->
         {
-            selectedItem = new Item(allItemNames.get(position));
+            String clickedName = (String) parent.getItemAtPosition(position);
+            selectedItem = new Item(clickedName);
             selectedItem.setQuantity(1);
 
             adLoutQuantity.setVisibility(View.VISIBLE);
             adTvQuantity.setText("1");
             adBtnDown.setBackgroundColor(Color.LTGRAY);
         });
+
+        adSearchItem.setDropDownHeight(ViewGroup.LayoutParams.WRAP_CONTENT);
 
         adb = new AlertDialog.Builder(context);
         adb.setView(adLayout);
