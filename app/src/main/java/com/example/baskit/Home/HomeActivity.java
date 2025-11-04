@@ -81,7 +81,7 @@ public class HomeActivity extends AppCompatActivity
         btnCreateList = findViewById(R.id.btn_create_list);
         tvTitle = findViewById(R.id.tv_title);
 
-        tvTitle.setText("היי " + authHandler.getUser().getName());
+        tvTitle.setText("היי " + user.getName());
 
         dbHandler.listenToUserName(user, new FirebaseDBHandler.GetUserNameCallback()
         {

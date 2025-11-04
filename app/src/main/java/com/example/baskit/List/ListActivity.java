@@ -2,13 +2,11 @@ package com.example.baskit.List;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -26,7 +24,6 @@ import com.example.baskit.R;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class ListActivity extends AppCompatActivity
 {
@@ -289,7 +286,7 @@ public class ListActivity extends AppCompatActivity
         {
             categoryView = categoriesListInflater.inflate(R.layout.category_list_item_default, categoriesListContainer, false);
 
-            tv_name = categoryView.findViewById(R.id.tv_name);
+            tv_name = categoryView.findViewById(R.id.tv_section_name);
             TextView tv_count = categoryView.findViewById(R.id.tv_count);
 
             tv_name.setText(category.getName());
@@ -298,7 +295,7 @@ public class ListActivity extends AppCompatActivity
         else
         {
             categoryView = categoriesListInflater.inflate(R.layout.category_list_item_finished, categoriesListContainer, false);
-            tv_name = categoryView.findViewById(R.id.tv_name);
+            tv_name = categoryView.findViewById(R.id.tv_section_name);
             tv_name.setText(category.getName());
         }
 

@@ -6,22 +6,15 @@
     android:orientation="vertical"
     android:padding="10dp">
 
-    <ScrollView
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_supermarkets"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="20dp"
-        android:layout_marginBottom="10dp">
-
-        <LinearLayout
-            android:id="@+id/supermarkets_container"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:clipChildren="true"
-            android:clipToPadding="true"
-            android:gravity="center_horizontal|top"
-            android:maxHeight="400dp"
-            android:orientation="vertical" />
-
-    </ScrollView>
+        android:paddingHorizontal="10dp"
+        android:layout_marginBottom="10dp"
+        android:clipToPadding="false"
+        android:gravity="center_horizontal|top"
+        android:maxHeight="400dp"
+        android:scrollbars="vertical"/>
 
 </LinearLayout>

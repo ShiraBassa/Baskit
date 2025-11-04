@@ -3,6 +3,9 @@ package com.example.baskit.List;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
+import android.os.Handler;
+import android.os.Looper;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -16,12 +19,19 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.baskit.API.APIHandler;
 import com.example.baskit.MainComponents.Item;
 import com.example.baskit.R;
 
-import java.net.ConnectException;
+import org.json.JSONException;
+
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class AddItemAlertDialog
 {
@@ -32,12 +42,15 @@ public class AddItemAlertDialog
     AlertDialog.Builder adb;
     AlertDialog adAddItem;
     AutoCompleteTextView adSearchItem;
+    private RecyclerView recyclerSupermarkets;
+    private SupermarketsListAdapter supermarketsAdapter;
     Item selectedItem;
     Activity activity;
     ArrayList<String> allItemNames;
     Context context;
     AddItemInterface addItemInterface;
     ProgressBar adProgressBar;
+    APIHandler apiHandler = APIHandler.getInstance();
 
     public interface AddItemInterface
     {
@@ -60,6 +73,7 @@ public class AddItemAlertDialog
         adTvQuantity = adLayout.findViewById(R.id.tv_quantity);
         adLoutQuantity = adLayout.findViewById(R.id.lout_quantity);
         adProgressBar = adLayout.findViewById(R.id.progressBar);
+        recyclerSupermarkets = adLayout.findViewById(R.id.recycler_supermarkets);
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(context, R.layout.add_item_dropdown_item, allItemNames)
         {
@@ -121,8 +135,33 @@ public class AddItemAlertDialog
                     }
                 }
 
-                if (!match)
+                if (match)
                 {
+                    new Thread(() ->
+                    {
+                        Map<String, Map<String, Double>> data = null;
+
+                        try
+                        {
+                            data = apiHandler.getItemPricesByName(selectedItem.getName());
+                        }
+                        catch (IOException | JSONException ignored) {}
+
+                        supermarketsAdapter = SupermarketsListAdapter.fromSupermarketsWithPrices(data, activity);
+
+                        activity.runOnUiThread(() -> {
+                            new Handler(Looper.getMainLooper()).post(() -> {
+                                recyclerSupermarkets.setLayoutManager(new LinearLayoutManager(context));
+                                recyclerSupermarkets.setAdapter(supermarketsAdapter);
+                            });
+                        });
+                    }).start();
+                }
+                else
+                {
+                    recyclerSupermarkets.setAdapter(null);
+                    recyclerSupermarkets.setLayoutManager(null);
+
                     adSearchItem.setText("");
                     adLoutQuantity.setVisibility(View.INVISIBLE);
                     selectedItem = null;

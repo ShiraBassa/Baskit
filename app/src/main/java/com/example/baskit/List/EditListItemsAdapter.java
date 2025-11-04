@@ -1,7 +1,6 @@
 package com.example.baskit.List;
 
 import android.content.ClipData;
-import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,8 +14,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.baskit.MainComponents.Item;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;
-
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 
@@ -50,7 +47,7 @@ public class EditListItemsAdapter extends RecyclerView.Adapter<EditListItemsAdap
             tvName = itemView.findViewById(R.id.tv_item_name);
             layoutQuantity = itemView.findViewById(R.id.layout_quantity);
             btnCheckBox = itemView.findViewById(R.id.check_box);
-            tvSupermarket = itemView.findViewById(R.id.tv_supermarket);
+            tvSupermarket = itemView.findViewById(R.id.tv_supermarket_name);
             tvPrice = itemView.findViewById(R.id.tv_price);
         }
     }

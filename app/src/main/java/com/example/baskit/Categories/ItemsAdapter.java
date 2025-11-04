@@ -62,7 +62,7 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
             btnUp = itemView.findViewById(R.id.btn_up);
             btnDown = itemView.findViewById(R.id.btn_down);
             btnCheckBox = itemView.findViewById(R.id.check_box);
-            tvSupermarket = itemView.findViewById(R.id.tv_supermarket);
+            tvSupermarket = itemView.findViewById(R.id.tv_supermarket_name);
             tvPrice = itemView.findViewById(R.id.tv_price);
         }
     }

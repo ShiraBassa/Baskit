@@ -7,7 +7,7 @@
     android:layout_marginBottom="20dp">
 
     <TextView
-        android:id="@+id/tv_name"
+        android:id="@+id/tv_section_name"
         android:textColor="@color/checked"
         android:textSize="36sp"
         android:textStyle="bold"

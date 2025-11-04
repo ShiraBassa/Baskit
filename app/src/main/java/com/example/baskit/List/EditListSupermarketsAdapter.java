@@ -8,7 +8,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -17,8 +16,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.baskit.API.APIHandler;
-import com.example.baskit.Categories.ItemsListHandler;
-import com.example.baskit.Firebase.FirebaseDBHandler;
 import com.example.baskit.MainComponents.Item;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;
@@ -26,13 +23,11 @@ import com.example.baskit.R;
 import org.json.JSONException;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.function.DoubleUnaryOperator;
 
 public class EditListSupermarketsAdapter extends RecyclerView.Adapter<EditListSupermarketsAdapter.ViewHolder>
 {
@@ -163,7 +158,7 @@ public class EditListSupermarketsAdapter extends RecyclerView.Adapter<EditListSu
         {
             super(itemView);
 
-            tvSupermarket = itemView.findViewById(R.id.tv_supermarket);
+            tvSupermarket = itemView.findViewById(R.id.tv_supermarket_name);
             btnExpand = itemView.findViewById(R.id.btn_expand);
             recyclerItems = itemView.findViewById(R.id.recycler_items);
         }
