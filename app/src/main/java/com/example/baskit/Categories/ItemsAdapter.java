@@ -1,5 +1,7 @@
 package com.example.baskit.Categories;
 
+import android.app.Activity;
+import android.content.Context;
 import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,6 +10,7 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.baskit.List.ItemViewAlertDialog;
 import com.example.baskit.MainComponents.Item;
 import com.example.baskit.R;
 
@@ -31,16 +34,21 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
     protected ArrayList<Item> items;
     protected OnItemClickListener listener;
     protected UpperClassFunctions upperClassFns;
+    private Activity activity;
+    private Context context;
 
     public ItemsAdapter(ArrayList<Item> items,
                         OnItemClickListener listener,
                         UpperClassFunctions upperClassFns,
-                        ItemsListHandler.EmptyCategoryCase emptyCategory)
+                        ItemsListHandler.EmptyCategoryCase emptyCategory,
+                        Activity activity, Context context)
     {
         this.emptyCategory = emptyCategory;
         this.items = new ArrayList<>();
         this.listener = listener;
         this.upperClassFns = upperClassFns;
+        this.activity = activity;
+        this.context = context;
 
         for (Item item : items)
         {
@@ -52,6 +60,7 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
     {
         protected TextView tvName, tvQuantity, tvSupermarket, tvPrice;
         protected ImageButton btnUp, btnDown, btnCheckBox;
+        protected ItemViewAlertDialog itemViewAlertDialog;
 
         public ViewHolder(View itemView)
         {
@@ -80,6 +89,7 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
     public void onBindViewHolder(ViewHolder holder, int position)
     {
         Item item = items.get(position);
+        holder.itemViewAlertDialog = new ItemViewAlertDialog(activity, context, upperClassFns, item, true);
 
         holder.tvName.setText(item.getName());
 
@@ -154,6 +164,15 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
         {
             listener.notifyCheckBox(item);
             upperClassFns.updateItemCategory(item);
+        });
+
+        holder.tvName.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                holder.itemViewAlertDialog.show();
+            }
         });
     }
 

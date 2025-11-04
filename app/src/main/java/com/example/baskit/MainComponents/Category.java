@@ -118,11 +118,6 @@ public class Category
         return finished;
     }
 
-    public int getSize()
-    {
-        return this.items.size();
-    }
-
     public java.util.List<Item> getItemsSorted()
     {
         java.util.List<Item> sortedItems = new ArrayList<>(items.values());

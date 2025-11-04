@@ -1,5 +1,7 @@
 package com.example.baskit.List;
 
+import android.app.Activity;
+import android.content.Context;
 import android.graphics.Color;
 import android.os.Handler;
 import android.os.Looper;
@@ -11,11 +13,14 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.view.menu.ActionMenuItem;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.baskit.API.APIHandler;
+import com.example.baskit.Categories.ItemsAdapter;
 import com.example.baskit.MainComponents.Item;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;
@@ -37,14 +42,20 @@ public class EditListSupermarketsAdapter extends RecyclerView.Adapter<EditListSu
     private Map<Supermarket, Boolean> expandedStates;
     private APIHandler apiHandler = APIHandler.getInstance();
     private Map<String, Map<String, Map<String, Double>>> itemsPrices = new HashMap<>();
+    Activity activity;
+    Context context;
+    ItemsAdapter.UpperClassFunctions upperClassFns;
 
-    public EditListSupermarketsAdapter(ArrayList<Item> items)
+    public EditListSupermarketsAdapter(ArrayList<Item> items, Activity activity, Context context, ItemsAdapter.UpperClassFunctions upperClassFns)
     {
         itemsBySupermarket = new HashMap<>();
         supermarkets = new ArrayList<>();
         expandedStates = new HashMap<>();
 
         this.items = items;
+        this.activity = activity;
+        this.context = context;
+        this.upperClassFns = upperClassFns;
 
         new Thread(() ->
         {
@@ -181,7 +192,7 @@ public class EditListSupermarketsAdapter extends RecyclerView.Adapter<EditListSu
         holder.tvSupermarket.setText(supermarket.toString());
 
         ArrayList<Item> items = itemsBySupermarket.get(supermarket);
-        EditListItemsAdapter itemsAdapter = new EditListItemsAdapter(items, supermarket, listener);
+        EditListItemsAdapter itemsAdapter = new EditListItemsAdapter(items, supermarket, listener, activity, context, upperClassFns);
 
         holder.recyclerItems.setLayoutManager(new LinearLayoutManager(holder.itemView.getContext()));
         holder.recyclerItems.setAdapter(itemsAdapter);
@@ -203,12 +214,7 @@ public class EditListSupermarketsAdapter extends RecyclerView.Adapter<EditListSu
             public boolean onMove(@NonNull RecyclerView recyclerView,
                                   @NonNull RecyclerView.ViewHolder viewHolder,
                                   @NonNull RecyclerView.ViewHolder target) {
-                // Handle moving items inside the same supermarket
-                int fromPos = viewHolder.getAdapterPosition();
-                int toPos = target.getAdapterPosition();
-                Collections.swap(items, fromPos, toPos);
-                recyclerView.getAdapter().notifyItemMoved(fromPos, toPos);
-                return true;
+                return false;
             }
 
             @Override
@@ -218,29 +224,47 @@ public class EditListSupermarketsAdapter extends RecyclerView.Adapter<EditListSu
         });
         itemTouchHelper.attachToRecyclerView(holder.recyclerItems);
 
-        holder.itemView.setOnDragListener((v, event) -> {
-            switch (event.getAction()) {
+        holder.itemView.setOnDragListener((v, event) ->
+        {
+            switch (event.getAction())
+            {
+                case DragEvent.ACTION_DRAG_STARTED:
+                    new Handler(Looper.getMainLooper()).post(() ->
+                    {
+                        for (Supermarket sm : expandedStates.keySet())
+                        {
+                            expandedStates.put(sm, false);
+                        }
+                        notifyDataSetChanged();
+                    });
+
+                    break;
+
                 case DragEvent.ACTION_DRAG_ENTERED:
-                    holder.itemView.setBackgroundColor(Color.parseColor("#22FFFFFF")); // optional: highlight
+                    holder.itemView.setBackgroundColor(ContextCompat.getColor(context, R.color.gray));
                     break;
+
                 case DragEvent.ACTION_DRAG_EXITED:
-                    holder.itemView.setBackgroundColor(Color.TRANSPARENT); // remove highlight
+                    holder.itemView.setBackgroundColor(Color.TRANSPARENT);
                     break;
+
                 case DragEvent.ACTION_DROP:
                     Item draggedItem = (Item) event.getLocalState();
                     Supermarket targetSupermarket = supermarket;
-
                     Supermarket fromSupermarket = draggedItem.getSupermarket();
+
                     if (!fromSupermarket.equals(targetSupermarket)) {
                         listener.onItemMoved(draggedItem, fromSupermarket, targetSupermarket);
                     }
 
                     holder.itemView.setBackgroundColor(Color.TRANSPARENT);
                     break;
+
                 case DragEvent.ACTION_DRAG_ENDED:
                     holder.itemView.setBackgroundColor(Color.TRANSPARENT);
                     break;
             }
+
             return true;
         });
     }

@@ -71,7 +71,21 @@ public class EditListAlertDialog
         adBtnCancel.setOnClickListener(v -> finish());
         adBtnSave.setOnClickListener(v -> finish(true));
 
-        supermarketsAdapter = new EditListSupermarketsAdapter(items);
+        supermarketsAdapter = new EditListSupermarketsAdapter(items, activity, context, new ItemsAdapter.UpperClassFunctions()
+        {
+            @Override
+            public void updateItemCategory(Item item)
+            {
+                dbHandler.updateItem(list, item);
+            }
+
+            @Override
+            public void removeItemCategory(Item item)
+            {
+                dbHandler.removeItem(list, item);
+            }
+        });
+
         this.recyclerSupermarkets.setLayoutManager(new LinearLayoutManager(this.context));
         this.recyclerSupermarkets.setAdapter(supermarketsAdapter);
     }

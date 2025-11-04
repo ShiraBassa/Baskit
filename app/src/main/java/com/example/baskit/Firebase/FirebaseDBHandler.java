@@ -324,6 +324,24 @@ public class FirebaseDBHandler
                 .setValue(item);
     }
 
+    public void updateItem(List list, Item item)
+    {
+        updateItem(list, getCategory(list, item), item);
+    }
+
+    public Category getCategory(List list, Item item)
+    {
+        for (Category category : list.getCategories().values())
+        {
+            if (category.getItems().containsValue(item))
+            {
+                return category;
+            }
+        }
+
+        return null;
+    }
+
     public void updateItems(List list, ArrayList<Item> items)
     {
         if (items == null) return;
@@ -349,6 +367,11 @@ public class FirebaseDBHandler
                 .child("items")
                 .child(item.getId())
                 .removeValue();
+    }
+
+    public void removeItem(List list, Item item)
+    {
+        removeItem(list, getCategory(list, item), item);
     }
 
     public void removeCategory(List list, Category category)

@@ -9,36 +9,17 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
+        android:gravity="center_vertical|start"
         android:layout_marginBottom="10dp"
         android:orientation="horizontal">
 
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1">
-
-            <ImageButton
-                android:id="@+id/btn_cancel"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:scaleType="fitCenter"
-                android:background="@null"
-                android:src="@drawable/ic_cancel" />
-
-        </LinearLayout>
-
-        <ProgressBar
-            android:id="@+id/progressBar"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:visibility="invisible"
-            style="?android:attr/progressBarStyleLarge"/>
-
-        <Space
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"/>
+        <ImageButton
+            android:id="@+id/btn_cancel"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:scaleType="fitCenter"
+            android:background="@null"
+            android:src="@drawable/ic_cancel" />
 
     </LinearLayout>
 
@@ -50,28 +31,27 @@
         android:orientation="vertical"
         android:layout_marginBottom="30dp">
 
-        <AutoCompleteTextView
-            android:id="@+id/searchItem"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="חפש פריט"
-            android:textColor="#000000"
-            android:textSize="28sp"
-            android:layout_marginHorizontal="10dp"
+            android:orientation="horizontal"
             android:layout_marginBottom="30dp"
-            android:dropDownHeight="200dp"
-            android:dropDownVerticalOffset="5dp"
-            android:completionThreshold="1"
-            android:inputType="text"
-            android:focusable="true"
-            android:clickable="true"
-            android:ellipsize="none"
-            android:textDirection="rtl"
-            android:singleLine="true"
-            android:gravity="start"
-            android:scrollHorizontally="false" />
+            android:gravity="center_vertical|end">
+
+            <TextView
+                android:id="@+id/tv_item_name"
+                android:textColor="#000000"
+                android:textSize="32sp"
+                android:textStyle="bold"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="פריט "
+                />
+
+        </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/lout_quantity_whole"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
@@ -159,7 +139,7 @@
         android:orientation="vertical">
 
         <Button
-            android:id="@+id/btn_add_item"
+            android:id="@+id/btn_save"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="15dp"
@@ -168,7 +148,7 @@
             android:textSize="40sp"
             android:backgroundTint="@color/gray"
             android:textStyle="bold"
-            android:text="הוסף"/>
+            android:text="שמור"/>
 
     </LinearLayout>
 

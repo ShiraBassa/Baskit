@@ -116,6 +116,7 @@ public class CategoryActivity extends AppCompatActivity
                         CategoryActivity.this, new ArrayList<>(category.getItems().values()), list);
 
                 itemsListHandler = new ItemsListHandler(CategoryActivity.this,
+                        CategoryActivity.this,
                         findViewById(R.id.recycler_unchecked),
                         findViewById(R.id.recycler_checked),
                         CategoryActivity.this::finishedCategory,

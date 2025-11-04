@@ -1,6 +1,8 @@
 package com.example.baskit.List;
 
+import android.app.Activity;
 import android.content.ClipData;
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,8 +11,10 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.view.menu.ActionMenuItem;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.baskit.Categories.ItemsAdapter;
 import com.example.baskit.MainComponents.Item;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;
@@ -22,16 +26,23 @@ public class EditListItemsAdapter extends RecyclerView.Adapter<EditListItemsAdap
     protected ArrayList<Item> items;
     private Supermarket supermarket;
     private OnItemMovedListener listener;
+    Activity activity;
+    Context context;
+    ItemsAdapter.UpperClassFunctions upperClassFns;
 
     public interface OnItemMovedListener
     {
         void onItemMoved(Item item, Supermarket from, Supermarket to);
     }
 
-    public EditListItemsAdapter(ArrayList<Item> items, Supermarket supermarket, OnItemMovedListener listener) {
+    public EditListItemsAdapter(ArrayList<Item> items, Supermarket supermarket, OnItemMovedListener listener,
+                                Activity activity, Context context, ItemsAdapter.UpperClassFunctions upperClassFns) {
         this.items = items;
         this.supermarket = supermarket;
         this.listener = listener;
+        this.activity = activity;
+        this.context = context;
+        this.upperClassFns = upperClassFns;
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder
@@ -39,6 +50,7 @@ public class EditListItemsAdapter extends RecyclerView.Adapter<EditListItemsAdap
         LinearLayout layoutQuantity;
         protected TextView tvName, tvSupermarket, tvPrice;
         protected ImageButton btnCheckBox;
+        protected ItemViewAlertDialog itemViewAlertDialog;
 
         public ViewHolder(View itemView)
         {
@@ -66,6 +78,7 @@ public class EditListItemsAdapter extends RecyclerView.Adapter<EditListItemsAdap
     public void onBindViewHolder(@NonNull ViewHolder holder, int position)
     {
         Item item = items.get(position);
+        holder.itemViewAlertDialog = new ItemViewAlertDialog(activity, context, upperClassFns, item, false);
 
         holder.tvName.setText(item.getName());
         holder.layoutQuantity.setVisibility(View.GONE);
@@ -82,6 +95,15 @@ public class EditListItemsAdapter extends RecyclerView.Adapter<EditListItemsAdap
             View.DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(v);
             v.startDragAndDrop(data, shadowBuilder, item, 0);
             return true;
+        });
+
+        holder.tvName.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                holder.itemViewAlertDialog.show();
+            }
         });
     }
 

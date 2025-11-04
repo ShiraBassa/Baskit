@@ -1,5 +1,7 @@
 package com.example.baskit.Categories;
 
+import android.app.Activity;
+import android.content.Context;
 import android.view.View;
 import androidx.core.content.ContextCompat;
 
@@ -13,9 +15,11 @@ public class ItemsAdapterChecked extends ItemsAdapter
     public ItemsAdapterChecked(ArrayList<Item> items,
                                OnItemClickListener listener,
                                UpperClassFunctions upperClassFns,
-                               ItemsListHandler.EmptyCategoryCase emptyCategory)
+                               ItemsListHandler.EmptyCategoryCase emptyCategory,
+                               Activity activity,
+                               Context context)
     {
-        super(items, listener, upperClassFns, emptyCategory);
+        super(items, listener, upperClassFns, emptyCategory, activity, context);
     }
 
     @Override

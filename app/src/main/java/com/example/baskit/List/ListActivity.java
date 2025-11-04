@@ -92,6 +92,7 @@ public class ListActivity extends AppCompatActivity
         categoriesListInflater = LayoutInflater.from(this);
 
         setButton();
+
         addItemAlertDialog = new AddItemAlertDialog(ListActivity.this,
                 ListActivity.this,
                 new ArrayList<>(itemsCodeNames.values()),

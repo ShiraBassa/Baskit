@@ -1,5 +1,6 @@
 package com.example.baskit.Categories;
 
+import android.app.Activity;
 import android.content.Context;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -54,14 +55,17 @@ public class ItemsListHandler implements ItemsAdapter.UpperClassFunctions
     private List list;
     private Category category;
     FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
+    Activity activity;
 
-    public ItemsListHandler(Context context,
+    public ItemsListHandler(Activity activity,
+                            Context context,
                             RecyclerView recyclerUnchecked,
                             RecyclerView recyclerChecked,
                             EmptyCategoryCase emptyCategory,
                             List list,
                             Category category)
     {
+        this.activity = activity;
         this.list = list;
         this.category = category;
         this.emptyCategory = emptyCategory;
@@ -84,8 +88,10 @@ public class ItemsListHandler implements ItemsAdapter.UpperClassFunctions
             }
         }
 
-        uncheckedAdapter = new ItemsAdapter(new ArrayList<>(uncheckedItems.values()), this::notifyCheckBox, this, this::ifFinishedCategory);
-        checkedAdapter = new ItemsAdapterChecked(new ArrayList<>(checkedItems.values()), this::notifyCheckBox, this, this::ifFinishedCategory);
+        uncheckedAdapter = new ItemsAdapter(new ArrayList<>(uncheckedItems.values()), this::notifyCheckBox, this, this::ifFinishedCategory,
+               activity, context);
+        checkedAdapter = new ItemsAdapterChecked(new ArrayList<>(checkedItems.values()), this::notifyCheckBox, this, this::ifFinishedCategory,
+                activity, context);
 
         this.recyclerUnchecked.setLayoutManager(new LinearLayoutManager(this.context));
         this.recyclerUnchecked.setAdapter(uncheckedAdapter);
