@@ -43,12 +43,14 @@ public class ListActivity extends AppCompatActivity
     Map<String, View> categoriesViews;
     AddItemAlertDialog addItemAlertDialog;
     Button btnAddItem;
+    ImageButton btnEditList;
     AIHandler aiHandler = AIHandler.getInstance();
     APIHandler apiHandler = APIHandler.getInstance();
 
     Map<String, Map<String, Map<String, Double>>> allItems;
     Map<String, String> itemsCodeNames;
     private boolean itemsLoaded = false;
+    EditListAlertDialog editListAlertDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -85,6 +87,7 @@ public class ListActivity extends AppCompatActivity
         btnBack = findViewById(R.id.btn_back);
         btnFinished = findViewById(R.id.btn_finished);
         btnAddItem = findViewById(R.id.btn_add_item);
+        btnEditList = findViewById(R.id.btn_edit);
 
         listId = getIntent().getStringExtra("listId");
 
@@ -123,6 +126,9 @@ public class ListActivity extends AppCompatActivity
                 {
                     categories = new HashMap<>();
                 }
+
+                editListAlertDialog = new EditListAlertDialog(ListActivity.this,
+                        ListActivity.this, list.getAllItems(), list);
 
                 setCategoriesInflater();
 
@@ -201,6 +207,15 @@ public class ListActivity extends AppCompatActivity
             public void onClick(View view)
             {
                 addItemAlertDialog.show();
+            }
+        });
+
+        btnEditList.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View view)
+            {
+                editListAlertDialog.show();
             }
         });
     }

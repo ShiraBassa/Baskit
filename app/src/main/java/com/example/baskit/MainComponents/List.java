@@ -80,4 +80,16 @@ public class List
     {
         categories.remove(categoryName);
     }
+
+    public ArrayList<Item> getAllItems()
+    {
+        ArrayList<Item> items = new ArrayList<>();
+
+        for (Category category : categories.values())
+        {
+            items.addAll(category.getItems().values());
+        }
+
+        return items;
+    }
 }
