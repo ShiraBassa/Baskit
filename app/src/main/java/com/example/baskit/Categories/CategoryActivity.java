@@ -24,6 +24,7 @@ import com.example.baskit.AI.AIHandler;
 import com.example.baskit.API.APIHandler;
 import com.example.baskit.Firebase.FirebaseDBHandler;
 import com.example.baskit.List.AddItemAlertDialog;
+import com.example.baskit.List.EditListAlertDialog;
 import com.example.baskit.List.ListActivity;
 import com.example.baskit.MainComponents.Category;
 import com.example.baskit.MainComponents.Item;
@@ -43,10 +44,11 @@ public class CategoryActivity extends AppCompatActivity
 
     ItemsListHandler itemsListHandler;
     TextView tvListName, tvCategoryName;
-    ImageButton btnFinished, btnBack;
+    ImageButton btnFinished, btnBack, btnEditList;
     Button btnAddItem;
     FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
     AddItemAlertDialog addItemAlertDialog;
+    EditListAlertDialog editListAlertDialog;
     AIHandler aiHandler = AIHandler.getInstance();
     APIHandler apiHandler = APIHandler.getInstance();
 
@@ -83,6 +85,7 @@ public class CategoryActivity extends AppCompatActivity
     {
         btnFinished = findViewById(R.id.btn_finished);
         btnBack = findViewById(R.id.btn_back);
+        btnEditList = findViewById(R.id.btn_edit);
         tvListName = findViewById(R.id.tv_list_name);
         tvCategoryName = findViewById(R.id.tv_category_name);
         btnAddItem = findViewById(R.id.btn_add_item);
@@ -103,10 +106,14 @@ public class CategoryActivity extends AppCompatActivity
                 tvCategoryName.setVisibility(View.VISIBLE);
 
                 setButtons();
+
                 addItemAlertDialog = new AddItemAlertDialog(CategoryActivity.this,
                         CategoryActivity.this,
                         new ArrayList<>(itemsCodeNames.values()),
                         CategoryActivity.this::addItem);
+
+                editListAlertDialog = new EditListAlertDialog(CategoryActivity.this,
+                        CategoryActivity.this, new ArrayList<>(category.getItems().values()), list);
 
                 itemsListHandler = new ItemsListHandler(CategoryActivity.this,
                         findViewById(R.id.recycler_unchecked),
@@ -170,6 +177,15 @@ public class CategoryActivity extends AppCompatActivity
             public void onClick(View view)
             {
                 addItemAlertDialog.show();
+            }
+        });
+
+        btnEditList.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View view)
+            {
+                editListAlertDialog.show();
             }
         });
     }

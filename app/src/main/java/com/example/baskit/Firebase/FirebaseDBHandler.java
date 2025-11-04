@@ -15,9 +15,11 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.ValueEventListener;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 public class FirebaseDBHandler
 {
@@ -320,6 +322,23 @@ public class FirebaseDBHandler
                 .child("items")
                 .child(item.getId())
                 .setValue(item);
+    }
+
+    public void updateItems(List list, ArrayList<Item> items)
+    {
+        if (items == null) return;
+
+        for (Item item : items)
+        {
+            for (Category category : list.getCategories().values())
+            {
+                if (category.getItems().containsKey(item.getId()))
+                {
+                    updateItem(list, category, item);
+                    break;
+                }
+            }
+        }
     }
 
     public void removeItem(List list, Category category, Item item)

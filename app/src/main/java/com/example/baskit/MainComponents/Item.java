@@ -1,9 +1,11 @@
 package com.example.baskit.MainComponents;
 
+import androidx.annotation.NonNull;
+
 import java.util.HashMap;
 import java.util.Map;
 
-public class Item
+public class Item implements Cloneable
 {
     private final String ID_PREFIX = "item_";
 
@@ -113,7 +115,8 @@ public class Item
         return supermarket;
     }
 
-    public void setSupermarket(Supermarket supermarket) {
+    public void setSupermarket(Supermarket supermarket)
+    {
         this.supermarket = supermarket;
     }
 
@@ -130,5 +133,21 @@ public class Item
         result.put("checked", isChecked());
         // Add any other fields your Item has
         return result;
+    }
+
+    @NonNull
+    @Override
+    public Item clone()
+    {
+        try
+        {
+            Item clone = (Item) super.clone();
+            clone.supermarket = this.supermarket != null ? this.supermarket.clone() : null;
+            return clone;
+        }
+        catch (CloneNotSupportedException e)
+        {
+            throw new AssertionError();
+        }
     }
 }

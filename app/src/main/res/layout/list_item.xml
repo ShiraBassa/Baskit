@@ -9,8 +9,8 @@
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="10dp"
         android:gravity="center_vertical|start"
+        android:layout_marginEnd="8dp"
         android:orientation="horizontal">
 
         <LinearLayout
@@ -34,7 +34,7 @@
                 android:layout_height="wrap_content"
                 android:text="כמות"
                 android:textColor="#000000"
-                android:textSize="24sp"
+                android:textSize="22sp"
                 android:textStyle="bold"/>
 
             <ImageButton
@@ -51,7 +51,6 @@
             android:id="@+id/tv_price"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingStart="8dp"
             android:text="מחיר"
             android:textColor="#000000"
             android:textSize="24sp"
@@ -65,30 +64,37 @@
         android:layout_weight="1"
         android:clipChildren="true"
         android:clipToPadding="true"
-        android:gravity="center_vertical|end"
+        android:gravity="top|end"
         android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/tv_supermarket"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingEnd="5dp"
-            android:singleLine="true"
-            android:text="(סופר, סניף)"
-            android:textColor="#000000"
-            android:textSize="18sp"
-            android:visibility="gone" />
+            android:orientation="vertical"
+            android:layout_marginEnd="5dp"
+            android:gravity="end|center_vertical">
 
-        <TextView
-            android:id="@+id/tv_item_name"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:singleLine="true"
-            android:text="מוצר"
-            android:textColor="#000000"
-            android:textSize="20sp"
-            android:textStyle="bold" />
+            <TextView
+                android:id="@+id/tv_item_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:text="מוצר"
+                android:textColor="#000000"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_supermarket"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:text="(סופר, סניף)"
+                android:textColor="#000000"
+                android:textSize="14sp"
+                android:visibility="gone"/>
+
+        </LinearLayout>
 
         <ImageButton
             android:id="@+id/check_box"

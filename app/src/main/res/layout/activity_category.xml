@@ -15,41 +15,37 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
+        android:paddingTop="25dp"
         android:layout_marginBottom="10dp"
         android:orientation="vertical"
-        android:paddingHorizontal="15dp"
-        android:paddingTop="30dp"
-        android:paddingBottom="10dp">
+        android:paddingHorizontal="15dp">
 
         <LinearLayout
             android:id="@+id/layout_top_bar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="20dp"
-            android:orientation="horizontal"
+            android:orientation="vertical"
             android:gravity="center_horizontal|top">
 
-            <ImageButton
-                android:id="@+id/btn_back"
-                android:layout_width="45dp"
-                android:layout_height="45dp"
-                android:layout_marginEnd="10dp"
-                android:scaleType="fitCenter"
-                android:background="@null"
-                android:src="@drawable/ic_back" />
-
             <LinearLayout
-                android:id="@+id/layout_titles"
-                android:layout_width="0dp"
-                android:layout_weight="1"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:gravity="center_vertical|end">
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:id="@+id/btn_back"
+                    android:layout_width="45dp"
+                    android:layout_height="45dp"
+                    android:layout_marginEnd="10dp"
+                    android:scaleType="fitCenter"
+                    android:background="@null"
+                    android:src="@drawable/ic_back" />
 
                 <TextView
                     android:id="@+id/tv_list_name"
                     android:textColor="#000000"
-                    android:textSize="32sp"
+                    android:textSize="28sp"
                     android:textStyle="bold"
                     android:visibility="invisible"
                     android:layout_height="wrap_content"
@@ -57,18 +53,18 @@
                     android:text="רשימה"
                     />
 
-                <TextView
-                    android:id="@+id/tv_category_name"
-                    android:textColor="#000000"
-                    android:textSize="48sp"
-                    android:textStyle="bold"
-                    android:visibility="invisible"
-                    android:layout_height="wrap_content"
-                    android:layout_width="match_parent"
-                    android:text="קטגוריה"
-                    />
+            </LinearLayout>-
 
-            </LinearLayout>
+            <TextView
+                android:id="@+id/tv_category_name"
+                android:textColor="#000000"
+                android:textSize="40sp"
+                android:textStyle="bold"
+                android:visibility="invisible"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:text="קטגוריה"
+                />
 
         </LinearLayout>
 
@@ -86,7 +82,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="2"
-                android:paddingHorizontal="10dp"
                 android:clipToPadding="false"
                 android:scrollbars="vertical" />
 
@@ -103,7 +98,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
-                android:paddingHorizontal="10dp"
                 android:clipToPadding="false"
                 android:scrollbars="vertical" />
 

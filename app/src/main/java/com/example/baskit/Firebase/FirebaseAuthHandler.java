@@ -357,7 +357,7 @@ public class FirebaseAuthHandler
             Map<String, ArrayList<String>> all_branches = apiHandler.getBranches();
 
             Map<String, ArrayList<String>> branches = new HashMap<>();
-            branches.put(stores.get(0), new ArrayList<>(java.util.List.of(all_branches.get(stores.get(0)).get(0))));
+            branches.put(stores.get(0), new ArrayList<>(java.util.List.of(all_branches.get(stores.get(0)).get(0), all_branches.get(stores.get(0)).get(1))));
             apiHandler.setBranches(branches);
         }
         catch (IOException | JSONException ignored) {}

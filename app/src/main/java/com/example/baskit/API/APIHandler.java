@@ -1,6 +1,7 @@
 package com.example.baskit.API;
 
 import com.example.baskit.Firebase.FirebaseAuthHandler;
+import com.example.baskit.MainComponents.Supermarket;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -25,7 +26,7 @@ public class APIHandler
     private static Map<String, Map<String, Map<String, Double>>> allItems;
     private final OkHttpClient client = new OkHttpClient();
 
-    public APIHandler() {}
+    private APIHandler() {}
 
     public static APIHandler getInstance()
     {
@@ -61,16 +62,22 @@ public class APIHandler
                     .post(RequestBody.create(body.toString(), MediaType.parse("application/json")))
                     .build();
 
-            Response response = client.newCall(request).execute();
-            if (!response.isSuccessful())
-                throw new IOException("Unexpected code " + response);
+            try (Response response = client.newCall(request).execute())
+            {
+                if (!response.isSuccessful())
+                {
+                    return;
+                }
 
-            JSONObject obj = new JSONObject(response.body().string());
-
-            response.close();
+                ResponseBody responseBody = response.body();
+            }
         }
-        catch (Exception e) {}
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
     }
+
 
     private String getRaw(String endpoint) throws IOException
     {
@@ -81,7 +88,16 @@ public class APIHandler
 
         try (Response response = client.newCall(request).execute())
         {
-            return response.body().string();
+            if (!response.isSuccessful()) {
+                throw new IOException("GET failed: " + response.code() + " " + response.message());
+            }
+
+            ResponseBody responseBody = response.body();
+            if (responseBody == null) {
+                throw new IOException("Empty response body for GET " + endpoint);
+            }
+
+            return responseBody.string();
         }
     }
 
@@ -166,6 +182,47 @@ public class APIHandler
         }
 
         return branchesMap;
+    }
+
+    public Map<String, ArrayList<String>> getChoices() throws IOException, JSONException
+    {
+        String branchesRaw = getRaw("/choices");
+        JSONObject branchesJson = new JSONObject(branchesRaw);
+        Map<String, ArrayList<String>> branchesMap = new HashMap<>();
+
+        for (Iterator<String> it = branchesJson.keys(); it.hasNext();)
+        {
+            String store = it.next();
+            JSONArray arr = branchesJson.getJSONArray(store);
+            ArrayList<String> branchList = new ArrayList<>();
+
+            for (int i = 0; i < arr.length(); i++)
+            {
+                branchList.add(arr.getString(i));
+            }
+            branchesMap.put(store, branchList);
+        }
+
+        return branchesMap;
+    }
+
+    public ArrayList<Supermarket> getSupermarkets() throws JSONException, IOException
+    {
+        ArrayList<Supermarket> supermarkets = new ArrayList<>();
+        Map<String, ArrayList<String>> branches = getChoices();
+
+        for (Map.Entry<String, ArrayList<String>> supermarketEntry : branches.entrySet())
+        {
+            String supermarketName = supermarketEntry.getKey();
+
+            for (String section : supermarketEntry.getValue())
+            {
+                Supermarket supermarket = new Supermarket(supermarketName, section);
+                supermarkets.add(supermarket);
+            }
+        }
+
+        return supermarkets;
     }
 
     public void setBranches(Map<String, ArrayList<String>> branches) throws IOException, JSONException
