@@ -38,7 +38,7 @@ public class ListActivity extends AppCompatActivity
     LayoutInflater categoriesListInflater;
     FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
     Map<String, View> categoriesViews;
-    AddItemAlertDialog addItemAlertDialog;
+    AddItemFragment addItemFragment;
     Button btnAddItem;
     ImageButton btnEditList;
     AIHandler aiHandler = AIHandler.getInstance();
@@ -101,7 +101,7 @@ public class ListActivity extends AppCompatActivity
 
         setButton();
 
-        addItemAlertDialog = new AddItemAlertDialog(ListActivity.this,
+        addItemFragment = new AddItemFragment(ListActivity.this,
                 ListActivity.this,
                 new ArrayList<>(itemsCodeNames.values()),
                 ListActivity.this::addItem);
@@ -221,7 +221,7 @@ public class ListActivity extends AppCompatActivity
             @Override
             public void onClick(View view)
             {
-                addItemAlertDialog.show();
+                addItemFragment.show(getSupportFragmentManager(), "AddItemFragment");
             }
         });
 
@@ -336,7 +336,7 @@ public class ListActivity extends AppCompatActivity
 
     public void addItem(Item item)
     {
-        addItemAlertDialog.startProgressBar();
+        addItemFragment.startProgressBar();
         item.updateId(getKeyByValue(itemsCodeNames, item.getName()));
 
         aiHandler.getCategoryName(item, ListActivity.this, categoryName -> {
@@ -352,8 +352,8 @@ public class ListActivity extends AppCompatActivity
                 {
                     runOnUiThread(() ->
                     {
-                        addItemAlertDialog.endProgressBar();
-                        addItemAlertDialog.finish();
+                        addItemFragment.endProgressBar();
+                        addItemFragment.dismiss();
                     });
                 }
 
@@ -362,8 +362,8 @@ public class ListActivity extends AppCompatActivity
                 {
                     runOnUiThread(() ->
                     {
-                        addItemAlertDialog.endProgressBar();
-                        addItemAlertDialog.finish();
+                        addItemFragment.endProgressBar();
+                        addItemFragment.dismiss();
                         Toast.makeText(ListActivity.this, "Failed to add item: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     });
                 }

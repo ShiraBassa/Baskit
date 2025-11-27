@@ -13,6 +13,7 @@ import com.example.baskit.AI.AIHandler;
 import com.example.baskit.API.APIHandler;
 import com.example.baskit.Firebase.FirebaseDBHandler;
 import com.example.baskit.List.AddItemAlertDialog;
+import com.example.baskit.List.AddItemFragment;
 import com.example.baskit.List.EditListFragment;
 import com.example.baskit.MainComponents.Category;
 import com.example.baskit.MainComponents.Item;
@@ -33,7 +34,7 @@ public class CategoryActivity extends AppCompatActivity
     ImageButton btnFinished, btnBack, btnEditList;
     Button btnAddItem;
     FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
-    AddItemAlertDialog addItemAlertDialog;
+    AddItemFragment addItemFragment;
     EditListFragment editListFragment;
     AIHandler aiHandler = AIHandler.getInstance();
     APIHandler apiHandler = APIHandler.getInstance();
@@ -106,7 +107,7 @@ public class CategoryActivity extends AppCompatActivity
 
                 setButtons();
 
-                addItemAlertDialog = new AddItemAlertDialog(CategoryActivity.this,
+                addItemFragment = new AddItemFragment(CategoryActivity.this,
                         CategoryActivity.this,
                         new ArrayList<>(itemsCodeNames.values()),
                         CategoryActivity.this::addItem);
@@ -186,7 +187,7 @@ public class CategoryActivity extends AppCompatActivity
             @Override
             public void onClick(View view)
             {
-                addItemAlertDialog.show();
+                addItemFragment.show(getSupportFragmentManager(), "AddItemFragment");
             }
         });
 
@@ -208,7 +209,7 @@ public class CategoryActivity extends AppCompatActivity
 
     public void addItem(Item item)
     {
-        addItemAlertDialog.startProgressBar();
+        addItemFragment.startProgressBar();
         item.updateId(getKeyByValue(itemsCodeNames, item.getName()));
 
         aiHandler.getCategoryName(item, CategoryActivity.this, categoryName ->
@@ -227,8 +228,8 @@ public class CategoryActivity extends AppCompatActivity
                     {
                         runOnUiThread(() ->
                         {
-                            addItemAlertDialog.endProgressBar();
-                            addItemAlertDialog.finish();
+                            addItemFragment.endProgressBar();
+                            addItemFragment.dismiss();
                         });
                     }
 
@@ -237,8 +238,8 @@ public class CategoryActivity extends AppCompatActivity
                     {
                         runOnUiThread(() ->
                         {
-                            addItemAlertDialog.endProgressBar();
-                            addItemAlertDialog.finish();
+                            addItemFragment.endProgressBar();
+                            addItemFragment.dismiss();
                             Toast.makeText(CategoryActivity.this, "שגיאה בניסיון להוסיף את הפריט", Toast.LENGTH_SHORT).show();
                         });
                     }
@@ -246,8 +247,8 @@ public class CategoryActivity extends AppCompatActivity
             }
             else
             {
-                addItemAlertDialog.endProgressBar();
-                addItemAlertDialog.finish();
+                addItemFragment.endProgressBar();
+                addItemFragment.dismiss();
                 Toast.makeText(CategoryActivity.this, "לא בקטגוריה המתאימה (" + categoryName + ")", Toast.LENGTH_SHORT).show();
             }
         });
