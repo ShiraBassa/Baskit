@@ -108,7 +108,8 @@
                 android:textStyle="bold"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
-                android:text="סך הכל: 100" />
+                android:visibility="invisible"
+                android:text="סך הכל: _" />
 
         </LinearLayout>
 

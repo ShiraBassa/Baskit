@@ -27,7 +27,7 @@ import java.util.Map;
 
 public class ListActivity extends AppCompatActivity
 {
-    TextView tvListName;
+    TextView tvListName, tvTotal;
     ImageButton btnBack, btnFinished;
 
     List list;
@@ -48,6 +48,7 @@ public class ListActivity extends AppCompatActivity
     Map<String, String> itemsCodeNames;
     private boolean itemsLoaded = false;
     EditListAlertDialog editListAlertDialog;
+    private boolean initialized = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -73,8 +74,14 @@ public class ListActivity extends AppCompatActivity
     {
         super.onResume();
 
-        if (itemsLoaded) {
+        if (itemsLoaded)
+        {
             resumeInit();  // only run if the background thread has completed
+
+            if (!initialized)
+            {
+                showTotal();
+            }
         }
     }
 
@@ -85,6 +92,7 @@ public class ListActivity extends AppCompatActivity
         btnFinished = findViewById(R.id.btn_finished);
         btnAddItem = findViewById(R.id.btn_add_item);
         btnEditList = findViewById(R.id.btn_edit);
+        tvTotal = findViewById(R.id.tv_total);
 
         listId = getIntent().getStringExtra("listId");
 
@@ -153,15 +161,24 @@ public class ListActivity extends AppCompatActivity
                         }
 
                         list = newList;
+                        showTotal();
+                        tvTotal.setVisibility(View.VISIBLE);
+                        initialized = false;
                     }
 
                     @Override
-                    public void onError(String error) {}
+                    public void onError(String error)
+                    {
+                        initialized = false;
+                    }
                 });
             }
 
             @Override
-            public void onError(String error) {}
+            public void onError(String error)
+            {
+                initialized = false;
+            }
         });
     }
 
@@ -364,5 +381,10 @@ public class ListActivity extends AppCompatActivity
             }
         }
         return null;
+    }
+
+    private void showTotal()
+    {
+        tvTotal.setText("סך הכל: " + Double.toString(list.getTotal()));
     }
 }

@@ -43,7 +43,7 @@ public class CategoryActivity extends AppCompatActivity
     Category category;
 
     ItemsListHandler itemsListHandler;
-    TextView tvListName, tvCategoryName;
+    TextView tvListName, tvCategoryName, tvTotal;
     ImageButton btnFinished, btnBack, btnEditList;
     Button btnAddItem;
     FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
@@ -54,6 +54,7 @@ public class CategoryActivity extends AppCompatActivity
 
     Map<String, Map<String, Map<String, Double>>> allItems;
     Map<String, String> itemsCodeNames;
+    boolean initialized = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -81,6 +82,17 @@ public class CategoryActivity extends AppCompatActivity
         }
     }
 
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
+
+        if (!initialized)
+        {
+            showTotal();
+        }
+    }
+
     private void init()
     {
         btnFinished = findViewById(R.id.btn_finished);
@@ -89,6 +101,7 @@ public class CategoryActivity extends AppCompatActivity
         tvListName = findViewById(R.id.tv_list_name);
         tvCategoryName = findViewById(R.id.tv_category_name);
         btnAddItem = findViewById(R.id.btn_add_item);
+        tvTotal = findViewById(R.id.tv_total);
 
         dbHandler.getList(getIntent().getStringExtra("listId"), new FirebaseDBHandler.GetListCallback()
         {
@@ -129,15 +142,25 @@ public class CategoryActivity extends AppCompatActivity
                     public void onCategoryFetched(Category newCategory)
                     {
                         itemsListHandler.update(newCategory);
+                        category = newCategory;
+                        showTotal();
+                        tvTotal.setVisibility(View.VISIBLE);
+                        initialized = false;
                     }
 
                     @Override
-                    public void onError(String error) {}
+                    public void onError(String error)
+                    {
+                        initialized = false;
+                    }
                 });
             }
 
             @Override
-            public void onError(String error) {}
+            public void onError(String error)
+            {
+                initialized = false;
+            }
         });
     }
 
@@ -254,5 +277,10 @@ public class CategoryActivity extends AppCompatActivity
             }
         }
         return null;
+    }
+
+    private void showTotal()
+    {
+        tvTotal.setText("סך הכל: " + Double.toString(category.getTotal()));
     }
 }

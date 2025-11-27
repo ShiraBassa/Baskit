@@ -124,4 +124,16 @@ public class Category
         sortedItems.sort(Comparator.comparing(Item::getName, String.CASE_INSENSITIVE_ORDER));
         return sortedItems;
     }
+
+    public double getTotal()
+    {
+        double sum = 0;
+
+        for (Item item : this.items.values())
+        {
+            sum += Math.round(item.getPrice() * item.getQuantity() * 100.0) / 100.0;
+        }
+
+        return sum;
+    }
 }

@@ -92,4 +92,16 @@ public class List
 
         return items;
     }
+
+    public double getTotal()
+    {
+        double sum = 0;
+
+        for (Category category : categories.values())
+        {
+            sum += category.getTotal();
+        }
+
+        return sum;
+    }
 }
