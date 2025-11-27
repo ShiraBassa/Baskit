@@ -1,39 +1,25 @@
 package com.example.baskit.Categories;
 
-import android.graphics.Color;
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.baskit.AI.AIHandler;
 import com.example.baskit.API.APIHandler;
 import com.example.baskit.Firebase.FirebaseDBHandler;
 import com.example.baskit.List.AddItemAlertDialog;
-import com.example.baskit.List.EditListAlertDialog;
-import com.example.baskit.List.ListActivity;
+import com.example.baskit.List.EditListFragment;
 import com.example.baskit.MainComponents.Category;
 import com.example.baskit.MainComponents.Item;
 import com.example.baskit.MainComponents.List;
 import com.example.baskit.R;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 
 public class CategoryActivity extends AppCompatActivity
@@ -48,7 +34,7 @@ public class CategoryActivity extends AppCompatActivity
     Button btnAddItem;
     FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
     AddItemAlertDialog addItemAlertDialog;
-    EditListAlertDialog editListAlertDialog;
+    EditListFragment editListFragment;
     AIHandler aiHandler = AIHandler.getInstance();
     APIHandler apiHandler = APIHandler.getInstance();
 
@@ -125,7 +111,7 @@ public class CategoryActivity extends AppCompatActivity
                         new ArrayList<>(itemsCodeNames.values()),
                         CategoryActivity.this::addItem);
 
-                editListAlertDialog = new EditListAlertDialog(CategoryActivity.this,
+                editListFragment = new EditListFragment(CategoryActivity.this,
                         CategoryActivity.this, new ArrayList<>(category.getItems().values()), list);
 
                 itemsListHandler = new ItemsListHandler(CategoryActivity.this,
@@ -209,7 +195,7 @@ public class CategoryActivity extends AppCompatActivity
             @Override
             public void onClick(View view)
             {
-                editListAlertDialog.show();
+                editListFragment.show(getSupportFragmentManager(), "EditListFragment");
             }
         });
     }

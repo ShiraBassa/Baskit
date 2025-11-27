@@ -47,7 +47,7 @@ public class ListActivity extends AppCompatActivity
     Map<String, Map<String, Map<String, Double>>> allItems;
     Map<String, String> itemsCodeNames;
     private boolean itemsLoaded = false;
-    EditListAlertDialog editListAlertDialog;
+    EditListFragment editListFragment;
     private boolean initialized = true;
 
     @Override
@@ -133,8 +133,8 @@ public class ListActivity extends AppCompatActivity
                     categories = new HashMap<>();
                 }
 
-                editListAlertDialog = new EditListAlertDialog(ListActivity.this,
-                        ListActivity.this, list.getAllItems(), list);
+                editListFragment = new EditListFragment(
+                        ListActivity.this, ListActivity.this, list.getAllItems(), list);
 
                 setCategoriesInflater();
 
@@ -230,7 +230,7 @@ public class ListActivity extends AppCompatActivity
             @Override
             public void onClick(View view)
             {
-                editListAlertDialog.show();
+                editListFragment.show(getSupportFragmentManager(), "EditListFragment");
             }
         });
     }
