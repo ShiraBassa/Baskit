@@ -48,14 +48,27 @@ public class EditListSupermarketsAdapter extends RecyclerView.Adapter<EditListSu
 
     public EditListSupermarketsAdapter(ArrayList<Item> items, Activity activity, Context context, ItemsAdapter.UpperClassFunctions upperClassFns)
     {
-        itemsBySupermarket = new HashMap<>();
-        supermarkets = new ArrayList<>();
-        expandedStates = new HashMap<>();
-
         this.items = items;
         this.activity = activity;
         this.context = context;
         this.upperClassFns = upperClassFns;
+
+        restart(items);
+    }
+
+    public void restart(ArrayList<Item> items)
+    {
+        if (supermarkets != null && !supermarkets.isEmpty())
+        {
+            int oldSize = supermarkets.size();
+            notifyItemRangeRemoved(0, oldSize);
+        }
+
+        this.items = items;
+        itemsBySupermarket = new HashMap<>();
+        supermarkets = new ArrayList<>();
+        expandedStates = new HashMap<>();
+        itemsPrices = new HashMap<>();
 
         new Thread(() ->
         {
@@ -281,7 +294,8 @@ public class EditListSupermarketsAdapter extends RecyclerView.Adapter<EditListSu
     }
 
     private final EditListItemsAdapter.OnItemMovedListener listener = (item, from, to) -> {
-        if (itemsBySupermarket.get(from) != null) {
+        if (itemsBySupermarket.get(from) != null)
+        {
             itemsBySupermarket.get(from).remove(item);
         }
 

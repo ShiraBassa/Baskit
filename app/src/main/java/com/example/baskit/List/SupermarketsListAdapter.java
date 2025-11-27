@@ -25,6 +25,16 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
     private Map<String, ArrayList<String>> supermarkets = null;
     private Map<String, Map<String, Double>> supermarketsWithPrices = null;
     private Activity activity;
+    private OnSupermarketClickListener OnSupermarketClickListener = null;
+
+    public void setOnSupermarketClickListener(OnSupermarketClickListener listener) {
+        this.OnSupermarketClickListener = listener;
+    }
+
+    public interface OnSupermarketClickListener
+    {
+        void onSupermarketClick(Supermarket supermarket);
+    }
 
     private SupermarketsListAdapter() { }
 
@@ -35,10 +45,11 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
         return adapter;
     }
 
-    public static SupermarketsListAdapter fromSupermarketsWithPrices(Map<String, Map<String, Double>> supermarketsWithPrices, Activity activity) {
+    public static SupermarketsListAdapter fromSupermarketsWithPrices(Map<String, Map<String, Double>> supermarketsWithPrices, Activity activity, OnSupermarketClickListener onSupermarketClickListener) {
         SupermarketsListAdapter adapter = new SupermarketsListAdapter();
         adapter.setSupermarketsWithPrices(supermarketsWithPrices);
         adapter.setActivity(activity);
+        adapter.setOnSupermarketClickListener(onSupermarketClickListener);
         return adapter;
     }
 
@@ -58,7 +69,7 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
         this.supermarkets = supermarkets;
     }
 
-    public void setSupermarketsWithPrices(Map<String, Map<String, Double>> supermarketsWithPrices) {
+    private void setSupermarketsWithPrices(Map<String, Map<String, Double>> supermarketsWithPrices) {
         this.supermarketsWithPrices = supermarketsWithPrices;
     }
 
@@ -97,13 +108,30 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
         {
             supermarketNames = new ArrayList<>(supermarketsWithPrices.keySet());
             supermarketName = supermarketNames.get(position);
-            sectionsAdapter = SectionsListAdapter.fromSectionsWithPrices(supermarketsWithPrices.get(supermarketName));
+            sectionsAdapter = SectionsListAdapter.fromSectionsWithPrices(supermarketsWithPrices.get(supermarketName), new SectionsListAdapter.OnSectionClickListener()
+            {
+                @Override
+                public void onSectionClick(String sectionName)
+                {
+                    OnSupermarketClickListener.onSupermarketClick(new Supermarket(supermarketName, sectionName));
+                }
+            });
         }
         else
         {
             supermarketNames = new ArrayList<>(supermarkets.keySet());
             supermarketName = supermarketNames.get(position);
-            sectionsAdapter = SectionsListAdapter.fromSections(supermarkets.get(supermarketName));
+            sectionsAdapter = SectionsListAdapter.fromSections(supermarkets.get(supermarketName), new SectionsListAdapter.OnSectionClickListener()
+            {
+                @Override
+                public void onSectionClick(String sectionName)
+                {
+                    if (OnSupermarketClickListener != null)
+                    {
+                        OnSupermarketClickListener.onSupermarketClick(new Supermarket(supermarketName, sectionName));
+                    }
+                }
+            });
         }
 
         holder.tvSupermarketName.setText(supermarketName);

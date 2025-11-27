@@ -77,23 +77,44 @@ public class EditListItemsAdapter extends RecyclerView.Adapter<EditListItemsAdap
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position)
     {
-        Item item = items.get(position);
-        holder.itemViewAlertDialog = new ItemViewAlertDialog(activity, context, upperClassFns, item, false);
+        Item ogItem = items.get(position);
+        Supermarket from = ogItem.getSupermarket();
 
-        holder.tvName.setText(item.getName());
+        holder.itemViewAlertDialog = new ItemViewAlertDialog(activity, context, new ItemsAdapter.UpperClassFunctions() {
+            @Override
+            public void updateItemCategory(Item item)
+            {
+                Supermarket to = item.getSupermarket();
+
+                if (from != to)
+                {
+                    listener.onItemMoved(item, from, to);
+                }
+
+                upperClassFns.updateItemCategory(item);
+            }
+
+            @Override
+            public void removeItemCategory(Item item)
+            {
+                upperClassFns.removeItemCategory(item);
+            }
+        }, ogItem, false);
+
+        holder.tvName.setText(ogItem.getName());
         holder.layoutQuantity.setVisibility(View.GONE);
         holder.tvSupermarket.setVisibility(View.GONE);
 
-        if (item.hasSupermarket())
+        if (ogItem.hasSupermarket())
         {
-            holder.tvPrice.setText(Double.toString(item.getPrice()));
+            holder.tvPrice.setText(Double.toString(ogItem.getPrice()));
             holder.tvPrice.setVisibility(View.VISIBLE);
         }
 
         holder.itemView.setOnLongClickListener(v -> {
             ClipData data = ClipData.newPlainText("", "");
             View.DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(v);
-            v.startDragAndDrop(data, shadowBuilder, item, 0);
+            v.startDragAndDrop(data, shadowBuilder, ogItem, 0);
             return true;
         });
 

@@ -18,18 +18,40 @@ public class SectionsListAdapter extends RecyclerView.Adapter<SectionsListAdapte
 {
     ArrayList<String> sections = null;
     Map<String, Double> sectionsWithPrices = null;
+    private int selectedPosition = RecyclerView.NO_POSITION;
+    private OnSectionClickListener listener = null;
 
-    private SectionsListAdapter() { }
+    public interface OnSectionClickListener
+    {
+        void onSectionClick(String sectionName);
+    }
 
-    public static SectionsListAdapter fromSections(ArrayList<String> sections) {
+    private void setOnSectionClickListener(OnSectionClickListener listener)
+    {
+        this.listener = listener;
+    }
+
+    private SectionsListAdapter() {}
+
+    public static SectionsListAdapter fromSections(ArrayList<String> sections)
+    {
         SectionsListAdapter adapter = new SectionsListAdapter();
         adapter.setSections(sections);
         return adapter;
     }
 
-    public static SectionsListAdapter fromSectionsWithPrices(Map<String, Double> sectionsWithPrices) {
+    public static SectionsListAdapter fromSections(ArrayList<String> sections, OnSectionClickListener onSupermarketClickListener)
+    {
+        SectionsListAdapter adapter = new SectionsListAdapter();
+        adapter.setSections(sections);
+        adapter.setOnSectionClickListener(onSupermarketClickListener);
+        return adapter;
+    }
+
+    public static SectionsListAdapter fromSectionsWithPrices(Map<String, Double> sectionsWithPrices, OnSectionClickListener onSectionClickListener) {
         SectionsListAdapter adapter = new SectionsListAdapter();
         adapter.setSectionsWithPrices(sectionsWithPrices);
+        adapter.setOnSectionClickListener(onSectionClickListener);
         return adapter;
     }
 
@@ -67,19 +89,39 @@ public class SectionsListAdapter extends RecyclerView.Adapter<SectionsListAdapte
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position)
     {
+        String sectionName;
+
         if (sectionsWithPrices != null)
         {
             ArrayList<String> sectionNames = new ArrayList<>(sectionsWithPrices.keySet());
-            String sectionName = sectionNames.get(position);
+            sectionName = sectionNames.get(position);
 
-            holder.tvSectionName.setText(sectionName);
             holder.tvItemPrice.setText(Double.toString(sectionsWithPrices.get(sectionName)));
             holder.tvItemPrice.setVisibility(View.VISIBLE);
+
+            holder.itemView.setSelected(selectedPosition == position);
+            holder.itemView.setBackgroundColor(selectedPosition == position ? 0xFFE0E0E0 : 0x00000000);
+
+            holder.itemView.setOnClickListener(v ->
+            {
+                int previousSelected = selectedPosition;
+
+                selectedPosition = position;
+                notifyItemChanged(previousSelected);
+                notifyItemChanged(selectedPosition);
+
+                if (listener != null)
+                {
+                    listener.onSectionClick(sectionName);
+                }
+            });
         }
         else
         {
-            holder.tvSectionName.setText(sections.get(position));
+            sectionName = sections.get(position);
         }
+
+        holder.tvSectionName.setText(sectionName);
     }
 
     @Override

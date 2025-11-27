@@ -24,6 +24,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.baskit.API.APIHandler;
 import com.example.baskit.MainComponents.Item;
+import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;
 
 import org.json.JSONException;
@@ -147,7 +148,17 @@ public class AddItemAlertDialog
                         }
                         catch (IOException | JSONException ignored) {}
 
-                        supermarketsAdapter = SupermarketsListAdapter.fromSupermarketsWithPrices(data, activity);
+                        Map<String, Map<String, Double>> finalData = data;
+
+                        supermarketsAdapter = SupermarketsListAdapter.fromSupermarketsWithPrices(finalData, activity, new SupermarketsListAdapter.OnSupermarketClickListener()
+                        {
+                            @Override
+                            public void onSupermarketClick(Supermarket supermarket)
+                            {
+                                selectedItem.setSupermarket(supermarket);
+                                selectedItem.setPrice(finalData.get(supermarket.getSupermarket()).get(supermarket.getSection()));
+                            }
+                        });
 
                         activity.runOnUiThread(() -> {
                             new Handler(Looper.getMainLooper()).post(() -> {
