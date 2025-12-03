@@ -113,7 +113,8 @@ public class CategoryActivity extends AppCompatActivity
                         CategoryActivity.this::addItem);
 
                 editListFragment = new EditListFragment(CategoryActivity.this,
-                        CategoryActivity.this, new ArrayList<>(category.getItems().values()), list);
+                        CategoryActivity.this, new ArrayList<>(category.getItems().values()), list,
+                        list.getName() + ", " + category.getName() + "");
 
                 itemsListHandler = new ItemsListHandler(CategoryActivity.this,
                         CategoryActivity.this,
@@ -268,6 +269,6 @@ public class CategoryActivity extends AppCompatActivity
 
     private void showTotal()
     {
-        tvTotal.setText("סך הכל: " + Double.toString(category.getTotal()));
+        tvTotal.setText("סך הכל: " + Double.toString(category.getTotal()) + " ש״ח");
     }
 }

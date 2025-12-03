@@ -30,7 +30,7 @@ public class EditListFragment extends DialogFragment
     private Activity activity;
     private Context context;
     private View fragmentView;
-    private TextView tvTotal;
+    private TextView tvTotal, tvName;
     private ImageButton btnCancel;
     private Button btnSave;
 
@@ -40,8 +40,9 @@ public class EditListFragment extends DialogFragment
 
     private RecyclerView recyclerSupermarkets;
     private EditListSupermarketsAdapter supermarketsAdapter;
+    private String title;
 
-    public EditListFragment(Activity activity, Context context, ArrayList<Item> items, List list)
+    public EditListFragment(Activity activity, Context context, ArrayList<Item> items, List list, String title)
     {
         this.activity = activity;
         this.context = context;
@@ -54,6 +55,7 @@ public class EditListFragment extends DialogFragment
         }
 
         this.list = list;
+        this.title = title;
     }
 
     @Nullable
@@ -69,9 +71,12 @@ public class EditListFragment extends DialogFragment
         btnCancel = fragmentView.findViewById(R.id.btn_cancel);
         btnSave = fragmentView.findViewById(R.id.btn_save);
         tvTotal = fragmentView.findViewById(R.id.tv_total);
+        tvName = fragmentView.findViewById(R.id.tv_title);
 
         showTotal();
         tvTotal.setVisibility(View.VISIBLE);
+        tvName.setText(title);
+        tvName.setVisibility(View.VISIBLE);
 
         recyclerSupermarkets = fragmentView.findViewById(R.id.recycler_supermarkets);
 

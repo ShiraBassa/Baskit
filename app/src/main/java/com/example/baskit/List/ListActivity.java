@@ -134,7 +134,8 @@ public class ListActivity extends AppCompatActivity
                 }
 
                 editListFragment = new EditListFragment(
-                        ListActivity.this, ListActivity.this, list.getAllItems(), list);
+                        ListActivity.this, ListActivity.this, list.getAllItems(), list,
+                        list.getName());
 
                 setCategoriesInflater();
 
@@ -385,6 +386,6 @@ public class ListActivity extends AppCompatActivity
 
     private void showTotal()
     {
-        tvTotal.setText("סך הכל: " + Double.toString(list.getTotal()));
+        tvTotal.setText("סך הכל: " + Double.toString(list.getTotal()) + " ש״ח");
     }
 }
