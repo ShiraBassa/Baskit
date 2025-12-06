@@ -75,6 +75,11 @@ public class User
 
     public void addList(String listId)
     {
+        if (listIDs == null)
+        {
+            listIDs = new ArrayList<>();
+        }
+
         listIDs.add(listId);
     }
 

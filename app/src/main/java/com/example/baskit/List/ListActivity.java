@@ -40,7 +40,7 @@ public class ListActivity extends AppCompatActivity
     Map<String, View> categoriesViews;
     AddItemFragment addItemFragment;
     Button btnAddItem;
-    ImageButton btnEditList;
+    ImageButton btnEditList, btnShare;
     AIHandler aiHandler = AIHandler.getInstance();
     APIHandler apiHandler = APIHandler.getInstance();
 
@@ -49,6 +49,7 @@ public class ListActivity extends AppCompatActivity
     private boolean itemsLoaded = false;
     EditListFragment editListFragment;
     private boolean initialized = true;
+    ShareListAlertDialog shareAlertDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -93,6 +94,7 @@ public class ListActivity extends AppCompatActivity
         btnAddItem = findViewById(R.id.btn_add_item);
         btnEditList = findViewById(R.id.btn_edit);
         tvTotal = findViewById(R.id.tv_total);
+        btnShare = findViewById(R.id.btn_share);
 
         listId = getIntent().getStringExtra("listId");
 
@@ -136,6 +138,8 @@ public class ListActivity extends AppCompatActivity
                 editListFragment = new EditListFragment(
                         ListActivity.this, ListActivity.this, list.getAllItems(), list,
                         list.getName());
+
+                shareAlertDialog = new ShareListAlertDialog(list, ListActivity.this, ListActivity.this);
 
                 setCategoriesInflater();
 
@@ -232,6 +236,15 @@ public class ListActivity extends AppCompatActivity
             public void onClick(View view)
             {
                 editListFragment.show(getSupportFragmentManager(), "EditListFragment");
+            }
+        });
+
+        btnShare.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                shareAlertDialog.show();
             }
         });
     }

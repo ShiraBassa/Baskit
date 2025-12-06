@@ -79,7 +79,7 @@ public class AddItemFragment extends DialogFragment
             @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState)
     {
-        fragmentView = inflater.inflate(R.layout.alert_dialog_add_item, container, false);
+        fragmentView = inflater.inflate(R.layout.fragment_add_item, container, false);
 
         btnCancel = fragmentView.findViewById(R.id.btn_cancel);
         btnAddItem = fragmentView.findViewById(R.id.btn_add_item);

@@ -8,8 +8,9 @@ public class List
 {
     private String id = "";
     private String name = "";
-    private ArrayList<String> userIDs;
+    private ArrayList<String> userIDs = new ArrayList<>();
     private Map<String, Category> categories = new HashMap<>();
+    private ArrayList<Request> requests = new ArrayList<>();
 
     public List() {}
 
@@ -46,6 +47,11 @@ public class List
 
     public void setUserIDs(ArrayList<String> userIDs) {
         this.userIDs = userIDs;
+    }
+
+    public void addUser(String userID)
+    {
+        this.userIDs.add(userID);
     }
 
     public Map<String, Category> getCategories() {
@@ -103,5 +109,25 @@ public class List
         }
 
         return sum;
+    }
+
+    public ArrayList<Request> getRequests()
+    {
+        return requests;
+    }
+
+    public void setRequests(ArrayList<Request> requests)
+    {
+        this.requests = requests;
+    }
+
+    public void addRequest(Request request)
+    {
+        this.requests.add(request);
+    }
+
+    public void removeRequest(Request request)
+    {
+        this.requests.remove(request);
     }
 }

@@ -12,7 +12,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.baskit.AI.AIHandler;
 import com.example.baskit.API.APIHandler;
 import com.example.baskit.Firebase.FirebaseDBHandler;
-import com.example.baskit.List.AddItemAlertDialog;
 import com.example.baskit.List.AddItemFragment;
 import com.example.baskit.List.EditListFragment;
 import com.example.baskit.MainComponents.Category;

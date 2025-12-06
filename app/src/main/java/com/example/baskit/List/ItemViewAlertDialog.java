@@ -6,17 +6,11 @@ import android.graphics.Color;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -30,7 +24,6 @@ import com.example.baskit.R;
 import org.json.JSONException;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Map;
 
 public class ItemViewAlertDialog
@@ -40,7 +33,7 @@ public class ItemViewAlertDialog
     ImageButton adBtnCancel, adBtnUp, adBtnDown;
     LinearLayout adLayout, adLoutQuantity, adLoutQuantityWhole;
     AlertDialog.Builder adb;
-    AlertDialog adAddItem;
+    AlertDialog adItemView;
     private RecyclerView recyclerSupermarkets;
     private SupermarketsListAdapter supermarketsAdapter;
     protected ItemsAdapter.UpperClassFunctions upperClassFns;
@@ -102,13 +95,13 @@ public class ItemViewAlertDialog
 
         adb = new AlertDialog.Builder(context);
         adb.setView(adLayout);
-        adAddItem = adb.create();
+        adItemView = adb.create();
 
-        adBtnCancel.setOnClickListener(v -> adAddItem.dismiss());
+        adBtnCancel.setOnClickListener(v -> adItemView.dismiss());
         adBtnSave.setOnClickListener(v ->
         {
             upperClassFns.updateItemCategory(item);
-            adAddItem.dismiss();
+            adItemView.dismiss();
         });
 
         adBtnUp.setOnClickListener(new View.OnClickListener()
@@ -161,6 +154,6 @@ public class ItemViewAlertDialog
             adLoutQuantityWhole.setVisibility(View.GONE);
         }
 
-        adAddItem.show();
+        adItemView.show();
     }
 }

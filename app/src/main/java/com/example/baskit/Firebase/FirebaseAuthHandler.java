@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class FirebaseAuthHandler
 {
@@ -92,6 +93,23 @@ public class FirebaseAuthHandler
                                     {
                                         String idToken = taskTwo.getResult().getToken();
                                         user.setToken(idToken);
+
+                                        ArrayList<String> listIDs = user.getListIDs();
+
+                                        if (listIDs != null)
+                                        {
+                                            listIDs.removeIf(Objects::isNull);
+                                            user.setListIDs(listIDs);
+
+                                            if (listIDs.isEmpty())
+                                            {
+                                                refUsers.child(user.getId()).child("listIDs").removeValue();
+                                            }
+                                            else
+                                            {
+                                                refUsers.child(user.getId()).child("listIDs").setValue(listIDs);
+                                            }
+                                        }
 
                                         new Thread(() ->
                                         {

@@ -23,6 +23,7 @@ import com.example.baskit.Firebase.FirebaseAuthHandler;
 import com.example.baskit.Firebase.FirebaseDBHandler;
 import com.example.baskit.MainComponents.List;
 import com.example.baskit.List.ListActivity;
+import com.example.baskit.MainComponents.Request;
 import com.example.baskit.MainComponents.User;
 import com.example.baskit.R;
 
@@ -35,7 +36,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import okhttp3.MediaType;
-import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
@@ -97,7 +97,7 @@ public class HomeActivity extends AppCompatActivity
 
         listsRecycler = findViewById(R.id.lists_grid);
 
-        dbHandler.getListNames(user.getListIDs(), new FirebaseDBHandler.GetListNamesCallback()
+        dbHandler.getListNames(user, new FirebaseDBHandler.GetListNamesCallback()
         {
             @Override
             public void onNamesFetched(ArrayList<String> listNames)
@@ -148,14 +148,27 @@ public class HomeActivity extends AppCompatActivity
             @Override
             public void onItemLongClick(int position)
             {
-                dbHandler.removeList(user.getListIDs().get(position), user);
+                String listId = user.getListIDs().get(position);
+
+                dbHandler.getList(listId, new FirebaseDBHandler.GetListCallback()
+                {
+                    @Override
+                    public void onListFetched(List newList)
+                    {
+                        dbHandler.removeList(newList);
+                        user.removeList(listId);
+                    }
+
+                    @Override
+                    public void onError(String error) {}
+                });
             }
         });
 
         listsRecycler.setAdapter(listsGridAdapter);
         listsRecycler.setVisibility(View.VISIBLE);
 
-        dbHandler.listenToListNames(user.getId(), new FirebaseDBHandler.GetListNamesListenerCallback()
+        dbHandler.listenToListNames(user, new FirebaseDBHandler.GetListNamesListenerCallback()
         {
             @Override
             public void onInfoFetched(ArrayList<String> listNames)
@@ -192,6 +205,9 @@ public class HomeActivity extends AppCompatActivity
     private void createList(String name)
     {
         List list = new List(dbHandler.getUniqueId(), name);
+        list.addUser(user.getId());
+        list.addRequest(new Request("EkASFY8PaOQ9cDaCXlPNWEADNKC2", "משתמש 2"));
+
         dbHandler.addList(list, user);
     }
 }
