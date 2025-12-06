@@ -109,7 +109,7 @@ public class ShareListAlertDialog
     {
         String listId = list.getId();
         String invitationCode = Base64.encodeToString(listId.getBytes(StandardCharsets.UTF_8), Base64.NO_WRAP);
-        String link = "baskit://joinList?inviteCode=" + invitationCode;
+        String link = "https://www.baskit.com/joinlist?inviteCode=" + invitationCode;
 
         return link;
     }

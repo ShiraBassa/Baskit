@@ -101,9 +101,10 @@ public class HomeActivity extends AppCompatActivity
         {
             String scheme = data.getScheme();
             String host = data.getHost();
+            String path = data.getPath();
             inviteCode = data.getQueryParameter("inviteCode");
 
-            if ("baskit".equals(scheme) && "joinList".equals(host) && inviteCode != null)
+            if ("https".equals(scheme) && "www.baskit.com".equals(host) && "/joinlist".equals(path) && inviteCode != null)
             {
                 Intent loginIntent = new Intent(this, LoginActivity.class);
                 loginIntent.putExtra("fromLink", true);
