@@ -10,6 +10,8 @@ import com.example.baskit.MainComponents.Item;
 import com.example.baskit.MainComponents.List;
 import com.example.baskit.MainComponents.Request;
 import com.example.baskit.MainComponents.User;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -552,5 +554,53 @@ public class FirebaseDBHandler
                 @Override
                 public void onCancelled(@NonNull DatabaseError error) {}
             });
+    }
+
+    public void sendJoinRequest(String listID, User user)
+    {
+        refLists.child(listID).child("requests").get().addOnCompleteListener(task ->
+        {
+            if (!task.isSuccessful())
+            {
+                return;
+            }
+
+            DataSnapshot snapshot = task.getResult();
+            final ArrayList<Request> requests = snapshot.getValue(
+                    new GenericTypeIndicator<ArrayList<Request>>() {}
+            );
+
+            final ArrayList<Request> safeRequests = (requests != null) ? requests : new ArrayList<>();
+
+            String userID = user.getId();
+
+            for (Request r : safeRequests)
+            {
+                if (r.getUserID().equals(userID))
+                {
+                    return;
+                }
+            }
+
+            refLists.child(listID).child("userIDs").get().addOnCompleteListener(taskTwo ->
+            {
+                if (!taskTwo.isSuccessful())
+                {
+                    return;
+                }
+
+                ArrayList<String> userIDs = taskTwo.getResult().getValue(
+                        new GenericTypeIndicator<ArrayList<String>>() {}
+                );
+
+                if (userIDs != null && userIDs.contains(userID))
+                {
+                    return;
+                }
+
+                safeRequests.add(new Request(user));
+                refLists.child(listID).child("requests").setValue(safeRequests);
+            });
+        });
     }
 }

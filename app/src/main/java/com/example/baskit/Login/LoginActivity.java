@@ -1,8 +1,10 @@
 package com.example.baskit.Login;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.content.LocusId;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -158,7 +160,18 @@ public class LoginActivity extends AppCompatActivity implements FirebaseAuthHand
         if (!homeStarted)
         {
             homeStarted = true;
-            startActivity(new Intent(LoginActivity.this, HomeActivity.class));
+            boolean fromLink = getIntent().getBooleanExtra("fromLink", false);
+
+            if (fromLink)
+            {
+                Intent intent = new Intent();
+                setResult(Activity.RESULT_OK, intent);
+            }
+            else
+            {
+                startActivity(new Intent(LoginActivity.this, HomeActivity.class));
+            }
+
             finish();
         }
     }

@@ -13,6 +13,12 @@ public class Request
         this.username = username;
     }
 
+    public Request(User user)
+    {
+        this.userID = user.getId();
+        this.username = user.getName();
+    }
+
     public String getUserID() {
         return userID;
     }

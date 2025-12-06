@@ -22,10 +22,19 @@
             android:exported="false" />
         <activity
             android:name=".Home.SettingsActivity"
-            android:exported="false" />
+            android:exported="false" >
+        </activity>
         <activity
             android:name=".Home.HomeActivity"
-            android:exported="false" />
+            android:exported="true" >
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="baskit" android:host="joinList" />
+            </intent-filter>
+        </activity>
         <activity
             android:name=".Login.LoginActivity"
             android:exported="true">

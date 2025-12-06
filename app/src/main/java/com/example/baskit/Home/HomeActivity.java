@@ -2,8 +2,11 @@ package com.example.baskit.Home;
 
 import static com.example.baskit.Firebase.FBRefs.refUsers;
 
+import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -11,7 +14,12 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.DefaultItemAnimator;
@@ -21,6 +29,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.baskit.API.APIHandler;
 import com.example.baskit.Firebase.FirebaseAuthHandler;
 import com.example.baskit.Firebase.FirebaseDBHandler;
+import com.example.baskit.Login.LoginActivity;
 import com.example.baskit.MainComponents.List;
 import com.example.baskit.List.ListActivity;
 import com.example.baskit.MainComponents.Request;
@@ -31,6 +40,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -54,17 +64,66 @@ public class HomeActivity extends AppCompatActivity
     FirebaseAuthHandler authHandler;
     FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
     User user;
+    String inviteCode;
+
+    private ActivityResultLauncher<Intent> loginLauncher =
+            registerForActivityResult(
+                    new ActivityResultContracts.StartActivityForResult(),
+                    new ActivityResultCallback<ActivityResult>()
+                    {
+                        @Override
+                        public void onActivityResult(ActivityResult result)
+                        {
+                            if (result.getResultCode() == Activity.RESULT_OK)
+                            {
+                                user = authHandler.getUser();
+
+                                setContentView(R.layout.activity_home);
+                                init();
+
+                                sendJoinRequest(inviteCode);
+                            }
+                        }
+                    }
+            );
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_home);
 
         authHandler = FirebaseAuthHandler.getInstance();
-        user = authHandler.getUser();
+        Intent intent = getIntent();
+        Uri data = intent.getData();
 
-        init();
+        if (data != null)
+        {
+            String scheme = data.getScheme();
+            String host = data.getHost();
+            inviteCode = data.getQueryParameter("inviteCode");
+
+            if ("baskit".equals(scheme) && "joinList".equals(host) && inviteCode != null)
+            {
+                Intent loginIntent = new Intent(this, LoginActivity.class);
+                loginIntent.putExtra("fromLink", true);
+                loginLauncher.launch(loginIntent);
+            }
+        }
+        else
+        {
+            user = authHandler.getUser();
+
+            setContentView(R.layout.activity_home);
+            init();
+        }
+    }
+
+    private void sendJoinRequest(String invitationCode)
+    {
+        String listId = new String(Base64.decode(invitationCode, Base64.NO_WRAP), StandardCharsets.UTF_8);
+
+        dbHandler.sendJoinRequest(listId, user);
+        Toast.makeText(this, "Waiting for approval...", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -206,7 +265,6 @@ public class HomeActivity extends AppCompatActivity
     {
         List list = new List(dbHandler.getUniqueId(), name);
         list.addUser(user.getId());
-        list.addRequest(new Request("EkASFY8PaOQ9cDaCXlPNWEADNKC2", "משתמש 2"));
 
         dbHandler.addList(list, user);
     }

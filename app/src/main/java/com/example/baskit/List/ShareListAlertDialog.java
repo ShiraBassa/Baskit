@@ -8,6 +8,7 @@ import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,6 +27,7 @@ import com.example.baskit.MainComponents.List;
 import com.example.baskit.MainComponents.Request;
 import com.example.baskit.R;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -105,8 +107,9 @@ public class ShareListAlertDialog
 
     private String createLink()
     {
-        String inviteCode = UUID.randomUUID().toString().replace("-", "");
-        String link = "baskit://joinList?inviteCode=" + inviteCode;
+        String listId = list.getId();
+        String invitationCode = Base64.encodeToString(listId.getBytes(StandardCharsets.UTF_8), Base64.NO_WRAP);
+        String link = "baskit://joinList?inviteCode=" + invitationCode;
 
         return link;
     }
