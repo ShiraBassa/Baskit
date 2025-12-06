@@ -55,16 +55,17 @@ public class SettingsActivity extends AppCompatActivity
         btnLogOut = findViewById(R.id.btn_log_out);
         recyclerSupermarkets = findViewById(R.id.recycler_supermarkets);
 
-        new Thread(() ->
-        {
+        new Thread(() -> {
             try
             {
-                supermarketsAdapter = SupermarketsListAdapter.fromSupermarkets(apiHandler.getChoices(), this);
-            }
-            catch (IOException | JSONException ignored) {}
+                final SupermarketsListAdapter adapter = SupermarketsListAdapter.fromSupermarkets(apiHandler.getChoices(), this);
 
-            recyclerSupermarkets.setLayoutManager(new LinearLayoutManager(this));
-            recyclerSupermarkets.setAdapter(supermarketsAdapter);
+                runOnUiThread(() ->
+                {
+                    recyclerSupermarkets.setLayoutManager(new LinearLayoutManager(this));
+                    recyclerSupermarkets.setAdapter(adapter);
+                });
+            } catch (IOException | JSONException ignored) {}
         }).start();
 
         setButtons();
