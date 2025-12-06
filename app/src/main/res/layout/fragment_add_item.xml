@@ -51,6 +51,7 @@
         android:layout_marginBottom="30dp">
 
         <AutoCompleteTextView
+            android:imeOptions="actionDone"
             android:id="@+id/searchItem"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -73,79 +74,89 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="30dp"
-            android:gravity="center_vertical|end">
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:visibility="invisible"
+            android:id="@+id/lout_info"
+            android:orientation="vertical"
+            android:gravity="center_horizontal|top">
 
             <LinearLayout
-                android:layout_width="wrap_content"
-                android:id="@+id/lout_quantity"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:layout_marginEnd="20dp"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:layout_marginBottom="25dp"
+                android:gravity="center_vertical|end">
 
-                <ImageButton
-                    android:id="@+id/btn_down"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:background="@null"
-                    android:scaleType="fitCenter"
-                    android:src="@drawable/ic_arrow_down"/>
-
-                <TextView
-                    android:id="@+id/tv_quantity"
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="כמות"
-                    android:textColor="#000000"
-                    android:textSize="32sp"/>
+                    android:gravity="center"
+                    android:layout_marginEnd="20dp"
+                    android:orientation="horizontal">
 
-                <ImageButton
-                    android:id="@+id/btn_up"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:background="@null"
-                    android:scaleType="fitCenter"
-                    android:src="@drawable/ic_arrow_up"/>
+                    <ImageButton
+                        android:id="@+id/btn_down"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:background="@null"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/ic_arrow_down"/>
+
+                    <TextView
+                        android:id="@+id/tv_quantity"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="כמות"
+                        android:textColor="#000000"
+                        android:textSize="32sp"/>
+
+                    <ImageButton
+                        android:id="@+id/btn_up"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:background="@null"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/ic_arrow_up"/>
+
+                </LinearLayout>
+
+                <TextView
+                    android:textColor="#000000"
+                    android:textSize="36sp"
+                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
+                    android:text="כמות"
+                    />
 
             </LinearLayout>
 
-            <TextView
-                android:textColor="#000000"
-                android:textSize="36sp"
-                android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:text="כמות"
-                />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:paddingHorizontal="10dp">
-
-            <TextView
-                android:textColor="#000000"
-                android:textSize="32sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="10dp"
-                android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:text="סופרים זמינים"
-                />
-
-            <include
-                android:id="@+id/supermarkets_list"
-                layout="@layout/supermarkets_list"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="1"/>
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:paddingHorizontal="10dp">
+
+                <TextView
+                    android:textColor="#000000"
+                    android:textSize="32sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="10dp"
+                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
+                    android:text="סופרים זמינים"
+                    />
+
+                <include
+                    android:id="@+id/supermarkets_list"
+                    layout="@layout/supermarkets_list"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"/>
+
+            </LinearLayout>
 
         </LinearLayout>
 

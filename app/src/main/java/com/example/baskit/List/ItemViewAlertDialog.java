@@ -57,7 +57,7 @@ public class ItemViewAlertDialog
         adBtnUp = adLayout.findViewById(R.id.btn_up);
         adBtnDown = adLayout.findViewById(R.id.btn_down);
         adTvQuantity = adLayout.findViewById(R.id.tv_quantity);
-        adLoutQuantity = adLayout.findViewById(R.id.lout_quantity);
+        adLoutQuantity = adLayout.findViewById(R.id.lout_info);
         adLoutQuantityWhole = adLayout.findViewById(R.id.lout_quantity_whole);
         recyclerSupermarkets = adLayout.findViewById(R.id.recycler_supermarkets);
         adTvItemName = adLayout.findViewById(R.id.tv_item_name);

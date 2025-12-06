@@ -2,6 +2,7 @@ package com.example.baskit.List;
 
 import android.app.Activity;
 import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -56,6 +57,17 @@ public class EditListFragment extends DialogFragment
 
         this.list = list;
         this.title = title;
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, Bundle savedInstanceState)
+    {
+        super.onViewCreated(view, savedInstanceState);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1)
+        {
+            view.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
+        }
     }
 
     @Nullable
@@ -135,6 +147,6 @@ public class EditListFragment extends DialogFragment
 
     private void showTotal()
     {
-        tvTotal.setText("סך הכל: " + Double.toString(list.getTotal()));
+        tvTotal.setText("סך הכל: " + Double.toString(list.getTotal()) + " ש״ח");
     }
 }

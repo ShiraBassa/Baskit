@@ -3,12 +3,14 @@ package com.example.baskit.List;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
@@ -40,7 +42,7 @@ public class AddItemFragment extends DialogFragment
     private TextView tvQuantity;
     private ImageButton btnCancel, btnUp, btnDown;
     private Button btnAddItem;
-    private LinearLayout quantityLayout;
+    private LinearLayout infoLayout;
     private ProgressBar progressBar;
     private AutoCompleteTextView searchItem;
 
@@ -72,6 +74,17 @@ public class AddItemFragment extends DialogFragment
         this.addItemInterface = addItemInterface;
     }
 
+    @Override
+    public void onViewCreated(@NonNull View view, Bundle savedInstanceState)
+    {
+        super.onViewCreated(view, savedInstanceState);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1)
+        {
+            view.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
+        }
+    }
+
     @Nullable
     @Override
     public View onCreateView(
@@ -87,7 +100,7 @@ public class AddItemFragment extends DialogFragment
         btnUp = fragmentView.findViewById(R.id.btn_up);
         btnDown = fragmentView.findViewById(R.id.btn_down);
         tvQuantity = fragmentView.findViewById(R.id.tv_quantity);
-        quantityLayout = fragmentView.findViewById(R.id.lout_quantity);
+        infoLayout = fragmentView.findViewById(R.id.lout_info);
         progressBar = fragmentView.findViewById(R.id.progressBar);
         recyclerSupermarkets = fragmentView.findViewById(R.id.recycler_supermarkets);
 
@@ -151,23 +164,35 @@ public class AddItemFragment extends DialogFragment
         searchItem.setThreshold(1);
         searchItem.setOnClickListener(v -> searchItem.showDropDown());
 
-        searchItem.setOnFocusChangeListener((v, hasFocus) ->
-        {
-            if (!hasFocus) handleItemTyped();
-        });
-
         searchItem.setOnItemClickListener((parent, view, position, id) ->
         {
             String clickedName = (String) parent.getItemAtPosition(position);
             selectedItem = new Item(clickedName);
-            selectedItem.setQuantity(1);
-
-            quantityLayout.setVisibility(View.VISIBLE);
             tvQuantity.setText("1");
             btnDown.setBackgroundColor(Color.LTGRAY);
+
+            selectedItem.setQuantity(1);
+
+            recyclerSupermarkets.setLayoutManager(new LinearLayoutManager(context));
+            recyclerSupermarkets.setAdapter(null);
+
+            loadSupermarketPrices();
+            infoLayout.setVisibility(View.VISIBLE);
+            hideKeyboard();
         });
 
         searchItem.setDropDownHeight(ViewGroup.LayoutParams.WRAP_CONTENT);
+    }
+
+    private void hideKeyboard()
+    {
+        View view = getView();
+
+        if (view != null)
+        {
+            InputMethodManager imm = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
     }
 
     private void setupButtons()
@@ -237,7 +262,7 @@ public class AddItemFragment extends DialogFragment
             recyclerSupermarkets.setLayoutManager(null);
 
             searchItem.setText("");
-            quantityLayout.setVisibility(View.INVISIBLE);
+            infoLayout.setVisibility(View.INVISIBLE);
             selectedItem = null;
         }
     }

@@ -60,7 +60,7 @@
 
             <LinearLayout
                 android:layout_width="wrap_content"
-                android:id="@+id/lout_quantity"
+                android:id="@+id/lout_info"
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:layout_marginEnd="20dp"

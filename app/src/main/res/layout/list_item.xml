@@ -34,7 +34,7 @@
                 android:layout_height="wrap_content"
                 android:text="כמות"
                 android:textColor="#000000"
-                android:textSize="22sp"
+                android:textSize="20sp"
                 android:textStyle="bold"/>
 
             <ImageButton
@@ -53,7 +53,7 @@
             android:layout_height="wrap_content"
             android:text="מחיר"
             android:textColor="#000000"
-            android:textSize="24sp"
+            android:textSize="20sp"
             android:visibility="gone" />
 
     </LinearLayout>
@@ -64,7 +64,7 @@
         android:layout_weight="1"
         android:clipChildren="true"
         android:clipToPadding="true"
-        android:gravity="top|end"
+        android:gravity="center_vertical|end"
         android:orientation="horizontal">
 
         <LinearLayout
@@ -81,7 +81,7 @@
                 android:singleLine="true"
                 android:text="מוצר"
                 android:textColor="#000000"
-                android:textSize="20sp"
+                android:textSize="17sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -91,15 +91,15 @@
                 android:singleLine="true"
                 android:text="(סופר, סניף)"
                 android:textColor="#000000"
-                android:textSize="14sp"
+                android:textSize="13sp"
                 android:visibility="gone"/>
 
         </LinearLayout>
 
         <ImageButton
             android:id="@+id/check_box"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
             android:background="@null"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_check_box_unchecked" />

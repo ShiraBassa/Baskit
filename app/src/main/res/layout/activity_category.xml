@@ -15,10 +15,10 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:paddingTop="25dp"
+        android:paddingTop="15dp"
         android:layout_marginBottom="10dp"
         android:orientation="vertical"
-        android:paddingHorizontal="15dp">
+        android:paddingHorizontal="5dp">
 
         <LinearLayout
             android:id="@+id/layout_top_bar"
@@ -58,7 +58,7 @@
             <TextView
                 android:id="@+id/tv_category_name"
                 android:textColor="#000000"
-                android:textSize="40sp"
+                android:textSize="35sp"
                 android:textStyle="bold"
                 android:visibility="invisible"
                 android:layout_height="wrap_content"
@@ -104,7 +104,7 @@
             <TextView
                 android:id="@+id/tv_total"
                 android:textColor="#000000"
-                android:textSize="32sp"
+                android:textSize="26sp"
                 android:textStyle="bold"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"

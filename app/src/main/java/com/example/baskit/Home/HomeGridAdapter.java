@@ -1,11 +1,17 @@
 package com.example.baskit.Home;
 
 import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.text.LineBreaker;
+import android.os.Build;
+import android.text.Layout;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.ViewGroup;
 import android.widget.Button;
 
 import androidx.annotation.NonNull;
+import androidx.core.widget.TextViewCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.baskit.MainComponents.List;
@@ -72,18 +78,30 @@ public class HomeGridAdapter extends RecyclerView.Adapter<HomeGridAdapter.GridVi
 
     @NonNull
     @Override
-    public GridViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public GridViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType)
+    {
         MaterialButton button = new MaterialButton(parent.getContext());
-        button.setCornerRadius(16); // rounded corners
+        button.setCornerRadius(16);
         button.setBackgroundColor(Color.LTGRAY);
         button.setTextColor(Color.BLACK);
-        button.setGravity(Gravity.CENTER);
+        button.setTypeface(Typeface.DEFAULT_BOLD);
         button.setTextSize(20f);
+        button.setSingleLine(false);
+        button.setHorizontallyScrolling(false);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            button.setBreakStrategy(LineBreaker.BREAK_STRATEGY_HIGH_QUALITY);
+            button.setHyphenationFrequency(Layout.HYPHENATION_FREQUENCY_NONE);
+        }
+
+        button.setGravity(Gravity.CENTER);
+        button.setTextAlignment(android.view.View.TEXT_ALIGNMENT_CENTER);
+        button.setPadding(0, 0, 0, 0);
 
         int margin = (int) (8 * parent.getContext().getResources().getDisplayMetrics().density);
         RecyclerView.LayoutParams params = new RecyclerView.LayoutParams(
                 RecyclerView.LayoutParams.MATCH_PARENT,
-                RecyclerView.LayoutParams.MATCH_PARENT // temporary, we'll fix in onBind
+                RecyclerView.LayoutParams.MATCH_PARENT
         );
         params.setMargins(margin, margin, margin, margin);
         button.setLayoutParams(params);
