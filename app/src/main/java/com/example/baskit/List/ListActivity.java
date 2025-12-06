@@ -57,17 +57,12 @@ public class ListActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list);
 
-        new Thread(() ->
-        {
-            allItems = apiHandler.getItems();
-            itemsCodeNames = apiHandler.getItemsCodeName(new ArrayList<>(allItems.keySet()));
+        allItems = apiHandler.getItems();
+        itemsCodeNames = apiHandler.getItemsCodeName(new ArrayList<>(allItems.keySet()));
 
-            runOnUiThread(() -> {
-                createInit();
-                itemsLoaded = true;  // mark that the thread finished
-                resumeInit();        // first-time call
-            });
-        }).start();
+        createInit();
+        itemsLoaded = true;
+        resumeInit();
     }
 
     @Override

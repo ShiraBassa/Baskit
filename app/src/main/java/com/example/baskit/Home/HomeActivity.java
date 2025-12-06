@@ -79,8 +79,13 @@ public class HomeActivity extends AppCompatActivity
                             {
                                 user = authHandler.getUser();
 
-                                setContentView(R.layout.activity_home);
-                                init();
+                                new Thread(() -> {
+                                    APIHandler.getInstance().preload();
+                                    runOnUiThread(() -> {
+                                        setContentView(R.layout.activity_home);
+                                        init();
+                                    });
+                                }).start();
 
                                 sendJoinRequest(inviteCode);
                             }
@@ -115,8 +120,13 @@ public class HomeActivity extends AppCompatActivity
         {
             user = authHandler.getUser();
 
-            setContentView(R.layout.activity_home);
-            init();
+            new Thread(() -> {
+                APIHandler.getInstance().preload();
+                runOnUiThread(() -> {
+                    setContentView(R.layout.activity_home);
+                    init();
+                });
+            }).start();
         }
     }
 

@@ -1,5 +1,7 @@
 package com.example.baskit.API;
 
+import android.util.Log;
+
 import com.example.baskit.Firebase.FirebaseAuthHandler;
 import com.example.baskit.MainComponents.Supermarket;
 
@@ -14,6 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import okhttp3.*;
@@ -25,6 +28,8 @@ public class APIHandler
     private static String firebaseToken;
     private static Map<String, Map<String, Map<String, Double>>> allItems;
     private final OkHttpClient client = new OkHttpClient();
+    private Map<String, Map<String, Map<String, Double>>> cachedItems = null;
+    private Map<String, String> cachedCodeNames = null;
 
     private APIHandler() {}
 
@@ -36,6 +41,95 @@ public class APIHandler
         }
 
         return instance;
+    }
+
+    public void preload()
+    {
+        if (cachedItems == null)
+        {
+            cachedItems = getItems();
+        }
+
+        if (cachedCodeNames == null && cachedItems != null)
+        {
+            cachedCodeNames = getItemsCodeName(new ArrayList<>(cachedItems.keySet()));
+        }
+    }
+
+    public Map<String, Map<String, Map<String, Double>>> getItems()
+    {
+        if (cachedItems != null)
+        {
+            return cachedItems;
+        }
+
+        cachedItems = new HashMap<>();
+
+        try
+        {
+            String itemsRaw = getRaw("/items");
+            JSONObject itemsJson = new JSONObject(itemsRaw);
+
+            for (Iterator<String> itemIter = itemsJson.keys(); itemIter.hasNext();)
+            {
+                String itemCode = itemIter.next();
+                JSONObject storesJson = itemsJson.getJSONObject(itemCode);
+                Map<String, Map<String, Double>> storeMap = parsePriceResponse(storesJson.toString());
+
+                cachedItems.put(itemCode, storeMap);
+            }
+        }
+        catch (Exception e)
+        {
+            Log.e("API", e.getMessage());
+        }
+
+        return cachedItems;
+    }
+
+    public Map<String, String> getItemsCodeName(List<String> keys)
+    {
+        if (cachedCodeNames == null)
+        {
+            cachedCodeNames = new HashMap<>();
+        }
+
+        List<String> missing = new ArrayList<>();
+
+        for (String key : keys)
+        {
+            if (!cachedCodeNames.containsKey(key))
+            {
+                missing.add(key);
+            }
+        }
+
+        if (missing.isEmpty())
+        {
+            return cachedCodeNames;
+        }
+
+        try
+        {
+            JSONObject body = new JSONObject();
+            body.put("item_codes", new JSONArray(missing));
+
+            String responseRaw = postRawWithResponse("/items_code_name", body.toString());
+            JSONObject jsonResponse = new JSONObject(responseRaw);
+
+            for (Iterator<String> it = jsonResponse.keys(); it.hasNext();)
+            {
+                String code = it.next();
+                String name = jsonResponse.getString(code);
+                cachedCodeNames.put(code, name);
+            }
+        }
+        catch (Exception e)
+        {
+            Log.e("API", e.getMessage());
+        }
+
+        return cachedCodeNames;
     }
 
     public void resetInstance()
@@ -288,64 +382,6 @@ public class APIHandler
         }
 
         return result;
-    }
-
-    public Map<String, Map<String, Map<String, Double>>> getItems()
-    {
-        allItems = new HashMap<>();
-
-        try
-        {
-            String itemsRaw = getRaw("/items");
-            JSONObject itemsJson = new JSONObject(itemsRaw);
-
-            for (Iterator<String> itemIter = itemsJson.keys(); itemIter.hasNext();)
-            {
-                String itemCode = itemIter.next();
-                JSONObject storesJson = itemsJson.getJSONObject(itemCode);
-                Map<String, Map<String, Double>> storeMap = parsePriceResponse(storesJson.toString());
-
-                allItems.put(itemCode, storeMap);
-            }
-        }
-        catch (Exception ignored) {}
-
-        return allItems;
-    }
-
-    public Map<String, Map<String, Map<String, Double>>> getItems(boolean forceRefresh)
-    {
-        if (forceRefresh || allItems == null)
-        {
-            return getItems();
-        }
-
-        return allItems;
-    }
-
-    public Map<String, String> getItemsCodeName(ArrayList<String> codes)
-    {
-        Map<String, String> itemsCodeName = new HashMap<>();
-        if (codes == null || codes.isEmpty()) return itemsCodeName;
-
-        try
-        {
-            JSONObject body = new JSONObject();
-            body.put("item_codes", new JSONArray(codes));
-
-            String responseRaw = postRawWithResponse("/items_code_name", body.toString());
-            JSONObject jsonResponse = new JSONObject(responseRaw);
-
-            for (Iterator<String> it = jsonResponse.keys(); it.hasNext();)
-            {
-                String code = it.next();
-                String name = jsonResponse.getString(code);
-                itemsCodeName.put(code, name);
-            }
-        }
-        catch (Exception ignored) {}
-
-        return itemsCodeName;
     }
 
     private String postRawWithResponse(String endpoint, String body) throws IOException
