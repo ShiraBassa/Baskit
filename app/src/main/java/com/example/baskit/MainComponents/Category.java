@@ -134,6 +134,6 @@ public class Category
             sum += Math.round(item.getPrice() * item.getQuantity() * 100.0) / 100.0;
         }
 
-        return sum;
+        return Math.round(sum * 100.0) / 100.0;
     }
 }

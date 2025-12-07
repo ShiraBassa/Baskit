@@ -105,10 +105,10 @@ public class List
 
         for (Category category : categories.values())
         {
-            sum += category.getTotal();
+            sum += Math.round(category.getTotal() * 100.0) / 100.0;
         }
 
-        return sum;
+        return Math.round(sum * 100.0) / 100.0;
     }
 
     public ArrayList<Request> getRequests()
