@@ -1,6 +1,7 @@
 package com.example.baskit.AI;
 
 import android.app.Activity;
+import android.util.Log;
 
 import com.example.baskit.MainComponents.Item;
 import com.google.android.gms.common.util.ArrayUtils;
@@ -74,7 +75,10 @@ public class AIHandler
             }
 
             @Override
-            public void onFailure(Throwable error) {}
+            public void onFailure(Throwable error)
+            {
+                Log.e("AI", error.toString());
+            }
         });
     }
 

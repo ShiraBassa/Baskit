@@ -24,7 +24,7 @@ import okhttp3.*;
 public class APIHandler
 {
     private static APIHandler instance;
-    private static final String SERVER_URL = "http://192.168.1.204:5001";
+    private static final String SERVER_URL = "http://10.0.2.2:5001";
     private static String firebaseToken;
     private static Map<String, Map<String, Map<String, Double>>> allItems;
     private final OkHttpClient client = new OkHttpClient();

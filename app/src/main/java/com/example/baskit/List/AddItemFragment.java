@@ -203,6 +203,7 @@ public class AddItemFragment extends DialogFragment
         {
             if (selectedItem != null)
             {
+                startProgressBar();
                 addItemInterface.addItem(selectedItem);
                 dismiss();
             }

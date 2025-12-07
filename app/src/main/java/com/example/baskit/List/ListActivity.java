@@ -345,11 +345,10 @@ public class ListActivity extends AppCompatActivity
 
     public void addItem(Item item)
     {
-        addItemFragment.startProgressBar();
         item.updateId(getKeyByValue(itemsCodeNames, item.getName()));
 
-        aiHandler.getCategoryName(item, ListActivity.this, categoryName -> {
-
+        aiHandler.getCategoryName(item, ListActivity.this, categoryName ->
+        {
             if (!list.hasCategory(categoryName))
             {
                 dbHandler.addCategory(list, new Category(categoryName));
