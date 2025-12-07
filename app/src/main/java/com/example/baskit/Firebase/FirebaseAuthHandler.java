@@ -405,4 +405,33 @@ public class FirebaseAuthHandler
             }
         }).start();
     }
+
+    public void removeSupermarket(Supermarket supermarket, Runnable onComplete)
+    {
+        new Thread(() ->
+        {
+            try
+            {
+                Map<String, ArrayList<String>> branches = apiHandler.getChoices();
+                String supermarketName = supermarket.getSupermarket();
+                Objects.requireNonNull(branches.get(supermarketName)).remove(supermarket.getSection());
+
+                if (Objects.requireNonNull(branches.get(supermarketName)).isEmpty())
+                {
+                    branches.remove(supermarketName);
+                }
+
+                apiHandler.setBranches(branches);
+
+                if (onComplete != null)
+                {
+                    new Handler(Looper.getMainLooper()).post(onComplete);
+                }
+            }
+            catch (IOException | JSONException e)
+            {
+                Log.e("Remove supermarket", e.getMessage());
+            }
+        }).start();
+    }
 }

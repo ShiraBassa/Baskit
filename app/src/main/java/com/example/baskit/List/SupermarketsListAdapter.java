@@ -27,8 +27,10 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
     private Map<String, Map<String, Double>> supermarketsWithPrices = null;
     private Activity activity;
     private OnSupermarketClickListener OnSupermarketClickListener = null;
+    private Supermarket selectedSupermarket = new Supermarket();
 
-    public void setOnSupermarketClickListener(OnSupermarketClickListener listener) {
+    public void setOnSupermarketClickListener(OnSupermarketClickListener listener)
+    {
         this.OnSupermarketClickListener = listener;
     }
 
@@ -37,49 +39,60 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
         void onSupermarketClick(Supermarket supermarket);
     }
 
-    private SupermarketsListAdapter() { }
+    private SupermarketsListAdapter() {}
 
-    public static SupermarketsListAdapter fromSupermarkets(Map<String, ArrayList<String>> supermarkets, Activity activity) {
+    public static SupermarketsListAdapter fromSupermarkets(Map<String, ArrayList<String>> supermarkets, Activity activity)
+    {
         SupermarketsListAdapter adapter = new SupermarketsListAdapter();
         adapter.setSupermarkets(supermarkets);
         adapter.setActivity(activity);
+
         return adapter;
     }
 
-    public static SupermarketsListAdapter fromSupermarketsWithPrices(Map<String, Map<String, Double>> supermarketsWithPrices, Activity activity, OnSupermarketClickListener onSupermarketClickListener) {
+    public static SupermarketsListAdapter fromSupermarketsWithPrices(Map<String, Map<String, Double>> supermarketsWithPrices, Activity activity, OnSupermarketClickListener onSupermarketClickListener)
+    {
         SupermarketsListAdapter adapter = new SupermarketsListAdapter();
         adapter.setSupermarketsWithPrices(supermarketsWithPrices);
         adapter.setActivity(activity);
         adapter.setOnSupermarketClickListener(onSupermarketClickListener);
+
         return adapter;
     }
 
-    public Map<String, ArrayList<String>> getSupermarkets() {
+    public Map<String, ArrayList<String>> getSupermarkets()
+    {
         return supermarkets;
     }
 
-    public Map<String, Map<String, Double>> getSupermarketsWithPrices() {
+    public Map<String, Map<String, Double>> getSupermarketsWithPrices()
+    {
         return supermarketsWithPrices;
     }
 
-    public void setActivity(Activity activity) {
+    public void setActivity(Activity activity)
+    {
         this.activity = activity;
     }
 
-    public void setSupermarkets(Map<String, ArrayList<String>> supermarkets) {
+    public void setSupermarkets(Map<String, ArrayList<String>> supermarkets)
+    {
         this.supermarkets = supermarkets;
     }
 
-    private void setSupermarketsWithPrices(Map<String, Map<String, Double>> supermarketsWithPrices) {
+    private void setSupermarketsWithPrices(Map<String, Map<String, Double>> supermarketsWithPrices)
+    {
         this.supermarketsWithPrices = supermarketsWithPrices;
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    public static class ViewHolder extends RecyclerView.ViewHolder
+    {
         TextView tvSupermarketName;
         RecyclerView recyclerSections;
         SectionsListAdapter sectionsAdapter;
 
-        public ViewHolder(View itemView) {
+        public ViewHolder(View itemView)
+        {
             super(itemView);
 
             tvSupermarketName = itemView.findViewById(R.id.tv_supermarket_name);
@@ -100,19 +113,22 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position)
+    {
         String supermarketName;
 
-        // Determine which data source we use
-        if (supermarketsWithPrices != null) {
+        if (supermarketsWithPrices != null)
+        {
             supermarketName = new ArrayList<>(supermarketsWithPrices.keySet()).get(position);
 
-            // Create adapter once, then update it on reuse
-            if (holder.sectionsAdapter == null) {
+           if (holder.sectionsAdapter == null)
+           {
                 holder.sectionsAdapter = SectionsListAdapter.fromSectionsWithPrices(
                         supermarketsWithPrices.get(supermarketName),
-                        sectionName -> {
-                            if (OnSupermarketClickListener != null) {
+                        sectionName ->
+                        {
+                            if (OnSupermarketClickListener != null)
+                            {
                                 OnSupermarketClickListener.onSupermarketClick(
                                         new Supermarket(supermarketName, sectionName)
                                 );
@@ -120,47 +136,61 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
                         }
                 );
                 holder.recyclerSections.setAdapter(holder.sectionsAdapter);
-            } else {
+            }
+           else
+           {
                 holder.sectionsAdapter.updateDataWithPrices(
                         supermarketsWithPrices.get(supermarketName)
                 );
+
                 holder.sectionsAdapter.notifyDataSetChanged();
             }
-
-        } else {
+        }
+        else
+        {
             supermarketName = new ArrayList<>(supermarkets.keySet()).get(position);
 
-            if (holder.sectionsAdapter == null) {
+            if (holder.sectionsAdapter == null)
+            {
                 holder.sectionsAdapter = SectionsListAdapter.fromSections(
-                        supermarkets.get(supermarketName),
-                        sectionName -> {
-                            if (OnSupermarketClickListener != null) {
-                                OnSupermarketClickListener.onSupermarketClick(
-                                        new Supermarket(supermarketName, sectionName)
-                                );
+                        supermarkets.get(supermarketName), new SectionsListAdapter.OnSectionClickListener()
+                        {
+                            @Override
+                            public void onSectionClick(String sectionName)
+                            {
+                                selectedSupermarket.setSupermarket(supermarketName);
+                                selectedSupermarket.setSection(sectionName);
                             }
                         }
                 );
                 holder.recyclerSections.setAdapter(holder.sectionsAdapter);
-            } else {
+            }
+            else
+            {
                 holder.sectionsAdapter.updateData(
                         supermarkets.get(supermarketName)
                 );
+
                 holder.sectionsAdapter.notifyDataSetChanged();
             }
         }
 
-        // Always set the title
         holder.tvSupermarketName.setText(supermarketName);
     }
 
     @Override
-    public int getItemCount() {
-        if (supermarketsWithPrices != null) {
+    public int getItemCount()
+    {
+        if (supermarketsWithPrices != null)
+        {
             return supermarketsWithPrices.size();
-        } else if (supermarkets != null) {
+        }
+        else if (supermarkets != null)
+        {
             return supermarkets.size();
-        } else {
+        }
+        else
+        {
             return 0;
         }
     }
@@ -172,5 +202,10 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
     public void updateDataWithPrices(Map<String, Map<String, Double>> newSupermarketsWithPrices)
     {
         this.supermarketsWithPrices = newSupermarketsWithPrices;
+    }
+
+    public Supermarket getSelectedSupermarket()
+    {
+        return selectedSupermarket;
     }
 }

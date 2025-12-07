@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class SettingsActivity extends AppCompatActivity
 {
@@ -104,10 +105,16 @@ public class SettingsActivity extends AppCompatActivity
             }
         });
 
-        btnAddSupermarket.setOnClickListener(v ->
+        btnAddSupermarket.setOnClickListener(new View.OnClickListener()
         {
-            if (supermarketsAdapter != null)
+            @Override
+            public void onClick(View v)
             {
+                if (supermarketsAdapter == null)
+                {
+                    return;
+                }
+
                 Supermarket supermarket = new Supermarket("שופרסל", "שלי מיתר");
                 authHandler.addSupermarket(supermarket, () ->
                 {
@@ -129,7 +136,35 @@ public class SettingsActivity extends AppCompatActivity
             @Override
             public void onClick(View v)
             {
+                if (supermarketsAdapter == null)
+                {
+                    return;
+                }
 
+                Supermarket supermarket = supermarketsAdapter.getSelectedSupermarket();
+
+                if (supermarket.getSupermarket().isEmpty() || supermarket.getSection().isEmpty())
+                {
+                    return;
+                }
+
+                authHandler.removeSupermarket(supermarket, () ->
+                {
+                    runOnUiThread(() ->
+                    {
+                        String supermarketName = supermarket.getSupermarket();
+                        Objects.requireNonNull(choices.get(supermarketName)).remove(supermarket.getSection());
+
+                        if (Objects.requireNonNull(choices.get(supermarketName)).isEmpty())
+                        {
+                            choices.remove(supermarketName);
+                        }
+
+                        supermarketsAdapter.updateData(choices);
+                        supermarketsAdapter.notifyDataSetChanged();
+
+                    });
+                });
             }
         });
     }

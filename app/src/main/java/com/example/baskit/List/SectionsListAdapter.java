@@ -45,6 +45,7 @@ public class SectionsListAdapter extends RecyclerView.Adapter<SectionsListAdapte
         SectionsListAdapter adapter = new SectionsListAdapter();
         adapter.setSections(sections);
         adapter.setOnSectionClickListener(onSupermarketClickListener);
+
         return adapter;
     }
 
@@ -52,14 +53,17 @@ public class SectionsListAdapter extends RecyclerView.Adapter<SectionsListAdapte
         SectionsListAdapter adapter = new SectionsListAdapter();
         adapter.setSectionsWithPrices(sectionsWithPrices);
         adapter.setOnSectionClickListener(onSectionClickListener);
+
         return adapter;
     }
 
-    public void setSections(ArrayList<String> sections) {
+    public void setSections(ArrayList<String> sections)
+    {
         this.sections = sections;
     }
 
-    public void setSectionsWithPrices(Map<String, Double> sectionsWithPrices) {
+    public void setSectionsWithPrices(Map<String, Double> sectionsWithPrices)
+    {
         this.sectionsWithPrices = sectionsWithPrices;
     }
 
@@ -98,29 +102,35 @@ public class SectionsListAdapter extends RecyclerView.Adapter<SectionsListAdapte
 
             holder.tvItemPrice.setText(Double.toString(sectionsWithPrices.get(sectionName)));
             holder.tvItemPrice.setVisibility(View.VISIBLE);
-
-            holder.itemView.setSelected(selectedPosition == position);
-            holder.itemView.setBackgroundColor(selectedPosition == position ? 0xFFE0E0E0 : 0x00000000);
-
-            holder.itemView.setOnClickListener(v -> {
-                int adapterPos = holder.getAdapterPosition();
-                if (adapterPos == RecyclerView.NO_POSITION) return;
-
-                int previousSelected = selectedPosition;
-                selectedPosition = adapterPos;
-
-                notifyItemChanged(previousSelected);
-                notifyItemChanged(selectedPosition);
-
-                if (listener != null) {
-                    listener.onSectionClick(sectionName);
-                }
-            });
         }
         else
         {
             sectionName = sections.get(position);
         }
+
+        holder.itemView.setSelected(selectedPosition == position);
+        holder.itemView.setBackgroundColor(selectedPosition == position ? 0xFFE0E0E0 : 0x00000000);
+
+        holder.itemView.setOnClickListener(v ->
+        {
+            int adapterPos = holder.getAdapterPosition();
+
+            if (adapterPos == RecyclerView.NO_POSITION)
+            {
+                return;
+            }
+
+            int previousSelected = selectedPosition;
+            selectedPosition = adapterPos;
+
+            notifyItemChanged(previousSelected);
+            notifyItemChanged(selectedPosition);
+
+            if (listener != null)
+            {
+                listener.onSectionClick(sectionName);
+            }
+        });
 
         holder.tvSectionName.setText(sectionName);
     }
