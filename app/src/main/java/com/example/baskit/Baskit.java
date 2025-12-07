@@ -2,16 +2,21 @@ package com.example.baskit;
 
 import android.app.Activity;
 import android.app.Application;
+import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 
 public class Baskit extends Application
 {
+    private static Context context;
+
     @Override
     public void onCreate()
     {
         super.onCreate();
+
+        context = getApplicationContext();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1)
         {
@@ -31,5 +36,10 @@ public class Baskit extends Application
                 @Override public void onActivityDestroyed(Activity activity) {}
             });
         }
+    }
+
+    public static Context getContext()
+    {
+        return context;
     }
 }

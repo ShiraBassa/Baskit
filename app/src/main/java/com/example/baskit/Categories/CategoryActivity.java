@@ -51,7 +51,7 @@ public class CategoryActivity extends AppCompatActivity
         new Thread(() ->
         {
             allItems = apiHandler.getItems();
-            itemsCodeNames = apiHandler.getItemsCodeName(new ArrayList<>(allItems.keySet()));
+            itemsCodeNames = apiHandler.getItemsCodeName();
 
             runOnUiThread(this::init);
         }).start();

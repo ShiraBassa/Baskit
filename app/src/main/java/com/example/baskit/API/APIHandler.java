@@ -2,17 +2,17 @@ package com.example.baskit.API;
 
 import android.util.Log;
 
-import com.example.baskit.Firebase.FirebaseAuthHandler;
+import com.example.baskit.Baskit;
 import com.example.baskit.MainComponents.Supermarket;
+import com.example.baskit.SQLite.AppDatabase;
+import com.example.baskit.SQLite.ItemCodeName;
+import com.example.baskit.SQLite.ItemEntity;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -24,7 +24,7 @@ import okhttp3.*;
 public class APIHandler
 {
     private static APIHandler instance;
-    private static final String SERVER_URL = "http://10.0.2.2:5001";
+    private static final String SERVER_URL = "http://192.168.1.204:5001";
     private static String firebaseToken;
     private static Map<String, Map<String, Map<String, Double>>> allItems;
     private final OkHttpClient client = new OkHttpClient();
@@ -45,25 +45,195 @@ public class APIHandler
 
     public void preload()
     {
-        if (cachedItems == null)
+        cachedItems = loadItemsFromDB();
+        cachedCodeNames = loadCodeNamesFromDB();
+
+        if (cachedItems.isEmpty())
         {
-            cachedItems = getItems();
+            try
+            {
+                Map<String, Map<String, Map<String, Double>>> freshItems = getItemsFromAPI();
+                Map<String, String> freshCodeNames = getItemsCodeNameFromAPI(new ArrayList<>(freshItems.keySet()));
+
+                mergeCache(freshItems, freshCodeNames);
+                saveItemsToDB(freshItems);
+                saveCodeNamesToDB(freshCodeNames);
+            }
+            catch (Exception e)
+            {
+                Log.e("API Preload", e.getMessage());
+            }
+        }
+        else
+        {
+            try
+            {
+                new Thread(() ->
+                {
+                    Map<String, Map<String, Map<String, Double>>> freshItems = getItemsFromAPI();
+                    Map<String, String> freshCodeNames = getItemsCodeNameFromAPI(new ArrayList<>(freshItems.keySet()));
+
+                    mergeCache(freshItems, freshCodeNames);
+                    saveItemsToDB(freshItems);
+                    saveCodeNamesToDB(freshCodeNames);
+                }).start();
+            }
+            catch (Exception e)
+            {
+                Log.e("API load new data", e.getMessage());
+            }
+        }
+    }
+
+    private Map<String, Map<String, Map<String, Double>>> loadItemsFromDB()
+    {
+        List<ItemEntity> dbItems = AppDatabase.getDatabase(Baskit.getContext())
+                .itemDao()
+                .getAll();
+
+        Map<String, Map<String, Map<String, Double>>> result = new HashMap<>();
+
+        for (ItemEntity entity : dbItems)
+        {
+            result.computeIfAbsent(entity.itemCode, k -> new HashMap<>())
+                    .computeIfAbsent(entity.store, k -> new HashMap<>())
+                    .put(entity.branch, entity.price);
         }
 
-        if (cachedCodeNames == null && cachedItems != null)
+        return result;
+    }
+
+    private Map<String, String> loadCodeNamesFromDB()
+    {
+        List<ItemCodeName> dbCodes = AppDatabase.getDatabase(Baskit.getContext())
+                .itemCodesDao()
+                .getAll();
+
+        Map<String, String> codeNames = new HashMap<>();
+
+        for (ItemCodeName code : dbCodes)
         {
-            cachedCodeNames = getItemsCodeName(new ArrayList<>(cachedItems.keySet()));
+            codeNames.put(code.getItemCode(), code.getItemName());
         }
+
+        return codeNames;
+    }
+
+    private void mergeCache(Map<String, Map<String, Map<String, Double>>> freshItems,
+                            Map<String, String> freshCodeNames)
+    {
+        for (String itemCode : freshItems.keySet())
+        {
+            cachedItems.put(itemCode, freshItems.get(itemCode));
+        }
+
+        cachedCodeNames.putAll(freshCodeNames);
+    }
+
+    private void saveItemsToDB(Map<String, Map<String, Map<String, Double>>> freshItems)
+    {
+        new Thread(() ->
+        {
+            AppDatabase db = AppDatabase.getDatabase(Baskit.getContext());
+            List<ItemEntity> dbItems = db.itemDao().getAll();
+            Map<String, Map<String, Map<String, Double>>> existing = new HashMap<>();
+
+            for (ItemEntity entity : dbItems)
+            {
+                existing.putIfAbsent(entity.itemCode, new HashMap<>());
+                Map<String, Map<String, Double>> storeMap = existing.get(entity.itemCode);
+                storeMap.putIfAbsent(entity.store, new HashMap<>());
+                storeMap.get(entity.store).put(entity.branch, entity.price);
+            }
+
+            List<ItemEntity> itemsToInsert = new ArrayList<>();
+
+            // get only the new or changed items
+            for (String itemCode : freshItems.keySet())
+            {
+                Map<String, Map<String, Double>> freshStores = freshItems.get(itemCode);
+
+                for (String store : freshStores.keySet())
+                {
+                    Map<String, Double> freshBranches = freshStores.get(store);
+
+                    for (String branch : freshBranches.keySet())
+                    {
+                        double freshPrice = freshBranches.get(branch);
+                        double existingPrice = existing
+                                .getOrDefault(itemCode, new HashMap<>())
+                                .getOrDefault(store, new HashMap<>())
+                                .getOrDefault(branch, Double.NaN);
+
+                        if (Double.isNaN(existingPrice) || existingPrice != freshPrice)
+                        {
+                            ItemEntity entity = new ItemEntity();
+                            entity.itemCode = itemCode;
+                            entity.store = store;
+                            entity.branch = branch;
+                            entity.price = freshPrice;
+                            itemsToInsert.add(entity);
+                        }
+                    }
+                }
+            }
+
+            if (!itemsToInsert.isEmpty())
+            {
+                db.itemDao().insertAll(itemsToInsert);
+            }
+        }).start();
+    }
+
+    private void saveCodeNamesToDB(Map<String, String> freshCodeNames)
+    {
+        new Thread(() ->
+        {
+            AppDatabase db = AppDatabase.getDatabase(Baskit.getContext());
+            List<ItemCodeName> dbCodes = db.itemCodesDao().getAll();
+            Map<String, String> existingMap = new HashMap<>();
+
+            for (ItemCodeName code : dbCodes)
+            {
+                existingMap.put(code.getItemCode(), code.getItemName());
+            }
+
+            List<ItemCodeName> codesToInsert = new ArrayList<>();
+
+            // get only the new or changed items
+            for (Map.Entry<String, String> entry : freshCodeNames.entrySet())
+            {
+                String code = entry.getKey();
+                String name = entry.getValue();
+
+                String existingName = existingMap.get(code);
+
+                if (existingName == null || !existingName.equals(name))
+                {
+                    codesToInsert.add(new ItemCodeName(code, name));
+                }
+            }
+
+            if (!codesToInsert.isEmpty())
+            {
+                db.itemCodesDao().insertAll(codesToInsert);
+            }
+        }).start();
     }
 
     public Map<String, Map<String, Map<String, Double>>> getItems()
     {
-        if (cachedItems != null)
-        {
-            return cachedItems;
-        }
+        return cachedItems;
+    }
 
-        cachedItems = new HashMap<>();
+    public Map<String, String> getItemsCodeName()
+    {
+        return cachedCodeNames;
+    }
+
+    private Map<String, Map<String, Map<String, Double>>> getItemsFromAPI()
+    {
+        Map<String, Map<String, Map<String, Double>>> items = new HashMap<>();
 
         try
         {
@@ -76,7 +246,7 @@ public class APIHandler
                 JSONObject storesJson = itemsJson.getJSONObject(itemCode);
                 Map<String, Map<String, Double>> storeMap = parsePriceResponse(storesJson.toString());
 
-                cachedItems.put(itemCode, storeMap);
+                items.put(itemCode, storeMap);
             }
         }
         catch (Exception e)
@@ -84,21 +254,17 @@ public class APIHandler
             Log.e("API", e.getMessage());
         }
 
-        return cachedItems;
+        return items;
     }
 
-    public Map<String, String> getItemsCodeName(List<String> keys)
+    private Map<String, String> getItemsCodeNameFromAPI(List<String> keys)
     {
-        if (cachedCodeNames == null)
-        {
-            cachedCodeNames = new HashMap<>();
-        }
-
+        Map<String, String> codeNames = new HashMap<>();
         List<String> missing = new ArrayList<>();
 
         for (String key : keys)
         {
-            if (!cachedCodeNames.containsKey(key))
+            if (!codeNames.containsKey(key))
             {
                 missing.add(key);
             }
@@ -106,7 +272,7 @@ public class APIHandler
 
         if (missing.isEmpty())
         {
-            return cachedCodeNames;
+            return codeNames;
         }
 
         try
@@ -121,7 +287,7 @@ public class APIHandler
             {
                 String code = it.next();
                 String name = jsonResponse.getString(code);
-                cachedCodeNames.put(code, name);
+                codeNames.put(code, name);
             }
         }
         catch (Exception e)
@@ -129,7 +295,7 @@ public class APIHandler
             Log.e("API", e.getMessage());
         }
 
-        return cachedCodeNames;
+        return codeNames;
     }
 
     public void resetInstance()

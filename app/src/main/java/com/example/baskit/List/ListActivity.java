@@ -58,7 +58,7 @@ public class ListActivity extends AppCompatActivity
         setContentView(R.layout.activity_list);
 
         allItems = apiHandler.getItems();
-        itemsCodeNames = apiHandler.getItemsCodeName(new ArrayList<>(allItems.keySet()));
+        itemsCodeNames = apiHandler.getItemsCodeName();
 
         createInit();
         itemsLoaded = true;
