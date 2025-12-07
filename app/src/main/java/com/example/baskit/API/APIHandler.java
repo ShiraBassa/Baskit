@@ -20,14 +20,19 @@ import java.util.List;
 import java.util.Map;
 
 import okhttp3.*;
+import java.util.concurrent.TimeUnit;
 
 public class APIHandler
 {
     private static APIHandler instance;
-    private static final String SERVER_URL = "http://192.168.1.204:5001";
+    private static final String SERVER_URL = "http://10.0.2.2:5001";
     private static String firebaseToken;
     private static Map<String, Map<String, Map<String, Double>>> allItems;
-    private final OkHttpClient client = new OkHttpClient();
+    private final OkHttpClient client = new OkHttpClient.Builder()
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .build();
     private Map<String, Map<String, Map<String, Double>>> cachedItems = null;
     private Map<String, String> cachedCodeNames = null;
 

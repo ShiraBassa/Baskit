@@ -3,12 +3,15 @@ package com.example.baskit.Firebase;
 import static com.example.baskit.Firebase.FBRefs.refAuth;
 import static com.example.baskit.Firebase.FBRefs.refUsers;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 
 import com.example.baskit.API.APIHandler;
 import com.example.baskit.Login.ErrorType;
+import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.MainComponents.User;
 import com.google.firebase.FirebaseException;
 import com.google.firebase.FirebaseNetworkException;
@@ -379,5 +382,27 @@ public class FirebaseAuthHandler
             apiHandler.setBranches(branches);
         }
         catch (IOException | JSONException ignored) {}
+    }
+
+    public void addSupermarket(Supermarket supermarket, Runnable onComplete)
+    {
+        new Thread(() ->
+        {
+            try
+            {
+                Map<String, ArrayList<String>> branches = apiHandler.getChoices();
+                branches.get(supermarket.getSupermarket()).add(supermarket.getSection());
+                apiHandler.setBranches(branches);
+
+                if (onComplete != null)
+                {
+                    new Handler(Looper.getMainLooper()).post(onComplete);
+                }
+            }
+            catch (IOException | JSONException e)
+            {
+                e.printStackTrace();
+            }
+        }).start();
     }
 }

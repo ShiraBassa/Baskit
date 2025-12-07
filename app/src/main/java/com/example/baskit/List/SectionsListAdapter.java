@@ -102,16 +102,17 @@ public class SectionsListAdapter extends RecyclerView.Adapter<SectionsListAdapte
             holder.itemView.setSelected(selectedPosition == position);
             holder.itemView.setBackgroundColor(selectedPosition == position ? 0xFFE0E0E0 : 0x00000000);
 
-            holder.itemView.setOnClickListener(v ->
-            {
-                int previousSelected = selectedPosition;
+            holder.itemView.setOnClickListener(v -> {
+                int adapterPos = holder.getAdapterPosition();
+                if (adapterPos == RecyclerView.NO_POSITION) return;
 
-                selectedPosition = position;
+                int previousSelected = selectedPosition;
+                selectedPosition = adapterPos;
+
                 notifyItemChanged(previousSelected);
                 notifyItemChanged(selectedPosition);
 
-                if (listener != null)
-                {
+                if (listener != null) {
                     listener.onSectionClick(sectionName);
                 }
             });
@@ -133,5 +134,14 @@ public class SectionsListAdapter extends RecyclerView.Adapter<SectionsListAdapte
         } else {
             return 0;
         }
+    }
+
+    public void updateData(ArrayList<String> newSections) {
+        this.sections = newSections;
+    }
+
+    public void updateDataWithPrices(Map<String, Double> newSectionsWithPrices)
+    {
+        this.sectionsWithPrices = newSectionsWithPrices;
     }
 }

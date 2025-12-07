@@ -18,6 +18,7 @@ import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 
 public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsListAdapter.ViewHolder>
@@ -73,17 +74,18 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
         this.supermarketsWithPrices = supermarketsWithPrices;
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder
-    {
-        protected TextView tvSupermarketName;
-        protected RecyclerView recyclerSections;
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        TextView tvSupermarketName;
+        RecyclerView recyclerSections;
+        SectionsListAdapter sectionsAdapter;
 
-        public ViewHolder(View itemView)
-        {
+        public ViewHolder(View itemView) {
             super(itemView);
 
             tvSupermarketName = itemView.findViewById(R.id.tv_supermarket_name);
             recyclerSections = itemView.findViewById(R.id.recycler_sections);
+
+            recyclerSections.setLayoutManager(new LinearLayoutManager(itemView.getContext()));
         }
     }
 
@@ -98,49 +100,58 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position)
-    {
-        ArrayList<String> supermarketNames;
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         String supermarketName;
-        SectionsListAdapter sectionsAdapter;
 
-        if (supermarketsWithPrices != null)
-        {
-            supermarketNames = new ArrayList<>(supermarketsWithPrices.keySet());
-            supermarketName = supermarketNames.get(position);
-            sectionsAdapter = SectionsListAdapter.fromSectionsWithPrices(supermarketsWithPrices.get(supermarketName), new SectionsListAdapter.OnSectionClickListener()
-            {
-                @Override
-                public void onSectionClick(String sectionName)
-                {
-                    OnSupermarketClickListener.onSupermarketClick(new Supermarket(supermarketName, sectionName));
-                }
-            });
-        }
-        else
-        {
-            supermarketNames = new ArrayList<>(supermarkets.keySet());
-            supermarketName = supermarketNames.get(position);
-            sectionsAdapter = SectionsListAdapter.fromSections(supermarkets.get(supermarketName), new SectionsListAdapter.OnSectionClickListener()
-            {
-                @Override
-                public void onSectionClick(String sectionName)
-                {
-                    if (OnSupermarketClickListener != null)
-                    {
-                        OnSupermarketClickListener.onSupermarketClick(new Supermarket(supermarketName, sectionName));
-                    }
-                }
-            });
+        // Determine which data source we use
+        if (supermarketsWithPrices != null) {
+            supermarketName = new ArrayList<>(supermarketsWithPrices.keySet()).get(position);
+
+            // Create adapter once, then update it on reuse
+            if (holder.sectionsAdapter == null) {
+                holder.sectionsAdapter = SectionsListAdapter.fromSectionsWithPrices(
+                        supermarketsWithPrices.get(supermarketName),
+                        sectionName -> {
+                            if (OnSupermarketClickListener != null) {
+                                OnSupermarketClickListener.onSupermarketClick(
+                                        new Supermarket(supermarketName, sectionName)
+                                );
+                            }
+                        }
+                );
+                holder.recyclerSections.setAdapter(holder.sectionsAdapter);
+            } else {
+                holder.sectionsAdapter.updateDataWithPrices(
+                        supermarketsWithPrices.get(supermarketName)
+                );
+                holder.sectionsAdapter.notifyDataSetChanged();
+            }
+
+        } else {
+            supermarketName = new ArrayList<>(supermarkets.keySet()).get(position);
+
+            if (holder.sectionsAdapter == null) {
+                holder.sectionsAdapter = SectionsListAdapter.fromSections(
+                        supermarkets.get(supermarketName),
+                        sectionName -> {
+                            if (OnSupermarketClickListener != null) {
+                                OnSupermarketClickListener.onSupermarketClick(
+                                        new Supermarket(supermarketName, sectionName)
+                                );
+                            }
+                        }
+                );
+                holder.recyclerSections.setAdapter(holder.sectionsAdapter);
+            } else {
+                holder.sectionsAdapter.updateData(
+                        supermarkets.get(supermarketName)
+                );
+                holder.sectionsAdapter.notifyDataSetChanged();
+            }
         }
 
+        // Always set the title
         holder.tvSupermarketName.setText(supermarketName);
-
-        activity.runOnUiThread(() ->
-        {
-            holder.recyclerSections.setLayoutManager(new LinearLayoutManager(holder.itemView.getContext()));
-            holder.recyclerSections.setAdapter(sectionsAdapter);
-        });
     }
 
     @Override
@@ -152,5 +163,14 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
         } else {
             return 0;
         }
+    }
+
+    public void updateData(Map<String, ArrayList<String>> newSupermarkets) {
+        this.supermarkets = newSupermarkets;
+    }
+
+    public void updateDataWithPrices(Map<String, Map<String, Double>> newSupermarketsWithPrices)
+    {
+        this.supermarketsWithPrices = newSupermarketsWithPrices;
     }
 }
