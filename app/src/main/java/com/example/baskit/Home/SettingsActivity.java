@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -18,6 +19,7 @@ import com.example.baskit.API.APIHandler;
 import com.example.baskit.Firebase.FBRefs;
 import com.example.baskit.Firebase.FirebaseAuthHandler;
 import com.example.baskit.Firebase.FirebaseDBHandler;
+import com.example.baskit.List.AddSupermarketAlertDialog;
 import com.example.baskit.List.SupermarketsListAdapter;
 import com.example.baskit.Login.LoginActivity;
 import com.example.baskit.MainComponents.Supermarket;
@@ -115,19 +117,32 @@ public class SettingsActivity extends AppCompatActivity
                     return;
                 }
 
-                Supermarket supermarket = new Supermarket("שופרסל", "שלי מיתר");
-                authHandler.addSupermarket(supermarket, () ->
+                new Thread(() ->
                 {
-                    runOnUiThread(() ->
+                    try
                     {
-                        choices.putIfAbsent(supermarket.getSupermarket(), new ArrayList<>());
-                        choices.get(supermarket.getSupermarket()).add(supermarket.getSection());
+                        Map<String, ArrayList<String>> allBranches = apiHandler.getBranches();
 
-                        supermarketsAdapter.updateData(choices);
-                        supermarketsAdapter.notifyDataSetChanged();
+                        runOnUiThread(() ->
+                        {
+                            try
+                            {
+                                new AddSupermarketAlertDialog(
+                                        SettingsActivity.this,
+                                        SettingsActivity.this,
+                                        choices,
+                                        supermarketsAdapter,
+                                        allBranches
+                                ).show();
+                            } catch (JSONException | IOException e)
+                            {
+                                throw new RuntimeException(e);
+                            }
+                        });
 
-                    });
-                });
+                    }
+                    catch (IOException | JSONException ignored) {}
+                }).start();
             }
         });
 

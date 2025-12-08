@@ -120,9 +120,12 @@ public class HomeActivity extends AppCompatActivity
         {
             user = authHandler.getUser();
 
-            new Thread(() -> {
+            new Thread(() ->
+            {
                 APIHandler.getInstance().preload();
-                runOnUiThread(() -> {
+
+                runOnUiThread(() ->
+                {
                     setContentView(R.layout.activity_home);
                     init();
                 });
