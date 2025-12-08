@@ -391,7 +391,15 @@ public class FirebaseAuthHandler
             try
             {
                 Map<String, ArrayList<String>> branches = apiHandler.getChoices();
-                branches.get(supermarket.getSupermarket()).add(supermarket.getSection());
+                String marketName = supermarket.getSupermarket();
+                String sectionName = supermarket.getSection();
+
+                // Initialize the list if it doesn't exist
+                if (!branches.containsKey(marketName) || branches.get(marketName) == null) {
+                    branches.put(marketName, new ArrayList<>());
+                }
+
+                branches.get(marketName).add(sectionName);
                 apiHandler.setBranches(branches);
 
                 if (onComplete != null)

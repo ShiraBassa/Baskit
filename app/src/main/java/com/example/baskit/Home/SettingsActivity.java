@@ -107,43 +107,45 @@ public class SettingsActivity extends AppCompatActivity
             }
         });
 
-        btnAddSupermarket.setOnClickListener(new View.OnClickListener()
+        btnAddSupermarket.setOnClickListener(v ->
         {
-            @Override
-            public void onClick(View v)
+            if (supermarketsAdapter == null)
             {
-                if (supermarketsAdapter == null)
-                {
-                    return;
-                }
-
-                new Thread(() ->
-                {
-                    try
-                    {
-                        Map<String, ArrayList<String>> allBranches = apiHandler.getBranches();
-
-                        runOnUiThread(() ->
-                        {
-                            try
-                            {
-                                new AddSupermarketAlertDialog(
-                                        SettingsActivity.this,
-                                        SettingsActivity.this,
-                                        choices,
-                                        supermarketsAdapter,
-                                        allBranches
-                                ).show();
-                            } catch (JSONException | IOException e)
-                            {
-                                throw new RuntimeException(e);
-                            }
-                        });
-
-                    }
-                    catch (IOException | JSONException ignored) {}
-                }).start();
+                return;
             }
+
+            new Thread(() ->
+            {
+                try
+                {
+                    Map<String, ArrayList<String>> allBranches = apiHandler.getBranches();
+                    if (allBranches == null || choices == null) {
+                        return; // prevent crash if API returns null
+                    }
+
+                    runOnUiThread(() ->
+                    {
+                        try
+                        {
+                            new AddSupermarketAlertDialog(
+                                    SettingsActivity.this,
+                                    SettingsActivity.this,
+                                    choices,
+                                    supermarketsAdapter,
+                                    allBranches
+                            ).show();
+                        } catch (JSONException | IOException e)
+                        {
+                            e.printStackTrace(); // log error instead of crashing
+                        }
+                    });
+
+                }
+                catch (IOException | JSONException e)
+                {
+                    e.printStackTrace(); // log error instead of ignoring
+                }
+            }).start();
         });
 
         btnRemoveSupermarket.setOnClickListener(new View.OnClickListener()
@@ -158,8 +160,11 @@ public class SettingsActivity extends AppCompatActivity
 
                 Supermarket supermarket = supermarketsAdapter.getSelectedSupermarket();
 
-                if (supermarket.getSupermarket().isEmpty() || supermarket.getSection().isEmpty())
+                if (supermarket == null ||
+                    supermarket.getSupermarket() == null || supermarket.getSupermarket().isEmpty() ||
+                    supermarket.getSection() == null || supermarket.getSection().isEmpty())
                 {
+                    // No selection, do nothing
                     return;
                 }
 
@@ -168,16 +173,19 @@ public class SettingsActivity extends AppCompatActivity
                     runOnUiThread(() ->
                     {
                         String supermarketName = supermarket.getSupermarket();
-                        Objects.requireNonNull(choices.get(supermarketName)).remove(supermarket.getSection());
-
-                        if (Objects.requireNonNull(choices.get(supermarketName)).isEmpty())
+                        ArrayList<String> sections = choices.get(supermarketName);
+                        if (sections != null)
                         {
-                            choices.remove(supermarketName);
+                            sections.remove(supermarket.getSection());
+
+                            if (sections.isEmpty())
+                            {
+                                choices.remove(supermarketName);
+                            }
+
+                            supermarketsAdapter.updateData(choices);
+                            supermarketsAdapter.notifyDataSetChanged();
                         }
-
-                        supermarketsAdapter.updateData(choices);
-                        supermarketsAdapter.notifyDataSetChanged();
-
                     });
                 });
             }

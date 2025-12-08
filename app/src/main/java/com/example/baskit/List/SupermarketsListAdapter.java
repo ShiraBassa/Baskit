@@ -156,10 +156,20 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
                         supermarkets.get(supermarketName), new SectionsListAdapter.OnSectionClickListener()
                         {
                             @Override
-                            public void onSectionClick(String sectionName)
-                            {
-                                selectedSupermarket.setSupermarket(supermarketName);
-                                selectedSupermarket.setSection(sectionName);
+                            public void onSectionClick(String sectionName) {
+                                if (selectedSupermarket.getSupermarket() != null &&
+                                    selectedSupermarket.getSupermarket().equals(supermarketName) &&
+                                    selectedSupermarket.getSection() != null &&
+                                    selectedSupermarket.getSection().equals(sectionName)) {
+                                    // Same item clicked — deselect
+                                    selectedSupermarket.setSupermarket(null);
+                                    selectedSupermarket.setSection(null);
+                                } else {
+                                    // New selection
+                                    selectedSupermarket.setSupermarket(supermarketName);
+                                    selectedSupermarket.setSection(sectionName);
+                                }
+                                notifyDataSetChanged(); // Refresh adapter to reflect selection/deselection
                             }
                         }
                 );

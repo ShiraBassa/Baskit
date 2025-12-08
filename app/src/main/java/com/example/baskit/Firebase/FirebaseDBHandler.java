@@ -85,7 +85,8 @@ public class FirebaseDBHandler
 
     public void getList(String listId, GetListCallback callback)
     {
-        refLists.child(listId).get().addOnCompleteListener(task -> {
+        refLists.child(listId).get().addOnCompleteListener(task ->
+        {
             if (task.isSuccessful())
             {
                 DataSnapshot snapshot = task.getResult();

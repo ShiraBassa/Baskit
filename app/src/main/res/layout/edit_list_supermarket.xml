@@ -4,7 +4,9 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:gravity="end|top"
-    android:layout_marginBottom="25dp">
+    android:layout_marginBottom="25dp"
+    android:background="@color/white_smoke"
+    android:paddingHorizontal="10dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -15,7 +17,7 @@
 
         <TextView
             android:id="@+id/tv_supermarket_name"
-            android:textColor="#000000"
+            android:textColor="@color/dark_teal"
             android:textSize="28sp"
             android:textStyle="bold"
             android:layout_height="wrap_content"
@@ -30,6 +32,7 @@
             android:layout_height="40dp"
             android:background="@null"
             android:scaleType="fitCenter"
+            android:tint="@color/dark_teal"
             android:src="@drawable/ic_arrow_up"/>
 
     </LinearLayout>
@@ -39,6 +42,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingHorizontal="25dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
         android:clipToPadding="true"
         android:clipChildren="true"
         android:nestedScrollingEnabled="true"

@@ -15,6 +15,7 @@ import androidx.core.widget.TextViewCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.baskit.MainComponents.List;
+import com.example.baskit.R;
 import com.google.android.material.button.MaterialButton;
 
 import java.util.ArrayList;
@@ -81,9 +82,15 @@ public class HomeGridAdapter extends RecyclerView.Adapter<HomeGridAdapter.GridVi
     public GridViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType)
     {
         MaterialButton button = new MaterialButton(parent.getContext());
-        button.setCornerRadius(16);
-        button.setBackgroundColor(Color.LTGRAY);
-        button.setTextColor(Color.BLACK);
+        button.setCornerRadius(24);
+        button.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
+            parent.getContext().getColor(R.color.white_smoke)
+        ));
+        button.setStrokeWidth(5);
+        button.setStrokeColor(android.content.res.ColorStateList.valueOf(
+            parent.getContext().getColor(R.color.tan)
+        ));
+        button.setTextColor(parent.getContext().getColor(R.color.rich_mahogany));
         button.setTypeface(Typeface.DEFAULT_BOLD);
         button.setTextSize(20f);
         button.setSingleLine(false);
@@ -96,9 +103,13 @@ public class HomeGridAdapter extends RecyclerView.Adapter<HomeGridAdapter.GridVi
 
         button.setGravity(Gravity.CENTER);
         button.setTextAlignment(android.view.View.TEXT_ALIGNMENT_CENTER);
-        button.setPadding(0, 0, 0, 0);
+        int pad = (int) (12 * parent.getContext().getResources().getDisplayMetrics().density);
+        button.setPadding(pad, pad, pad, pad);
+        button.setRippleColor(android.content.res.ColorStateList.valueOf(
+            parent.getContext().getColor(R.color.dark_teal)
+        ));
 
-        int margin = (int) (8 * parent.getContext().getResources().getDisplayMetrics().density);
+        int margin = (int) (12 * parent.getContext().getResources().getDisplayMetrics().density);
         RecyclerView.LayoutParams params = new RecyclerView.LayoutParams(
                 RecyclerView.LayoutParams.MATCH_PARENT,
                 RecyclerView.LayoutParams.MATCH_PARENT

@@ -4,7 +4,8 @@
     android:layout_height="400dp"
     android:orientation="vertical"
     android:gravity="center"
-    android:padding="10dp">
+    android:padding="10dp"
+    android:background="@color/white_smoke">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -20,10 +21,11 @@
             android:layout_marginBottom="10dp"
             android:scaleType="fitCenter"
             android:background="@null"
-            android:src="@drawable/ic_cancel" />
+            android:src="@drawable/ic_cancel"
+            android:tint="@color/dark_teal" />
 
         <TextView
-            android:textColor="#000000"
+            android:textColor="@color/evergreen"
             android:textSize="48sp"
             android:textStyle="bold"
             android:layout_height="wrap_content"
@@ -42,29 +44,37 @@
         android:orientation="vertical"
         android:gravity="center_horizontal|top">
 
-        <EditText
-            android:id="@+id/et_name"
+        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="50dp"
-            android:paddingHorizontal="10dp"
-            android:textColor="#000000"
-            android:textSize="36sp"
-            android:textDirection="rtl"
-            android:singleLine="true"
-            android:gravity="start"
-            android:textStyle="bold"
-            android:hint="שם"
-            />
+            android:elevation="4dp"
+            android:layout_marginHorizontal="20dp"
+            android:backgroundTint="@color/tan_transparent">
+
+            <EditText
+                android:id="@+id/et_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="10dp"
+                android:textColor="@color/dark_teal"
+                android:textColorHint="@color/dark_teal_transparent"
+                android:textSize="36sp"
+                android:textDirection="rtl"
+                android:singleLine="true"
+                android:gravity="start"
+                android:textStyle="bold"
+                android:hint="שם"
+                android:background="@null"/>
+        </androidx.cardview.widget.CardView>
 
     </LinearLayout>
 
     <Button
         android:id="@+id/btn_create"
-        android:textColor="#000000"
+        android:textColor="@color/white_smoke"
         android:textSize="40sp"
-        android:backgroundTint="@color/gray"
         android:textStyle="bold"
+        android:backgroundTint="@color/dark_teal"
         android:paddingHorizontal="15dp"
         android:paddingVertical="10dp"
         android:layout_height="wrap_content"

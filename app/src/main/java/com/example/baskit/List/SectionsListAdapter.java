@@ -109,26 +109,36 @@ public class SectionsListAdapter extends RecyclerView.Adapter<SectionsListAdapte
         }
 
         holder.itemView.setSelected(selectedPosition == position);
-        holder.itemView.setBackgroundColor(selectedPosition == position ? 0xFFE0E0E0 : 0x00000000);
+        int selectedColor = holder.itemView.getContext().getResources().getColor(R.color.tan); // use Tan for selected
+        int defaultColor = holder.itemView.getContext().getResources().getColor(R.color.white_smoke); // default background
+        holder.itemView.setBackgroundColor(selectedPosition == position ? selectedColor : defaultColor);
 
-        holder.itemView.setOnClickListener(v ->
-        {
+        holder.itemView.setOnClickListener(v -> {
             int adapterPos = holder.getAdapterPosition();
 
-            if (adapterPos == RecyclerView.NO_POSITION)
-            {
+            if (adapterPos == RecyclerView.NO_POSITION) {
                 return;
             }
 
-            int previousSelected = selectedPosition;
-            selectedPosition = adapterPos;
+            if (selectedPosition == adapterPos) {
+                // Deselect if the same item is clicked
+                selectedPosition = RecyclerView.NO_POSITION;
+            } else {
+                selectedPosition = adapterPos;
+            }
 
-            notifyItemChanged(previousSelected);
-            notifyItemChanged(selectedPosition);
+            // Refresh all items to reset backgrounds
+            notifyDataSetChanged();
 
-            if (listener != null)
-            {
-                listener.onSectionClick(sectionName);
+            if (listener != null) {
+                String sectionNameClick;
+                if (sectionsWithPrices != null) {
+                    ArrayList<String> sectionNames = new ArrayList<>(sectionsWithPrices.keySet());
+                    sectionNameClick = sectionNames.get(adapterPos);
+                } else {
+                    sectionNameClick = sections.get(adapterPos);
+                }
+                listener.onSectionClick(sectionNameClick);
             }
         });
 

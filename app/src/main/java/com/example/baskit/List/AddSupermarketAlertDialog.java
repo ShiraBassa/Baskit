@@ -131,10 +131,14 @@ public class AddSupermarketAlertDialog
 
                 authHandler.addSupermarket(supermarket, () ->
                 {
-                    activity.runOnUiThread(() ->
-                    {
+                    activity.runOnUiThread(() -> {
                         choices.putIfAbsent(supermarket.getSupermarket(), new ArrayList<>());
-                        choices.get(supermarket.getSupermarket()).add(supermarket.getSection());
+                        ArrayList<String> sectionsList = choices.get(supermarket.getSupermarket());
+                        if (sectionsList == null) {
+                            sectionsList = new ArrayList<>();
+                            choices.put(supermarket.getSupermarket(), sectionsList);
+                        }
+                        sectionsList.add(supermarket.getSection());
 
                         supermarketsAdapter.updateData(choices);
                         supermarketsAdapter.notifyDataSetChanged();

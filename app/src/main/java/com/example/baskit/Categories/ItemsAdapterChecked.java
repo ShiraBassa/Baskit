@@ -25,12 +25,13 @@ public class ItemsAdapterChecked extends ItemsAdapter
     @Override
     public void onBindViewHolder(ViewHolder holder, int position)
     {
-        int checkedColor = ContextCompat.getColor(holder.itemView.getContext(), R.color.checked);
+        int darkTeal = ContextCompat.getColor(holder.itemView.getContext(), R.color.dark_teal);
+        int richMahogany = ContextCompat.getColor(holder.itemView.getContext(), R.color.rich_mahogany);
 
-        holder.tvName.setTextColor(checkedColor);
-        holder.tvQuantity.setTextColor(checkedColor);
-        holder.tvSupermarket.setTextColor(checkedColor);
-        holder.tvPrice.setTextColor(checkedColor);
+        holder.tvName.setTextColor(darkTeal);
+        holder.tvQuantity.setTextColor(richMahogany);
+        holder.tvSupermarket.setTextColor(richMahogany);
+        holder.tvPrice.setTextColor(richMahogany);
         holder.btnCheckBox.setImageResource(R.drawable.ic_check_box_checked);
 
         super.onBindViewHolder(holder, position);

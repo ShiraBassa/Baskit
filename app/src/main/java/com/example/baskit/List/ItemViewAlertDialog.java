@@ -12,6 +12,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -128,7 +129,7 @@ public class ItemViewAlertDialog
 
                 if (quantity == 1)
                 {
-                    adBtnDown.setBackgroundColor(Color.LTGRAY);
+                    adBtnDown.setBackgroundColor(ContextCompat.getColor(context, R.color.rich_mahogany));
                 }
 
                 adTvQuantity.setText(Integer.toString(quantity));

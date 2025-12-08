@@ -8,6 +8,7 @@
     android:gravity="center"
     android:orientation="vertical"
     android:padding="10dp"
+    android:background="@color/white_smoke"
     tools:context=".Home.HomeActivity">
 
     <LinearLayout
@@ -31,7 +32,8 @@
                 android:layout_height="45dp"
                 android:src="@drawable/ic_settings"
                 android:scaleType="fitCenter"
-                android:background="@null"/>
+                android:background="@null"
+                android:tint="@color/dark_teal"/>
 
         </LinearLayout>
 
@@ -40,9 +42,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="היי ___"
-            android:textColor="#000000"
+            android:textColor="@color/evergreen"
             android:gravity="center"
-            android:textSize="60sp"
+            android:textSize="40sp"
+            android:letterSpacing="0.02"
             android:textStyle="bold" />
 
     </LinearLayout>
@@ -61,7 +64,9 @@
             android:layout_height="match_parent"
             android:visibility="gone"
             android:layoutDirection="rtl"
-            android:orientation="vertical"/>
+            android:orientation="vertical"
+            android:padding="8dp"
+            android:clipToPadding="false"/>
 
     </LinearLayout>
 
@@ -71,18 +76,22 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:orientation="horizontal"
-        android:padding="10dp">
+        android:padding="10dp"
+        android:background="@color/white_smoke"
+        android:elevation="4dp">
 
         <Button
             android:id="@+id/btn_create_list"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:backgroundTint="@color/gray"
+            android:backgroundTint="@color/dark_teal"
             android:text="צור רשימה"
             android:textAlignment="center"
-            android:textColor="#000000"
-            android:textSize="30sp"
-            android:textStyle="bold" />
+            android:textColor="@android:color/white"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:paddingHorizontal="32dp"
+            android:paddingVertical="14dp" />
 
     </LinearLayout>
 

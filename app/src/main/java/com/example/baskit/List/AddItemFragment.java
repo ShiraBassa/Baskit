@@ -21,6 +21,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -169,7 +170,7 @@ public class AddItemFragment extends DialogFragment
             String clickedName = (String) parent.getItemAtPosition(position);
             selectedItem = new Item(clickedName);
             tvQuantity.setText("1");
-            btnDown.setBackgroundColor(Color.LTGRAY);
+            btnDown.setBackgroundColor(ContextCompat.getColor(context, R.color.rich_mahogany));
 
             selectedItem.setQuantity(1);
 
@@ -230,7 +231,7 @@ public class AddItemFragment extends DialogFragment
 
                 int quantity = selectedItem.lowerQuantity();
 
-                if (quantity == 1) btnDown.setBackgroundColor(Color.LTGRAY);
+                if (quantity == 1) btnDown.setBackgroundColor(ContextCompat.getColor(context, R.color.rich_mahogany));
 
                 tvQuantity.setText(Integer.toString(quantity));
             }

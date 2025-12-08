@@ -4,14 +4,16 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:padding="10dp"
-    android:gravity="center">
+    android:gravity="center"
+    android:background="@color/white_smoke"
+    android:elevation="8dp">
 
     <LinearLayout
         android:layout_width="0dp"
         android:layout_weight="1"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginEnd="10dp"
+        android:layout_marginEnd="12dp"
         android:gravity="center">
 
         <ImageButton
@@ -20,7 +22,8 @@
             android:layout_height="50dp"
             android:scaleType="fitCenter"
             android:background="@null"
-            android:src="@drawable/ic_check" />
+            android:src="@drawable/ic_check"
+            android:tint="@color/deep_crimson" />
 
     </LinearLayout>
 
@@ -28,17 +31,23 @@
         android:id="@+id/btn_add_item"
         android:layout_width="70dp"
         android:layout_height="70dp"
-        android:backgroundTint="@color/gray"
+        android:backgroundTint="@color/dark_teal"
         android:text="+"
-        android:textColor="#000000"
-        android:textSize="40sp" />
+        android:textColor="@android:color/white"
+        android:textSize="36sp"
+        android:textStyle="bold"
+        android:layout_gravity="center"
+        android:elevation="6dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp" />
 
     <LinearLayout
         android:gravity="center"
         android:layout_width="0dp"
         android:layout_weight="1"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:layout_marginStart="12dp">
 
         <ImageButton
             android:id="@+id/btn_edit"
@@ -46,7 +55,8 @@
             android:layout_height="50dp"
             android:scaleType="fitCenter"
             android:background="@null"
-            android:src="@drawable/ic_edit" />
+            android:src="@drawable/ic_edit"
+            android:tint="@color/dark_teal" />
 
     </LinearLayout>
 
