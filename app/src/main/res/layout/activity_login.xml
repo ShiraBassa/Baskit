@@ -5,7 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white_smoke"
+    android:background="?attr/colorSurface"
     android:gravity="center"
     android:orientation="vertical"
     android:padding="10dp"
@@ -17,7 +17,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="40dp"
         android:text="היכנס / הירשם"
-        android:textColor="@color/evergreen"
+        android:textColor="?attr/colorPrimary"
         android:textSize="40sp"
         android:textStyle="bold" />
 
@@ -47,7 +47,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="10dp"
                     android:text="אימייל"
-                    android:textColor="@color/rich_mahogany"
+                    android:textColor="?attr/colorSecondary"
                     android:textSize="22sp"
                     android:textStyle="bold" />
 
@@ -58,9 +58,13 @@
                     android:layout_height="wrap_content"
                     android:inputType="textEmailAddress"
                     android:textSize="20sp"
-                    android:background="@color/white_smoke"
                     android:padding="12dp"
-                    android:backgroundTint="@color/tan"/>
+                    android:textColor="?attr/colorSecondary"
+                    android:clipToOutline="true"
+                    android:outlineProvider="background"
+                    android:layout_marginBottom="16dp"
+                    android:scrollHorizontally="false"
+                    android:scrollbars="none" />
 
             </LinearLayout>
 
@@ -75,7 +79,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="10dp"
                     android:text="סיסמא"
-                    android:textColor="@color/rich_mahogany"
+                    android:textColor="?attr/colorSecondary"
                     android:textSize="22sp"
                     android:textStyle="bold" />
 
@@ -86,9 +90,13 @@
                     android:layout_height="wrap_content"
                     android:textSize="20sp"
                     android:inputType="textPassword"
-                    android:background="@color/white_smoke"
                     android:padding="12dp"
-                    android:backgroundTint="@color/tan"/>
+                    android:clipToOutline="true"
+                    android:textColor="?attr/colorSecondary"
+                    android:outlineProvider="background"
+                    android:layout_marginBottom="16dp"
+                    android:scrollHorizontally="false"
+                    android:scrollbars="none" />
 
             </LinearLayout>
 
@@ -98,13 +106,13 @@
             android:id="@+id/btn_submit"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:backgroundTint="@color/dark_teal"
+            android:backgroundTint="?attr/colorPrimary"
             android:gravity="center"
             android:orientation="vertical"
             android:paddingHorizontal="40dp"
             android:paddingVertical="14dp"
             android:text="בוצע"
-            android:textColor="@android:color/white"
+            android:textColor="?attr/colorOnPrimary"
             android:textSize="24sp"
             android:textStyle="bold" />
 

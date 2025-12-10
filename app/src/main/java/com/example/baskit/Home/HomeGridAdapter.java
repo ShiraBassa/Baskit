@@ -1,5 +1,8 @@
 package com.example.baskit.Home;
 
+import static com.example.baskit.Baskit.getThemeColor;
+
+import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.text.LineBreaker;
@@ -77,20 +80,24 @@ public class HomeGridAdapter extends RecyclerView.Adapter<HomeGridAdapter.GridVi
         }
     }
 
+    @SuppressLint("ResourceType")
     @NonNull
     @Override
     public GridViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType)
     {
         MaterialButton button = new MaterialButton(parent.getContext());
         button.setCornerRadius(24);
+
         button.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
-            parent.getContext().getColor(R.color.white_smoke)
-        ));
+                getThemeColor(parent.getContext(), com.google.android.material.R.attr.colorSurface)));
+
         button.setStrokeWidth(5);
         button.setStrokeColor(android.content.res.ColorStateList.valueOf(
-            parent.getContext().getColor(R.color.tan)
+                getThemeColor(parent.getContext(), com.google.android.material.R.attr.colorPrimaryVariant)
         ));
-        button.setTextColor(parent.getContext().getColor(R.color.rich_mahogany));
+
+        button.setTextColor(getThemeColor(parent.getContext(), com.google.android.material.R.attr.colorOnSurface));
+
         button.setTypeface(Typeface.DEFAULT_BOLD);
         button.setTextSize(20f);
         button.setSingleLine(false);
@@ -105,8 +112,9 @@ public class HomeGridAdapter extends RecyclerView.Adapter<HomeGridAdapter.GridVi
         button.setTextAlignment(android.view.View.TEXT_ALIGNMENT_CENTER);
         int pad = (int) (12 * parent.getContext().getResources().getDisplayMetrics().density);
         button.setPadding(pad, pad, pad, pad);
+
         button.setRippleColor(android.content.res.ColorStateList.valueOf(
-            parent.getContext().getColor(R.color.dark_teal)
+                getThemeColor(parent.getContext(), com.google.android.material.R.attr.colorPrimary)
         ));
 
         int margin = (int) (12 * parent.getContext().getResources().getDisplayMetrics().density);

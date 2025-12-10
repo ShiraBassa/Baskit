@@ -1,9 +1,33 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+
     <style name="Base.Theme.Baskit" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+
+        <!-- Primary actions = dark teal -->
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryContainer">@color/primary_variant</item>
+
+        <!-- Secondary subtle actions = rich mahogany -->
+        <item name="colorSecondary">@color/secondary</item>
+        <item name="colorSecondaryContainer">@color/secondary_variant</item>
+
+        <!-- Navigation + icons = dark teal -->
+        <item name="colorOnPrimary">@color/on_primary</item>
+        <item name="colorOnSecondary">@color/on_secondary</item>
+
+        <!-- Background & surfaces -->
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/on_surface</item>
+
+        <!-- Destructive actions -->
+        <item name="colorError">@color/destructive</item>
+
+        <!-- Outline, borders, dividers -->
+        <item name="colorOutline">@color/evergreen</item>
+
+        <!-- Accents -->
+        <item name="colorTertiary">@color/accent</item>
     </style>
 
     <style name="Theme.Baskit" parent="Base.Theme.Baskit" />
+
 </resources>

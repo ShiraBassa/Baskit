@@ -5,88 +5,74 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
     android:orientation="vertical"
     android:paddingHorizontal="10dp"
+    android:gravity="center"
+    android:background="?attr/colorSurface"
     tools:context=".List.ListActivity">
 
-    <androidx.cardview.widget.CardView
+    <!-- Top Floating Header -->
+    <LinearLayout
+        android:id="@+id/layout_top_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingVertical="16dp"
+        android:paddingHorizontal="10dp"
+        android:background="?attr/colorSurface"
+        android:elevation="4dp">
+
+        <ImageButton
+            android:id="@+id/btn_back"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:scaleType="fitCenter"
+            android:background="@null"
+            android:src="@drawable/ic_back"
+            app:tint="?attr/colorPrimary" />
+
+        <TextView
+            android:id="@+id/tv_list_name"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="10dp"
+            android:text="רשימה"
+            android:visibility="invisible"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.02" />
+
+        <ImageButton
+            android:id="@+id/btn_share"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:scaleType="fitCenter"
+            android:background="@null"
+            android:src="@drawable/ic_share"
+            app:tint="?attr/colorSecondary" />
+    </LinearLayout>
+
+    <!-- Scrollable Categories List -->
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:layout_margin="16dp"
-        android:elevation="8dp"
-        app:cardCornerRadius="16dp"
-        app:cardBackgroundColor="@color/tan">
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp">
 
         <LinearLayout
-            android:id="@+id/layout_top_content"
+            android:id="@+id/categories_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="30dp"
-            android:gravity="top|end"
             android:orientation="vertical"
-            android:paddingHorizontal="5dp"
-            android:paddingTop="15dp">
+            android:gravity="center_horizontal|top"
+            android:paddingHorizontal="5dp" />
+    </ScrollView>
 
-            <LinearLayout
-                android:id="@+id/layout_top_bar"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="end"
-                android:layout_marginBottom="25dp"
-                android:orientation="horizontal">
-
-                <ImageButton
-                    android:id="@+id/btn_back"
-                    android:layout_width="45dp"
-                    android:layout_height="45dp"
-                    android:scaleType="fitCenter"
-                    android:background="@null"
-                    android:src="@drawable/ic_back"
-                    android:tint="@color/dark_teal" />
-
-                <TextView
-                    android:id="@+id/tv_list_name"
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="10dp"
-                    android:text="רשימה"
-                    android:visibility="invisible"
-                    android:textColor="@color/evergreen"
-                    android:textSize="36sp"
-                    android:textStyle="bold"
-                    android:letterSpacing="0.02" />
-
-                <ImageButton
-                    android:id="@+id/btn_share"
-                    android:layout_width="45dp"
-                    android:layout_height="45dp"
-                    android:scaleType="fitCenter"
-                    android:background="@null"
-                    android:src="@drawable/ic_share"
-                    android:tint="@color/dark_teal" />
-
-            </LinearLayout>
-
-            <ScrollView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="10dp">
-
-                <LinearLayout
-                    android:id="@+id/categories_container"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_horizontal|top"
-                    android:orientation="vertical" />
-
-            </ScrollView>
-
-        </LinearLayout>
-    </androidx.cardview.widget.CardView>
-
+    <!-- Total Text -->
     <TextView
         android:id="@+id/tv_total"
         android:layout_width="wrap_content"
@@ -94,10 +80,11 @@
         android:layout_marginBottom="20dp"
         android:visibility="invisible"
         android:text="סך הכל: _ ש״ח"
-        android:textColor="@color/rich_mahogany"
+        android:textColor="?attr/colorSecondary"
         android:textSize="22sp"
         android:textStyle="bold" />
 
+    <!-- Bottom Bar -->
     <include
         layout="@layout/bottom_bar"
         android:layout_width="match_parent"

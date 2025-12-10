@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:padding="10dp"
     android:gravity="center"
-    android:background="@color/white_smoke"
+    android:background="?attr/colorSurface"
     android:elevation="8dp">
 
     <LinearLayout
@@ -23,7 +24,7 @@
             android:scaleType="fitCenter"
             android:background="@null"
             android:src="@drawable/ic_check"
-            android:tint="@color/deep_crimson" />
+            app:tint="?attr/colorError" />
 
     </LinearLayout>
 
@@ -31,9 +32,9 @@
         android:id="@+id/btn_add_item"
         android:layout_width="70dp"
         android:layout_height="70dp"
-        android:backgroundTint="@color/dark_teal"
+        android:backgroundTint="?attr/colorPrimary"
         android:text="+"
-        android:textColor="@android:color/white"
+        android:textColor="?attr/colorOnPrimary"
         android:textSize="36sp"
         android:textStyle="bold"
         android:layout_gravity="center"
@@ -56,7 +57,7 @@
             android:scaleType="fitCenter"
             android:background="@null"
             android:src="@drawable/ic_edit"
-            android:tint="@color/dark_teal" />
+            app:tint="?attr/colorSecondary" />
 
     </LinearLayout>
 

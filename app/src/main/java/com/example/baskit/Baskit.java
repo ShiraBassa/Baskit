@@ -3,8 +3,10 @@ package com.example.baskit;
 import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
+import android.content.res.Resources;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.TypedValue;
 import android.view.View;
 
 public class Baskit extends Application
@@ -41,5 +43,20 @@ public class Baskit extends Application
     public static Context getContext()
     {
         return context;
+    }
+
+    public static int getThemeColor(Context context, int attributeId) {
+        TypedValue typedValue = new TypedValue();
+        Resources.Theme theme = context.getTheme();
+        theme.resolveAttribute(attributeId, typedValue, true);
+
+        // If the attribute directly points to a color, it's in typedValue.data
+        if (typedValue.type >= TypedValue.TYPE_FIRST_COLOR_INT && typedValue.type <= TypedValue.TYPE_LAST_COLOR_INT) {
+            return typedValue.data;
+        }
+        // If the attribute points to a color resource, get it from the resources
+        else {
+            return context.getResources().getColor(typedValue.resourceId, theme);
+        }
     }
 }

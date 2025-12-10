@@ -8,7 +8,7 @@
     android:gravity="center"
     android:orientation="vertical"
     android:padding="10dp"
-    android:background="@color/white_smoke"
+    android:background="?attr/colorSurface"
     tools:context=".Home.HomeActivity">
 
     <LinearLayout
@@ -33,7 +33,7 @@
                 android:src="@drawable/ic_settings"
                 android:scaleType="fitCenter"
                 android:background="@null"
-                android:tint="@color/dark_teal"/>
+                app:tint="?attr/colorPrimary"/>
 
         </LinearLayout>
 
@@ -42,7 +42,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="היי ___"
-            android:textColor="@color/evergreen"
+            android:textColor="?attr/colorPrimary"
             android:gravity="center"
             android:textSize="40sp"
             android:letterSpacing="0.02"
@@ -77,17 +77,16 @@
         android:gravity="center"
         android:orientation="horizontal"
         android:padding="10dp"
-        android:background="@color/white_smoke"
         android:elevation="4dp">
 
         <Button
             android:id="@+id/btn_create_list"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:backgroundTint="@color/dark_teal"
+            android:backgroundTint="?attr/colorPrimary"
             android:text="צור רשימה"
             android:textAlignment="center"
-            android:textColor="@android:color/white"
+            android:textColor="?attr/colorOnPrimary"
             android:textSize="22sp"
             android:textStyle="bold"
             android:paddingHorizontal="32dp"
