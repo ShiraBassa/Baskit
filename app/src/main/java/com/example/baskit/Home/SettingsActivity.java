@@ -2,23 +2,16 @@ package com.example.baskit.Home;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.baskit.API.APIHandler;
-import com.example.baskit.Firebase.FBRefs;
 import com.example.baskit.Firebase.FirebaseAuthHandler;
-import com.example.baskit.Firebase.FirebaseDBHandler;
 import com.example.baskit.List.AddSupermarketAlertDialog;
 import com.example.baskit.List.SupermarketsListAdapter;
 import com.example.baskit.Login.LoginActivity;
@@ -29,9 +22,7 @@ import org.json.JSONException;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 public class SettingsActivity extends AppCompatActivity
 {
@@ -62,7 +53,7 @@ public class SettingsActivity extends AppCompatActivity
         btnLogOut = findViewById(R.id.btn_log_out);
         btnAddSupermarket = findViewById(R.id.btn_add_supermarket);
         btnRemoveSupermarket = findViewById(R.id.btn_remove_supermarket);
-        recyclerSupermarkets = findViewById(R.id.recycler_supermarkets);
+        recyclerSupermarkets = findViewById(R.id.recycler_supermarket);
 
         new Thread(() -> {
             try

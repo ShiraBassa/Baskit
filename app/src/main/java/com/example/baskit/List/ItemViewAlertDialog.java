@@ -60,7 +60,7 @@ public class ItemViewAlertDialog
         adTvQuantity = adLayout.findViewById(R.id.tv_quantity);
         adLoutQuantity = adLayout.findViewById(R.id.lout_info);
         adLoutQuantityWhole = adLayout.findViewById(R.id.lout_quantity_whole);
-        recyclerSupermarkets = adLayout.findViewById(R.id.recycler_supermarkets);
+        recyclerSupermarkets = adLayout.findViewById(R.id.recycler_supermarket);
         adTvItemName = adLayout.findViewById(R.id.tv_item_name);
 
         new Thread(() ->
@@ -82,7 +82,6 @@ public class ItemViewAlertDialog
                 {
                     item.setSupermarket(supermarket);
                     item.setPrice(finalData.get(supermarket.getSupermarket()).get(supermarket.getSection()));
-                    upperClassFns.updateItemCategory(item);
                 }
             });
 
@@ -156,5 +155,10 @@ public class ItemViewAlertDialog
         }
 
         adItemView.show();
+    }
+
+    public void setUpperClassFns(ItemsAdapter.UpperClassFunctions upperClassFns)
+    {
+        this.upperClassFns = upperClassFns;
     }
 }

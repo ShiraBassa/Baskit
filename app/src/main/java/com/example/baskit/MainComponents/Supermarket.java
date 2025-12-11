@@ -36,7 +36,13 @@ public class Supermarket implements Cloneable
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
+        if (section.isEmpty())
+        {
+            return supermarket;
+        }
+
         return supermarket + " ," + section;
     }
 

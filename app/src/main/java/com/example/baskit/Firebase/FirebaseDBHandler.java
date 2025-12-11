@@ -18,6 +18,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.ValueEventListener;
 
+import org.json.JSONException;
+
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,7 +33,7 @@ public class FirebaseDBHandler
 
     public interface GetListCallback
     {
-        void onListFetched(List newList);
+        void onListFetched(List newList) throws JSONException, IOException;
         void onError(String error);
     }
 
@@ -94,7 +97,13 @@ public class FirebaseDBHandler
                 if (snapshot.exists())
                 {
                     List list = snapshot.getValue(List.class);
-                    callback.onListFetched(list);
+                    try {
+                        callback.onListFetched(list);
+                    } catch (JSONException e) {
+                        throw new RuntimeException(e);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
                 else
                 {
@@ -322,7 +331,13 @@ public class FirebaseDBHandler
                 if (snapshot.exists())
                 {
                     List list = snapshot.getValue(List.class);
-                    callback.onListFetched(list);
+                    try {
+                        callback.onListFetched(list);
+                    } catch (JSONException e) {
+                        throw new RuntimeException(e);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             }
 

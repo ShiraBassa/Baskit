@@ -103,7 +103,7 @@ public class AddItemFragment extends DialogFragment
         tvQuantity = fragmentView.findViewById(R.id.tv_quantity);
         infoLayout = fragmentView.findViewById(R.id.lout_info);
         progressBar = fragmentView.findViewById(R.id.progressBar);
-        recyclerSupermarkets = fragmentView.findViewById(R.id.recycler_supermarkets);
+        recyclerSupermarkets = fragmentView.findViewById(R.id.recycler_supermarket);
 
         setupAutocomplete();
         setupButtons();

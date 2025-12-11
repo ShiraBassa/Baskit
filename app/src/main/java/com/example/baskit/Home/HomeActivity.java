@@ -155,7 +155,15 @@ public class HomeActivity extends AppCompatActivity
         btnCreateList = findViewById(R.id.btn_create_list);
         tvTitle = findViewById(R.id.tv_title);
 
-        tvTitle.setText("היי " + user.getName());
+        if (user != null) {
+            tvTitle.setText("היי " + user.getName());
+        }
+        else
+        {
+            tvTitle.setText("היי"); // fallback
+            Log.w("HomeActivity", "User is null in init()");
+            return;
+        }
 
         dbHandler.listenToUserName(user, new FirebaseDBHandler.GetUserNameCallback()
         {

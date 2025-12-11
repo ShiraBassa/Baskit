@@ -40,14 +40,13 @@ public class ListActivity extends AppCompatActivity
     Map<String, View> categoriesViews;
     AddItemFragment addItemFragment;
     Button btnAddItem;
-    ImageButton btnEditList, btnShare;
+    ImageButton btnShare;
     AIHandler aiHandler = AIHandler.getInstance();
     APIHandler apiHandler = APIHandler.getInstance();
 
     Map<String, Map<String, Map<String, Double>>> allItems;
     Map<String, String> itemsCodeNames;
     private boolean itemsLoaded = false;
-    EditListFragment editListFragment;
     private boolean initialized = true;
     ShareListAlertDialog shareAlertDialog;
 
@@ -87,7 +86,6 @@ public class ListActivity extends AppCompatActivity
         btnBack = findViewById(R.id.btn_back);
         btnFinished = findViewById(R.id.btn_finished);
         btnAddItem = findViewById(R.id.btn_add_item);
-        btnEditList = findViewById(R.id.btn_edit);
         tvTotal = findViewById(R.id.tv_total);
         btnShare = findViewById(R.id.btn_share);
 
@@ -98,10 +96,13 @@ public class ListActivity extends AppCompatActivity
 
         setButton();
 
-        addItemFragment = new AddItemFragment(ListActivity.this,
-                ListActivity.this,
-                new ArrayList<>(itemsCodeNames.values()),
-                ListActivity.this::addItem);
+        if (itemsCodeNames != null && itemsCodeNames.values() != null)
+        {
+            addItemFragment = new AddItemFragment(ListActivity.this,
+                    ListActivity.this,
+                    new ArrayList<>(itemsCodeNames.values()),
+                    ListActivity.this::addItem);
+        }
     }
 
     private void resumeInit()
@@ -129,10 +130,6 @@ public class ListActivity extends AppCompatActivity
                 {
                     categories = new HashMap<>();
                 }
-
-                editListFragment = new EditListFragment(
-                        ListActivity.this, ListActivity.this, list.getAllItems(), list,
-                        list.getName());
 
                 shareAlertDialog = new ShareListAlertDialog(list, ListActivity.this, ListActivity.this);
 
@@ -222,15 +219,6 @@ public class ListActivity extends AppCompatActivity
             public void onClick(View view)
             {
                 addItemFragment.show(getSupportFragmentManager(), "AddItemFragment");
-            }
-        });
-
-        btnEditList.setOnClickListener(new View.OnClickListener()
-        {
-            @Override
-            public void onClick(View view)
-            {
-                editListFragment.show(getSupportFragmentManager(), "EditListFragment");
             }
         });
 
@@ -393,6 +381,16 @@ public class ListActivity extends AppCompatActivity
 
     private void showTotal()
     {
-        tvTotal.setText("סך הכל: " + Double.toString(list.getTotal()) + " ש״ח");
+        double total = list.getTotal();
+        int total_rounded = (int) total;
+
+        if (total == total_rounded)
+        {
+            tvTotal.setText("סך הכל: " + Integer.toString(total_rounded) + " ש״ח");
+        }
+        else
+        {
+            tvTotal.setText("סך הכל: " + Double.toString(total) + " ש״ח");
+        }
     }
 }

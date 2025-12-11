@@ -28,9 +28,10 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
     {
         void updateItemCategory(Item item);
         void removeItemCategory(Item item);
+        void updateCategory();
+        void removeCategory();
     }
 
-    ItemsListHandler.EmptyCategoryCase emptyCategory;
     protected ArrayList<Item> items;
     protected OnItemClickListener listener;
     protected UpperClassFunctions upperClassFns;
@@ -40,10 +41,8 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
     public ItemsAdapter(ArrayList<Item> items,
                         OnItemClickListener listener,
                         UpperClassFunctions upperClassFns,
-                        ItemsListHandler.EmptyCategoryCase emptyCategory,
                         Activity activity, Context context)
     {
-        this.emptyCategory = emptyCategory;
         this.items = new ArrayList<>();
         this.listener = listener;
         this.upperClassFns = upperClassFns;
@@ -58,7 +57,7 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
 
     public static class ViewHolder extends RecyclerView.ViewHolder
     {
-        protected TextView tvName, tvQuantity, tvSupermarket, tvPrice;
+        protected TextView tvName, tvQuantity, tvPrice;
         protected ImageButton btnUp, btnDown, btnCheckBox;
         protected ItemViewAlertDialog itemViewAlertDialog;
 
@@ -71,7 +70,6 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
             btnUp = itemView.findViewById(R.id.btn_up);
             btnDown = itemView.findViewById(R.id.btn_down);
             btnCheckBox = itemView.findViewById(R.id.check_box);
-            tvSupermarket = itemView.findViewById(R.id.tv_supermarket_name);
             tvPrice = itemView.findViewById(R.id.tv_price);
         }
     }
@@ -109,13 +107,31 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
 
         if (item.hasSupermarket())
         {
-            holder.tvSupermarket.setText("(" + item.getSupermarket() + ")");
-            holder.tvSupermarket.setTextColor(ContextCompat.getColor(context, R.color.rich_mahogany));
-            holder.tvPrice.setText(Double.toString(item.getPrice()));
-            holder.tvPrice.setTextColor(ContextCompat.getColor(context, R.color.rich_mahogany));
+            double total = item.getTotal();
+            int total_rounded = (int) total;
 
-            holder.tvSupermarket.setVisibility(View.VISIBLE);
+            if (total == total_rounded)
+            {
+                holder.tvPrice.setText(Integer.toString(total_rounded));
+            }
+            else
+            {
+                holder.tvPrice.setText(Double.toString(total));
+            }
+
+            holder.tvPrice.setTextColor(ContextCompat.getColor(context, R.color.rich_mahogany));
             holder.tvPrice.setVisibility(View.VISIBLE);
+        }
+
+        if (item.isChecked())
+        {
+            holder.btnCheckBox.setImageResource(R.drawable.ic_check_box_checked);
+            holder.itemView.setAlpha(0.5f);
+        }
+        else
+        {
+            holder.btnCheckBox.setImageResource(R.drawable.ic_check_box_unchecked);
+            holder.itemView.setAlpha(1f);
         }
 
         setItemButtons(holder, item, position);
@@ -149,8 +165,12 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
 
             if (quantity == 0)
             {
-                removeItem(currPosition);
-                upperClassFns.removeItemCategory(item);
+                removeItem(item);
+
+                if (upperClassFns != null)
+                {
+                    upperClassFns.removeItemCategory(item);
+                }
             }
             else
             {
@@ -166,10 +186,22 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
 
         holder.btnCheckBox.setOnClickListener(v ->
         {
+            item.setChecked(!item.isChecked());
+
+            if (item.isChecked())
+            {
+                holder.btnCheckBox.setImageResource(R.drawable.ic_check_box_checked);
+                holder.itemView.setAlpha(0.5f);
+            }
+            else
+            {
+                holder.btnCheckBox.setImageResource(R.drawable.ic_check_box_unchecked);
+                holder.itemView.setAlpha(1f);
+            }
+
             listener.notifyCheckBox(item);
             upperClassFns.updateItemCategory(item);
         });
-        holder.btnCheckBox.setColorFilter(ContextCompat.getColor(context, R.color.dark_teal));
 
         holder.tvName.setOnClickListener(new View.OnClickListener()
         {
@@ -179,8 +211,6 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
                 holder.itemViewAlertDialog.show();
             }
         });
-
-        holder.btnUp.setColorFilter(ContextCompat.getColor(context, R.color.dark_teal));
     }
 
     public void addItem(Item item)
@@ -208,7 +238,7 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
 
         if (items.isEmpty())
         {
-            emptyCategory.onFinishedCategory();
+            upperClassFns.removeCategory();
         }
     }
 

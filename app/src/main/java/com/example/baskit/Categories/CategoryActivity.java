@@ -8,17 +8,22 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.baskit.AI.AIHandler;
 import com.example.baskit.API.APIHandler;
 import com.example.baskit.Firebase.FirebaseDBHandler;
 import com.example.baskit.List.AddItemFragment;
-import com.example.baskit.List.EditListFragment;
 import com.example.baskit.MainComponents.Category;
 import com.example.baskit.MainComponents.Item;
 import com.example.baskit.MainComponents.List;
+import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;
 
+import org.json.JSONException;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -28,19 +33,20 @@ public class CategoryActivity extends AppCompatActivity
     Map<String, Category> categories;
     Category category;
 
-    ItemsListHandler itemsListHandler;
     TextView tvListName, tvCategoryName, tvTotal;
-    ImageButton btnFinished, btnBack, btnEditList;
+    ImageButton btnFinished, btnBack;
+    Button btnCheapest;
     Button btnAddItem;
     FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
     AddItemFragment addItemFragment;
-    EditListFragment editListFragment;
     AIHandler aiHandler = AIHandler.getInstance();
     APIHandler apiHandler = APIHandler.getInstance();
 
     Map<String, Map<String, Map<String, Double>>> allItems;
     Map<String, String> itemsCodeNames;
     boolean initialized = true;
+    private RecyclerView recyclerItems;
+    private CategoryItemsAdapter itemsAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -58,17 +64,6 @@ public class CategoryActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onPause()
-    {
-        super.onPause();
-
-        if (list.hasCategory(category.getName()))
-        {
-            list.getCategory(category.getName()).setItems(itemsListHandler.getAllItems());
-        }
-    }
-
-    @Override
     protected void onResume()
     {
         super.onResume();
@@ -83,16 +78,16 @@ public class CategoryActivity extends AppCompatActivity
     {
         btnFinished = findViewById(R.id.btn_finished);
         btnBack = findViewById(R.id.btn_back);
-        btnEditList = findViewById(R.id.btn_edit);
         tvListName = findViewById(R.id.tv_list_name);
         tvCategoryName = findViewById(R.id.tv_category_name);
         btnAddItem = findViewById(R.id.btn_add_item);
         tvTotal = findViewById(R.id.tv_total);
+        btnCheapest = findViewById(R.id.btn_arrange_cheapest);
 
         dbHandler.getList(getIntent().getStringExtra("listId"), new FirebaseDBHandler.GetListCallback()
         {
             @Override
-            public void onListFetched(List newList)
+            public void onListFetched(List newList) throws JSONException, IOException
             {
                 CategoryActivity.this.list = newList;
 
@@ -111,28 +106,80 @@ public class CategoryActivity extends AppCompatActivity
                         new ArrayList<>(itemsCodeNames.values()),
                         CategoryActivity.this::addItem);
 
-                editListFragment = new EditListFragment(CategoryActivity.this,
-                        CategoryActivity.this, new ArrayList<>(category.getItems().values()), list,
-                        list.getName() + ", " + category.getName() + "");
+                recyclerItems = findViewById(R.id.recycler_category_items);
 
-                itemsListHandler = new ItemsListHandler(CategoryActivity.this,
-                        CategoryActivity.this,
-                        findViewById(R.id.recycler_unchecked),
-                        findViewById(R.id.recycler_checked),
-                        CategoryActivity.this::finishedCategory,
-                        newList,
-                        category);
+                new Thread(() ->
+                {
+                    try
+                    {
+                        ArrayList<Supermarket> supermarkets = apiHandler.getSupermarkets();
+
+                        CategoryActivity.this.runOnUiThread(() ->
+                        {
+                            itemsAdapter = new CategoryItemsAdapter(
+                                    category,
+                                    CategoryActivity.this,
+                                    CategoryActivity.this,
+                                    new ItemsAdapter.UpperClassFunctions()
+                                    {
+                                        @Override
+                                        public void updateItemCategory(Item item)
+                                        {
+                                            if (category == null) return;
+                                            dbHandler.updateItem(list, category, item);
+                                        }
+
+                                        @Override
+                                        public void removeItemCategory(Item item)
+                                        {
+                                            if (category == null) return;
+                                            dbHandler.removeItem(list, category, item);
+                                        }
+
+                                        @Override
+                                        public void updateCategory()
+                                        {
+                                            if (category == null) return;
+                                            dbHandler.updateItems(list, new ArrayList<>(category.getItems().values()));
+                                        }
+
+                                        @Override
+                                        public void removeCategory()
+                                        {
+                                            dbHandler.removeCategory(list, category);
+                                            finish();
+                                        }
+                                    },
+                                    supermarkets,
+                                    apiHandler.getItems()
+                            );
+
+                            recyclerItems.setLayoutManager(new LinearLayoutManager(CategoryActivity.this));
+                            recyclerItems.setAdapter(itemsAdapter);
+
+                        });
+
+                    } catch (Exception ignored) {}
+                }).start();
 
                 dbHandler.listenToCategory(list, category, new FirebaseDBHandler.GetCategoryCallback()
                 {
                     @Override
                     public void onCategoryFetched(Category newCategory)
                     {
-                        itemsListHandler.update(newCategory);
                         category = newCategory;
                         showTotal();
                         tvTotal.setVisibility(View.VISIBLE);
-                        initialized = false;
+
+                        if (initialized)
+                        {
+                            initialized = false;
+                            return;
+                        }
+
+                        runOnUiThread(() -> {
+                            itemsAdapter.updateItems(new ArrayList<>(category.getItems().values()));
+                        });
                     }
 
                     @Override
@@ -169,7 +216,6 @@ public class CategoryActivity extends AppCompatActivity
             @Override
             public void onClick(View view)
             {
-                itemsListHandler.finished();
             }
         });
 
@@ -191,12 +237,12 @@ public class CategoryActivity extends AppCompatActivity
             }
         });
 
-        btnEditList.setOnClickListener(new View.OnClickListener()
+        btnCheapest.setOnClickListener(new View.OnClickListener()
         {
             @Override
             public void onClick(View view)
             {
-                editListFragment.show(getSupportFragmentManager(), "EditListFragment");
+                itemsAdapter.arrangeByCheapest();
             }
         });
     }
@@ -268,6 +314,16 @@ public class CategoryActivity extends AppCompatActivity
 
     private void showTotal()
     {
-        tvTotal.setText("סך הכל: " + Double.toString(category.getTotal()) + " ש״ח");
+        double total = category.getTotal();
+        int total_rounded = (int) total;
+
+        if (total == total_rounded)
+        {
+            tvTotal.setText("סך הכל: " + Integer.toString(total_rounded) + " ש״ח");
+        }
+        else
+        {
+            tvTotal.setText("סך הכל: " + Double.toString(total) + " ש״ח");
+        }
     }
 }

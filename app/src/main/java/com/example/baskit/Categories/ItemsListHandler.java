@@ -9,7 +9,6 @@ import com.example.baskit.Firebase.FirebaseDBHandler;
 import com.example.baskit.MainComponents.Category;
 import com.example.baskit.MainComponents.Item;
 import com.example.baskit.MainComponents.List;
-import com.example.baskit.MainComponents.User;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,14 +19,6 @@ public class ItemsListHandler implements ItemsAdapter.UpperClassFunctions
     public void notifyCheckBox(Item item)
     {
         boolean checked = item.isChecked();
-
-        ItemsAdapter fromAdapter = checked ? checkedAdapter : uncheckedAdapter;
-        ItemsAdapter toAdapter = checked ? uncheckedAdapter : checkedAdapter;
-
-        item.setChecked(!checked);
-        toAdapter.addItem(item);
-        item.setChecked(checked);
-        fromAdapter.removeItem(item);
         item.setChecked(!checked);
     }
 
@@ -43,14 +34,26 @@ public class ItemsListHandler implements ItemsAdapter.UpperClassFunctions
         dbHandler.removeItem(list, category, item);
     }
 
+    @Override
+    public void updateCategory()
+    {
+        dbHandler.updateItems(list, new ArrayList<>(category.getItems().values()));
+    }
+
+    @Override
+    public void removeCategory()
+    {
+        dbHandler.removeCategory(list, category);
+    }
+
     @FunctionalInterface
     public interface EmptyCategoryCase {
         void onFinishedCategory();
     }
 
     EmptyCategoryCase emptyCategory;
-    private RecyclerView recyclerUnchecked, recyclerChecked;
-    private ItemsAdapter uncheckedAdapter, checkedAdapter;
+    private RecyclerView recyclerItems;
+    private ItemsAdapter itemsAdapter;
     private Context context;
     private List list;
     private Category category;
@@ -59,8 +62,7 @@ public class ItemsListHandler implements ItemsAdapter.UpperClassFunctions
 
     public ItemsListHandler(Activity activity,
                             Context context,
-                            RecyclerView recyclerUnchecked,
-                            RecyclerView recyclerChecked,
+                            RecyclerView recyclerItems,
                             EmptyCategoryCase emptyCategory,
                             List list,
                             Category category)
@@ -70,124 +72,55 @@ public class ItemsListHandler implements ItemsAdapter.UpperClassFunctions
         this.category = category;
         this.emptyCategory = emptyCategory;
         this.context = context;
-        this.recyclerUnchecked = recyclerUnchecked;
-        this.recyclerChecked = recyclerChecked;
+        this.recyclerItems = recyclerItems;
 
-        Map<String, Item> uncheckedItems = new HashMap<>();
-        Map<String, Item> checkedItems = new HashMap();
-
-        for (Item item : category.getItems().values())
-        {
-            if (item.isChecked())
-            {
-                checkedItems.put(item.getId(), item);
-            }
-            else
-            {
-                uncheckedItems.put(item.getId(), item);
-            }
-        }
-
-        uncheckedAdapter = new ItemsAdapter(new ArrayList<>(uncheckedItems.values()), this::notifyCheckBox, this, this::ifFinishedCategory,
+        itemsAdapter = new ItemsAdapter(new ArrayList<>(category.getItems().values()), this::notifyCheckBox, this,
                activity, context);
-        checkedAdapter = new ItemsAdapterChecked(new ArrayList<>(checkedItems.values()), this::notifyCheckBox, this, this::ifFinishedCategory,
-                activity, context);
 
-        this.recyclerUnchecked.setLayoutManager(new LinearLayoutManager(this.context));
-        this.recyclerUnchecked.setAdapter(uncheckedAdapter);
-
-        this.recyclerChecked.setLayoutManager(new LinearLayoutManager(this.context));
-        this.recyclerChecked.setAdapter(checkedAdapter);
+        this.recyclerItems.setLayoutManager(new LinearLayoutManager(this.context));
+        this.recyclerItems.setAdapter(itemsAdapter);
     }
 
     public void addItem(Item item)
     {
-        if (item.isChecked())
-        {
-            checkedAdapter.addItem(item);
-        }
-        else
-        {
-            uncheckedAdapter.addItem(item);
-        }
-
+        itemsAdapter.addItem(item);
         dbHandler.addItem(list, category, item);
     }
 
     public void removeItem(int pos, boolean checked)
     {
-        if (checked)
-        {
-            checkedAdapter.removeItem(pos);
-        }
-        else
-        {
-            uncheckedAdapter.removeItem(pos);
-        }
+        itemsAdapter.removeItem(pos);
     }
 
     public void removeItem(Item item)
     {
-        if (item.isChecked())
-        {
-            checkedAdapter.removeItem(item);
-        }
-        else
-        {
-            uncheckedAdapter.removeItem(item);
-        }
+        itemsAdapter.removeItem(item);
     }
 
     public void finished()
     {
-        checkedAdapter.clearAll();
-
+        itemsAdapter.clearAll();
         ifFinishedCategory();
-    }
-
-    public Map<String, Item> getAllItems()
-    {
-        Map<String, Item> all_items = new HashMap<>();
-
-        // Add unchecked items
-        for (Item item : uncheckedAdapter.items) {
-            all_items.put(item.getId(), item);
-        }
-
-        // Add checked items
-        for (Item item : checkedAdapter.items) {
-            all_items.put(item.getId(), item);
-        }
-
-        return all_items;
     }
 
     public void ifFinishedCategory()
     {
-        if (uncheckedAdapter.items.isEmpty() && checkedAdapter.items.isEmpty())
+        for (Item item : category.getItems().values())
         {
-            emptyCategory.onFinishedCategory();
-            dbHandler.removeCategory(list, category);
+            if (!item.isChecked())
+            {
+                return;
+            }
         }
+
+        emptyCategory.onFinishedCategory();
+        dbHandler.removeCategory(list, category);
     }
 
     public void update(Category newCategory)
     {
         this.category = newCategory;
-
-        ArrayList<Item> uncheckedItems = new ArrayList<>();
-        ArrayList<Item> checkedItems = new ArrayList<>();
-
-        for (Item item : newCategory.getItems().values()) {
-            if (item.isChecked()) {
-                checkedItems.add(item);
-            } else {
-                uncheckedItems.add(item);
-            }
-        }
-
-        uncheckedAdapter.updateItems(uncheckedItems);
-        checkedAdapter.updateItems(checkedItems);
+        itemsAdapter.updateItems((ArrayList<Item>) newCategory.getItems().values());
 
         ifFinishedCategory();
     }

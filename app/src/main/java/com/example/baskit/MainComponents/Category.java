@@ -79,6 +79,20 @@ public class Category
         updateFinished();
     }
 
+    public void setItemsFromFlat(ArrayList<Item> items)
+    {
+        Map<String, Item> itemsMap = new HashMap<>();
+
+        for (Item item : items)
+        {
+            itemsMap.put(item.getId(), item);
+        }
+
+        this.items = itemsMap;
+
+        updateFinished();
+    }
+
     @Override
     public String toString() {
         return name;
@@ -131,7 +145,7 @@ public class Category
 
         for (Item item : this.items.values())
         {
-            sum += Math.round(item.getPrice() * item.getQuantity() * 100.0) / 100.0;
+            sum += item.getTotal();
         }
 
         return Math.round(sum * 100.0) / 100.0;

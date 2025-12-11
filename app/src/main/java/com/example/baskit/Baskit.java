@@ -9,6 +9,8 @@ import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.View;
 
+import androidx.core.graphics.ColorUtils;
+
 public class Baskit extends Application
 {
     private static Context context;
@@ -58,5 +60,13 @@ public class Baskit extends Application
         else {
             return context.getResources().getColor(typedValue.resourceId, theme);
         }
+    }
+
+    public static int getThemeColor(Context context, int attributeId, int alpha)
+    {
+        int baseColor = getThemeColor(context, com.google.android.material.R.attr.colorError);
+        int colorWithAlpha = ColorUtils.setAlphaComponent(baseColor, alpha);
+
+        return colorWithAlpha;
     }
 }

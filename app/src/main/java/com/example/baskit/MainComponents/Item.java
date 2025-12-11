@@ -63,6 +63,11 @@ public class Item implements Cloneable
         return price;
     }
 
+    public double getTotal()
+    {
+        return Math.round(this.price * this.quantity * 100.0) / 100.0;
+    }
+
     public void setPrice(double price) {
         this.price = price;
     }
@@ -85,6 +90,11 @@ public class Item implements Cloneable
 
     public String getId() {
         return id;
+    }
+
+    public String getAbsoluteId()
+    {
+        return id.startsWith(ID_PREFIX) ? id.substring(ID_PREFIX.length()) : id;
     }
 
     public void setId(String id) {
