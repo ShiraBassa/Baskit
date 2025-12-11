@@ -12,7 +12,7 @@ import com.example.baskit.MainComponents.Supermarket;
 
 import java.util.ArrayList;
 
-public class SupermarketAdapter extends ItemsAdapter
+public class SupermarketItemsAdapter extends ItemsAdapter
 {
     private OnItemMovedListener listener;
 
@@ -21,8 +21,8 @@ public class SupermarketAdapter extends ItemsAdapter
         void onItemMoved(Item item, Supermarket from, Supermarket to);
     }
 
-    public SupermarketAdapter(ArrayList<Item> items, OnItemMovedListener listener,
-                              Activity activity, Context context,  UpperClassFunctions upperClassFns) {
+    public SupermarketItemsAdapter(ArrayList<Item> items, OnItemMovedListener listener,
+                                   Activity activity, Context context, UpperClassFunctions upperClassFns) {
         super(items, item -> {}, upperClassFns, activity, context);
         this.listener = listener;
     }

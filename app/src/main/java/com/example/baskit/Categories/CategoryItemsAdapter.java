@@ -225,7 +225,7 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
         holder.tvSupermarket.setText(supermarket.toString());
 
         ArrayList<Item> items = itemsBySupermarket.get(supermarket);
-        SupermarketAdapter supermarketsAdapter = new SupermarketAdapter(items, listener, activity, context, upperClassFns);
+        SupermarketItemsAdapter supermarketsAdapter = new SupermarketItemsAdapter(items, listener, activity, context, upperClassFns);
 
         holder.recyclerItems.setLayoutManager(new LinearLayoutManager(holder.itemView.getContext()));
         holder.recyclerItems.setAdapter(supermarketsAdapter);
@@ -358,7 +358,7 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
         return supermarkets != null ? supermarkets.size() : 0;
     }
 
-    private final SupermarketAdapter.OnItemMovedListener listener = (draggedItem, from, to) ->
+    private final SupermarketItemsAdapter.OnItemMovedListener listener = (draggedItem, from, to) ->
     {
         if (itemsBySupermarket.get(from) != null)
         {
