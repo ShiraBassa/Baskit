@@ -289,6 +289,17 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
         holder.recyclerItems.setVisibility(isExpanded ? View.VISIBLE : View.GONE);
         holder.btnExpand.setRotation(isExpanded ? 180 : 0);
 
+        if (ifFinishedSupermarket(items))
+        {
+            holder.tvSupermarket.setAlpha(0.5f);
+            holder.btnExpand.setAlpha(0.5f);
+        }
+        else
+        {
+            holder.tvSupermarket.setAlpha(1f);
+            holder.btnExpand.setAlpha(1f);
+        }
+
         holder.btnExpand.setOnClickListener(v ->
         {
             expandedStates.put(supermarket, !isExpanded);
@@ -480,5 +491,18 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
 
         restart();
         sortByExisting();
+    }
+
+    private boolean ifFinishedSupermarket(ArrayList<Item> items)
+    {
+        for (Item item : items)
+        {
+            if (!item.isChecked())
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
