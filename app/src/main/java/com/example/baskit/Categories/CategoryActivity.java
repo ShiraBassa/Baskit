@@ -168,6 +168,13 @@ public class CategoryActivity extends AppCompatActivity
                     public void onCategoryFetched(Category newCategory)
                     {
                         category = newCategory;
+
+                        if (category.getItems().isEmpty())
+                        {
+                            finish();
+                            return;
+                        }
+
                         showTotal();
                         tvTotal.setVisibility(View.VISIBLE);
 
@@ -216,6 +223,7 @@ public class CategoryActivity extends AppCompatActivity
             @Override
             public void onClick(View view)
             {
+                dbHandler.finishCategory(list, category);
             }
         });
 
@@ -245,12 +253,6 @@ public class CategoryActivity extends AppCompatActivity
                 itemsAdapter.arrangeByCheapest();
             }
         });
-    }
-
-    private void finishedCategory()
-    {
-        list.removeCategory(category.getName());
-        finish();
     }
 
     public void addItem(Item item)

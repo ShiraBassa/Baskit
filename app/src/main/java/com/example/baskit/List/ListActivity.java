@@ -195,21 +195,7 @@ public class ListActivity extends AppCompatActivity
             @Override
             public void onClick(View view)
             {
-                Category category;
-
-                for (int i=0; i<list.getCategories().size(); i++)
-                {
-                    category = list.getCategories().get(i);
-
-                    if (category.isFinished())
-                    {
-                        i--;
-                    }
-
-                    category.finished(list);
-                }
-
-                resumeInit();
+                dbHandler.finishList(list);
             }
         });
 

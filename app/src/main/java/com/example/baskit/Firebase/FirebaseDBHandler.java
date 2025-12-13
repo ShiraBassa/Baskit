@@ -619,4 +619,31 @@ public class FirebaseDBHandler
             });
         });
     }
+
+    public boolean finishCategory(List list, Category category)
+    {
+        for (Item item : category.getItems().values())
+        {
+            if (item.isChecked())
+            {
+                removeItem(list, category, item);
+            }
+        }
+
+        if (category.isFinished())
+        {
+            removeCategory(list, category);
+            return true;
+        }
+
+        return false;
+    }
+
+    public void finishList(List list)
+    {
+        for (Category category : list.getCategories().values())
+        {
+            finishCategory(list, category);
+        }
+    }
 }
