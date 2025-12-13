@@ -25,7 +25,10 @@ import java.util.concurrent.TimeUnit;
 public class APIHandler
 {
     private static APIHandler instance;
-    private static final String SERVER_URL = "http://10.0.2.2:5001";
+    private static final String PRIVATE_NETWORK_URL = "192.168.1.204";
+    private static final String EMULATOR_URL = "10.0.2.2";
+
+    private static final String SERVER_URL = "http://" + PRIVATE_NETWORK_URL + ":5001";
     private static String firebaseToken;
     private static Map<String, Map<String, Map<String, Double>>> allItems;
     private final OkHttpClient client = new OkHttpClient.Builder()

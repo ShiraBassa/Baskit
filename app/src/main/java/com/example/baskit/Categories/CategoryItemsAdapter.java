@@ -12,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -81,9 +82,11 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
             @Override
             public void collapseAllSupermarkets()
             {
-                for (Supermarket sm : expandedStates.keySet()) {
+                for (Supermarket sm : expandedStates.keySet())
+                {
                     expandedStates.put(sm, false);
                 }
+
                 draggable = true;
                 notifyDataSetChanged();
             }
@@ -91,9 +94,11 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
             @Override
             public void expandAllSupermarkets()
             {
-                for (Supermarket sm : expandedStates.keySet()) {
+                for (Supermarket sm : expandedStates.keySet())
+                {
                     expandedStates.put(sm, true);
                 }
+
                 draggable = false;
                 notifyDataSetChanged();
             }
@@ -180,7 +185,9 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
         }
 
         ArrayList<Item> otherItems = itemsBySupermarket.get(other);
-        if (otherItems != null && !otherItems.isEmpty() && !supermarkets.contains(other)) {
+
+        if (otherItems != null && !otherItems.isEmpty() && !supermarkets.contains(other))
+        {
             supermarkets.add(other);
         }
 
@@ -289,8 +296,7 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
         });
 
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(
-                ItemTouchHelper.UP | ItemTouchHelper.DOWN |
-                        ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT, 0) {
+                ItemTouchHelper.UP | ItemTouchHelper.DOWN, 0) {
             @Override
             public boolean isLongPressDragEnabled()
             {
@@ -298,14 +304,16 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
             }
 
             @Override
-            public boolean isItemViewSwipeEnabled() {
+            public boolean isItemViewSwipeEnabled()
+            {
                 return false;
             }
 
             @Override
             public boolean onMove(@NonNull RecyclerView recyclerView,
                                   @NonNull RecyclerView.ViewHolder viewHolder,
-                                  @NonNull RecyclerView.ViewHolder target) {
+                                  @NonNull RecyclerView.ViewHolder target)
+            {
                 return draggable;
             }
 
@@ -319,10 +327,14 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
 
         holder.itemView.setOnDragListener((v, event) ->
         {
-            View draggedView = (View) event.getLocalState();
-            Item draggedItem = (Item) draggedView.getTag(R.id.drag_item);
-            Supermarket fromSupermarket =
-                    (Supermarket) draggedView.getTag(R.id.drag_from_supermarket);
+            View dragHandle = (View) event.getLocalState();
+
+            ImageView ghostView = (ImageView) dragHandle.getTag(R.id.drag_fake_view);
+            int touchOffsetY = (int) dragHandle.getTag(R.id.drag_touch_offset_y);
+            int fixedX = (int) dragHandle.getTag(R.id.drag_initial_x);
+            int rootYOffset = (int) dragHandle.getTag(R.id.drag_root_y_offset);
+            Item draggedItem = (Item) dragHandle.getTag(R.id.drag_item);
+            Supermarket fromSupermarket = (Supermarket) dragHandle.getTag(R.id.drag_from_supermarket);
 
             switch (event.getAction())
             {
@@ -332,7 +344,20 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
                         holder.itemView.setBackgroundColor(
                                 getThemeColor(context, com.google.android.material.R.attr.colorError));
                     }
+                    break;
 
+                case DragEvent.ACTION_DRAG_LOCATION:
+                    int[] targetLoc = new int[2];
+                    holder.itemView.getLocationOnScreen(targetLoc);
+                    float screenTouchY = targetLoc[1] + event.getY();
+
+                    if (ghostView != null)
+                    {
+                        float newGhostY = screenTouchY - rootYOffset - touchOffsetY;
+
+                        ghostView.setY(newGhostY);
+                        ghostView.setX(fixedX);
+                    }
                     break;
 
                 case DragEvent.ACTION_DRAG_ENTERED:
@@ -366,6 +391,23 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
                     break;
 
                 case DragEvent.ACTION_DRAG_ENDED:
+                    if (ghostView != null)
+                    {
+                        ViewGroup root = (ViewGroup) ghostView.getParent();
+
+                        if (root != null)
+                        {
+                            root.removeView(ghostView);
+                        }
+                    }
+
+                    View originalRow = (View) dragHandle.getTag(R.id.drag_original_row);
+
+                    if (originalRow != null)
+                    {
+                        originalRow.setVisibility(View.VISIBLE);
+                    }
+
                     upperClassFns.expandAllSupermarkets();
                     holder.itemView.setBackgroundColor(Color.TRANSPARENT);
 
@@ -410,10 +452,13 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
             itemsBySupermarket.get(from).remove(draggedItem);
         }
 
-        if (to == unassigned) {
+        if (to == unassigned)
+        {
             draggedItem.setSupermarket(null);
             draggedItem.setPrice(0.0);
-        } else {
+        }
+        else
+        {
             draggedItem.setSupermarket(to);
             updateItemPriceForSupermarket(draggedItem, to);
         }

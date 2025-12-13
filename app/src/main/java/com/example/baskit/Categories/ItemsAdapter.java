@@ -37,8 +37,8 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
     protected ArrayList<Item> items;
     protected OnItemClickListener listener;
     protected UpperClassFunctions upperClassFns;
-    private Activity activity;
-    private Context context;
+    protected Activity activity;
+    protected Context context;
 
     public ItemsAdapter(ArrayList<Item> items,
                         OnItemClickListener listener,

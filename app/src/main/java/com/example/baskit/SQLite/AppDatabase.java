@@ -3,10 +3,14 @@ package com.example.baskit.SQLite;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
+import androidx.room.migration.Migration;
+import androidx.sqlite.db.SupportSQLiteDatabase;
+
 import android.content.Context;
 
-@Database(entities = {ItemEntity.class, ItemCodeName.class}, version = 1, exportSchema = false)
-public abstract class AppDatabase extends RoomDatabase {
+@Database(entities = {ItemEntity.class, ItemCodeName.class}, version = 2, exportSchema = false)
+public abstract class AppDatabase extends RoomDatabase
+{
     public abstract ItemDao itemDao();
     public abstract ItemCodeNamesDao itemCodesDao();
 
@@ -21,10 +25,12 @@ public abstract class AppDatabase extends RoomDatabase {
                 if (INSTANCE == null)
                 {
                     INSTANCE = Room.databaseBuilder(
-                            context.getApplicationContext(),
-                            AppDatabase.class,
-                            "baskit_db"
-                    ).build();
+                                    context.getApplicationContext(),
+                                    AppDatabase.class,
+                                    "baskit_db"
+                            )
+                            .fallbackToDestructiveMigration()
+                            .build();
                 }
             }
         }
