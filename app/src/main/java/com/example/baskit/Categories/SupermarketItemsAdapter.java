@@ -3,12 +3,15 @@ package com.example.baskit.Categories;
 import android.app.Activity;
 import android.content.ClipData;
 import android.content.Context;
+import android.view.DragEvent;
 import android.view.View;
+import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 
 import com.example.baskit.MainComponents.Item;
 import com.example.baskit.MainComponents.Supermarket;
+import com.example.baskit.R;
 
 import java.util.ArrayList;
 
@@ -33,11 +36,19 @@ public class SupermarketItemsAdapter extends ItemsAdapter
 
         Item ogItem = items.get(position);
         Supermarket from = ogItem.getSupermarket();
+        ImageView dragHandle = holder.itemView.findViewById(R.id.drag_handle);
 
-        holder.itemView.setOnLongClickListener(v -> {
+        dragHandle.setOnLongClickListener(v -> {
             ClipData data = ClipData.newPlainText("", "");
             View.DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(v);
-            v.startDragAndDrop(data, shadowBuilder, ogItem, 0);
+
+            upperClassFns.collapseAllSupermarkets();
+
+            v.startDragAndDrop(data, shadowBuilder, v, 0);
+            v.setVisibility(View.INVISIBLE);
+            v.setTag(R.id.drag_item, ogItem);
+            v.setTag(R.id.drag_from_supermarket, from);
+
             return true;
         });
 

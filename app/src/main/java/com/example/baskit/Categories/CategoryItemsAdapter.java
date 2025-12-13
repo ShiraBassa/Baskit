@@ -35,7 +35,6 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
     ArrayList<Supermarket> supermarkets;
     protected Map<Supermarket, ArrayList<Item>> itemsBySupermarket;
     private Map<Supermarket, Boolean> expandedStates;
-    private APIHandler apiHandler = APIHandler.getInstance();
     private Map<String, Map<String, Map<String, Double>>> itemPrices;
 
     Activity activity;
@@ -43,6 +42,8 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
     ItemsAdapter.UpperClassFunctions upperClassFns;
     Supermarket unassigned = new Supermarket("לא נבחר", "");
     Supermarket other = new Supermarket("אחר", "");
+    boolean isDropped;
+    boolean draggable = false;
 
     public CategoryItemsAdapter(Category category, Activity activity, Context context,
                                 ItemsAdapter.UpperClassFunctions upperClassFns, ArrayList<Supermarket> supermarkets,
@@ -51,7 +52,52 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
         this.category = category;
         this.activity = activity;
         this.context = context;
-        this.upperClassFns = upperClassFns;
+        this.upperClassFns = new ItemsAdapter.UpperClassFunctions()
+        {
+            @Override
+            public void updateItemCategory(Item item)
+            {
+                upperClassFns.updateItemCategory(item);
+            }
+
+            @Override
+            public void removeItemCategory(Item item)
+            {
+                upperClassFns.removeItemCategory(item);
+            }
+
+            @Override
+            public void updateCategory()
+            {
+                upperClassFns.updateCategory();
+            }
+
+            @Override
+            public void removeCategory()
+            {
+                upperClassFns.removeCategory();
+            }
+
+            @Override
+            public void collapseAllSupermarkets()
+            {
+                for (Supermarket sm : expandedStates.keySet()) {
+                    expandedStates.put(sm, false);
+                }
+                draggable = true;
+                notifyDataSetChanged();
+            }
+
+            @Override
+            public void expandAllSupermarkets()
+            {
+                for (Supermarket sm : expandedStates.keySet()) {
+                    expandedStates.put(sm, true);
+                }
+                draggable = false;
+                notifyDataSetChanged();
+            }
+        };
         this.supermarkets = supermarkets;
 
         ArrayList<Supermarket> displaySupermarkets = new ArrayList<>(supermarkets);
@@ -194,7 +240,7 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
     public static class ViewHolder extends RecyclerView.ViewHolder
     {
         protected TextView tvSupermarket;
-        protected ImageButton btnExpand;
+        protected ImageButton btnExpand, dragHandle;
         protected RecyclerView recyclerItems;
 
         public ViewHolder(View itemView)
@@ -204,7 +250,7 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
             tvSupermarket = itemView.findViewById(R.id.tv_supermarket_name);
             btnExpand = itemView.findViewById(R.id.btn_expand);
             recyclerItems = itemView.findViewById(R.id.recycler_items);
-
+            dragHandle = itemView.findViewById(R.id.drag_handle);
         }
     }
 
@@ -221,6 +267,8 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position)
     {
+        holder.itemView.setOnDragListener(null);
+        isDropped = false;
         Supermarket supermarket = supermarkets.get(position);
         holder.tvSupermarket.setText(supermarket.toString());
 
@@ -244,41 +292,46 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
                 ItemTouchHelper.UP | ItemTouchHelper.DOWN |
                         ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT, 0) {
             @Override
-            public boolean onMove(@NonNull RecyclerView recyclerView,
-                                  @NonNull RecyclerView.ViewHolder viewHolder,
-                                  @NonNull RecyclerView.ViewHolder target) {
+            public boolean isLongPressDragEnabled()
+            {
+                return draggable;
+            }
+
+            @Override
+            public boolean isItemViewSwipeEnabled() {
                 return false;
             }
 
             @Override
-            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-                // not needed
+            public boolean onMove(@NonNull RecyclerView recyclerView,
+                                  @NonNull RecyclerView.ViewHolder viewHolder,
+                                  @NonNull RecyclerView.ViewHolder target) {
+                return draggable;
             }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {}
         });
+
         itemTouchHelper.attachToRecyclerView(holder.recyclerItems);
+
+        if (!draggable) return;
 
         holder.itemView.setOnDragListener((v, event) ->
         {
-            Item draggedItem = (Item) event.getLocalState();
+            View draggedView = (View) event.getLocalState();
+            Item draggedItem = (Item) draggedView.getTag(R.id.drag_item);
+            Supermarket fromSupermarket =
+                    (Supermarket) draggedView.getTag(R.id.drag_from_supermarket);
 
             switch (event.getAction())
             {
                 case DragEvent.ACTION_DRAG_STARTED:
-                    new Handler(Looper.getMainLooper()).post(() ->
+                    if (!containsSupermarket(draggedItem, supermarkets.get(position)))
                     {
-                        for (Supermarket sm : expandedStates.keySet())
-                        {
-                            expandedStates.put(sm, false);
-                        }
-
-                        notifyDataSetChanged();
-
-                        if (!containsSupermarket(draggedItem, supermarkets.get(position)))
-                        {
-                            holder.itemView.setBackgroundColor(
-                                    getThemeColor(context, com.google.android.material.R.attr.colorError));
-                        }
-                    });
+                        holder.itemView.setBackgroundColor(
+                                getThemeColor(context, com.google.android.material.R.attr.colorError));
+                    }
 
                     break;
 
@@ -299,8 +352,8 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
                     break;
 
                 case DragEvent.ACTION_DROP:
+                    isDropped = true;
                     Supermarket targetSupermarket = supermarket;
-                    Supermarket fromSupermarket = draggedItem.getSupermarket();
 
                     if (containsSupermarket(draggedItem, targetSupermarket))
                     {
@@ -313,16 +366,8 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
                     break;
 
                 case DragEvent.ACTION_DRAG_ENDED:
-                    new Handler(Looper.getMainLooper()).post(() ->
-                    {
-                        for (Supermarket sm : expandedStates.keySet())
-                        {
-                            expandedStates.put(sm, true);
-                        }
-
-                        notifyDataSetChanged();
-                        holder.itemView.setBackgroundColor(Color.TRANSPARENT);
-                    });
+                    upperClassFns.expandAllSupermarkets();
+                    holder.itemView.setBackgroundColor(Color.TRANSPARENT);
 
                     break;
             }

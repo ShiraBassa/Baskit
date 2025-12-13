@@ -30,6 +30,8 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
         void removeItemCategory(Item item);
         void updateCategory();
         void removeCategory();
+        default void collapseAllSupermarkets() {}
+        default void expandAllSupermarkets() {}
     }
 
     protected ArrayList<Item> items;
@@ -88,6 +90,7 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
     {
         Item item = items.get(position);
         holder.itemViewAlertDialog = new ItemViewAlertDialog(activity, context, upperClassFns, item, true);
+        holder.itemView.setOnDragListener(null);
 
         holder.tvName.setText(item.getName());
         holder.tvName.setTextColor(ContextCompat.getColor(context, R.color.dark_teal));
