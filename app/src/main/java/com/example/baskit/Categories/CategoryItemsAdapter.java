@@ -342,7 +342,7 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
                     if (!containsSupermarket(draggedItem, supermarkets.get(position)))
                     {
                         holder.itemView.setBackgroundColor(
-                                getThemeColor(context, com.google.android.material.R.attr.colorError));
+                                getThemeColor(context, com.google.android.material.R.attr.colorSecondary, 75));
                     }
                     break;
 
