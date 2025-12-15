@@ -85,7 +85,7 @@ public class HomeGridAdapter extends RecyclerView.Adapter<HomeGridAdapter.GridVi
     @Override
     public GridViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType)
     {
-        MaterialButton button = new MaterialButton(parent.getContext());
+        MaterialButton button = new SquareMaterialButton(parent.getContext());
         button.setCornerRadius(24);
 
         button.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
@@ -120,7 +120,7 @@ public class HomeGridAdapter extends RecyclerView.Adapter<HomeGridAdapter.GridVi
         int margin = (int) (12 * parent.getContext().getResources().getDisplayMetrics().density);
         RecyclerView.LayoutParams params = new RecyclerView.LayoutParams(
                 RecyclerView.LayoutParams.MATCH_PARENT,
-                RecyclerView.LayoutParams.MATCH_PARENT
+                RecyclerView.LayoutParams.WRAP_CONTENT
         );
         params.setMargins(margin, margin, margin, margin);
         button.setLayoutParams(params);
@@ -129,14 +129,8 @@ public class HomeGridAdapter extends RecyclerView.Adapter<HomeGridAdapter.GridVi
     }
 
     @Override
-    public void onBindViewHolder(@NonNull GridViewHolder holder, int position) {
-        // Make square: height = width
-        holder.button.post(() -> {
-            int width = holder.button.getWidth();
-            holder.button.getLayoutParams().height = width;
-            holder.button.requestLayout();
-        });
-
+    public void onBindViewHolder(@NonNull GridViewHolder holder, int position)
+    {
         holder.button.setText(listNames.get(position));
 
         holder.button.setOnClickListener(v -> {

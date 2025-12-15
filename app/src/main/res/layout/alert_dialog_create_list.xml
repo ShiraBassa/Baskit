@@ -2,83 +2,77 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="350dp"
     android:layout_height="400dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:gravity="center"
-    android:padding="10dp"
+    android:padding="12dp"
     android:background="@color/white_smoke">
 
+    <!-- Title and Cancel -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="40dp"
+        android:layout_marginBottom="30dp"
         android:orientation="vertical"
         android:gravity="center_vertical|start">
 
         <ImageButton
             android:id="@+id/btn_cancel"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginBottom="10dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginBottom="8dp"
             android:scaleType="fitCenter"
             android:background="@null"
             android:src="@drawable/ic_cancel"
             android:tint="@color/dark_teal" />
 
         <TextView
+            android:id="@+id/tv_title"
             android:textColor="@color/evergreen"
-            android:textSize="48sp"
+            android:textSize="42sp"
             android:textStyle="bold"
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
             android:textAlignment="center"
-            android:text="צור רשימה"
-            />
-
+            android:text="צור רשימה"/>
     </LinearLayout>
 
+    <!-- EditText Input -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:layout_marginBottom="40dp"
+        android:layout_marginBottom="30dp"
         android:orientation="vertical"
         android:gravity="center_horizontal|top">
 
-        <androidx.cardview.widget.CardView
+        <EditText
+            android:id="@+id/et_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:elevation="4dp"
-            android:layout_marginHorizontal="20dp"
-            android:backgroundTint="@color/tan_transparent">
-
-            <EditText
-                android:id="@+id/et_name"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingHorizontal="10dp"
-                android:textColor="@color/dark_teal"
-                android:textColorHint="@color/dark_teal_transparent"
-                android:textSize="36sp"
-                android:textDirection="rtl"
-                android:singleLine="true"
-                android:gravity="start"
-                android:textStyle="bold"
-                android:hint="שם"
-                android:background="@null"/>
-        </androidx.cardview.widget.CardView>
-
+            android:padding="12dp"
+            android:textColor="@color/dark_teal"
+            android:textColorHint="@color/dark_teal_transparent"
+            android:textSize="36sp"
+            android:textDirection="rtl"
+            android:singleLine="true"
+            android:gravity="start"
+            android:textStyle="bold"
+            android:hint="שם"/>
     </LinearLayout>
 
-    <Button
+    <!-- Create Button -->
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_create"
-        android:textColor="@color/white_smoke"
-        android:textSize="40sp"
-        android:textStyle="bold"
-        android:backgroundTint="@color/dark_teal"
-        android:paddingHorizontal="15dp"
-        android:paddingVertical="10dp"
-        android:layout_height="wrap_content"
         android:layout_width="wrap_content"
-        android:text="צור" />
-
+        android:layout_height="wrap_content"
+        android:text="צור"
+        android:textSize="38sp"
+        android:textColor="@color/white_smoke"
+        android:paddingHorizontal="20dp"
+        android:paddingVertical="12dp"
+        app:cornerRadius="12dp"
+        android:backgroundTint="@color/dark_teal"
+        app:iconGravity="textStart"
+        android:textStyle="bold"/>
 </LinearLayout>
