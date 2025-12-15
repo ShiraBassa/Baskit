@@ -1,24 +1,19 @@
 package com.example.baskit.List;
 
 import android.app.Activity;
-import android.content.ClipData;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.baskit.MainComponents.Item;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 
 public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsListAdapter.ViewHolder>
@@ -27,7 +22,7 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
     private Map<String, Map<String, Double>> supermarketsWithPrices = null;
     private Activity activity;
     private OnSupermarketClickListener OnSupermarketClickListener = null;
-    private Supermarket selectedSupermarket = new Supermarket();
+    private static Supermarket selectedSupermarket = new Supermarket();
 
     public void setOnSupermarketClickListener(OnSupermarketClickListener listener)
     {
@@ -124,14 +119,13 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
            if (holder.sectionsAdapter == null)
            {
                 holder.sectionsAdapter = SectionsListAdapter.fromSectionsWithPrices(
-                        supermarketsWithPrices.get(supermarketName),
-                        sectionName ->
-                        {
-                            if (OnSupermarketClickListener != null)
+                        supermarketsWithPrices.get(supermarketName), new SectionsListAdapter.OnSectionClickListener() {
+                            @Override
+                            public void onSectionClick(String sectionName)
                             {
-                                OnSupermarketClickListener.onSupermarketClick(
-                                        new Supermarket(supermarketName, sectionName)
-                                );
+                                SupermarketsListAdapter.onSectionClick(supermarketName, sectionName);
+                                OnSupermarketClickListener.onSupermarketClick(new Supermarket(supermarketName, sectionName));
+                                notifyDataSetChanged();
                             }
                         }
                 );
@@ -156,20 +150,11 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
                         supermarkets.get(supermarketName), new SectionsListAdapter.OnSectionClickListener()
                         {
                             @Override
-                            public void onSectionClick(String sectionName) {
-                                if (selectedSupermarket.getSupermarket() != null &&
-                                    selectedSupermarket.getSupermarket().equals(supermarketName) &&
-                                    selectedSupermarket.getSection() != null &&
-                                    selectedSupermarket.getSection().equals(sectionName)) {
-                                    // Same item clicked — deselect
-                                    selectedSupermarket.setSupermarket(null);
-                                    selectedSupermarket.setSection(null);
-                                } else {
-                                    // New selection
-                                    selectedSupermarket.setSupermarket(supermarketName);
-                                    selectedSupermarket.setSection(sectionName);
-                                }
-                                notifyDataSetChanged(); // Refresh adapter to reflect selection/deselection
+                            public void onSectionClick(String sectionName)
+                            {
+                                SupermarketsListAdapter.onSectionClick(supermarketName, sectionName);
+                                OnSupermarketClickListener.onSupermarketClick(new Supermarket(supermarketName, sectionName));
+                                notifyDataSetChanged();
                             }
                         }
                 );
@@ -184,6 +169,12 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
                 holder.sectionsAdapter.notifyDataSetChanged();
             }
         }
+
+        holder.sectionsAdapter.updateSelectedSection(
+                selectedSupermarket.getSupermarket(),
+                selectedSupermarket.getSection()
+        );
+        holder.sectionsAdapter.notifyDataSetChanged();
 
         holder.tvSupermarketName.setText(supermarketName);
     }
@@ -217,5 +208,24 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
     public Supermarket getSelectedSupermarket()
     {
         return selectedSupermarket;
+    }
+
+    private static void onSectionClick(String supermarketName, String sectionName)
+    {
+        if (selectedSupermarket.getSupermarket() != null &&
+                selectedSupermarket.getSupermarket().equals(supermarketName) &&
+                selectedSupermarket.getSection() != null &&
+                selectedSupermarket.getSection().equals(sectionName))
+        {
+            // Same item clicked — deselect
+            selectedSupermarket.setSupermarket(null);
+            selectedSupermarket.setSection(null);
+        }
+        else
+        {
+            // New selection
+            selectedSupermarket.setSupermarket(supermarketName);
+            selectedSupermarket.setSection(sectionName);
+        }
     }
 }

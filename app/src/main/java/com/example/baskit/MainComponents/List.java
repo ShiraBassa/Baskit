@@ -1,9 +1,13 @@
 package com.example.baskit.MainComponents;
 
+import com.google.firebase.database.Exclude;
+import com.google.firebase.database.IgnoreExtraProperties;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+@IgnoreExtraProperties
 public class List
 {
     private String id = "";
@@ -99,6 +103,7 @@ public class List
         return items;
     }
 
+    @Exclude
     public double getTotal()
     {
         double sum = 0;

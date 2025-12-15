@@ -21,6 +21,9 @@ public class SectionsListAdapter extends RecyclerView.Adapter<SectionsListAdapte
     private int selectedPosition = RecyclerView.NO_POSITION;
     private OnSectionClickListener listener = null;
 
+    private String selectedSupermarket = null;
+    private String selectedSection = null;
+
     public interface OnSectionClickListener
     {
         void onSectionClick(String sectionName);
@@ -67,6 +70,12 @@ public class SectionsListAdapter extends RecyclerView.Adapter<SectionsListAdapte
         this.sectionsWithPrices = sectionsWithPrices;
     }
 
+    public void updateSelectedSection(String supermarket, String section) {
+        this.selectedSupermarket = supermarket;
+        this.selectedSection = section;
+        notifyDataSetChanged();
+    }
+
     public static class ViewHolder extends RecyclerView.ViewHolder
     {
         protected TextView tvSectionName, tvItemPrice;
@@ -108,10 +117,18 @@ public class SectionsListAdapter extends RecyclerView.Adapter<SectionsListAdapte
             sectionName = sections.get(position);
         }
 
-        holder.itemView.setSelected(selectedPosition == position);
-        int selectedColor = holder.itemView.getContext().getResources().getColor(R.color.tan); // use Tan for selected
-        int defaultColor = holder.itemView.getContext().getResources().getColor(R.color.white_smoke); // default background
-        holder.itemView.setBackgroundColor(selectedPosition == position ? selectedColor : defaultColor);
+        if (sections != null && sectionName.equals(selectedSection) && selectedSupermarket != null)
+        {
+            holder.itemView.setBackgroundColor(holder.itemView.getContext().getResources().getColor(R.color.tan));
+        }
+        else if (sectionsWithPrices != null && sectionName.equals(selectedSection) && selectedSupermarket != null)
+        {
+            holder.itemView.setBackgroundColor(holder.itemView.getContext().getResources().getColor(R.color.tan));
+        }
+        else
+        {
+            holder.itemView.setBackgroundColor(holder.itemView.getContext().getResources().getColor(R.color.white_smoke));
+        }
 
         holder.itemView.setOnClickListener(v -> {
             int adapterPos = holder.getAdapterPosition();
@@ -146,12 +163,18 @@ public class SectionsListAdapter extends RecyclerView.Adapter<SectionsListAdapte
     }
 
     @Override
-    public int getItemCount() {
-        if (sectionsWithPrices != null) {
+    public int getItemCount()
+    {
+        if (sectionsWithPrices != null)
+        {
             return sectionsWithPrices.size();
-        } else if (sections != null) {
+        }
+        else if (sections != null)
+        {
             return sections.size();
-        } else {
+        }
+        else
+        {
             return 0;
         }
     }

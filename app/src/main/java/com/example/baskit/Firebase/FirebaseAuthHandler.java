@@ -384,7 +384,7 @@ public class FirebaseAuthHandler
         catch (IOException | JSONException ignored) {}
     }
 
-    public void addSupermarket(Supermarket supermarket, Runnable onComplete)
+    public void addSupermarketSection(Supermarket supermarket, Runnable onComplete)
     {
         new Thread(() ->
         {
@@ -414,7 +414,7 @@ public class FirebaseAuthHandler
         }).start();
     }
 
-    public void removeSupermarket(Supermarket supermarket, Runnable onComplete)
+    public void removeSupermarketSection(Supermarket supermarket, Runnable onComplete)
     {
         new Thread(() ->
         {

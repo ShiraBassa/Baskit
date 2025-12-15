@@ -26,6 +26,7 @@ import org.json.JSONException;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.ArrayList;
 
 public class ItemViewAlertDialog
 {
@@ -75,21 +76,23 @@ public class ItemViewAlertDialog
 
             Map<String, Map<String, Double>> finalData = data;
 
-            supermarketsAdapter = SupermarketsListAdapter.fromSupermarketsWithPrices(finalData, activity, new SupermarketsListAdapter.OnSupermarketClickListener()
+            activity.runOnUiThread(() ->
             {
-                @Override
-                public void onSupermarketClick(Supermarket supermarket)
-                {
-                    item.setSupermarket(supermarket);
-                    item.setPrice(finalData.get(supermarket.getSupermarket()).get(supermarket.getSection()));
-                }
-            });
+                supermarketsAdapter = SupermarketsListAdapter.fromSupermarketsWithPrices(finalData, activity, new SupermarketsListAdapter.OnSupermarketClickListener() {
+                    @Override
+                    public void onSupermarketClick(Supermarket supermarket)
+                    {
+                        item.setSupermarket(supermarket);
+                        item.setPrice(finalData.get(supermarket.getSupermarket()).get(supermarket.getSection()));
 
-            activity.runOnUiThread(() -> {
-                new Handler(Looper.getMainLooper()).post(() -> {
-                    recyclerSupermarkets.setLayoutManager(new LinearLayoutManager(context));
-                    recyclerSupermarkets.setAdapter(supermarketsAdapter);
+                        supermarketsAdapter.getSelectedSupermarket().setSupermarket(supermarket.getSupermarket());
+                        supermarketsAdapter.getSelectedSupermarket().setSection(supermarket.getSection());
+                        supermarketsAdapter.notifyDataSetChanged();
+                    }
                 });
+
+                recyclerSupermarkets.setLayoutManager(new LinearLayoutManager(context));
+                recyclerSupermarkets.setAdapter(supermarketsAdapter);
             });
         }).start();
 

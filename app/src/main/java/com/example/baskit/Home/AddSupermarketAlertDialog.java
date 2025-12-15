@@ -1,12 +1,7 @@
-package com.example.baskit.List;
-
-import static android.content.Context.CLIPBOARD_SERVICE;
+package com.example.baskit.Home;
 
 import android.app.Activity;
-import android.content.ClipData;
-import android.content.ClipboardManager;
 import android.content.Context;
-import android.util.Base64;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -18,14 +13,11 @@ import androidx.appcompat.app.AlertDialog;
 
 import com.example.baskit.API.APIHandler;
 import com.example.baskit.Firebase.FirebaseAuthHandler;
-import com.example.baskit.Firebase.FirebaseDBHandler;
-import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;
 
 import org.json.JSONException;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -38,50 +30,46 @@ public class AddSupermarketAlertDialog
     AlertDialog ad;
     Button btnAdd;
     FirebaseAuthHandler authHandler;
-    Spinner spinnerSupermarkets, spinnerSections;
-    Map<String, ArrayList<String>> all_branches;
-    ArrayList<String> all_supermarkets;
-    ArrayList<String> all_sections;
+    Spinner spinnerSupermarkets;
+    ArrayList<String> all_stores;
     Map<String, ArrayList<String>> choices;
-    SupermarketsListAdapter supermarketsAdapter;
+    AddSectionAlertDialog.OnStoreAddedListener onStoreAddedListener;
+    private final APIHandler apiHandler = APIHandler.getInstance();
 
     public AddSupermarketAlertDialog(Activity activity,
                                      Context context,
                                      Map<String, ArrayList<String>> choices,
-                                     SupermarketsListAdapter supermarketsAdapter,
-                                     Map<String, ArrayList<String>> all_branches)
+                                     ArrayList<String> unchosen_stores,
+                                     AddSectionAlertDialog.OnStoreAddedListener onStoreAddedListener)
             throws JSONException, IOException
     {
         this.activity = activity;
         this.context = context;
         this.choices = choices;
-        this.supermarketsAdapter = supermarketsAdapter;
-        this.all_branches = all_branches;
+        this.onStoreAddedListener = onStoreAddedListener;
+        this.all_stores = unchosen_stores;
 
         authHandler = FirebaseAuthHandler.getInstance();
-
-        all_supermarkets = new ArrayList<>(all_branches.keySet());
 
         adLayout = (LinearLayout) activity.getLayoutInflater()
                 .inflate(R.layout.alert_dialog_add_supermarket, null);
         spinnerSupermarkets = adLayout.findViewById(R.id.spinner_supermarkets);
-        spinnerSections = adLayout.findViewById(R.id.spinner_sections);
         btnAdd = adLayout.findViewById(R.id.btn_add);
 
         adb = new AlertDialog.Builder(context);
         adb.setView(adLayout);
         ad = adb.create();
 
-        setSpinners();
+        setSpinner();
         setButton();
     }
 
-    private void setSpinners()
+    private void setSpinner()
     {
         ArrayAdapter<String> supermarketAdapter =
                 new ArrayAdapter<>(context,
                         android.R.layout.simple_spinner_dropdown_item,
-                        all_supermarkets);
+                        all_stores);
 
         spinnerSupermarkets.setAdapter(supermarketAdapter);
 
@@ -90,26 +78,17 @@ public class AddSupermarketAlertDialog
             @Override
             public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id)
             {
-                String selectedSupermarket = all_supermarkets.get(position);
-                all_sections = all_branches.get(selectedSupermarket);
-
-                ArrayAdapter<String> sectionAdapter =
-                        new ArrayAdapter<>(context,
-                                android.R.layout.simple_spinner_dropdown_item,
-                                all_sections);
-
-                spinnerSections.setAdapter(sectionAdapter);
-                spinnerSections.setEnabled(true);
+                btnAdd.setEnabled(true);
             }
 
             @Override
             public void onNothingSelected(android.widget.AdapterView<?> parent)
             {
-                spinnerSections.setEnabled(false);
+                btnAdd.setEnabled(false);
             }
         });
 
-        spinnerSections.setEnabled(false);
+        btnAdd.setEnabled(false);
     }
 
     private void setButton()
@@ -120,31 +99,43 @@ public class AddSupermarketAlertDialog
             public void onClick(View v)
             {
                 String supermarketName = (String) spinnerSupermarkets.getSelectedItem();
-                String sectionName = (String) spinnerSections.getSelectedItem();
 
-                if (supermarketName == null || sectionName == null) {
-                    Toast.makeText(context, "נא לבחור סופרמרקט ומחלקה", Toast.LENGTH_SHORT).show();
+                if (supermarketName == null)
+                {
+                    Toast.makeText(context, "נא לבחור סופרמרקט", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-                Supermarket supermarket = new Supermarket(supermarketName, sectionName);
+                ArrayList<String> curr_supermarkets = new ArrayList<>(choices.keySet());
+                curr_supermarkets.add(supermarketName);
 
-                authHandler.addSupermarket(supermarket, () ->
+                new Thread(() ->
                 {
-                    activity.runOnUiThread(() -> {
-                        choices.putIfAbsent(supermarket.getSupermarket(), new ArrayList<>());
-                        ArrayList<String> sectionsList = choices.get(supermarket.getSupermarket());
-                        if (sectionsList == null) {
-                            sectionsList = new ArrayList<>();
-                            choices.put(supermarket.getSupermarket(), sectionsList);
-                        }
-                        sectionsList.add(supermarket.getSection());
+                    try
+                    {
+                        apiHandler.setStores(curr_supermarkets);
+                    }
+                    catch (IOException e)
+                    {
+                        throw new RuntimeException(e);
+                    }
+                    catch (JSONException e)
+                    {
+                        throw new RuntimeException(e);
+                    }
 
-                        supermarketsAdapter.updateData(choices);
-                        supermarketsAdapter.notifyDataSetChanged();
+                    activity.runOnUiThread(() ->
+                    {
+                        if (!choices.containsKey(supermarketName))
+                        {
+                            choices.put(supermarketName, new ArrayList<>());
+                        }
+
+                        onStoreAddedListener.onStoreAdded(supermarketName, new ArrayList<>());
+
                         ad.dismiss();
                     });
-                });
+                }).start();
             }
         });
     }

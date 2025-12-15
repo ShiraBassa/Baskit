@@ -2,9 +2,13 @@ package com.example.baskit.MainComponents;
 
 import androidx.annotation.NonNull;
 
+import com.google.firebase.database.Exclude;
+import com.google.firebase.database.IgnoreExtraProperties;
+
 import java.util.HashMap;
 import java.util.Map;
 
+@IgnoreExtraProperties
 public class Item implements Cloneable
 {
     private final String ID_PREFIX = "item_";
@@ -63,6 +67,7 @@ public class Item implements Cloneable
         return price;
     }
 
+    @Exclude
     public double getTotal()
     {
         return Math.round(this.price * this.quantity * 100.0) / 100.0;
@@ -92,6 +97,7 @@ public class Item implements Cloneable
         return id;
     }
 
+    @Exclude
     public String getAbsoluteId()
     {
         return id.startsWith(ID_PREFIX) ? id.substring(ID_PREFIX.length()) : id;

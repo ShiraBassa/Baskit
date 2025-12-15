@@ -2,6 +2,7 @@ package com.example.baskit.Home;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -12,7 +13,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.baskit.API.APIHandler;
 import com.example.baskit.Firebase.FirebaseAuthHandler;
-import com.example.baskit.List.AddSupermarketAlertDialog;
 import com.example.baskit.List.SupermarketsListAdapter;
 import com.example.baskit.Login.LoginActivity;
 import com.example.baskit.MainComponents.Supermarket;
@@ -105,38 +105,22 @@ public class SettingsActivity extends AppCompatActivity
                 return;
             }
 
-            new Thread(() ->
+            try
             {
-                try
-                {
-                    Map<String, ArrayList<String>> allBranches = apiHandler.getBranches();
-                    if (allBranches == null || choices == null) {
-                        return; // prevent crash if API returns null
-                    }
-
-                    runOnUiThread(() ->
-                    {
-                        try
-                        {
-                            new AddSupermarketAlertDialog(
-                                    SettingsActivity.this,
-                                    SettingsActivity.this,
-                                    choices,
-                                    supermarketsAdapter,
-                                    allBranches
-                            ).show();
-                        } catch (JSONException | IOException e)
-                        {
-                            e.printStackTrace(); // log error instead of crashing
-                        }
-                    });
-
-                }
-                catch (IOException | JSONException e)
-                {
-                    e.printStackTrace(); // log error instead of ignoring
-                }
-            }).start();
+                new AddSectionAlertDialog(
+                        SettingsActivity.this,
+                        SettingsActivity.this,
+                        supermarketsAdapter
+                );
+            }
+            catch (JSONException e)
+            {
+                throw new RuntimeException(e);
+            }
+            catch (IOException e)
+            {
+                throw new RuntimeException(e);
+            }
         });
 
         btnRemoveSupermarket.setOnClickListener(new View.OnClickListener()
@@ -155,11 +139,10 @@ public class SettingsActivity extends AppCompatActivity
                     supermarket.getSupermarket() == null || supermarket.getSupermarket().isEmpty() ||
                     supermarket.getSection() == null || supermarket.getSection().isEmpty())
                 {
-                    // No selection, do nothing
                     return;
                 }
 
-                authHandler.removeSupermarket(supermarket, () ->
+                authHandler.removeSupermarketSection(supermarket, () ->
                 {
                     runOnUiThread(() ->
                     {
