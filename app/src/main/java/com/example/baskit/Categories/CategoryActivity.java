@@ -321,11 +321,11 @@ public class CategoryActivity extends AppCompatActivity
 
         if (total == total_rounded)
         {
-            tvTotal.setText("סך הכל: " + Integer.toString(total_rounded) + " ש״ח");
+            tvTotal.setText("סך הכל: " + Integer.toString(total_rounded) + "₪");
         }
         else
         {
-            tvTotal.setText("סך הכל: " + Double.toString(total) + " ש״ח");
+            tvTotal.setText("סך הכל: " + Double.toString(total) + "₪");
         }
     }
 }

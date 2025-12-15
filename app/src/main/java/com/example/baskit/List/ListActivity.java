@@ -281,26 +281,31 @@ public class ListActivity extends AppCompatActivity
     private void inflaterAddItem(Category category)
     {
         View categoryView;
-        TextView tv_name;
+        TextView tvName, tvCount, tvPrice;
+        LinearLayout loutInfo, loutTitle;
+
+        categoryView = categoriesListInflater.inflate(R.layout.category_list_item, categoriesListContainer, false);
+
+        tvName = categoryView.findViewById(R.id.tv_section_name);
+        tvCount  = categoryView.findViewById(R.id.tv_count);
+        tvPrice = categoryView.findViewById(R.id.tv_price);
+        loutInfo = categoryView.findViewById(R.id.lout_info);
+        loutTitle = categoryView.findViewById(R.id.lout_title);
+
+        tvName.setText(category.getName());
 
         if (!category.isFinished())
         {
-            categoryView = categoriesListInflater.inflate(R.layout.category_list_item_default, categoriesListContainer, false);
-
-            tv_name = categoryView.findViewById(R.id.tv_section_name);
-            TextView tv_count = categoryView.findViewById(R.id.tv_count);
-
-            tv_name.setText(category.getName());
-            tv_count.setText(Integer.toString(category.countUnchecked()));
+            tvCount.setText(Integer.toString(category.countUnchecked()));
+            tvPrice.setText(Double.toString(category.getTotal()) + "₪");
         }
         else
         {
-            categoryView = categoriesListInflater.inflate(R.layout.category_list_item_finished, categoriesListContainer, false);
-            tv_name = categoryView.findViewById(R.id.tv_section_name);
-            tv_name.setText(category.getName());
+            loutInfo.setVisibility(View.GONE);
+            loutTitle.setAlpha(0.5f);
         }
 
-        tv_name.setOnClickListener(new View.OnClickListener()
+        categoryView.setOnClickListener(new View.OnClickListener()
         {
             @Override
             public void onClick(View view)
@@ -372,11 +377,11 @@ public class ListActivity extends AppCompatActivity
 
         if (total == total_rounded)
         {
-            tvTotal.setText("סך הכל: " + Integer.toString(total_rounded) + " ש״ח");
+            tvTotal.setText("סך הכל: " + Integer.toString(total_rounded) + "₪");
         }
         else
         {
-            tvTotal.setText("סך הכל: " + Double.toString(total) + " ש״ח");
+            tvTotal.setText("סך הכל: " + Double.toString(total) + "₪");
         }
     }
 }

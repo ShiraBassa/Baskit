@@ -115,11 +115,11 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
 
             if (total == total_rounded)
             {
-                holder.tvPrice.setText(Integer.toString(total_rounded));
+                holder.tvPrice.setText(Integer.toString(total_rounded) + "₪");
             }
             else
             {
-                holder.tvPrice.setText(Double.toString(total));
+                holder.tvPrice.setText(Double.toString(total) + "₪");
             }
 
             holder.tvPrice.setTextColor(ContextCompat.getColor(context, R.color.rich_mahogany));

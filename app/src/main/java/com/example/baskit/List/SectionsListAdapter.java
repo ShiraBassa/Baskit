@@ -109,7 +109,7 @@ public class SectionsListAdapter extends RecyclerView.Adapter<SectionsListAdapte
             ArrayList<String> sectionNames = new ArrayList<>(sectionsWithPrices.keySet());
             sectionName = sectionNames.get(position);
 
-            holder.tvItemPrice.setText(Double.toString(sectionsWithPrices.get(sectionName)));
+            holder.tvItemPrice.setText(Double.toString(sectionsWithPrices.get(sectionName)) + "₪");
             holder.tvItemPrice.setVisibility(View.VISIBLE);
         }
         else
