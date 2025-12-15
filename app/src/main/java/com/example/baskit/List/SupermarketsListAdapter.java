@@ -124,7 +124,12 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
                             public void onSectionClick(String sectionName)
                             {
                                 SupermarketsListAdapter.onSectionClick(supermarketName, sectionName);
-                                OnSupermarketClickListener.onSupermarketClick(new Supermarket(supermarketName, sectionName));
+
+                                if (OnSupermarketClickListener != null)
+                                {
+                                    OnSupermarketClickListener.onSupermarketClick(new Supermarket(supermarketName, sectionName));
+                                }
+
                                 notifyDataSetChanged();
                             }
                         }
@@ -153,7 +158,11 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
                             public void onSectionClick(String sectionName)
                             {
                                 SupermarketsListAdapter.onSectionClick(supermarketName, sectionName);
-                                OnSupermarketClickListener.onSupermarketClick(new Supermarket(supermarketName, sectionName));
+
+                                if (OnSupermarketClickListener != null)
+                                {
+                                    OnSupermarketClickListener.onSupermarketClick(new Supermarket(supermarketName, sectionName));
+                                }
                                 notifyDataSetChanged();
                             }
                         }
