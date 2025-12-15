@@ -63,7 +63,7 @@ public class APIHandler
                 Map<String, Map<String, Map<String, Double>>> freshItems = getItemsFromAPI();
                 Map<String, String> freshCodeNames = getItemsCodeNameFromAPI(new ArrayList<>(freshItems.keySet()));
 
-                mergeCache(freshItems, freshCodeNames);
+                updateCache(freshItems, freshCodeNames);
                 saveItemsToDB(freshItems);
                 saveCodeNamesToDB(freshCodeNames);
             }
@@ -81,7 +81,7 @@ public class APIHandler
                     Map<String, Map<String, Map<String, Double>>> freshItems = getItemsFromAPI();
                     Map<String, String> freshCodeNames = getItemsCodeNameFromAPI(new ArrayList<>(freshItems.keySet()));
 
-                    mergeCache(freshItems, freshCodeNames);
+                    updateCache(freshItems, freshCodeNames);
                     saveItemsToDB(freshItems);
                     saveCodeNamesToDB(freshCodeNames);
                 }).start();
@@ -127,14 +127,13 @@ public class APIHandler
         return codeNames;
     }
 
-    private void mergeCache(Map<String, Map<String, Map<String, Double>>> freshItems,
-                            Map<String, String> freshCodeNames)
+    private void updateCache(Map<String, Map<String, Map<String, Double>>> freshItems,
+                             Map<String, String> freshCodeNames)
     {
-        for (String itemCode : freshItems.keySet())
-        {
-            cachedItems.put(itemCode, freshItems.get(itemCode));
-        }
+        cachedItems.clear();
+        cachedItems.putAll(freshItems);
 
+        cachedCodeNames.clear();
         cachedCodeNames.putAll(freshCodeNames);
     }
 
@@ -143,20 +142,10 @@ public class APIHandler
         new Thread(() ->
         {
             AppDatabase db = AppDatabase.getDatabase(Baskit.getContext());
-            List<ItemEntity> dbItems = db.itemDao().getAll();
-            Map<String, Map<String, Map<String, Double>>> existing = new HashMap<>();
-
-            for (ItemEntity entity : dbItems)
-            {
-                existing.putIfAbsent(entity.itemCode, new HashMap<>());
-                Map<String, Map<String, Double>> storeMap = existing.get(entity.itemCode);
-                storeMap.putIfAbsent(entity.store, new HashMap<>());
-                storeMap.get(entity.store).put(entity.branch, entity.price);
-            }
+            db.itemDao().clearAll();
 
             List<ItemEntity> itemsToInsert = new ArrayList<>();
 
-            // get only the new or changed items
             for (String itemCode : freshItems.keySet())
             {
                 Map<String, Map<String, Double>> freshStores = freshItems.get(itemCode);
@@ -168,20 +157,12 @@ public class APIHandler
                     for (String branch : freshBranches.keySet())
                     {
                         double freshPrice = freshBranches.get(branch);
-                        double existingPrice = existing
-                                .getOrDefault(itemCode, new HashMap<>())
-                                .getOrDefault(store, new HashMap<>())
-                                .getOrDefault(branch, Double.NaN);
-
-                        if (Double.isNaN(existingPrice) || existingPrice != freshPrice)
-                        {
-                            ItemEntity entity = new ItemEntity();
-                            entity.itemCode = itemCode;
-                            entity.store = store;
-                            entity.branch = branch;
-                            entity.price = freshPrice;
-                            itemsToInsert.add(entity);
-                        }
+                        ItemEntity entity = new ItemEntity();
+                        entity.itemCode = itemCode;
+                        entity.store = store;
+                        entity.branch = branch;
+                        entity.price = freshPrice;
+                        itemsToInsert.add(entity);
                     }
                 }
             }
@@ -198,28 +179,14 @@ public class APIHandler
         new Thread(() ->
         {
             AppDatabase db = AppDatabase.getDatabase(Baskit.getContext());
-            List<ItemCodeName> dbCodes = db.itemCodesDao().getAll();
-            Map<String, String> existingMap = new HashMap<>();
-
-            for (ItemCodeName code : dbCodes)
-            {
-                existingMap.put(code.getItemCode(), code.getItemName());
-            }
+            db.itemCodesDao().clearAll();
 
             List<ItemCodeName> codesToInsert = new ArrayList<>();
-
-            // get only the new or changed items
             for (Map.Entry<String, String> entry : freshCodeNames.entrySet())
             {
                 String code = entry.getKey();
                 String name = entry.getValue();
-
-                String existingName = existingMap.get(code);
-
-                if (existingName == null || !existingName.equals(name))
-                {
-                    codesToInsert.add(new ItemCodeName(code, name));
-                }
+                codesToInsert.add(new ItemCodeName(code, name));
             }
 
             if (!codesToInsert.isEmpty())
