@@ -32,9 +32,9 @@ public class APIHandler
     private static String firebaseToken;
     private static Map<String, Map<String, Map<String, Double>>> allItems;
     private final OkHttpClient client = new OkHttpClient.Builder()
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(30, TimeUnit.SECONDS)
+            .connectTimeout(0, TimeUnit.SECONDS)
+            .readTimeout(0, TimeUnit.SECONDS)
+            .writeTimeout(0, TimeUnit.SECONDS)
             .build();
     private Map<String, Map<String, Map<String, Double>>> cachedItems = null;
     private Map<String, String> cachedCodeNames = null;

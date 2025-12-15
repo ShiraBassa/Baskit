@@ -36,7 +36,7 @@ public class SettingsActivity extends AppCompatActivity
     ImageButton btnHome, btnLogOut;
     Button btnAddSupermarket, btnRemoveSupermarket, btnAddCity, btnRemoveCity;
     Map<String, ArrayList<String>> choices;
-    ArrayList<String> cities;
+    ArrayList<String> cities, all_cities;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -65,6 +65,7 @@ public class SettingsActivity extends AppCompatActivity
             {
                 choices = apiHandler.getChoices();
                 cities = apiHandler.getCities();
+                all_cities = apiHandler.getAllCities();
 
                 supermarketsAdapter = SupermarketsListAdapter.fromSupermarkets(choices, this);
                 citiesAdapter = new CitiesListAdapter(cities);
@@ -181,6 +182,33 @@ public class SettingsActivity extends AppCompatActivity
                         }
                     });
                 });
+            }
+        });
+
+        btnAddCity.setOnClickListener(v ->
+        {
+            if (cities == null)
+            {
+                return;
+            }
+
+            try
+            {
+                new AddCityAlertDialog(
+                        SettingsActivity.this,
+                        SettingsActivity.this,
+                        cities,
+                        all_cities,
+                        citiesAdapter
+                ).show();
+            }
+            catch (JSONException e)
+            {
+                throw new RuntimeException(e);
+            }
+            catch (IOException e)
+            {
+                throw new RuntimeException(e);
             }
         });
 

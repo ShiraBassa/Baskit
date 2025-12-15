@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:padding="20dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center"
+    android:background="@color/white_smoke">
+
+    <TextView
+        android:text="בחר עיר"
+        android:textSize="22sp"
+        android:textColor="@color/dark_teal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"/>
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:elevation="4dp"
+        android:backgroundTint="@color/white_smoke">
+
+        <Spinner
+            android:id="@+id/spinner_cities"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+    </androidx.cardview.widget.CardView>
+
+    <Button
+        android:id="@+id/btn_add"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="הוסף"
+        android:textColor="@color/white_smoke"
+        android:backgroundTint="@color/dark_teal"
+        android:layout_gravity="center"/>
+
+</LinearLayout>
