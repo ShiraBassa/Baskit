@@ -124,6 +124,14 @@ public class AddItemFragment extends DialogFragment
                     ViewGroup.LayoutParams.MATCH_PARENT
             );
         }
+
+        selectedItem = null;
+        searchItem.setText("");
+        recyclerSupermarkets.setAdapter(null);
+        recyclerSupermarkets.setLayoutManager(null);
+        infoLayout.setVisibility(View.INVISIBLE);
+        tvQuantity.setText("");
+        searchItem.clearFocus();
     }
 
     private void setupAutocomplete()
@@ -283,7 +291,7 @@ public class AddItemFragment extends DialogFragment
 
             Map<String, Map<String, Double>> finalData = data;
 
-            supermarketsAdapter = SupermarketsListAdapter.fromSupermarketsWithPrices(finalData, activity, new SupermarketsListAdapter.OnSupermarketClickListener()
+            supermarketsAdapter = SupermarketsListAdapter.fromSupermarketsWithPrices(finalData, activity, null, new SupermarketsListAdapter.OnSupermarketClickListener()
             {
                 @Override
                 public void onSupermarketClick(Supermarket supermarket)

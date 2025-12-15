@@ -150,7 +150,10 @@ public class Category
 
         for (Item item : this.items.values())
         {
-            sum += item.getTotal();
+            if (!item.isChecked())
+            {
+                sum += item.getTotal();
+            }
         }
 
         return Math.round(sum * 100.0) / 100.0;

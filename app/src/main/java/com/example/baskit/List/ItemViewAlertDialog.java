@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.baskit.API.APIHandler;
+import com.example.baskit.Baskit;
 import com.example.baskit.Categories.ItemsAdapter;
 import com.example.baskit.MainComponents.Item;
 import com.example.baskit.MainComponents.Supermarket;
@@ -45,11 +46,11 @@ public class ItemViewAlertDialog
     Item item;
     boolean showQuantity;
 
-    public ItemViewAlertDialog(Activity activity, Context context, ItemsAdapter.UpperClassFunctions upperClassFns, Item item, boolean showQuantity)
+    public ItemViewAlertDialog(Activity activity, Context context, ItemsAdapter.UpperClassFunctions upperClassFns, Item _item, boolean showQuantity)
     {
         this.activity = activity;
         this.context = context;
-        this.item = item;
+        this.item = _item.clone();
         this.upperClassFns = upperClassFns;
         this.showQuantity = showQuantity;
 
@@ -78,15 +79,25 @@ public class ItemViewAlertDialog
 
             activity.runOnUiThread(() ->
             {
-                supermarketsAdapter = SupermarketsListAdapter.fromSupermarketsWithPrices(finalData, activity, new SupermarketsListAdapter.OnSupermarketClickListener() {
+                supermarketsAdapter = SupermarketsListAdapter.fromSupermarketsWithPrices(finalData, activity, item.getSupermarket(), new SupermarketsListAdapter.OnSupermarketClickListener()
+                {
                     @Override
                     public void onSupermarketClick(Supermarket supermarket)
                     {
-                        item.setSupermarket(supermarket);
-                        item.setPrice(finalData.get(supermarket.getSupermarket()).get(supermarket.getSection()));
+                        if (supermarket.getSupermarket() == null)
+                        {
+                            item.setSupermarket(Baskit.unassigned_supermarket);
+                            item.setPrice(0);
+                        }
+                        else
+                        {
+                            item.setSupermarket(supermarket);
+                            item.setPrice(
+                                    finalData.get(supermarket.getSupermarket())
+                                            .get(supermarket.getSection())
+                            );
+                        }
 
-                        supermarketsAdapter.getSelectedSupermarket().setSupermarket(supermarket.getSupermarket());
-                        supermarketsAdapter.getSelectedSupermarket().setSection(supermarket.getSection());
                         supermarketsAdapter.notifyDataSetChanged();
                     }
                 });
@@ -139,8 +150,15 @@ public class ItemViewAlertDialog
         });
     }
 
-    public void show()
+    public void show(Item _item)
     {
+        this.item = _item.clone();
+
+        if (supermarketsAdapter != null)
+        {
+            supermarketsAdapter.resetSelection(item.getSupermarket());
+        }
+
         adBtnSave.setClickable(true);
         adBtnCancel.setClickable(true);
         adBtnUp.setClickable(true);

@@ -137,10 +137,13 @@ public class SectionsListAdapter extends RecyclerView.Adapter<SectionsListAdapte
                 return;
             }
 
-            if (selectedPosition == adapterPos) {
+            if (selectedPosition == adapterPos)
+            {
                 // Deselect if the same item is clicked
                 selectedPosition = RecyclerView.NO_POSITION;
-            } else {
+            }
+            else
+            {
                 selectedPosition = adapterPos;
             }
 

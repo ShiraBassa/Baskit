@@ -211,7 +211,7 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
             @Override
             public void onClick(View v)
             {
-                holder.itemViewAlertDialog.show();
+                holder.itemViewAlertDialog.show(item);
             }
         });
     }

@@ -11,9 +11,13 @@ import android.view.View;
 
 import androidx.core.graphics.ColorUtils;
 
+import com.example.baskit.MainComponents.Supermarket;
+
 public class Baskit extends Application
 {
     private static Context context;
+    public static final Supermarket unassigned_supermarket = new Supermarket("לא נבחר", "");
+    public static final Supermarket other_supermarket = new Supermarket("אחר", "");
 
     @Override
     public void onCreate()

@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.baskit.Baskit;
 import com.example.baskit.MainComponents.Category;
 import com.example.baskit.MainComponents.Item;
 import com.example.baskit.MainComponents.Supermarket;
@@ -26,6 +27,8 @@ import com.example.baskit.R;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
+
+import kotlin.io.encoding.Base64Kt;
 
 public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdapter.ViewHolder>
 {
@@ -38,8 +41,10 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
     Activity activity;
     Context context;
     ItemsAdapter.UpperClassFunctions upperClassFns;
-    Supermarket unassigned = new Supermarket("לא נבחר", "");
-    Supermarket other = new Supermarket("אחר", "");
+
+    public static final Supermarket unassigned_supermarket = Baskit.unassigned_supermarket;
+    public static final Supermarket other_supermarket = Baskit.other_supermarket;
+
     boolean isDropped;
     boolean draggable = false;
 
@@ -103,7 +108,7 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
         this.supermarkets = supermarkets;
 
         ArrayList<Supermarket> displaySupermarkets = new ArrayList<>(supermarkets);
-        displaySupermarkets.add(unassigned);
+        displaySupermarkets.add(unassigned_supermarket);
         this.supermarkets = displaySupermarkets;
 
         this.itemPrices = itemPrices;
@@ -123,8 +128,8 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
         itemsBySupermarket = new HashMap<>();
         expandedStates = new HashMap<>();
 
-        itemsBySupermarket.put(unassigned, new ArrayList<>());
-        expandedStates.put(unassigned, true);
+        itemsBySupermarket.put(unassigned_supermarket, new ArrayList<>());
+        expandedStates.put(unassigned_supermarket, true);
 
         for (Supermarket supermarket : supermarkets)
         {
@@ -132,8 +137,8 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
             expandedStates.put(supermarket, true);
         }
 
-        itemsBySupermarket.put(other, new ArrayList<>());
-        expandedStates.put(other, true);
+        itemsBySupermarket.put(other_supermarket, new ArrayList<>());
+        expandedStates.put(other_supermarket, true);
     }
 
     public void arrangeByCheapest()
@@ -164,11 +169,11 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
 
             if (supermarket == null)
             {
-                targetList = itemsBySupermarket.get(unassigned);
+                targetList = itemsBySupermarket.get(unassigned_supermarket);
             }
             else if (!itemsBySupermarket.containsKey(supermarket))
             {
-                targetList = itemsBySupermarket.get(other);
+                targetList = itemsBySupermarket.get(other_supermarket);
             }
             else
             {
@@ -181,11 +186,11 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
             }
         }
 
-        ArrayList<Item> otherItems = itemsBySupermarket.get(other);
+        ArrayList<Item> otherItems = itemsBySupermarket.get(other_supermarket);
 
-        if (otherItems != null && !otherItems.isEmpty() && !supermarkets.contains(other))
+        if (otherItems != null && !otherItems.isEmpty() && !supermarkets.contains(other_supermarket))
         {
-            supermarkets.add(other);
+            supermarkets.add(other_supermarket);
         }
 
         notifyDataSetChanged();
@@ -193,30 +198,43 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
 
     private void setCheapest()
     {
+        double lowest;
+        Supermarket lowestSupermarket;
+
         for (Item item : category.getItems().values())
         {
-            double lowest = Double.MAX_VALUE;
-            Supermarket lowestSupermarket = null;
+            Map<String, Map<String, Double>> currItemPrices = itemPrices.get(item.getAbsoluteId());
 
-            for (Map.Entry<String, Map<String, Double>> SupermarketEntry : itemPrices.get(item.getAbsoluteId()).entrySet())
+            if (currItemPrices == null || currItemPrices.isEmpty())
             {
-                String supermarket = SupermarketEntry.getKey();
+                lowest = 0.0;
+                lowestSupermarket = unassigned_supermarket;
+            }
+            else
+            {
+                lowest = Double.MAX_VALUE;
+                lowestSupermarket = null;
 
-                for (Map.Entry<String, Double> sectionEntry : SupermarketEntry.getValue().entrySet())
+                for (Map.Entry<String, Map<String, Double>> SupermarketEntry : itemPrices.get(item.getAbsoluteId()).entrySet())
                 {
-                    String section = sectionEntry.getKey();
-                    Double price = sectionEntry.getValue();
+                    String supermarket = SupermarketEntry.getKey();
 
-                    if (price < lowest)
+                    for (Map.Entry<String, Double> sectionEntry : SupermarketEntry.getValue().entrySet())
                     {
-                        lowest = price;
-                        lowestSupermarket = new Supermarket(supermarket, section);
+                        String section = sectionEntry.getKey();
+                        Double price = sectionEntry.getValue();
+
+                        if (price < lowest)
+                        {
+                            lowest = price;
+                            lowestSupermarket = new Supermarket(supermarket, section);
+                        }
                     }
                 }
-
-                item.setPrice(lowest);
-                item.setSupermarket(lowestSupermarket);
             }
+
+            item.setPrice(lowest);
+            item.setSupermarket(lowestSupermarket);
         }
     }
 
@@ -428,7 +446,7 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
 
     private boolean containsSupermarket(Item item, Supermarket supermarket)
     {
-        if (supermarket == unassigned)
+        if (supermarket == unassigned_supermarket)
         {
             return true;
         }
@@ -460,7 +478,7 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
             itemsBySupermarket.get(from).remove(draggedItem);
         }
 
-        if (to == unassigned)
+        if (to == unassigned_supermarket)
         {
             draggedItem.setSupermarket(null);
             draggedItem.setPrice(0.0);

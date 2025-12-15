@@ -10,6 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.baskit.Baskit;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;
 
@@ -22,7 +23,9 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
     private Map<String, Map<String, Double>> supermarketsWithPrices = null;
     private Activity activity;
     private OnSupermarketClickListener OnSupermarketClickListener = null;
-    private static Supermarket selectedSupermarket = new Supermarket();
+    private Supermarket selectedSupermarket = new Supermarket();
+    public static final Supermarket unassigned_supermarket = Baskit.unassigned_supermarket;
+    public static final Supermarket other_supermarket = Baskit.other_supermarket;
 
     public void setOnSupermarketClickListener(OnSupermarketClickListener listener)
     {
@@ -45,14 +48,41 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
         return adapter;
     }
 
-    public static SupermarketsListAdapter fromSupermarketsWithPrices(Map<String, Map<String, Double>> supermarketsWithPrices, Activity activity, OnSupermarketClickListener onSupermarketClickListener)
+    public static SupermarketsListAdapter fromSupermarketsWithPrices(Map<String, Map<String, Double>> supermarketsWithPrices, Activity activity, Supermarket preselected_supermarket, OnSupermarketClickListener onSupermarketClickListener)
     {
         SupermarketsListAdapter adapter = new SupermarketsListAdapter();
         adapter.setSupermarketsWithPrices(supermarketsWithPrices);
         adapter.setActivity(activity);
         adapter.setOnSupermarketClickListener(onSupermarketClickListener);
 
+        if (preselected_supermarket != null &&
+                preselected_supermarket != Baskit.unassigned_supermarket &&
+                preselected_supermarket.getSupermarket() != null)
+        {
+            adapter.selectedSupermarket = preselected_supermarket;
+        }
+        else
+        {
+            adapter.selectedSupermarket = new Supermarket();
+        }
+
         return adapter;
+    }
+
+    public void resetSelection(Supermarket supermarket)
+    {
+        if (supermarket != null &&
+                supermarket != Baskit.unassigned_supermarket &&
+                supermarket.getSupermarket() != null)
+        {
+            selectedSupermarket = supermarket;
+        }
+        else
+        {
+            selectedSupermarket = new Supermarket(); // nothing selected
+        }
+
+        notifyDataSetChanged();
     }
 
     public Map<String, ArrayList<String>> getSupermarkets()
@@ -123,7 +153,7 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
                             @Override
                             public void onSectionClick(String sectionName)
                             {
-                                SupermarketsListAdapter.onSectionClick(supermarketName, sectionName);
+                                _onSectionClick(supermarketName, sectionName);
 
                                 if (OnSupermarketClickListener != null)
                                 {
@@ -157,7 +187,7 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
                             @Override
                             public void onSectionClick(String sectionName)
                             {
-                                SupermarketsListAdapter.onSectionClick(supermarketName, sectionName);
+                                _onSectionClick(supermarketName, sectionName);
 
                                 if (OnSupermarketClickListener != null)
                                 {
@@ -219,7 +249,7 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
         return selectedSupermarket;
     }
 
-    private static void onSectionClick(String supermarketName, String sectionName)
+    private void _onSectionClick(String supermarketName, String sectionName)
     {
         if (selectedSupermarket.getSupermarket() != null &&
                 selectedSupermarket.getSupermarket().equals(supermarketName) &&
