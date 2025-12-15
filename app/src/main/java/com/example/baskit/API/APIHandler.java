@@ -391,6 +391,21 @@ public class APIHandler
     }
 
     // Cities
+    public ArrayList<String> getAllCities() throws IOException, JSONException
+    {
+        String citiesRaw = getRaw("/all_cities");
+
+        JSONArray citiesJson = new JSONArray(citiesRaw);
+        ArrayList<String> cities = new ArrayList<>();
+
+        for (int i = 0; i < citiesJson.length(); i++)
+        {
+            cities.add(citiesJson.getString(i));
+        }
+
+        return cities;
+    }
+
     public ArrayList<String> getCities() throws IOException, JSONException
     {
         String citiesRaw = getRaw("/cities");
@@ -405,6 +420,7 @@ public class APIHandler
 
         return cities;
     }
+
 
     public void setCities(ArrayList<String> cities) throws IOException, JSONException
     {

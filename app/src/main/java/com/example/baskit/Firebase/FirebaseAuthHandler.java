@@ -363,7 +363,7 @@ public class FirebaseAuthHandler
 
         try
         {
-            ArrayList<String> all_cities = apiHandler.getCities();
+            ArrayList<String> all_cities = apiHandler.getAllCities();
 
             ArrayList<String> cities = new ArrayList<>();
             cities.add(all_cities.get(0));
@@ -439,6 +439,62 @@ public class FirebaseAuthHandler
             catch (IOException | JSONException e)
             {
                 Log.e("Remove supermarket", e.getMessage());
+            }
+        }).start();
+    }
+
+    public void addCity(String city, Runnable onComplete)
+    {
+        new Thread(() ->
+        {
+            try
+            {
+                ArrayList<String> cities = apiHandler.getCities();
+
+                if (cities.contains(city))
+                {
+                    return;
+                }
+
+                cities.add(city);
+                apiHandler.setCities(cities);
+
+                if (onComplete != null)
+                {
+                    new Handler(Looper.getMainLooper()).post(onComplete);
+                }
+            }
+            catch (IOException | JSONException e)
+            {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
+    public void removeCity(String city, Runnable onComplete)
+    {
+        new Thread(() ->
+        {
+            try
+            {
+                ArrayList<String> cities = apiHandler.getCities();
+
+                if (!cities.contains(city))
+                {
+                    return;
+                }
+
+                cities.remove(city);
+                apiHandler.setCities(cities);
+
+                if (onComplete != null)
+                {
+                    new Handler(Looper.getMainLooper()).post(onComplete);
+                }
+            }
+            catch (IOException | JSONException e)
+            {
+                e.printStackTrace();
             }
         }).start();
     }

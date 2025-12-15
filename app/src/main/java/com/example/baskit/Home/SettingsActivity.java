@@ -2,7 +2,6 @@ package com.example.baskit.Home;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -13,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.baskit.API.APIHandler;
 import com.example.baskit.Firebase.FirebaseAuthHandler;
+import com.example.baskit.List.CitiesListAdapter;
 import com.example.baskit.List.SupermarketsListAdapter;
 import com.example.baskit.Login.LoginActivity;
 import com.example.baskit.MainComponents.Supermarket;
@@ -28,13 +28,15 @@ public class SettingsActivity extends AppCompatActivity
 {
     FirebaseAuthHandler authHandler;
 
-    private RecyclerView recyclerSupermarkets;
+    private RecyclerView recyclerSupermarkets, recyclerCities;
     private SupermarketsListAdapter supermarketsAdapter;
+    CitiesListAdapter citiesAdapter;
     APIHandler apiHandler = APIHandler.getInstance();
 
     ImageButton btnHome, btnLogOut;
-    Button btnAddSupermarket, btnRemoveSupermarket;
+    Button btnAddSupermarket, btnRemoveSupermarket, btnAddCity, btnRemoveCity;
     Map<String, ArrayList<String>> choices;
+    ArrayList<String> cities;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -54,17 +56,34 @@ public class SettingsActivity extends AppCompatActivity
         btnAddSupermarket = findViewById(R.id.btn_add_supermarket);
         btnRemoveSupermarket = findViewById(R.id.btn_remove_supermarket);
         recyclerSupermarkets = findViewById(R.id.recycler_supermarket);
+        recyclerCities = findViewById(R.id.recycler_cities);
+        btnAddCity = findViewById(R.id.btn_add_city);
+        btnRemoveCity = findViewById(R.id.btn_remove_city);
 
         new Thread(() -> {
             try
             {
                 choices = apiHandler.getChoices();
+                cities = apiHandler.getCities();
+
                 supermarketsAdapter = SupermarketsListAdapter.fromSupermarkets(choices, this);
+                citiesAdapter = new CitiesListAdapter(cities);
 
                 runOnUiThread(() ->
                 {
-                    recyclerSupermarkets.setLayoutManager(new LinearLayoutManager(this));
+                    LinearLayoutManager lmSupermarkets = new LinearLayoutManager(this);
+                    lmSupermarkets.setAutoMeasureEnabled(true);
+
+                    recyclerSupermarkets.setLayoutManager(lmSupermarkets);
+                    recyclerSupermarkets.setHasFixedSize(false);
                     recyclerSupermarkets.setAdapter(supermarketsAdapter);
+
+                    LinearLayoutManager lmCities = new LinearLayoutManager(this);
+                    lmCities.setAutoMeasureEnabled(true);
+
+                    recyclerCities.setLayoutManager(lmCities);
+                    recyclerCities.setHasFixedSize(false);
+                    recyclerCities.setAdapter(citiesAdapter);
                 });
             } catch (IOException | JSONException ignored) {}
         }).start();
@@ -159,6 +178,38 @@ public class SettingsActivity extends AppCompatActivity
 
                             supermarketsAdapter.updateData(choices);
                             supermarketsAdapter.notifyDataSetChanged();
+                        }
+                    });
+                });
+            }
+        });
+
+        btnRemoveCity.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                if (citiesAdapter == null)
+                {
+                    return;
+                }
+
+                String city = citiesAdapter.getSelectedCity();
+
+                if (city == null || city.isEmpty())
+                {
+                    return;
+                }
+
+                authHandler.removeCity(city, () ->
+                {
+                    runOnUiThread(() ->
+                    {
+                        if (cities != null)
+                        {
+                            cities.remove(city);
+                            citiesAdapter.updateData(cities);
+                            citiesAdapter.notifyDataSetChanged();
                         }
                     });
                 });

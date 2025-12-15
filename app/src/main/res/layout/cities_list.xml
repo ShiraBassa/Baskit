@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:gravity="top|center_horizontal"
     android:orientation="vertical"
     android:padding="10dp">
@@ -9,18 +10,15 @@
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp"
-        android:elevation="4dp"
-        android:background="@color/white_smoke">
+        app:useCompatPadding="true">
 
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recycler_supermarket"
+            android:id="@+id/recycler_cities"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:nestedScrollingEnabled="false"
-            android:clipToPadding="false"
+            android:overScrollMode="never"
             android:scrollbars="none"/>
-
     </androidx.cardview.widget.CardView>
 
 </LinearLayout>
