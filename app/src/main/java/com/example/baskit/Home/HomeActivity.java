@@ -80,7 +80,13 @@ public class HomeActivity extends AppCompatActivity
                                 user = authHandler.getUser();
 
                                 new Thread(() -> {
-                                    APIHandler.getInstance().preload();
+                                    try {
+                                        APIHandler.getInstance().preload();
+                                    } catch (JSONException e) {
+                                        throw new RuntimeException(e);
+                                    } catch (IOException e) {
+                                        throw new RuntimeException(e);
+                                    }
                                     runOnUiThread(() -> {
                                         setContentView(R.layout.activity_home);
                                         init();
@@ -122,7 +128,13 @@ public class HomeActivity extends AppCompatActivity
 
             new Thread(() ->
             {
-                APIHandler.getInstance().preload();
+                try {
+                    APIHandler.getInstance().preload();
+                } catch (JSONException e) {
+                    throw new RuntimeException(e);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
 
                 runOnUiThread(() ->
                 {

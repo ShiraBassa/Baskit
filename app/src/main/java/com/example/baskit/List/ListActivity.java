@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.baskit.AI.AIHandler;
 import com.example.baskit.API.APIHandler;
+import com.example.baskit.Baskit;
 import com.example.baskit.Categories.CategoryActivity;
 import com.example.baskit.Firebase.FirebaseDBHandler;
 import com.example.baskit.MainComponents.Category;
@@ -21,6 +22,7 @@ import com.example.baskit.MainComponents.Item;
 import com.example.baskit.MainComponents.List;
 import com.example.baskit.R;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -75,7 +77,7 @@ public class ListActivity extends AppCompatActivity
 
             if (!initialized)
             {
-                showTotal();
+                tvTotal.setText(Baskit.getTotalDisplayString(list.getTotal(), true));
             }
         }
     }
@@ -158,7 +160,7 @@ public class ListActivity extends AppCompatActivity
                         }
 
                         list = newList;
-                        showTotal();
+                        tvTotal.setText(Baskit.getTotalDisplayString(list.getTotal(), true));
                         tvTotal.setVisibility(View.VISIBLE);
                         initialized = false;
                     }
@@ -297,7 +299,17 @@ public class ListActivity extends AppCompatActivity
         if (!category.isFinished())
         {
             tvCount.setText(Integer.toString(category.countUnchecked()));
-            tvPrice.setText(Double.toString(category.getTotal()) + "₪");
+
+            double total = category.getTotal();
+
+            if (total % 1.0 == 0)
+            {
+                tvPrice.setText(String.format("%.0f", total) + "₪");
+            }
+            else
+            {
+                tvPrice.setText(String.format("%.2f", total) + "₪");
+            }
         }
         else
         {
@@ -368,20 +380,5 @@ public class ListActivity extends AppCompatActivity
             }
         }
         return null;
-    }
-
-    private void showTotal()
-    {
-        double total = list.getTotal();
-        int total_rounded = (int) total;
-
-        if (total == total_rounded)
-        {
-            tvTotal.setText("סך הכל: " + Integer.toString(total_rounded) + "₪");
-        }
-        else
-        {
-            tvTotal.setText("סך הכל: " + Double.toString(total) + "₪");
-        }
     }
 }

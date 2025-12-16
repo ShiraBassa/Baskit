@@ -1,6 +1,5 @@
 package com.example.baskit.List;
 
-import android.app.Activity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,6 +22,7 @@ public class SectionsListAdapter extends RecyclerView.Adapter<SectionsListAdapte
 
     private String selectedSupermarket = null;
     private String selectedSection = null;
+    String supermarketName;
 
     public interface OnSectionClickListener
     {
@@ -34,30 +34,24 @@ public class SectionsListAdapter extends RecyclerView.Adapter<SectionsListAdapte
         this.listener = listener;
     }
 
-    private SectionsListAdapter() {}
+    public SectionsListAdapter() {}
 
-    public static SectionsListAdapter fromSections(ArrayList<String> sections)
+    public void fromSections(ArrayList<String> sections)
     {
-        SectionsListAdapter adapter = new SectionsListAdapter();
-        adapter.setSections(sections);
-        return adapter;
+        this.sections = sections;
     }
 
-    public static SectionsListAdapter fromSections(ArrayList<String> sections, OnSectionClickListener onSupermarketClickListener)
+    public void fromSections(String supermarketName, ArrayList<String> sections, OnSectionClickListener onSupermarketClickListener)
     {
-        SectionsListAdapter adapter = new SectionsListAdapter();
-        adapter.setSections(sections);
-        adapter.setOnSectionClickListener(onSupermarketClickListener);
-
-        return adapter;
+        this.supermarketName = supermarketName;
+        this.sections = sections;
+        this.listener = onSupermarketClickListener;
     }
 
-    public static SectionsListAdapter fromSectionsWithPrices(Map<String, Double> sectionsWithPrices, OnSectionClickListener onSectionClickListener) {
-        SectionsListAdapter adapter = new SectionsListAdapter();
-        adapter.setSectionsWithPrices(sectionsWithPrices);
-        adapter.setOnSectionClickListener(onSectionClickListener);
-
-        return adapter;
+    public void fromSectionsWithPrices(String supermarketName, Map<String, Double> sectionsWithPrices, OnSectionClickListener onSectionClickListener) {
+        this.supermarketName = supermarketName;
+        this.sectionsWithPrices = sectionsWithPrices;
+        this.listener = onSectionClickListener;
     }
 
     public void setSections(ArrayList<String> sections)
@@ -78,14 +72,14 @@ public class SectionsListAdapter extends RecyclerView.Adapter<SectionsListAdapte
 
     public static class ViewHolder extends RecyclerView.ViewHolder
     {
-        protected TextView tvSectionName, tvItemPrice;
+        protected TextView tvSectionName, tvPrice;
 
         public ViewHolder(View itemView)
         {
             super(itemView);
 
             tvSectionName = itemView.findViewById(R.id.tv_section_name);
-            tvItemPrice = itemView.findViewById(R.id.tv_price);
+            tvPrice = itemView.findViewById(R.id.tv_price);
         }
     }
 
@@ -109,19 +103,21 @@ public class SectionsListAdapter extends RecyclerView.Adapter<SectionsListAdapte
             ArrayList<String> sectionNames = new ArrayList<>(sectionsWithPrices.keySet());
             sectionName = sectionNames.get(position);
 
-            holder.tvItemPrice.setText(Double.toString(sectionsWithPrices.get(sectionName)) + "₪");
-            holder.tvItemPrice.setVisibility(View.VISIBLE);
+            holder.tvPrice.setText(Double.toString(sectionsWithPrices.get(sectionName)) + "₪");
+            holder.tvPrice.setVisibility(View.VISIBLE);
         }
         else
         {
             sectionName = sections.get(position);
         }
 
-        if (sections != null && sectionName.equals(selectedSection) && selectedSupermarket != null)
+        if (sections != null && sectionName.equals(selectedSection) &&
+                selectedSupermarket != null && supermarketName.equals(selectedSupermarket))
         {
             holder.itemView.setBackgroundColor(holder.itemView.getContext().getResources().getColor(R.color.tan));
         }
-        else if (sectionsWithPrices != null && sectionName.equals(selectedSection) && selectedSupermarket != null)
+        else if (sectionsWithPrices != null && sectionName.equals(selectedSection) &&
+                selectedSupermarket != null && supermarketName.equals(selectedSupermarket))
         {
             holder.itemView.setBackgroundColor(holder.itemView.getContext().getResources().getColor(R.color.tan));
         }
@@ -150,14 +146,20 @@ public class SectionsListAdapter extends RecyclerView.Adapter<SectionsListAdapte
             // Refresh all items to reset backgrounds
             notifyDataSetChanged();
 
-            if (listener != null) {
+            if (listener != null)
+            {
                 String sectionNameClick;
-                if (sectionsWithPrices != null) {
+
+                if (sectionsWithPrices != null)
+                {
                     ArrayList<String> sectionNames = new ArrayList<>(sectionsWithPrices.keySet());
                     sectionNameClick = sectionNames.get(adapterPos);
-                } else {
+                }
+                else
+                {
                     sectionNameClick = sections.get(adapterPos);
                 }
+
                 listener.onSectionClick(sectionNameClick);
             }
         });

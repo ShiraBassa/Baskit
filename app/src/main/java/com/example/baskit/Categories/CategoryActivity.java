@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.baskit.AI.AIHandler;
 import com.example.baskit.API.APIHandler;
+import com.example.baskit.Baskit;
 import com.example.baskit.Firebase.FirebaseDBHandler;
 import com.example.baskit.List.AddItemFragment;
 import com.example.baskit.MainComponents.Category;
@@ -70,7 +71,7 @@ public class CategoryActivity extends AppCompatActivity
 
         if (!initialized)
         {
-            showTotal();
+            tvTotal.setText(Baskit.getTotalDisplayString(category.getTotal(), true));
         }
     }
 
@@ -105,62 +106,49 @@ public class CategoryActivity extends AppCompatActivity
                         CategoryActivity.this,
                         new ArrayList<>(itemsCodeNames.values()),
                         CategoryActivity.this::addItem);
-
                 recyclerItems = findViewById(R.id.recycler_category_items);
 
-                new Thread(() ->
-                {
-                    try
-                    {
-                        ArrayList<Supermarket> supermarkets = apiHandler.getSupermarkets();
-
-                        CategoryActivity.this.runOnUiThread(() ->
+                ArrayList<Supermarket> supermarkets = apiHandler.getSupermarkets();
+                itemsAdapter = new CategoryItemsAdapter(
+                        category,
+                        CategoryActivity.this,
+                        CategoryActivity.this,
+                        new ItemsAdapter.UpperClassFunctions()
                         {
-                            itemsAdapter = new CategoryItemsAdapter(
-                                    category,
-                                    CategoryActivity.this,
-                                    CategoryActivity.this,
-                                    new ItemsAdapter.UpperClassFunctions()
-                                    {
-                                        @Override
-                                        public void updateItemCategory(Item item)
-                                        {
-                                            if (category == null) return;
-                                            dbHandler.updateItem(list, category, item);
-                                        }
+                            @Override
+                            public void updateItemCategory(Item item)
+                            {
+                                if (category == null) return;
+                                dbHandler.updateItem(list, category, item);
+                            }
 
-                                        @Override
-                                        public void removeItemCategory(Item item)
-                                        {
-                                            if (category == null) return;
-                                            dbHandler.removeItem(list, category, item);
-                                        }
+                            @Override
+                            public void removeItemCategory(Item item)
+                            {
+                                if (category == null) return;
+                                dbHandler.removeItem(list, category, item);
+                            }
 
-                                        @Override
-                                        public void updateCategory()
-                                        {
-                                            if (category == null) return;
-                                            dbHandler.updateItems(list, new ArrayList<>(category.getItems().values()));
-                                        }
+                            @Override
+                            public void updateCategory()
+                            {
+                                if (category == null) return;
+                                dbHandler.updateItems(list, new ArrayList<>(category.getItems().values()));
+                            }
 
-                                        @Override
-                                        public void removeCategory()
-                                        {
-                                            dbHandler.removeCategory(list, category);
-                                            finish();
-                                        }
-                                    },
-                                    supermarkets,
-                                    apiHandler.getItems()
-                            );
+                            @Override
+                            public void removeCategory()
+                            {
+                                dbHandler.removeCategory(list, category);
+                                finish();
+                            }
+                        },
+                        supermarkets,
+                        apiHandler.getItems()
+                );
 
-                            recyclerItems.setLayoutManager(new LinearLayoutManager(CategoryActivity.this));
-                            recyclerItems.setAdapter(itemsAdapter);
-
-                        });
-
-                    } catch (Exception ignored) {}
-                }).start();
+                recyclerItems.setLayoutManager(new LinearLayoutManager(CategoryActivity.this));
+                recyclerItems.setAdapter(itemsAdapter);
 
                 dbHandler.listenToCategory(list, category, new FirebaseDBHandler.GetCategoryCallback()
                 {
@@ -175,7 +163,7 @@ public class CategoryActivity extends AppCompatActivity
                             return;
                         }
 
-                        showTotal();
+                        tvTotal.setText(Baskit.getTotalDisplayString(category.getTotal(), true));
                         tvTotal.setVisibility(View.VISIBLE);
 
                         if (initialized)
@@ -312,20 +300,5 @@ public class CategoryActivity extends AppCompatActivity
             }
         }
         return null;
-    }
-
-    private void showTotal()
-    {
-        double total = category.getTotal();
-        int total_rounded = (int) total;
-
-        if (total == total_rounded)
-        {
-            tvTotal.setText("סך הכל: " + Integer.toString(total_rounded) + "₪");
-        }
-        else
-        {
-            tvTotal.setText("סך הכל: " + Double.toString(total) + "₪");
-        }
     }
 }

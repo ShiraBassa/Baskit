@@ -38,6 +38,7 @@ public class APIHandler
             .build();
     private Map<String, Map<String, Map<String, Double>>> cachedItems = null;
     private Map<String, String> cachedCodeNames = null;
+    private ArrayList<Supermarket> supermarkets = null;
 
     private APIHandler() {}
 
@@ -51,8 +52,9 @@ public class APIHandler
         return instance;
     }
 
-    public void preload()
+    public void preload() throws JSONException, IOException
     {
+        supermarkets = getUpdatedSupermarkets();
         cachedItems = loadItemsFromDB();
         cachedCodeNames = loadCodeNamesFromDB();
 
@@ -457,9 +459,27 @@ public class APIHandler
         return branchesMap;
     }
 
-    public ArrayList<Supermarket> getSupermarkets() throws JSONException, IOException
+    public ArrayList<Supermarket> getSupermarkets()
     {
-        ArrayList<Supermarket> supermarkets = new ArrayList<>();
+        return supermarkets;
+    }
+
+    public boolean singleSectionInSupermarkets(Supermarket supermarket)
+    {
+        for (Supermarket sm : supermarkets)
+        {
+            if (!sm.equals(supermarket) && sm.getSupermarket().equals(supermarket.getSupermarket()))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public void updateSupermarkets() throws JSONException, IOException
+    {
+        ArrayList<Supermarket> supermarketsNew = new ArrayList<>();
         Map<String, ArrayList<String>> branches = getChoices();
 
         for (Map.Entry<String, ArrayList<String>> supermarketEntry : branches.entrySet())
@@ -469,11 +489,22 @@ public class APIHandler
             for (String section : supermarketEntry.getValue())
             {
                 Supermarket supermarket = new Supermarket(supermarketName, section);
-                supermarkets.add(supermarket);
+                supermarketsNew.add(supermarket);
             }
         }
 
-        return supermarkets;
+        this.supermarkets = supermarketsNew;
+    }
+
+    public void updateSupermarkets(ArrayList<Supermarket> supermarketsNew)
+    {
+        this.supermarkets = supermarketsNew;
+    }
+
+    public ArrayList<Supermarket> getUpdatedSupermarkets() throws JSONException, IOException
+    {
+        updateSupermarkets();
+        return getSupermarkets();
     }
 
     public void setBranches(Map<String, ArrayList<String>> branches) throws IOException, JSONException

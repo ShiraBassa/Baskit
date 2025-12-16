@@ -3,8 +3,6 @@ package com.example.baskit.List;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
-import android.os.Handler;
-import android.os.Looper;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -27,7 +25,6 @@ import org.json.JSONException;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.ArrayList;
 
 public class ItemViewAlertDialog
 {
@@ -38,7 +35,7 @@ public class ItemViewAlertDialog
     AlertDialog.Builder adb;
     AlertDialog adItemView;
     private RecyclerView recyclerSupermarkets;
-    private SupermarketsListAdapter supermarketsAdapter;
+    private ItemViewPricesAdapter pricesAdapter;
     protected ItemsAdapter.UpperClassFunctions upperClassFns;
     Activity activity;
     Context context;
@@ -79,7 +76,7 @@ public class ItemViewAlertDialog
 
             activity.runOnUiThread(() ->
             {
-                supermarketsAdapter = SupermarketsListAdapter.fromSupermarketsWithPrices(finalData, activity, item.getSupermarket(), new SupermarketsListAdapter.OnSupermarketClickListener()
+                pricesAdapter = new ItemViewPricesAdapter(finalData, item.getSupermarket(), new ItemViewPricesAdapter.OnSupermarketClickListener()
                 {
                     @Override
                     public void onSupermarketClick(Supermarket supermarket)
@@ -92,18 +89,24 @@ public class ItemViewAlertDialog
                         else
                         {
                             item.setSupermarket(supermarket);
-                            item.setPrice(
-                                    finalData.get(supermarket.getSupermarket())
-                                            .get(supermarket.getSection())
-                            );
-                        }
 
-                        supermarketsAdapter.notifyDataSetChanged();
+                            Map<String, Double> sectionPrices = finalData.get(supermarket.getSupermarket());
+
+                            if (sectionPrices != null)
+                            {
+                                Double price = sectionPrices.get(supermarket.getSection());
+                                item.setPrice(price != null ? price : 0);
+                            }
+                            else
+                            {
+                                item.setPrice(0);
+                            }
+                        }
                     }
                 });
 
                 recyclerSupermarkets.setLayoutManager(new LinearLayoutManager(context));
-                recyclerSupermarkets.setAdapter(supermarketsAdapter);
+                recyclerSupermarkets.setAdapter(pricesAdapter);
             });
         }).start();
 
@@ -154,9 +157,12 @@ public class ItemViewAlertDialog
     {
         this.item = _item.clone();
 
-        if (supermarketsAdapter != null)
+        if (pricesAdapter != null && item.getSupermarket() != null)
         {
-            supermarketsAdapter.resetSelection(item.getSupermarket());
+            pricesAdapter.resetSelection(
+                    item.getSupermarket().getSupermarket(),
+                    item.getSupermarket().getSection()
+            );
         }
 
         adBtnSave.setClickable(true);

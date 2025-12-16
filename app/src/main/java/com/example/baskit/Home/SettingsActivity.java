@@ -67,7 +67,7 @@ public class SettingsActivity extends AppCompatActivity
                 cities = apiHandler.getCities();
                 all_cities = apiHandler.getAllCities();
 
-                supermarketsAdapter = SupermarketsListAdapter.fromSupermarkets(choices, this);
+                supermarketsAdapter = new SupermarketsListAdapter(choices);
                 citiesAdapter = new CitiesListAdapter(cities);
 
                 runOnUiThread(() ->
@@ -153,24 +153,22 @@ public class SettingsActivity extends AppCompatActivity
                     return;
                 }
 
-                Supermarket supermarket = supermarketsAdapter.getSelectedSupermarket();
+                String supermarketName = supermarketsAdapter.getSelectedSupermarketName();
+                String sectionName = supermarketsAdapter.getSelectedSectionName();
 
-                if (supermarket == null ||
-                    supermarket.getSupermarket() == null || supermarket.getSupermarket().isEmpty() ||
-                    supermarket.getSection() == null || supermarket.getSection().isEmpty())
+                if (supermarketName == null || sectionName == null)
                 {
                     return;
                 }
 
-                authHandler.removeSupermarketSection(supermarket, () ->
+                authHandler.removeSupermarketSection(new Supermarket(supermarketName, sectionName), () ->
                 {
                     runOnUiThread(() ->
                     {
-                        String supermarketName = supermarket.getSupermarket();
                         ArrayList<String> sections = choices.get(supermarketName);
                         if (sections != null)
                         {
-                            sections.remove(supermarket.getSection());
+                            sections.remove(sectionName);
 
                             if (sections.isEmpty())
                             {

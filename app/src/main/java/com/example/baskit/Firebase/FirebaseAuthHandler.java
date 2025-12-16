@@ -401,6 +401,7 @@ public class FirebaseAuthHandler
 
                 branches.get(marketName).add(sectionName);
                 apiHandler.setBranches(branches);
+                apiHandler.updateSupermarkets();
 
                 if (onComplete != null)
                 {
@@ -430,6 +431,7 @@ public class FirebaseAuthHandler
                 }
 
                 apiHandler.setBranches(branches);
+                apiHandler.updateSupermarkets();
 
                 if (onComplete != null)
                 {

@@ -48,7 +48,7 @@ public class AddItemFragment extends DialogFragment
     private AutoCompleteTextView searchItem;
 
     private RecyclerView recyclerSupermarkets;
-    private SupermarketsListAdapter supermarketsAdapter;
+    private ItemViewPricesAdapter pricesAdapter;
 
     private Item selectedItem;
     private Activity activity;
@@ -193,6 +193,37 @@ public class AddItemFragment extends DialogFragment
         searchItem.setDropDownHeight(ViewGroup.LayoutParams.WRAP_CONTENT);
     }
 
+    private void handleItemTyped()
+    {
+        String typed = searchItem.getText().toString().trim();
+
+        ArrayList<String> exactMatches = new ArrayList<>();
+        ArrayList<String> startsWithMatches = new ArrayList<>();
+        ArrayList<String> containsMatches = new ArrayList<>();
+
+        for (String name : allItemNames)
+        {
+            String lowerName = name.toLowerCase();
+            String lowerTyped = typed.toLowerCase();
+            if (lowerName.equals(lowerTyped)) exactMatches.add(name);
+            else if (lowerName.startsWith(lowerTyped)) startsWithMatches.add(name);
+            else containsMatches.add(name);
+        }
+
+        ArrayList<String> orderedItems = new ArrayList<>();
+        orderedItems.addAll(exactMatches);
+        orderedItems.addAll(startsWithMatches);
+        orderedItems.addAll(containsMatches);
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(context, R.layout.add_item_dropdown_item, R.id.tvItemName, orderedItems);
+        searchItem.setAdapter(adapter);
+
+        if (!orderedItems.isEmpty())
+        {
+            searchItem.showDropDown();
+        }
+    }
+
     private void hideKeyboard()
     {
         View view = getView();
@@ -246,37 +277,6 @@ public class AddItemFragment extends DialogFragment
         });
     }
 
-    private void handleItemTyped()
-    {
-        String typed = searchItem.getText().toString().trim();
-        boolean match = false;
-
-        for (String name : allItemNames)
-        {
-            if (typed.equals(name))
-            {
-                selectedItem = new Item(name);
-                selectedItem.setQuantity(1);
-                match = true;
-                break;
-            }
-        }
-
-        if (match)
-        {
-            loadSupermarketPrices();
-        }
-        else
-        {
-            recyclerSupermarkets.setAdapter(null);
-            recyclerSupermarkets.setLayoutManager(null);
-
-            searchItem.setText("");
-            infoLayout.setVisibility(View.INVISIBLE);
-            selectedItem = null;
-        }
-    }
-
     private void loadSupermarketPrices()
     {
         new Thread(() ->
@@ -291,7 +291,7 @@ public class AddItemFragment extends DialogFragment
 
             Map<String, Map<String, Double>> finalData = data;
 
-            supermarketsAdapter = SupermarketsListAdapter.fromSupermarketsWithPrices(finalData, activity, null, new SupermarketsListAdapter.OnSupermarketClickListener()
+            pricesAdapter = new ItemViewPricesAdapter(finalData, null, new ItemViewPricesAdapter.OnSupermarketClickListener()
             {
                 @Override
                 public void onSupermarketClick(Supermarket supermarket)
@@ -306,7 +306,7 @@ public class AddItemFragment extends DialogFragment
                 new Handler(Looper.getMainLooper()).post(() ->
                 {
                     recyclerSupermarkets.setLayoutManager(new LinearLayoutManager(context));
-                    recyclerSupermarkets.setAdapter(supermarketsAdapter);
+                    recyclerSupermarkets.setAdapter(pricesAdapter);
                 });
             });
         }).start();

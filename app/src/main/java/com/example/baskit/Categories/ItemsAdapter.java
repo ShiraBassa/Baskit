@@ -10,6 +10,7 @@ import android.widget.TextView;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.baskit.Baskit;
 import com.example.baskit.List.ItemViewAlertDialog;
 import com.example.baskit.MainComponents.Item;
 import com.example.baskit.R;
@@ -110,18 +111,7 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
 
         if (item.hasSupermarket())
         {
-            double total = item.getTotal();
-            int total_rounded = (int) total;
-
-            if (total == total_rounded)
-            {
-                holder.tvPrice.setText(Integer.toString(total_rounded) + "₪");
-            }
-            else
-            {
-                holder.tvPrice.setText(Double.toString(total) + "₪");
-            }
-
+            holder.tvPrice.setText(Baskit.getTotalDisplayString(item.getTotal(), false));
             holder.tvPrice.setTextColor(ContextCompat.getColor(context, R.color.rich_mahogany));
             holder.tvPrice.setVisibility(View.VISIBLE);
         }

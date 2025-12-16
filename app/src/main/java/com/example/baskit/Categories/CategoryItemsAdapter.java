@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.baskit.API.APIHandler;
 import com.example.baskit.Baskit;
 import com.example.baskit.MainComponents.Category;
 import com.example.baskit.MainComponents.Item;
@@ -27,8 +28,6 @@ import com.example.baskit.R;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
-
-import kotlin.io.encoding.Base64Kt;
 
 public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdapter.ViewHolder>
 {
@@ -47,6 +46,7 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
 
     boolean isDropped;
     boolean draggable = false;
+    private final APIHandler apiHandler = APIHandler.getInstance();
 
     public CategoryItemsAdapter(Category category, Activity activity, Context context,
                                 ItemsAdapter.UpperClassFunctions upperClassFns, ArrayList<Supermarket> supermarkets,
@@ -292,7 +292,15 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
         holder.itemView.setOnDragListener(null);
         isDropped = false;
         Supermarket supermarket = supermarkets.get(position);
-        holder.tvSupermarket.setText(supermarket.toString());
+
+        if (apiHandler.singleSectionInSupermarkets(supermarket))
+        {
+            holder.tvSupermarket.setText(supermarket.getSupermarket());
+        }
+        else
+        {
+            holder.tvSupermarket.setText(supermarket.toString());
+        }
 
         ArrayList<Item> items = itemsBySupermarket.get(supermarket);
         SupermarketItemsAdapter supermarketsAdapter = new SupermarketItemsAdapter(items, listener, activity, context, upperClassFns);

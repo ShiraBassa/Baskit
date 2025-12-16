@@ -73,4 +73,28 @@ public class Baskit extends Application
 
         return colorWithAlpha;
     }
+
+    public static String getTotalDisplayString(Double total)
+    {
+        if (total % 1.0 == 0)
+        {
+            return String.format("%.0f", total) + "₪";
+        }
+        else
+        {
+            return String.format("%.2f", total) + "₪";
+        }
+    }
+
+    public static String getTotalDisplayString(Double total, boolean withTitle)
+    {
+        String str = getTotalDisplayString(total);
+
+        if (withTitle)
+        {
+            return "סך הכל: " + str;
+        }
+
+        return str;
+    }
 }
