@@ -1,33 +1,30 @@
 package com.example.baskit.Home;
 
-import static com.example.baskit.Baskit.getThemeColor;
+import static com.example.baskit.Baskit.getAppColor;
 
 import android.annotation.SuppressLint;
-import android.graphics.Color;
+import android.content.Context;
 import android.graphics.Typeface;
 import android.graphics.text.LineBreaker;
 import android.os.Build;
 import android.text.Layout;
-import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.ViewGroup;
 import android.widget.Button;
 
 import androidx.annotation.NonNull;
-import androidx.core.widget.TextViewCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.baskit.MainComponents.List;
-import com.example.baskit.R;
 import com.google.android.material.button.MaterialButton;
 
 import java.util.ArrayList;
-import java.util.stream.Collectors;
 
 public class HomeGridAdapter extends RecyclerView.Adapter<HomeGridAdapter.GridViewHolder>
 {
     private ArrayList<String> listNames;
     private OnItemClickListener listener;
+    private Context context;
 
     public interface OnItemClickListener
     {
@@ -35,7 +32,9 @@ public class HomeGridAdapter extends RecyclerView.Adapter<HomeGridAdapter.GridVi
         void onItemLongClick(int position);
     }
 
-    public HomeGridAdapter(ArrayList<String> listNames, OnItemClickListener listener) {
+    public HomeGridAdapter(Context context, ArrayList<String> listNames, OnItemClickListener listener)
+    {
+        this.context = context;
         this.listNames = listNames;
         this.listener = listener;
     }
@@ -89,14 +88,14 @@ public class HomeGridAdapter extends RecyclerView.Adapter<HomeGridAdapter.GridVi
         button.setCornerRadius(24);
 
         button.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
-                getThemeColor(parent.getContext(), com.google.android.material.R.attr.colorSurface)));
+                getAppColor(context, com.google.android.material.R.attr.colorSurface)));
 
         button.setStrokeWidth(5);
         button.setStrokeColor(android.content.res.ColorStateList.valueOf(
-                getThemeColor(parent.getContext(), com.google.android.material.R.attr.colorPrimaryVariant)
+                getAppColor(context, com.google.android.material.R.attr.colorPrimaryVariant)
         ));
 
-        button.setTextColor(getThemeColor(parent.getContext(), com.google.android.material.R.attr.colorOnSurface));
+        button.setTextColor(getAppColor(context, com.google.android.material.R.attr.colorOnSurface));
 
         button.setTypeface(Typeface.DEFAULT_BOLD);
         button.setTextSize(20f);
@@ -114,7 +113,7 @@ public class HomeGridAdapter extends RecyclerView.Adapter<HomeGridAdapter.GridVi
         button.setPadding(pad, pad, pad, pad);
 
         button.setRippleColor(android.content.res.ColorStateList.valueOf(
-                getThemeColor(parent.getContext(), com.google.android.material.R.attr.colorPrimary)
+                getAppColor(context, com.google.android.material.R.attr.colorPrimary)
         ));
 
         int margin = (int) (12 * parent.getContext().getResources().getDisplayMetrics().density);

@@ -67,8 +67,8 @@ public class SettingsActivity extends AppCompatActivity
                 cities = apiHandler.getCities();
                 all_cities = apiHandler.getAllCities();
 
-                supermarketsAdapter = new SupermarketsListAdapter(choices);
-                citiesAdapter = new CitiesListAdapter(cities);
+                supermarketsAdapter = new SupermarketsListAdapter(this, choices);
+                citiesAdapter = new CitiesListAdapter(this, cities);
 
                 runOnUiThread(() ->
                 {

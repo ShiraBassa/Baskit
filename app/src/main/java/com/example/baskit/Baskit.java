@@ -51,27 +51,38 @@ public class Baskit extends Application
         return context;
     }
 
-    public static int getThemeColor(Context context, int attributeId) {
+    public static int getAppColor(Context context, int attributeId)
+    {
         TypedValue typedValue = new TypedValue();
         Resources.Theme theme = context.getTheme();
-        theme.resolveAttribute(attributeId, typedValue, true);
+        boolean found = theme.resolveAttribute(attributeId, typedValue, true);
+
+        // Attribute not found in theme: fallback color
+        if (!found)
+        {
+            return 0xFF000000; // black for debug
+        }
 
         // If the attribute directly points to a color, it's in typedValue.data
-        if (typedValue.type >= TypedValue.TYPE_FIRST_COLOR_INT && typedValue.type <= TypedValue.TYPE_LAST_COLOR_INT) {
+        if (typedValue.type >= TypedValue.TYPE_FIRST_COLOR_INT && typedValue.type <= TypedValue.TYPE_LAST_COLOR_INT)
+        {
             return typedValue.data;
         }
         // If the attribute points to a color resource, get it from the resources
-        else {
+        else if (typedValue.resourceId != 0)
+        {
             return context.getResources().getColor(typedValue.resourceId, theme);
+        }
+        // Attribute exists but no resource: fallback
+        else
+        {
+            return 0xFF000000; // black for debug
         }
     }
 
-    public static int getThemeColor(Context context, int attributeId, int alpha)
+    public static int getAppColor(Context context, int attributeId, int alpha)
     {
-        int baseColor = getThemeColor(context, com.google.android.material.R.attr.colorError);
-        int colorWithAlpha = ColorUtils.setAlphaComponent(baseColor, alpha);
-
-        return colorWithAlpha;
+        return ColorUtils.setAlphaComponent(getAppColor(context, attributeId), alpha);
     }
 
     public static String getTotalDisplayString(Double total)

@@ -1,5 +1,7 @@
 package com.example.baskit.List;
 
+import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,6 +10,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.baskit.Baskit;
 import com.example.baskit.R;
 
 import java.util.ArrayList;
@@ -15,56 +18,30 @@ import java.util.Map;
 
 public class SectionsListAdapter extends RecyclerView.Adapter<SectionsListAdapter.ViewHolder>
 {
-    ArrayList<String> sections = null;
-    Map<String, Double> sectionsWithPrices = null;
+    ArrayList<String> sections;
     private int selectedPosition = RecyclerView.NO_POSITION;
-    private OnSectionClickListener listener = null;
+    private OnSectionClickListener listener;
 
     private String selectedSupermarket = null;
     private String selectedSection = null;
     String supermarketName;
+    private Context context;
 
     public interface OnSectionClickListener
     {
         void onSectionClick(String sectionName);
     }
 
-    private void setOnSectionClickListener(OnSectionClickListener listener)
+    public SectionsListAdapter(Context context, String supermarketName, ArrayList<String> sections, OnSectionClickListener onSupermarketClickListener)
     {
-        this.listener = listener;
-    }
-
-    public SectionsListAdapter() {}
-
-    public void fromSections(ArrayList<String> sections)
-    {
-        this.sections = sections;
-    }
-
-    public void fromSections(String supermarketName, ArrayList<String> sections, OnSectionClickListener onSupermarketClickListener)
-    {
+        this.context = context;
         this.supermarketName = supermarketName;
         this.sections = sections;
         this.listener = onSupermarketClickListener;
     }
 
-    public void fromSectionsWithPrices(String supermarketName, Map<String, Double> sectionsWithPrices, OnSectionClickListener onSectionClickListener) {
-        this.supermarketName = supermarketName;
-        this.sectionsWithPrices = sectionsWithPrices;
-        this.listener = onSectionClickListener;
-    }
-
-    public void setSections(ArrayList<String> sections)
+    public void updateSelectedSection(String supermarket, String section)
     {
-        this.sections = sections;
-    }
-
-    public void setSectionsWithPrices(Map<String, Double> sectionsWithPrices)
-    {
-        this.sectionsWithPrices = sectionsWithPrices;
-    }
-
-    public void updateSelectedSection(String supermarket, String section) {
         this.selectedSupermarket = supermarket;
         this.selectedSection = section;
         notifyDataSetChanged();
@@ -96,34 +73,15 @@ public class SectionsListAdapter extends RecyclerView.Adapter<SectionsListAdapte
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position)
     {
-        String sectionName;
+        String sectionName = sections.get(position);
 
-        if (sectionsWithPrices != null)
+        if (sectionName.equals(selectedSection) && supermarketName.equals(selectedSupermarket))
         {
-            ArrayList<String> sectionNames = new ArrayList<>(sectionsWithPrices.keySet());
-            sectionName = sectionNames.get(position);
-
-            holder.tvPrice.setText(Double.toString(sectionsWithPrices.get(sectionName)) + "₪");
-            holder.tvPrice.setVisibility(View.VISIBLE);
+            holder.itemView.setBackgroundColor(Baskit.getAppColor(context, com.google.android.material.R.attr.colorSecondaryContainer));
         }
         else
         {
-            sectionName = sections.get(position);
-        }
-
-        if (sections != null && sectionName.equals(selectedSection) &&
-                selectedSupermarket != null && supermarketName.equals(selectedSupermarket))
-        {
-            holder.itemView.setBackgroundColor(holder.itemView.getContext().getResources().getColor(R.color.tan));
-        }
-        else if (sectionsWithPrices != null && sectionName.equals(selectedSection) &&
-                selectedSupermarket != null && supermarketName.equals(selectedSupermarket))
-        {
-            holder.itemView.setBackgroundColor(holder.itemView.getContext().getResources().getColor(R.color.tan));
-        }
-        else
-        {
-            holder.itemView.setBackgroundColor(holder.itemView.getContext().getResources().getColor(R.color.white_smoke));
+            holder.itemView.setBackgroundColor(Baskit.getAppColor(context, com.google.android.material.R.attr.colorSurface));
         }
 
         holder.itemView.setOnClickListener(v -> {
@@ -148,18 +106,7 @@ public class SectionsListAdapter extends RecyclerView.Adapter<SectionsListAdapte
 
             if (listener != null)
             {
-                String sectionNameClick;
-
-                if (sectionsWithPrices != null)
-                {
-                    ArrayList<String> sectionNames = new ArrayList<>(sectionsWithPrices.keySet());
-                    sectionNameClick = sectionNames.get(adapterPos);
-                }
-                else
-                {
-                    sectionNameClick = sections.get(adapterPos);
-                }
-
+                String sectionNameClick = sections.get(adapterPos);
                 listener.onSectionClick(sectionNameClick);
             }
         });
@@ -170,11 +117,7 @@ public class SectionsListAdapter extends RecyclerView.Adapter<SectionsListAdapte
     @Override
     public int getItemCount()
     {
-        if (sectionsWithPrices != null)
-        {
-            return sectionsWithPrices.size();
-        }
-        else if (sections != null)
+        if (sections != null)
         {
             return sections.size();
         }
@@ -188,8 +131,4 @@ public class SectionsListAdapter extends RecyclerView.Adapter<SectionsListAdapte
         this.sections = newSections;
     }
 
-    public void updateDataWithPrices(Map<String, Double> newSectionsWithPrices)
-    {
-        this.sectionsWithPrices = newSectionsWithPrices;
-    }
 }

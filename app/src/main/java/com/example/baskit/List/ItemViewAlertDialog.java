@@ -76,7 +76,7 @@ public class ItemViewAlertDialog
 
             activity.runOnUiThread(() ->
             {
-                pricesAdapter = new ItemViewPricesAdapter(finalData, item.getSupermarket(), new ItemViewPricesAdapter.OnSupermarketClickListener()
+                pricesAdapter = new ItemViewPricesAdapter(context, finalData, item.getSupermarket(), new ItemViewPricesAdapter.OnSupermarketClickListener()
                 {
                     @Override
                     public void onSupermarketClick(Supermarket supermarket)
@@ -145,7 +145,7 @@ public class ItemViewAlertDialog
 
                 if (quantity == 1)
                 {
-                    adBtnDown.setBackgroundColor(ContextCompat.getColor(context, R.color.rich_mahogany));
+                    adBtnDown.setBackgroundColor(Baskit.getAppColor(context, com.google.android.material.R.attr.colorSecondary));
                 }
 
                 adTvQuantity.setText(Integer.toString(quantity));
@@ -179,6 +179,15 @@ public class ItemViewAlertDialog
         else
         {
             adLoutQuantityWhole.setVisibility(View.GONE);
+        }
+
+        if (item.getQuantity() == 1)
+        {
+            adBtnDown.setBackgroundColor(Baskit.getAppColor(context, com.google.android.material.R.attr.colorSecondary));
+        }
+        else
+        {
+            adBtnDown.setBackgroundColor(Color.TRANSPARENT);
         }
 
         adItemView.show();

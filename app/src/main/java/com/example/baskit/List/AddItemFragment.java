@@ -27,6 +27,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.baskit.API.APIHandler;
+import com.example.baskit.Baskit;
 import com.example.baskit.MainComponents.Item;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;
@@ -178,7 +179,7 @@ public class AddItemFragment extends DialogFragment
             String clickedName = (String) parent.getItemAtPosition(position);
             selectedItem = new Item(clickedName);
             tvQuantity.setText("1");
-            btnDown.setBackgroundColor(ContextCompat.getColor(context, R.color.rich_mahogany));
+            btnDown.setBackgroundColor(Baskit.getAppColor(context, com.google.android.material.R.attr.colorOnSecondaryContainer));
 
             selectedItem.setQuantity(1);
 
@@ -270,7 +271,7 @@ public class AddItemFragment extends DialogFragment
 
                 int quantity = selectedItem.lowerQuantity();
 
-                if (quantity == 1) btnDown.setBackgroundColor(ContextCompat.getColor(context, R.color.rich_mahogany));
+                if (quantity == 1) btnDown.setBackgroundColor(Baskit.getAppColor(context, com.google.android.material.R.attr.colorSecondaryContainer));
 
                 tvQuantity.setText(Integer.toString(quantity));
             }
@@ -291,7 +292,7 @@ public class AddItemFragment extends DialogFragment
 
             Map<String, Map<String, Double>> finalData = data;
 
-            pricesAdapter = new ItemViewPricesAdapter(finalData, null, new ItemViewPricesAdapter.OnSupermarketClickListener()
+            pricesAdapter = new ItemViewPricesAdapter(context, finalData, null, new ItemViewPricesAdapter.OnSupermarketClickListener()
             {
                 @Override
                 public void onSupermarketClick(Supermarket supermarket)

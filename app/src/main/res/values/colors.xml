@@ -39,5 +39,8 @@
     <!-- 💡 States -->
     <color name="pressed_primary">@color/evergreen</color>
     <color name="pressed_secondary">@color/dark_teal</color>
-    <color name="pressed_destructive">#650000</color> <!-- darker crimson -->
+
+    <!-- App -->
+    <color name="price">@color/evergreen</color>
+    <color name="quantity">@color/dark_teal</color>
 </resources>

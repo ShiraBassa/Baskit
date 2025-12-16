@@ -228,7 +228,7 @@ public class HomeActivity extends AppCompatActivity
     {
         listsRecycler.setLayoutManager(new GridLayoutManager(this, 3)); // 3 columns
 
-        listsGridAdapter = new HomeGridAdapter(listNamesRecycler, new HomeGridAdapter.OnItemClickListener()
+        listsGridAdapter = new HomeGridAdapter(this, listNamesRecycler, new HomeGridAdapter.OnItemClickListener()
         {
             @Override
             public void onItemClick(int position)

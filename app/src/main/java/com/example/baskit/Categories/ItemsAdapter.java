@@ -2,6 +2,7 @@ package com.example.baskit.Categories;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -94,25 +95,25 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
         holder.itemView.setOnDragListener(null);
 
         holder.tvName.setText(item.getName());
-        holder.tvName.setTextColor(ContextCompat.getColor(context, R.color.dark_teal));
+        holder.tvName.setTextColor(Baskit.getAppColor(context, com.google.android.material.R.attr.colorPrimary));
 
         int quantity = item.getQuantity();
         holder.tvQuantity.setText(String.valueOf(quantity));
-        holder.tvQuantity.setTextColor(ContextCompat.getColor(context, R.color.rich_mahogany));
+        holder.tvQuantity.setTextColor(Baskit.getAppColor(context, R.color.quantity));
 
         if (quantity == 1)
         {
-            holder.btnDown.setBackgroundColor(ContextCompat.getColor(context, R.color.tan));
+            holder.btnDown.setBackgroundColor(Baskit.getAppColor(context, com.google.android.material.R.attr.colorSecondaryContainer));
         }
         else
         {
-            holder.btnDown.setBackgroundColor(ContextCompat.getColor(context, android.R.color.transparent));
+            holder.btnDown.setBackgroundColor(Color.TRANSPARENT);
         }
 
         if (item.hasSupermarket())
         {
             holder.tvPrice.setText(Baskit.getTotalDisplayString(item.getTotal(), false));
-            holder.tvPrice.setTextColor(ContextCompat.getColor(context, R.color.rich_mahogany));
+            holder.tvPrice.setTextColor(Baskit.getAppColor(context, R.color.price));
             holder.tvPrice.setVisibility(View.VISIBLE);
         }
 
@@ -139,7 +140,7 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
 
             item.setQuantity(item.raiseQuantity());
             holder.tvQuantity.setText(String.valueOf(item.getQuantity()));
-            holder.btnDown.setBackgroundColor(ContextCompat.getColor(context, android.R.color.transparent));
+            holder.btnDown.setBackgroundColor(Color.TRANSPARENT);
 
             upperClassFns.updateItemCategory(item);
         });
@@ -169,7 +170,7 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
             {
                 if (quantity == 1)
                 {
-                    holder.btnDown.setBackgroundColor(ContextCompat.getColor(context, R.color.tan));
+                    holder.btnDown.setBackgroundColor(Baskit.getAppColor(context, com.google.android.material.R.attr.colorSecondaryContainer));
                 }
 
                 holder.tvQuantity.setText(String.valueOf(item.getQuantity()));

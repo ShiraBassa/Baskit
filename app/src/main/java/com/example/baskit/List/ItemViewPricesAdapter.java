@@ -1,5 +1,6 @@
 package com.example.baskit.List;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,14 +24,16 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
     private OnSupermarketClickListener listener;
     private String selectedSupermarket, selectedSection;
     private final APIHandler apiHandler = APIHandler.getInstance();
+    private Context context;
 
     public interface OnSupermarketClickListener
     {
         void onSupermarketClick(Supermarket supermarket);
     }
 
-    public ItemViewPricesAdapter(Map<String, Map<String, Double>> pricesMap, Supermarket preselected_supermarket, OnSupermarketClickListener onSupermarketClickListener)
+    public ItemViewPricesAdapter(Context context, Map<String, Map<String, Double>> pricesMap, Supermarket preselected_supermarket, OnSupermarketClickListener onSupermarketClickListener)
     {
+        this.context = context;
         this.listener = onSupermarketClickListener;
 
         if (pricesMap != null && preselected_supermarket != null &&
@@ -139,11 +142,11 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
         if (supermarket.getSupermarket().equals(selectedSupermarket) &&
                 supermarket.getSection().equals(selectedSection))
         {
-            holder.itemView.setBackgroundColor(holder.itemView.getContext().getResources().getColor(R.color.tan));
+            holder.itemView.setBackgroundColor(Baskit.getAppColor(context, com.google.android.material.R.attr.colorSecondaryContainer));
         }
         else
         {
-            holder.itemView.setBackgroundColor(holder.itemView.getContext().getResources().getColor(R.color.white_smoke));
+            holder.itemView.setBackgroundColor(Baskit.getAppColor(context, com.google.android.material.R.attr.colorSurface));
         }
 
         holder.itemView.setOnClickListener(v ->

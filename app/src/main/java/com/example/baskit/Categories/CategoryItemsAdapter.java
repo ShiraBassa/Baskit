@@ -1,6 +1,6 @@
 package com.example.baskit.Categories;
 
-import static com.example.baskit.Baskit.getThemeColor;
+import static com.example.baskit.Baskit.getAppColor;
 
 import android.app.Activity;
 import android.content.Context;
@@ -376,7 +376,7 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
                     if (!containsSupermarket(draggedItem, supermarkets.get(position)))
                     {
                         holder.itemView.setBackgroundColor(
-                                getThemeColor(context, com.google.android.material.R.attr.colorSecondary, 75));
+                                Baskit.getAppColor(context, com.google.android.material.R.attr.colorError, 75));
                     }
                     break;
 
@@ -397,7 +397,7 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
                 case DragEvent.ACTION_DRAG_ENTERED:
                     if (containsSupermarket(draggedItem, supermarkets.get(position)))
                     {
-                        holder.itemView.setBackgroundColor(getThemeColor(context, com.google.android.material.R.attr.colorSecondaryContainer));
+                        holder.itemView.setBackgroundColor(getAppColor(context, com.google.android.material.R.attr.colorSecondaryContainer));
                     }
 
                     break;

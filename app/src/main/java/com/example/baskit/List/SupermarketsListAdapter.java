@@ -2,6 +2,7 @@ package com.example.baskit.List;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,14 +25,16 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
     private OnSupermarketClickListener listener = null;
     private String selectedSupermarketName, selectedSectionName;
     private ArrayList<SectionsListAdapter> allSectionAdapters = new ArrayList<>();
+    private Context context;
 
     public interface OnSupermarketClickListener
     {
         void onSupermarketClick(Supermarket supermarket);
     }
 
-    public SupermarketsListAdapter(Map<String, ArrayList<String>> supermarkets)
+    public SupermarketsListAdapter(Context context, Map<String, ArrayList<String>> supermarkets)
     {
+        this.context = context;
         this.supermarkets = supermarkets;
     }
 
@@ -71,10 +74,7 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
 
         if (holder.sectionsAdapter == null)
         {
-            holder.sectionsAdapter = new SectionsListAdapter();
-            allSectionAdapters.add(holder.sectionsAdapter);
-
-            holder.sectionsAdapter.fromSections(supermarketName,
+            holder.sectionsAdapter = new SectionsListAdapter(context, supermarketName,
                     supermarkets.get(supermarketName), new SectionsListAdapter.OnSectionClickListener()
                     {
                         @Override
@@ -91,6 +91,7 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
                     }
             );
 
+            allSectionAdapters.add(holder.sectionsAdapter);
             holder.recyclerSections.setAdapter(holder.sectionsAdapter);
         }
         else
