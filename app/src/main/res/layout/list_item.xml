@@ -29,7 +29,7 @@
             android:layout_height="24dp"
             android:background="@null"
             android:scaleType="fitCenter"
-            android:tint="?attr/colorSecondary"
+            android:tint="@color/quantity"
             android:src="@drawable/ic_arrow_down"/>
 
         <TextView
@@ -37,7 +37,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="כמות"
-            android:textColor="?attr/colorSecondary"
+            android:textColor="@color/quantity"
             android:textSize="18sp"
             android:textStyle="bold"
             android:layout_marginHorizontal="2dp"/>
@@ -48,7 +48,7 @@
             android:layout_height="24dp"
             android:background="@null"
             android:scaleType="fitCenter"
-            android:tint="?attr/colorSecondary"
+            android:tint="@color/quantity"
             android:src="@drawable/ic_arrow_up"/>
     </LinearLayout>
 
@@ -58,7 +58,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="מחיר"
-        android:textColor="?attr/colorSecondary"
+        android:textColor="@color/price"
         android:textSize="18sp"
         android:visibility="gone"
         android:layout_marginEnd="12dp"/>

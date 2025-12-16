@@ -125,7 +125,7 @@
                             android:layout_height="32dp"
                             android:background="@null"
                             android:scaleType="fitCenter"
-                            android:tint="@color/rich_mahogany"
+                            android:tint="@color/quantity"
                             android:src="@drawable/ic_arrow_down"/>
 
                         <TextView
@@ -133,7 +133,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="_"
-                            android:textColor="@color/rich_mahogany"
+                            android:textColor="@color/quantity"
                             android:textSize="32sp"/>
 
                         <ImageButton
@@ -142,13 +142,13 @@
                             android:layout_height="32dp"
                             android:background="@null"
                             android:scaleType="fitCenter"
-                            android:tint="@color/rich_mahogany"
+                            android:tint="@color/quantity"
                             android:src="@drawable/ic_arrow_up"/>
 
                     </LinearLayout>
 
                     <TextView
-                        android:textColor="@color/rich_mahogany"
+                        android:textColor="@color/quantity"
                         android:textSize="36sp"
                         android:layout_height="wrap_content"
                         android:layout_width="wrap_content"

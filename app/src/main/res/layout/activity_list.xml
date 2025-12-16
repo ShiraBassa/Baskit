@@ -80,7 +80,7 @@
         android:layout_marginBottom="20dp"
         android:visibility="invisible"
         android:text="סך הכל: _ ש״ח"
-        android:textColor="?attr/colorSecondary"
+        android:textColor="@color/price"
         android:textSize="22sp"
         android:textStyle="bold" />
 

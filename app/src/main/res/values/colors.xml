@@ -42,5 +42,5 @@
 
     <!-- App -->
     <color name="price">@color/evergreen</color>
-    <color name="quantity">@color/dark_teal</color>
+    <color name="quantity">@color/rich_mahogany</color>
 </resources>

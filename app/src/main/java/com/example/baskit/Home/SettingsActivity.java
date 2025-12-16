@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.baskit.API.APIHandler;
 import com.example.baskit.Firebase.FirebaseAuthHandler;
 import com.example.baskit.List.CitiesListAdapter;
-import com.example.baskit.List.SupermarketsListAdapter;
 import com.example.baskit.Login.LoginActivity;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;

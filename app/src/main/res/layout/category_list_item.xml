@@ -17,7 +17,7 @@
 
         <TextView
             android:id="@+id/tv_count"
-            android:textColor="@color/rich_mahogany"
+            android:textColor="@color/quantity"
             android:textSize="22sp"
             android:textStyle="bold"
             android:layout_marginEnd="25dp"
@@ -41,7 +41,7 @@
             android:text="מחיר"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:textColor="@color/rich_mahogany"
+            android:textColor="@color/price"
             android:letterSpacing="0.01" />
 
     </LinearLayout>

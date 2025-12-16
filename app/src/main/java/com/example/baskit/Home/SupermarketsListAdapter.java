@@ -1,7 +1,6 @@
-package com.example.baskit.List;
+package com.example.baskit.Home;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,7 +11,6 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.baskit.Baskit;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;
 

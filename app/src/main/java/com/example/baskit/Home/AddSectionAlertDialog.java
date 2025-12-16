@@ -13,7 +13,6 @@ import androidx.appcompat.app.AlertDialog;
 
 import com.example.baskit.API.APIHandler;
 import com.example.baskit.Firebase.FirebaseAuthHandler;
-import com.example.baskit.List.SupermarketsListAdapter;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;
 

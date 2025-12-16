@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.View;
 
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.ColorUtils;
 
 import com.example.baskit.MainComponents.Supermarket;
@@ -51,32 +52,37 @@ public class Baskit extends Application
         return context;
     }
 
-    public static int getAppColor(Context context, int attributeId)
+    public static int getAppColor(Context context, int id)
     {
         TypedValue typedValue = new TypedValue();
         Resources.Theme theme = context.getTheme();
-        boolean found = theme.resolveAttribute(attributeId, typedValue, true);
 
-        // Attribute not found in theme: fallback color
-        if (!found)
+        // 1. Try to resolve it as a Theme Attribute (e.g., R.attr.colorPrimary)
+        boolean found = theme.resolveAttribute(id, typedValue, true);
+
+        if (found)
         {
-            return 0xFF000000; // black for debug
+            // If the attribute directly points to a color
+            if (typedValue.type >= TypedValue.TYPE_FIRST_COLOR_INT && typedValue.type <= TypedValue.TYPE_LAST_COLOR_INT)
+            {
+                return typedValue.data;
+            }
+            // If the attribute points to a resource
+            else if (typedValue.resourceId != 0)
+            {
+                return context.getResources().getColor(typedValue.resourceId, theme);
+            }
         }
 
-        // If the attribute directly points to a color, it's in typedValue.data
-        if (typedValue.type >= TypedValue.TYPE_FIRST_COLOR_INT && typedValue.type <= TypedValue.TYPE_LAST_COLOR_INT)
+        // 2. If not found as an attribute, assume it is a direct Resource ID (e.g., R.color.quantity)
+        try
         {
-            return typedValue.data;
+            return ContextCompat.getColor(context, id);
         }
-        // If the attribute points to a color resource, get it from the resources
-        else if (typedValue.resourceId != 0)
+        catch (Exception e)
         {
-            return context.getResources().getColor(typedValue.resourceId, theme);
-        }
-        // Attribute exists but no resource: fallback
-        else
-        {
-            return 0xFF000000; // black for debug
+            // 3. If both fail, return Red for debug
+            return 0xFFFF0000;
         }
     }
 

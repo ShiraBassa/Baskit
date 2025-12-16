@@ -14,17 +14,6 @@
     android:foreground="?attr/selectableItemBackground">
 
     <TextView
-        android:id="@+id/tv_price"
-        android:textColor="?attr/colorSecondary"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:layout_marginEnd="10dp"
-        android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
-        android:text="מחיר"
-        android:visibility="gone"/>
-
-    <TextView
         android:id="@+id/tv_section_name"
         android:textColor="?attr/colorPrimary"
         android:textSize="20sp"

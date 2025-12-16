@@ -145,7 +145,7 @@ public class ItemViewAlertDialog
 
                 if (quantity == 1)
                 {
-                    adBtnDown.setBackgroundColor(Baskit.getAppColor(context, com.google.android.material.R.attr.colorSecondary));
+                    adBtnDown.setBackgroundColor(Baskit.getAppColor(context, R.color.quantity));
                 }
 
                 adTvQuantity.setText(Integer.toString(quantity));
@@ -183,7 +183,7 @@ public class ItemViewAlertDialog
 
         if (item.getQuantity() == 1)
         {
-            adBtnDown.setBackgroundColor(Baskit.getAppColor(context, com.google.android.material.R.attr.colorSecondary));
+            adBtnDown.setBackgroundColor(Baskit.getAppColor(context, R.color.quantity));
         }
         else
         {

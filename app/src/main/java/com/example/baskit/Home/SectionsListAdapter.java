@@ -1,7 +1,6 @@
-package com.example.baskit.List;
+package com.example.baskit.Home;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,7 +13,6 @@ import com.example.baskit.Baskit;
 import com.example.baskit.R;
 
 import java.util.ArrayList;
-import java.util.Map;
 
 public class SectionsListAdapter extends RecyclerView.Adapter<SectionsListAdapter.ViewHolder>
 {
@@ -49,14 +47,13 @@ public class SectionsListAdapter extends RecyclerView.Adapter<SectionsListAdapte
 
     public static class ViewHolder extends RecyclerView.ViewHolder
     {
-        protected TextView tvSectionName, tvPrice;
+        protected TextView tvSectionName;
 
         public ViewHolder(View itemView)
         {
             super(itemView);
 
             tvSectionName = itemView.findViewById(R.id.tv_section_name);
-            tvPrice = itemView.findViewById(R.id.tv_price);
         }
     }
 
