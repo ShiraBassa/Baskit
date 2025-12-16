@@ -646,4 +646,17 @@ public class FirebaseDBHandler
             finishCategory(list, category);
         }
     }
+
+    public void updateCategory(List list, Category category)
+    {
+        updateItems(list, new ArrayList<>(category.getItems().values()));
+    }
+
+    public void updateList(List list)
+    {
+        for (Category category : list.getCategories().values())
+        {
+            updateCategory(list, category);
+        }
+    }
 }

@@ -55,6 +55,20 @@
             app:tint="?attr/colorSecondary" />
     </LinearLayout>
 
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_arrange_cheapest"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="סדר לפי הזול ביותר"
+        android:textColor="?attr/colorSecondary"
+        app:strokeColor="?attr/colorSecondary"
+        android:backgroundTint="?attr/colorSurface"
+        app:rippleColor="?attr/colorSecondaryContainer"
+        android:layout_margin="10dp"
+        android:elevation="2dp"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+
+
     <!-- Scrollable Categories List -->
     <ScrollView
         android:layout_width="match_parent"

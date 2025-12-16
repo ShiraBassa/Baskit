@@ -20,6 +20,7 @@ import com.example.baskit.Firebase.FirebaseDBHandler;
 import com.example.baskit.MainComponents.Category;
 import com.example.baskit.MainComponents.Item;
 import com.example.baskit.MainComponents.List;
+import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;
 
 import java.text.DecimalFormat;
@@ -41,7 +42,7 @@ public class ListActivity extends AppCompatActivity
     FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
     Map<String, View> categoriesViews;
     AddItemFragment addItemFragment;
-    Button btnAddItem;
+    Button btnAddItem, btnCheapest;;
     ImageButton btnShare;
     AIHandler aiHandler = AIHandler.getInstance();
     APIHandler apiHandler = APIHandler.getInstance();
@@ -90,6 +91,7 @@ public class ListActivity extends AppCompatActivity
         btnAddItem = findViewById(R.id.btn_add_item);
         tvTotal = findViewById(R.id.tv_total);
         btnShare = findViewById(R.id.btn_share);
+        btnCheapest = findViewById(R.id.btn_arrange_cheapest);
 
         listId = getIntent().getStringExtra("listId");
 
@@ -218,6 +220,15 @@ public class ListActivity extends AppCompatActivity
                 shareAlertDialog.show();
             }
         });
+
+        btnCheapest.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View view)
+            {
+                setCheapest();
+            }
+        });
     }
 
     private void setCategoriesInflater()
@@ -263,12 +274,11 @@ public class ListActivity extends AppCompatActivity
                 else
                 {
                     View categoryView = categoriesViews.get(key);
-                    TextView tv_count = categoryView.findViewById(R.id.tv_count);
+                    TextView tvCount = categoryView.findViewById(R.id.tv_count);
+                    TextView tvPrice = categoryView.findViewById(R.id.tv_price);
 
-                    if (tv_count != null)
-                    {
-                        tv_count.setText(Integer.toString(newCategory.countUnchecked()));
-                    }
+                    tvCount.setText(Integer.toString(newCategory.countUnchecked()));
+                    tvPrice.setText(Baskit.getTotalDisplayString(newCategory.getTotal(), false));
                 }
             }
             else
@@ -299,17 +309,7 @@ public class ListActivity extends AppCompatActivity
         if (!category.isFinished())
         {
             tvCount.setText(Integer.toString(category.countUnchecked()));
-
-            double total = category.getTotal();
-
-            if (total % 1.0 == 0)
-            {
-                tvPrice.setText(String.format("%.0f", total) + "₪");
-            }
-            else
-            {
-                tvPrice.setText(String.format("%.2f", total) + "₪");
-            }
+            tvPrice.setText(Baskit.getTotalDisplayString(category.getTotal(), false));
         }
         else
         {
@@ -380,5 +380,52 @@ public class ListActivity extends AppCompatActivity
             }
         }
         return null;
+    }
+
+    private void setCheapest()
+    {
+        double lowest;
+        Supermarket lowestSupermarket;
+
+        for (Category category : list.getCategories().values())
+        {
+            for (Item item : category.getItems().values())
+            {
+                Map<String, Map<String, Double>> currItemPrices = allItems.get(item.getAbsoluteId());
+
+                if (currItemPrices == null || currItemPrices.isEmpty())
+                {
+                    lowest = 0.0;
+                    lowestSupermarket = Baskit.unassigned_supermarket;
+                }
+                else
+                {
+                    lowest = Double.MAX_VALUE;
+                    lowestSupermarket = null;
+
+                    for (Map.Entry<String, Map<String, Double>> SupermarketEntry : allItems.get(item.getAbsoluteId()).entrySet())
+                    {
+                        String supermarket = SupermarketEntry.getKey();
+
+                        for (Map.Entry<String, Double> sectionEntry : SupermarketEntry.getValue().entrySet())
+                        {
+                            String section = sectionEntry.getKey();
+                            Double price = sectionEntry.getValue();
+
+                            if (price < lowest)
+                            {
+                                lowest = price;
+                                lowestSupermarket = new Supermarket(supermarket, section);
+                            }
+                        }
+                    }
+                }
+
+                item.setPrice(lowest);
+                item.setSupermarket(lowestSupermarket);
+            }
+        }
+
+        dbHandler.updateList(list);
     }
 }

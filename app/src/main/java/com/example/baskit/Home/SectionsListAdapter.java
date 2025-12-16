@@ -27,7 +27,7 @@ public class SectionsListAdapter extends RecyclerView.Adapter<SectionsListAdapte
 
     public interface OnSectionClickListener
     {
-        void onSectionClick(String sectionName);
+        void onSectionClick(String selectedSupermarketName, String selectedSectionName);
     }
 
     public SectionsListAdapter(Context context, String supermarketName, ArrayList<String> sections, OnSectionClickListener onSupermarketClickListener)
@@ -104,7 +104,7 @@ public class SectionsListAdapter extends RecyclerView.Adapter<SectionsListAdapte
             if (listener != null)
             {
                 String sectionNameClick = sections.get(adapterPos);
-                listener.onSectionClick(sectionNameClick);
+                listener.onSectionClick(supermarketName, sectionNameClick);
             }
         });
 
@@ -124,8 +124,10 @@ public class SectionsListAdapter extends RecyclerView.Adapter<SectionsListAdapte
         }
     }
 
-    public void updateData(ArrayList<String> newSections) {
-        this.sections = newSections;
+    public void updateData(ArrayList<String> sections, String supermarketName)
+    {
+        this.sections = sections;
+        this.supermarketName = supermarketName;
     }
 
 }
