@@ -68,7 +68,7 @@ public class ItemViewAlertDialog
 
             try
             {
-                data = apiHandler.getItemPricesByName(item.getName());
+                data = apiHandler.getItemPricesByCode(item.getAbsoluteId());
             }
             catch (IOException | JSONException ignored) {}
 

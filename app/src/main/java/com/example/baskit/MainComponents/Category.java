@@ -128,7 +128,7 @@ public class Category
                 }
             }
 
-            list.modifyCategory(name, this);
+            list.updateCategory(this);
         }
     }
 
@@ -157,5 +157,22 @@ public class Category
         }
 
         return Math.round(sum * 100.0) / 100.0;
+    }
+
+    public boolean doesExists(Item item)
+    {
+        return items.containsKey(item.getId());
+    }
+
+    public ArrayList<String> toItemNames()
+    {
+        ArrayList<String> itemNames = new ArrayList<>();
+
+        for (Item item : items.values())
+        {
+            itemNames.add(item.name);
+        }
+
+        return itemNames;
     }
 }

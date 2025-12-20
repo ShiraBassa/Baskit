@@ -71,7 +71,7 @@ public class List
         this.categories.put(category.getName(), category);
     }
 
-    public void modifyCategory(String categoryName, Category category)
+    public void updateCategory(Category category)
     {
         addCategory(category);
     }
@@ -134,5 +134,30 @@ public class List
     public void removeRequest(Request request)
     {
         this.requests.remove(request);
+    }
+
+    public boolean doesExists(Item item)
+    {
+        for (Category category : categories.values())
+        {
+            if (category.doesExists(item))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public ArrayList<String> toItemNames()
+    {
+        ArrayList<String> itemNames = new ArrayList<>();
+
+        for (Category category : categories.values())
+        {
+            itemNames.addAll(category.toItemNames());
+        }
+
+        return itemNames;
     }
 }

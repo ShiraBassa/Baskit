@@ -93,20 +93,14 @@ public class ListActivity extends AppCompatActivity
         btnShare = findViewById(R.id.btn_share);
         btnCheapest = findViewById(R.id.btn_arrange_cheapest);
 
+        btnAddItem.setEnabled(false);
+
         listId = getIntent().getStringExtra("listId");
 
         categoriesListContainer = findViewById(R.id.categories_container);
         categoriesListInflater = LayoutInflater.from(this);
 
         setButton();
-
-        if (itemsCodeNames != null && itemsCodeNames.values() != null)
-        {
-            addItemFragment = new AddItemFragment(ListActivity.this,
-                    ListActivity.this,
-                    new ArrayList<>(itemsCodeNames.values()),
-                    ListActivity.this::addItem);
-        }
     }
 
     private void resumeInit()
@@ -127,6 +121,20 @@ public class ListActivity extends AppCompatActivity
 
                 tvListName.setText(ListActivity.this.list.getName());
                 tvListName.setVisibility(View.VISIBLE);
+
+               if (itemsCodeNames != null && itemsCodeNames.values() != null)
+                {
+                    addItemFragment = new AddItemFragment(ListActivity.this,
+                            ListActivity.this,
+                            new ArrayList<>(itemsCodeNames.values()),
+                            list.toItemNames(),
+                            ListActivity.this::addItem);
+                    btnAddItem.setEnabled(true);
+                }
+                else
+                {
+                    btnAddItem.setEnabled(false);
+                }
 
                 categories = ListActivity.this.list.getCategories();
 
@@ -161,10 +169,7 @@ public class ListActivity extends AppCompatActivity
                             //If needed categories = newCategories
                         }
 
-                        list = newList;
-                        tvTotal.setText(Baskit.getTotalDisplayString(list.getTotal(), true));
-                        tvTotal.setVisibility(View.VISIBLE);
-                        initialized = false;
+                        addItemFragment.updateData(list.toItemNames());
                     }
 
                     @Override
@@ -208,6 +213,12 @@ public class ListActivity extends AppCompatActivity
             @Override
             public void onClick(View view)
             {
+                if (addItemFragment == null)
+                {
+                    Toast.makeText(ListActivity.this, "Items are still loading…", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 addItemFragment.show(getSupportFragmentManager(), "AddItemFragment");
             }
         });

@@ -105,6 +105,7 @@ public class CategoryActivity extends AppCompatActivity
                 addItemFragment = new AddItemFragment(CategoryActivity.this,
                         CategoryActivity.this,
                         new ArrayList<>(itemsCodeNames.values()),
+                        list.toItemNames(),
                         CategoryActivity.this::addItem);
                 recyclerItems = findViewById(R.id.recycler_category_items);
 
@@ -156,6 +157,7 @@ public class CategoryActivity extends AppCompatActivity
                     public void onCategoryFetched(Category newCategory)
                     {
                         category = newCategory;
+                        list.updateCategory(category);
 
                         if (category.getItems().isEmpty())
                         {
@@ -175,6 +177,8 @@ public class CategoryActivity extends AppCompatActivity
                         runOnUiThread(() -> {
                             itemsAdapter.updateItems(new ArrayList<>(category.getItems().values()));
                         });
+
+                        addItemFragment.updateData(list.toItemNames());
                     }
 
                     @Override

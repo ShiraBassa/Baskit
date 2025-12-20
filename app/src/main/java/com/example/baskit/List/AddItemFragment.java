@@ -29,6 +29,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.baskit.API.APIHandler;
 import com.example.baskit.Baskit;
 import com.example.baskit.MainComponents.Item;
+import com.example.baskit.MainComponents.List;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;
 
@@ -37,6 +38,8 @@ import org.json.JSONException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.Locale;
 
 public class AddItemFragment extends DialogFragment
 {
@@ -59,6 +62,7 @@ public class AddItemFragment extends DialogFragment
     private AddItemInterface addItemInterface;
 
     private APIHandler apiHandler = APIHandler.getInstance();
+    private ArrayList<String> listItemNames;
 
     public interface AddItemInterface
     {
@@ -67,13 +71,48 @@ public class AddItemFragment extends DialogFragment
 
     public AddItemFragment(Activity activity, Context context,
                            ArrayList<String> allItemNames,
+                           ArrayList<String> listItemNames,
                            AddItemInterface addItemInterface)
     {
-
         this.activity = activity;
         this.context = context;
         this.allItemNames = allItemNames;
+        this.listItemNames = listItemNames;
         this.addItemInterface = addItemInterface;
+
+        init();
+    }
+
+    private void init()
+    {
+        LinkedHashMap<String, String> unique = new LinkedHashMap<>();
+
+        if (allItemNames != null)
+        {
+            for (String name : allItemNames)
+            {
+                if (isBadItemName(name) || listItemNames.contains(name)) continue;
+
+                String trimmed = name.trim();
+                String key = trimmed.toLowerCase(Locale.ROOT);
+
+                if (key.isEmpty() || key.equals("null")) continue;
+
+                if (!unique.containsKey(key))
+                {
+                    unique.put(key, trimmed);
+                }
+            }
+        }
+
+        this.allItemNames = new ArrayList<>(unique.values());
+    }
+
+    private boolean isBadItemName(String s)
+    {
+        if (s == null) return true;
+        String t = s.trim();
+        return t.isEmpty() || t.equalsIgnoreCase("null");
     }
 
     @Override
@@ -177,6 +216,14 @@ public class AddItemFragment extends DialogFragment
         searchItem.setOnItemClickListener((parent, view, position, id) ->
         {
             String clickedName = (String) parent.getItemAtPosition(position);
+
+            if (isBadItemName(clickedName))
+            {
+                searchItem.setError("שם פריט לא תקין");
+                selectedItem = null;
+                return;
+            }
+
             selectedItem = new Item(clickedName);
             tvQuantity.setText("1");
             btnDown.setBackgroundColor(Baskit.getAppColor(context, com.google.android.material.R.attr.colorOnSecondaryContainer));
@@ -197,6 +244,7 @@ public class AddItemFragment extends DialogFragment
     private void handleItemTyped()
     {
         String typed = searchItem.getText().toString().trim();
+        if (typed.isEmpty()) return;
 
         ArrayList<String> exactMatches = new ArrayList<>();
         ArrayList<String> startsWithMatches = new ArrayList<>();
@@ -204,6 +252,8 @@ public class AddItemFragment extends DialogFragment
 
         for (String name : allItemNames)
         {
+            if (isBadItemName(name)) continue;
+
             String lowerName = name.toLowerCase();
             String lowerTyped = typed.toLowerCase();
             if (lowerName.equals(lowerTyped)) exactMatches.add(name);
@@ -331,5 +381,11 @@ public class AddItemFragment extends DialogFragment
         {
             progressBar.setVisibility(View.INVISIBLE);
         }
+    }
+
+    public void updateData(ArrayList<String> newListItemNames)
+    {
+        listItemNames = newListItemNames;
+        init();
     }
 }
