@@ -20,6 +20,7 @@ import com.example.baskit.MainComponents.Category;
 import com.example.baskit.MainComponents.Item;
 import com.example.baskit.MainComponents.List;
 import com.example.baskit.MainComponents.Supermarket;
+import com.example.baskit.MasterActivity;
 import com.example.baskit.R;
 
 import org.json.JSONException;
@@ -28,7 +29,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
 
-public class CategoryActivity extends AppCompatActivity
+public class CategoryActivity extends MasterActivity
 {
     List list;
     Map<String, Category> categories;
@@ -53,15 +54,19 @@ public class CategoryActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_category);
 
-        new Thread(() ->
+        runIfOnline(() ->
         {
-            allItems = apiHandler.getItems();
-            itemsCodeNames = apiHandler.getItemsCodeName();
+            setContentView(R.layout.activity_category);
 
-            runOnUiThread(this::init);
-        }).start();
+            new Thread(() ->
+            {
+                allItems = apiHandler.getItems();
+                itemsCodeNames = apiHandler.getItemsCodeName();
+
+                runOnUiThread(this::init);
+            }).start();
+        });
     }
 
     @Override

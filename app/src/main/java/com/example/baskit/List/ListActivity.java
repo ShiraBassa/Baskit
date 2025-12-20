@@ -21,6 +21,7 @@ import com.example.baskit.MainComponents.Category;
 import com.example.baskit.MainComponents.Item;
 import com.example.baskit.MainComponents.List;
 import com.example.baskit.MainComponents.Supermarket;
+import com.example.baskit.MasterActivity;
 import com.example.baskit.R;
 
 import java.text.DecimalFormat;
@@ -28,7 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ListActivity extends AppCompatActivity
+public class ListActivity extends MasterActivity
 {
     TextView tvListName, tvTotal;
     ImageButton btnBack, btnFinished;
@@ -57,14 +58,18 @@ public class ListActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_list);
 
-        allItems = apiHandler.getItems();
-        itemsCodeNames = apiHandler.getItemsCodeName();
+        runIfOnline(() ->
+        {
+            setContentView(R.layout.activity_list);
 
-        createInit();
-        itemsLoaded = true;
-        resumeInit();
+            allItems = apiHandler.getItems();
+            itemsCodeNames = apiHandler.getItemsCodeName();
+
+            createInit();
+            itemsLoaded = true;
+            resumeInit();
+        });
     }
 
     @Override

@@ -35,6 +35,7 @@ import com.example.baskit.MainComponents.List;
 import com.example.baskit.List.ListActivity;
 import com.example.baskit.MainComponents.Request;
 import com.example.baskit.MainComponents.User;
+import com.example.baskit.MasterActivity;
 import com.example.baskit.R;
 
 import org.json.JSONException;
@@ -50,7 +51,7 @@ import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class HomeActivity extends AppCompatActivity
+public class HomeActivity extends MasterActivity
 {
     RecyclerView listsRecycler;
     HomeGridAdapter listsGridAdapter;
@@ -104,45 +105,48 @@ public class HomeActivity extends AppCompatActivity
     {
         super.onCreate(savedInstanceState);
 
-        authHandler = FirebaseAuthHandler.getInstance();
-        Intent intent = getIntent();
-        Uri data = intent.getData();
-
-        if (data != null)
+        runIfOnline(() ->
         {
-            String scheme = data.getScheme();
-            String host = data.getHost();
-            String path = data.getPath();
-            inviteCode = data.getQueryParameter("inviteCode");
+            authHandler = FirebaseAuthHandler.getInstance();
+            Intent intent = getIntent();
+            Uri data = intent.getData();
 
-            if ("https".equals(scheme) && "www.baskit.com".equals(host) && "/joinlist".equals(path) && inviteCode != null)
+            if (data != null)
             {
-                Intent loginIntent = new Intent(this, LoginActivity.class);
-                loginIntent.putExtra("fromLink", true);
-                loginLauncher.launch(loginIntent);
-            }
-        }
-        else
-        {
-            user = authHandler.getUser();
+                String scheme = data.getScheme();
+                String host = data.getHost();
+                String path = data.getPath();
+                inviteCode = data.getQueryParameter("inviteCode");
 
-            new Thread(() ->
-            {
-                try {
-                    APIHandler.getInstance().preload();
-                } catch (JSONException e) {
-                    throw new RuntimeException(e);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-
-                runOnUiThread(() ->
+                if ("https".equals(scheme) && "www.baskit.com".equals(host) && "/joinlist".equals(path) && inviteCode != null)
                 {
-                    setContentView(R.layout.activity_home);
-                    init();
-                });
-            }).start();
-        }
+                    Intent loginIntent = new Intent(this, LoginActivity.class);
+                    loginIntent.putExtra("fromLink", true);
+                    loginLauncher.launch(loginIntent);
+                }
+            }
+            else
+            {
+                user = authHandler.getUser();
+
+                new Thread(() ->
+                {
+                    try {
+                        APIHandler.getInstance().preload();
+                    } catch (JSONException e) {
+                        throw new RuntimeException(e);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+
+                    runOnUiThread(() ->
+                    {
+                        setContentView(R.layout.activity_home);
+                        init();
+                    });
+                }).start();
+            }
+        });
     }
 
     private void sendJoinRequest(String invitationCode)

@@ -15,10 +15,11 @@ import com.example.baskit.Firebase.FBRefs;
 import com.example.baskit.Firebase.FirebaseAuthHandler;
 import com.example.baskit.Home.HomeActivity;
 import com.example.baskit.MainComponents.User;
+import com.example.baskit.MasterActivity;
 import com.example.baskit.R;
 
 
-public class LoginActivity extends AppCompatActivity implements FirebaseAuthHandler.AuthCallback
+public class LoginActivity extends MasterActivity implements FirebaseAuthHandler.AuthCallback
 {
     Button btnSubmit;
     EditText etEmail, etPassword;
@@ -30,30 +31,32 @@ public class LoginActivity extends AppCompatActivity implements FirebaseAuthHand
     {
         super.onCreate(savedInstanceState);
 
-        authHandler = FirebaseAuthHandler.getInstance();
+        runIfOnline(() ->
+        {
+            authHandler = FirebaseAuthHandler.getInstance();
 
-        if (getIntent().getBooleanExtra("fromLogout", false))
-        {
-            startLogin();
-        }
-        else
-        {
-            authHandler.checkCurrUser(new FirebaseAuthHandler.AuthCallback()
+            if (getIntent().getBooleanExtra("fromLogout", false))
             {
-                @Override
-                public void onAuthSuccess()
+                startLogin();
+            }
+            else
+            {
+                authHandler.checkCurrUser(new FirebaseAuthHandler.AuthCallback()
                 {
-                    finishLogin();
-                }
+                    @Override
+                    public void onAuthSuccess()
+                    {
+                        finishLogin();
+                    }
 
-                @Override
-                public void onAuthError(String msg, ErrorType type)
-                {
-                    startLogin();
-                }
-            });
-        }
-
+                    @Override
+                    public void onAuthError(String msg, ErrorType type)
+                    {
+                        startLogin();
+                    }
+                });
+            }
+        });
     }
 
     private void init()
