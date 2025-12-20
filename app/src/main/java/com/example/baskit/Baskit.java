@@ -36,8 +36,6 @@ public class Baskit extends Application
         super.onCreate();
 
         context = getApplicationContext();
-
-        // Initialize connectivity state
         onlineLive.postValue(isOnlineNow(this));
 
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);

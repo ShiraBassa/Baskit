@@ -32,9 +32,10 @@ public class APIHandler
     private static String firebaseToken;
     private static Map<String, Map<String, Map<String, Double>>> allItems;
     private final OkHttpClient client = new OkHttpClient.Builder()
-            .connectTimeout(0, TimeUnit.SECONDS)
-            .readTimeout(0, TimeUnit.SECONDS)
-            .writeTimeout(0, TimeUnit.SECONDS)
+            .connectTimeout(5, TimeUnit.SECONDS)
+            .readTimeout(10, TimeUnit.SECONDS)
+            .writeTimeout(10, TimeUnit.SECONDS)
+            .callTimeout(15, TimeUnit.SECONDS)
             .build();
     private Map<String, Map<String, Map<String, Double>>> cachedItems = null;
     private Map<String, String> cachedCodeNames = null;
@@ -50,6 +51,26 @@ public class APIHandler
         }
 
         return instance;
+    }
+
+    public boolean isServerActive()
+    {
+        try
+        {
+            Request request = new Request.Builder()
+                    .url(SERVER_URL + "/active")
+                    .get()
+                    .build();
+
+            try (Response response = client.newCall(request).execute())
+            {
+                return response.isSuccessful();
+            }
+        }
+        catch (Exception e)
+        {
+            return false;
+        }
     }
 
     public void preload() throws JSONException, IOException

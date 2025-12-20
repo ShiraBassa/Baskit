@@ -33,29 +33,32 @@ public class LoginActivity extends MasterActivity implements FirebaseAuthHandler
 
         runIfOnline(() ->
         {
-            authHandler = FirebaseAuthHandler.getInstance();
+            runWhenServerActive(() ->
+            {
+                authHandler = FirebaseAuthHandler.getInstance();
 
-            if (getIntent().getBooleanExtra("fromLogout", false))
-            {
-                startLogin();
-            }
-            else
-            {
-                authHandler.checkCurrUser(new FirebaseAuthHandler.AuthCallback()
+                if (getIntent().getBooleanExtra("fromLogout", false))
                 {
-                    @Override
-                    public void onAuthSuccess()
+                    startLogin();
+                }
+                else
+                {
+                    authHandler.checkCurrUser(new FirebaseAuthHandler.AuthCallback()
                     {
-                        finishLogin();
-                    }
+                        @Override
+                        public void onAuthSuccess()
+                        {
+                            finishLogin();
+                        }
 
-                    @Override
-                    public void onAuthError(String msg, ErrorType type)
-                    {
-                        startLogin();
-                    }
-                });
-            }
+                        @Override
+                        public void onAuthError(String msg, ErrorType type)
+                        {
+                            startLogin();
+                        }
+                    });
+                }
+            });
         });
     }
 
