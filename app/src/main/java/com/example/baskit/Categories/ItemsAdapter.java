@@ -112,7 +112,7 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
 
         if (!item.isUnassigned())
         {
-            holder.tvPrice.setText(Baskit.getTotalDisplayString(item.getTotal(), item.isPriceKnown(), false));
+            holder.tvPrice.setText(Baskit.getTotalDisplayString(item.getTotal(), item.isPriceKnown(), false, false));
             holder.tvPrice.setTextColor(Baskit.getAppColor(context, R.color.price));
             holder.tvPrice.setVisibility(View.VISIBLE);
         }

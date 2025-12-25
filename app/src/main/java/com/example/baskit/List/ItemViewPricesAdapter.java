@@ -137,7 +137,7 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
             holder.tvSectionName.setText(supermarket.getSection());
         }
 
-        holder.tvPrice.setText(Baskit.getTotalDisplayString(price, true, false));
+        holder.tvPrice.setText(Baskit.getTotalDisplayString(price, true, false, false));
 
         if (supermarket.getSupermarket().equals(selectedSupermarket) &&
                 supermarket.getSection().equals(selectedSection))

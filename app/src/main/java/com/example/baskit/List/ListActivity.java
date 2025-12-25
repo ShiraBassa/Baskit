@@ -83,7 +83,7 @@ public class ListActivity extends MasterActivity
 
             if (!initialized)
             {
-                tvTotal.setText(Baskit.getTotalDisplayString(list.getTotal(), list.allPricesKnown(), true));
+                tvTotal.setText(Baskit.getTotalDisplayString(list.getTotal(), list.allPricesKnown(), true, true));
                 tvTotal.setVisibility(View.VISIBLE);
             }
         }
@@ -127,7 +127,7 @@ public class ListActivity extends MasterActivity
 
                 tvListName.setText(ListActivity.this.list.getName());
                 tvListName.setVisibility(View.VISIBLE);
-                tvTotal.setText(Baskit.getTotalDisplayString(list.getTotal(), list.allPricesKnown(), true));
+                tvTotal.setText(Baskit.getTotalDisplayString(list.getTotal(), list.allPricesKnown(), true, true));
                 tvTotal.setVisibility(View.VISIBLE);
 
                if (itemsCodeNames != null && itemsCodeNames.values() != null)
@@ -297,7 +297,7 @@ public class ListActivity extends MasterActivity
                     TextView tvPrice = categoryView.findViewById(R.id.tv_price);
 
                     tvCount.setText(Integer.toString(newCategory.countUnchecked()));
-                    tvPrice.setText(Baskit.getTotalDisplayString(newCategory.getTotal(), newCategory.allPricesKnown(), false));
+                    tvPrice.setText(Baskit.getTotalDisplayString(newCategory.getTotal(), newCategory.allPricesKnown(), false, false));
                 }
             }
             else
@@ -327,7 +327,7 @@ public class ListActivity extends MasterActivity
         if (!category.isFinished())
         {
             tvCount.setText(Integer.toString(category.countUnchecked()));
-            tvPrice.setText(Baskit.getTotalDisplayString(category.getTotal(), category.allPricesKnown(), false));
+            tvPrice.setText(Baskit.getTotalDisplayString(category.getTotal(), category.allPricesKnown(), false, false));
         }
         else
         {

@@ -154,11 +154,11 @@ public class Baskit extends Application
         return ColorUtils.setAlphaComponent(getAppColor(context, attributeId), alpha);
     }
 
-    private static String getTotalDisplayString(Double total, boolean allPricesKnown)
+    private static String getTotalDisplayString(Double total, boolean allPricesKnown, boolean allowZero)
     {
         String str;
 
-        if (total == 0)
+        if (total == 0 && !allowZero && !allPricesKnown)
         {
             str = "?";
         }
@@ -184,9 +184,9 @@ public class Baskit extends Application
         return str;
     }
 
-    public static String getTotalDisplayString(Double total, boolean allPricesKnown, boolean withTitle)
+    public static String getTotalDisplayString(Double total, boolean allPricesKnown, boolean withTitle, boolean allowZero)
     {
-        String amount = getTotalDisplayString(total, allPricesKnown);
+        String amount = getTotalDisplayString(total, allPricesKnown, allowZero);
         String amountIsolated = "\u2066" + amount + "\u2069";
 
         if (withTitle)
