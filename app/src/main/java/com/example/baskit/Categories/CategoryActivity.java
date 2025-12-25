@@ -76,7 +76,7 @@ public class CategoryActivity extends MasterActivity
 
         if (!initialized)
         {
-            tvTotal.setText(Baskit.getTotalDisplayString(category.getTotal(), true));
+            tvTotal.setText(Baskit.getTotalDisplayString(category.getTotal(), category.allPricesKnown(), true));
         }
     }
 
@@ -170,7 +170,7 @@ public class CategoryActivity extends MasterActivity
                             return;
                         }
 
-                        tvTotal.setText(Baskit.getTotalDisplayString(category.getTotal(), true));
+                        tvTotal.setText(Baskit.getTotalDisplayString(category.getTotal(), category.allPricesKnown(), true));
                         tvTotal.setVisibility(View.VISIBLE);
 
                         if (initialized)

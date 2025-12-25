@@ -81,9 +81,9 @@ public class ItemViewAlertDialog
                     @Override
                     public void onSupermarketClick(Supermarket supermarket)
                     {
-                        if (supermarket.getSupermarket() == null)
+                        if (supermarket == null || supermarket.getSupermarket() == null)
                         {
-                            item.setSupermarket(Baskit.unassigned_supermarket);
+                            item.setSupermarket(null);
                             item.setPrice(0);
                         }
                         else

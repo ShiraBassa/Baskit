@@ -159,6 +159,19 @@ public class Category
         return Math.round(sum * 100.0) / 100.0;
     }
 
+    public boolean allPricesKnown()
+    {
+        for (Item item : this.items.values())
+        {
+            if (!item.isPriceKnown() && !item.isChecked())
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public boolean doesExists(Item item)
     {
         return items.containsKey(item.getId());

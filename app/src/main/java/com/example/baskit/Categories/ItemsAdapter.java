@@ -110,11 +110,15 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
             holder.btnDown.setBackgroundColor(Color.TRANSPARENT);
         }
 
-        if (item.hasSupermarket())
+        if (!item.isUnassigned())
         {
-            holder.tvPrice.setText(Baskit.getTotalDisplayString(item.getTotal(), false));
+            holder.tvPrice.setText(Baskit.getTotalDisplayString(item.getTotal(), item.isPriceKnown(), false));
             holder.tvPrice.setTextColor(Baskit.getAppColor(context, R.color.price));
             holder.tvPrice.setVisibility(View.VISIBLE);
+        }
+        else
+        {
+            holder.tvPrice.setVisibility(View.GONE);
         }
 
         if (item.isChecked())

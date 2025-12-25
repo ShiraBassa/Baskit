@@ -2,6 +2,7 @@ package com.example.baskit.MainComponents;
 
 import androidx.annotation.NonNull;
 
+import com.example.baskit.Baskit;
 import com.google.firebase.database.Exclude;
 import com.google.firebase.database.IgnoreExtraProperties;
 
@@ -165,5 +166,36 @@ public class Item implements Cloneable
         {
             throw new AssertionError();
         }
+    }
+
+    public boolean isPriceKnown()
+    {
+        if (supermarket == null)
+        {
+            return false;
+        }
+
+        if (supermarket.equals(Baskit.unassigned_supermarket) || supermarket.equals(Baskit.other_supermarket) ||
+                price == 0)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    public boolean isUnassigned()
+    {
+        if (supermarket == null)
+        {
+            return true;
+        }
+
+        if (supermarket.equals(Baskit.unassigned_supermarket))
+        {
+            return true;
+        }
+
+        return false;
     }
 }

@@ -137,7 +137,7 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
             holder.tvSectionName.setText(supermarket.getSection());
         }
 
-        holder.tvPrice.setText(Baskit.getTotalDisplayString(price, false));
+        holder.tvPrice.setText(Baskit.getTotalDisplayString(price, true, false));
 
         if (supermarket.getSupermarket().equals(selectedSupermarket) &&
                 supermarket.getSection().equals(selectedSection))
@@ -157,25 +157,28 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
 
             if (isSelected)
             {
+                // Deselect -> unassigned
                 selectedSupermarket = null;
                 selectedSection = null;
+
+                notifyDataSetChanged();
+
+                if (listener != null)
+                {
+                    listener.onSupermarketClick(null);
+                }
+
+                return;
             }
-            else
-            {
-                selectedSupermarket = supermarket.getSupermarket();
-                selectedSection = supermarket.getSection();
-            }
+
+            selectedSupermarket = supermarket.getSupermarket();
+            selectedSection = supermarket.getSection();
 
             notifyDataSetChanged();
 
             if (listener != null)
             {
-                listener.onSupermarketClick(
-                        new Supermarket(
-                                supermarket.getSupermarket(),
-                                supermarket.getSection()
-                        )
-                );
+                listener.onSupermarketClick(new Supermarket(selectedSupermarket, selectedSection));
             }
         });
     }

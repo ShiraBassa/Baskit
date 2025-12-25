@@ -160,4 +160,17 @@ public class List
 
         return itemNames;
     }
+
+    public boolean allPricesKnown()
+    {
+        for (Category category : categories.values())
+        {
+            if (!category.allPricesKnown())
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }

@@ -46,34 +46,21 @@
 
     </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/lout_title"
+    <Space
         android:layout_width="0dp"
         android:layout_weight="1"
+        android:layout_height="wrap_content"/>
+
+    <TextView
+        android:id="@+id/tv_section_name"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical|end">
-
-        <TextView
-            android:id="@+id/tv_section_name"
-            android:textColor="@color/dark_teal"
-            android:textSize="22sp"
-            android:textStyle="bold"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:text="קטגוריה"
-            android:letterSpacing="0.02"
-            />
-
-        <TextView
-            android:textColor="@color/dark_teal"
-            android:textSize="22sp"
-            android:textStyle="bold"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:text=" -"
-            android:letterSpacing="0.02"
-            />
-    </LinearLayout>
+        android:textColor="@color/dark_teal"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:text="- קטגוריה"
+        android:letterSpacing="0.02"/>
 
 </LinearLayout>

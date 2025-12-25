@@ -15,6 +15,8 @@ import android.view.View;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.ColorUtils;
+import androidx.core.text.BidiFormatter;
+import androidx.core.text.TextDirectionHeuristicsCompat;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
@@ -152,27 +154,47 @@ public class Baskit extends Application
         return ColorUtils.setAlphaComponent(getAppColor(context, attributeId), alpha);
     }
 
-    public static String getTotalDisplayString(Double total)
+    private static String getTotalDisplayString(Double total, boolean allPricesKnown)
     {
-        if (total % 1.0 == 0)
+        String str;
+
+        if (total == 0)
         {
-            return String.format("%.0f", total) + "₪";
+            str = "?";
         }
         else
         {
-            return String.format("%.2f", total) + "₪";
+            if (total % 1.0 == 0)
+            {
+                str = String.format("%.0f", total);
+            }
+            else
+            {
+                str = String.format("%.2f", total);
+            }
+
+            if (!allPricesKnown)
+            {
+                str += "+";
+            }
         }
+
+        str += "₪";
+
+        return str;
     }
 
-    public static String getTotalDisplayString(Double total, boolean withTitle)
+    public static String getTotalDisplayString(Double total, boolean allPricesKnown, boolean withTitle)
     {
-        String str = getTotalDisplayString(total);
+        String amount = getTotalDisplayString(total, allPricesKnown);
+        String amountIsolated = "\u2066" + amount + "\u2069";
 
         if (withTitle)
         {
-            return "סך הכל: " + str;
+            String titleIsolated = "\u2067" + "סך הכל:" + "\u2069";
+            return amountIsolated + " " + titleIsolated;
         }
 
-        return str;
+        return amountIsolated;
     }
 }

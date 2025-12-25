@@ -83,7 +83,8 @@ public class ListActivity extends MasterActivity
 
             if (!initialized)
             {
-                tvTotal.setText(Baskit.getTotalDisplayString(list.getTotal(), true));
+                tvTotal.setText(Baskit.getTotalDisplayString(list.getTotal(), list.allPricesKnown(), true));
+                tvTotal.setVisibility(View.VISIBLE);
             }
         }
     }
@@ -126,6 +127,8 @@ public class ListActivity extends MasterActivity
 
                 tvListName.setText(ListActivity.this.list.getName());
                 tvListName.setVisibility(View.VISIBLE);
+                tvTotal.setText(Baskit.getTotalDisplayString(list.getTotal(), list.allPricesKnown(), true));
+                tvTotal.setVisibility(View.VISIBLE);
 
                if (itemsCodeNames != null && itemsCodeNames.values() != null)
                 {
@@ -294,7 +297,7 @@ public class ListActivity extends MasterActivity
                     TextView tvPrice = categoryView.findViewById(R.id.tv_price);
 
                     tvCount.setText(Integer.toString(newCategory.countUnchecked()));
-                    tvPrice.setText(Baskit.getTotalDisplayString(newCategory.getTotal(), false));
+                    tvPrice.setText(Baskit.getTotalDisplayString(newCategory.getTotal(), newCategory.allPricesKnown(), false));
                 }
             }
             else
@@ -310,7 +313,7 @@ public class ListActivity extends MasterActivity
     {
         View categoryView;
         TextView tvName, tvCount, tvPrice;
-        LinearLayout loutInfo, loutTitle;
+        LinearLayout loutInfo;
 
         categoryView = categoriesListInflater.inflate(R.layout.category_list_item, categoriesListContainer, false);
 
@@ -318,19 +321,18 @@ public class ListActivity extends MasterActivity
         tvCount  = categoryView.findViewById(R.id.tv_count);
         tvPrice = categoryView.findViewById(R.id.tv_price);
         loutInfo = categoryView.findViewById(R.id.lout_info);
-        loutTitle = categoryView.findViewById(R.id.lout_title);
 
-        tvName.setText(category.getName());
+        tvName.setText("- " + category.getName());
 
         if (!category.isFinished())
         {
             tvCount.setText(Integer.toString(category.countUnchecked()));
-            tvPrice.setText(Baskit.getTotalDisplayString(category.getTotal(), false));
+            tvPrice.setText(Baskit.getTotalDisplayString(category.getTotal(), category.allPricesKnown(), false));
         }
         else
         {
             loutInfo.setVisibility(View.GONE);
-            loutTitle.setAlpha(0.5f);
+            tvName.setAlpha(0.5f);
         }
 
         categoryView.setOnClickListener(new View.OnClickListener()
