@@ -101,6 +101,18 @@ public class HomeActivity extends MasterActivity
             );
 
     @Override
+    protected boolean enableSwipeBack()
+    {
+        return false;
+    }
+
+    @Override
+    protected boolean disableSystemBack()
+    {
+        return true;
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);

@@ -409,6 +409,11 @@ public class ListActivity extends MasterActivity
         {
             for (Item item : category.getItems().values())
             {
+                if (item.isChecked())
+                {
+                    continue;
+                }
+
                 Map<String, Map<String, Double>> currItemPrices = allItems.get(item.getAbsoluteId());
 
                 if (currItemPrices == null || currItemPrices.isEmpty())

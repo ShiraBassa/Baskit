@@ -244,6 +244,11 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
 
         for (Item item : category.getItems().values())
         {
+            if (item.isChecked())
+            {
+                continue;
+            }
+
             Map<String, Map<String, Double>> currItemPrices = itemPrices.get(item.getAbsoluteId());
 
             if (currItemPrices == null || currItemPrices.isEmpty())
