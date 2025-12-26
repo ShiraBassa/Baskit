@@ -347,8 +347,27 @@ public class AddItemFragment extends DialogFragment
                 @Override
                 public void onSupermarketClick(Supermarket supermarket)
                 {
-                    selectedItem.setSupermarket(supermarket);
-                    selectedItem.setPrice(finalData.get(supermarket.getSupermarket()).get(supermarket.getSection()));
+                    if (supermarket == null || supermarket.getSupermarket() == null)
+                    {
+                        selectedItem.setSupermarket(null);
+                        selectedItem.setPrice(0);
+                    }
+                    else
+                    {
+                        selectedItem.setSupermarket(supermarket);
+
+                        Map<String, Double> sectionPrices = finalData.get(supermarket.getSupermarket());
+
+                        if (sectionPrices != null)
+                        {
+                            Double price = sectionPrices.get(supermarket.getSection());
+                            selectedItem.setPrice(price != null ? price : 0);
+                        }
+                        else
+                        {
+                            selectedItem.setPrice(0);
+                        }
+                    }
                 }
             });
 
