@@ -22,6 +22,7 @@ import com.example.baskit.MainComponents.List;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.MasterActivity;
 import com.example.baskit.R;
+import com.google.android.material.snackbar.Snackbar;
 
 import org.json.JSONException;
 
@@ -259,43 +260,53 @@ public class CategoryActivity extends MasterActivity
 
         aiHandler.getCategoryName(item, CategoryActivity.this, categoryName ->
         {
-            if (categoryName.equals(category.getName()))
+            if (!list.hasCategory(categoryName))
             {
-                if (!list.hasCategory(categoryName))
+                dbHandler.addCategory(list, new Category(categoryName));
+            }
+
+            dbHandler.addItem(list, categoryName, item, new FirebaseDBHandler.DBCallback()
+            {
+                @Override
+                public void onComplete()
                 {
-                    dbHandler.addCategory(list, new Category(categoryName));
+                    runOnUiThread(() ->
+                    {
+                        addItemFragment.endProgressBar();
+                        addItemFragment.dismiss();
+
+                        if (!categoryName.equals(category.getName()))
+                        {
+                            Snackbar snackbar = Snackbar.make(
+                                    findViewById(android.R.id.content),
+                                    "הפריט נוסף לקטגוריה: " + categoryName,
+                                    Snackbar.LENGTH_LONG
+                            );
+
+                            snackbar.getView().setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+
+                            snackbar.setAction("בטל", v ->
+                            {
+                                new Thread(() -> dbHandler.removeItem(list, categoryName, item)).start();
+                            });
+
+                            snackbar.setAnchorView(btnAddItem);
+                            snackbar.show();
+                        }
+                    });
                 }
 
-                dbHandler.addItem(list, categoryName, item, new FirebaseDBHandler.DBCallback()
+                @Override
+                public void onFailure(Exception e)
                 {
-                    @Override
-                    public void onComplete()
+                    runOnUiThread(() ->
                     {
-                        runOnUiThread(() ->
-                        {
-                            addItemFragment.endProgressBar();
-                            addItemFragment.dismiss();
-                        });
-                    }
-
-                    @Override
-                    public void onFailure(Exception e)
-                    {
-                        runOnUiThread(() ->
-                        {
-                            addItemFragment.endProgressBar();
-                            addItemFragment.dismiss();
-                            Toast.makeText(CategoryActivity.this, "שגיאה בניסיון להוסיף את הפריט", Toast.LENGTH_SHORT).show();
-                        });
-                    }
-                });
-            }
-            else
-            {
-                addItemFragment.endProgressBar();
-                addItemFragment.dismiss();
-                Toast.makeText(CategoryActivity.this, "לא בקטגוריה המתאימה (" + categoryName + ")", Toast.LENGTH_SHORT).show();
-            }
+                        addItemFragment.endProgressBar();
+                        addItemFragment.dismiss();
+                        Toast.makeText(CategoryActivity.this, "שגיאה בניסיון להוסיף את הפריט", Toast.LENGTH_SHORT).show();
+                    });
+                }
+            });
         });
     }
 

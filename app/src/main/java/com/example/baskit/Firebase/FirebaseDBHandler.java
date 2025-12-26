@@ -462,6 +462,16 @@ public class FirebaseDBHandler
                 .removeValue();
     }
 
+    public void removeItem(List list, String categoryName, Item item)
+    {
+        refLists.child(list.getId())
+                .child("categories")
+                .child(categoryName)
+                .child("items")
+                .child(item.getId())
+                .removeValue();
+    }
+
     public void removeItem(List list, Item item)
     {
         removeItem(list, getCategory(list, item), item);
