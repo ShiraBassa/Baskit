@@ -80,7 +80,10 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
             @Override
             public void removeCategory()
             {
-                upperClassFns.removeCategory();
+                if (category.isEmpty())
+                {
+                    upperClassFns.removeCategory();
+                }
             }
 
             @Override

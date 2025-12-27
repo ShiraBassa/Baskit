@@ -188,4 +188,9 @@ public class Category
 
         return itemNames;
     }
+
+    public boolean isEmpty()
+    {
+        return items.isEmpty();
+    }
 }

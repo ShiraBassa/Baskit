@@ -173,4 +173,22 @@ public class List
 
         return true;
     }
+
+    public boolean isEmpty()
+    {
+        if (categories.isEmpty())
+        {
+            return true;
+        }
+
+        for (Category category : categories.values())
+        {
+            if (!category.isEmpty())
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }
