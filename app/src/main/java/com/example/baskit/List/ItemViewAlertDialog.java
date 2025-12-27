@@ -10,7 +10,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
-import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -170,7 +169,7 @@ public class ItemViewAlertDialog
         adBtnUp.setClickable(true);
         adBtnDown.setClickable(true);
 
-        adTvItemName.setText(item.getName());
+        adTvItemName.setText(item.getDecodedName());
 
         if (showQuantity)
         {

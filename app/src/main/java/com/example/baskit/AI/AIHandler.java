@@ -4,10 +4,6 @@ import android.app.Activity;
 import android.util.Log;
 
 import com.example.baskit.MainComponents.Item;
-import com.google.android.gms.common.util.ArrayUtils;
-
-import java.util.ArrayList;
-import java.util.stream.Collectors;
 
 public class AIHandler
 {

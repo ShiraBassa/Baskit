@@ -8,7 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.TextView;
-import androidx.core.content.ContextCompat;
+
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.baskit.Baskit;
@@ -94,7 +94,7 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
         holder.itemViewAlertDialog = new ItemViewAlertDialog(activity, context, upperClassFns, item, true);
         holder.itemView.setOnDragListener(null);
 
-        holder.tvName.setText(item.getName());
+        holder.tvName.setText(item.getDecodedName());
         holder.tvName.setTextColor(Baskit.getAppColor(context, com.google.android.material.R.attr.colorPrimary));
 
         int quantity = item.getQuantity();

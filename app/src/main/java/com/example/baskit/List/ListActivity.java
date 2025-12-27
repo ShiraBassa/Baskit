@@ -10,8 +10,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import com.example.baskit.AI.AIHandler;
 import com.example.baskit.API.APIHandler;
 import com.example.baskit.Baskit;
@@ -24,7 +22,6 @@ import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.MasterActivity;
 import com.example.baskit.R;
 
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;

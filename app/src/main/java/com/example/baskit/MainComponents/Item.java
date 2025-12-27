@@ -12,7 +12,7 @@ import java.util.Map;
 @IgnoreExtraProperties
 public class Item implements Cloneable
 {
-    private final String ID_PREFIX = "item_";
+    private static final String ID_PREFIX = "item_";
 
     protected String id = "";
     protected String name = "";
@@ -25,18 +25,18 @@ public class Item implements Cloneable
 
     public Item(String name)
     {
-        this.name = name;
+        setName(name);
     }
 
     public Item(String id, String name) {
         this.id = ID_PREFIX + id;
-        this.name = name;
+        setName(name);
     }
 
     public Item(Item item)
     {
         this.id = item.getId();
-        this.name = item.getName();
+        setName(item.getName());
         this.price = item.getPrice();
         this.quantity = item.getQuantity();
         this.checked = item.isChecked();
@@ -45,23 +45,30 @@ public class Item implements Cloneable
 
     public Item(String name, int quantity)
     {
-        this.name = name;
+        setName(name);
         this.quantity = quantity;
     }
 
     public Item(String name, int quantity, int price)
     {
-        this.name = name;
+        setName(name);
         this.quantity = quantity;
         this.price = price;
     }
 
-    public String getName() {
+    public String getName()
+    {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public String getDecodedName()
+    {
+        return decodeKey(this.name);
+    }
+
+    public void setName(String name)
+    {
+        this.name = encodeKey(name);
     }
 
     public double getPrice() {
@@ -138,18 +145,9 @@ public class Item implements Cloneable
     }
 
     @Override
-    public String toString() {
-        return name;
-    }
-
-    public Map<String, Object> toMap() {
-        Map<String, Object> result = new HashMap<>();
-        result.put("id", getId());
-        result.put("name", getName());
-        result.put("quantity", getQuantity());
-        result.put("checked", isChecked());
-        // Add any other fields your Item has
-        return result;
+    public String toString()
+    {
+        return getName();
     }
 
     @NonNull
@@ -197,5 +195,31 @@ public class Item implements Cloneable
         }
 
         return false;
+    }
+
+   public static String encodeKey(String s)
+    {
+        if (s == null) return null;
+        String out = s;
+        out = out.replace(".", "__dot__");
+        out = out.replace("$", "__dollar__");
+        out = out.replace("#", "__hash__");
+        out = out.replace("[", "__lbracket__");
+        out = out.replace("]", "__rbracket__");
+        out = out.replace("/", "__slash__");
+        return out;
+    }
+
+    public static String decodeKey(String s)
+    {
+        if (s == null) return null;
+        String out = s;
+        out = out.replace("__dot__", ".");
+        out = out.replace("__dollar__", "$");
+        out = out.replace("__hash__", "#");
+        out = out.replace("__lbracket__", "[");
+        out = out.replace("__rbracket__", "]");
+        out = out.replace("__slash__", "/");
+        return out;
     }
 }

@@ -21,7 +21,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -29,7 +28,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.baskit.API.APIHandler;
 import com.example.baskit.Baskit;
 import com.example.baskit.MainComponents.Item;
-import com.example.baskit.MainComponents.List;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;
 
@@ -64,6 +62,20 @@ public class AddItemFragment extends DialogFragment
     private APIHandler apiHandler = APIHandler.getInstance();
     private ArrayList<String> listItemNames;
 
+    private String decodeSanitizedKey(String s)
+    {
+        if (s == null) return null;
+
+        String out = s;
+        out = out.replace("__dot__", ".");
+        out = out.replace("__dollar__", "$");
+        out = out.replace("__hash__", "#");
+        out = out.replace("__lbracket__", "[");
+        out = out.replace("__rbracket__", "]");
+        out = out.replace("__slash__", "/");
+        return out;
+    }
+
     public interface AddItemInterface
     {
         void addItem(Item item);
@@ -87,13 +99,27 @@ public class AddItemFragment extends DialogFragment
     {
         LinkedHashMap<String, String> unique = new LinkedHashMap<>();
 
+        if (listItemNames != null)
+        {
+            ArrayList<String> decodedList = new ArrayList<>();
+
+            for (String n : listItemNames)
+            {
+                String d = decodeSanitizedKey(n);
+                if (!isBadItemName(d)) decodedList.add(d.trim());
+            }
+
+            listItemNames = decodedList;
+        }
+
         if (allItemNames != null)
         {
             for (String name : allItemNames)
             {
-                if (isBadItemName(name) || listItemNames.contains(name)) continue;
+                String decoded = decodeSanitizedKey(name);
+                if (isBadItemName(decoded) || (listItemNames != null && listItemNames.contains(decoded))) continue;
 
-                String trimmed = name.trim();
+                String trimmed = decoded.trim();
                 String key = trimmed.toLowerCase(Locale.ROOT);
 
                 if (key.isEmpty() || key.equals("null")) continue;
@@ -188,7 +214,8 @@ public class AddItemFragment extends DialogFragment
                 }
 
                 TextView tvName = convertView.findViewById(R.id.tvItemName);
-                tvName.setText(getItem(position));
+                String raw = getItem(position);
+                tvName.setText(decodeSanitizedKey(raw));
 
                 return convertView;
             }
@@ -203,7 +230,8 @@ public class AddItemFragment extends DialogFragment
                 }
 
                 TextView tvName = convertView.findViewById(R.id.tvItemName);
-                tvName.setText(getItem(position));
+                String raw = getItem(position);
+                tvName.setText(decodeSanitizedKey(raw));
 
                 return convertView;
             }
@@ -215,7 +243,7 @@ public class AddItemFragment extends DialogFragment
 
         searchItem.setOnItemClickListener((parent, view, position, id) ->
         {
-            String clickedName = (String) parent.getItemAtPosition(position);
+            String clickedName = Item.decodeKey((String) parent.getItemAtPosition(position));
 
             if (isBadItemName(clickedName))
             {
@@ -252,13 +280,14 @@ public class AddItemFragment extends DialogFragment
 
         for (String name : allItemNames)
         {
-            if (isBadItemName(name)) continue;
+            String decodedName = decodeSanitizedKey(name);
+            if (isBadItemName(decodedName)) continue;
 
-            String lowerName = name.toLowerCase();
+            String lowerName = decodedName.toLowerCase();
             String lowerTyped = typed.toLowerCase();
-            if (lowerName.equals(lowerTyped)) exactMatches.add(name);
-            else if (lowerName.startsWith(lowerTyped)) startsWithMatches.add(name);
-            else containsMatches.add(name);
+            if (lowerName.equals(lowerTyped)) exactMatches.add(decodedName);
+            else if (lowerName.startsWith(lowerTyped)) startsWithMatches.add(decodedName);
+            else containsMatches.add(decodedName);
         }
 
         ArrayList<String> orderedItems = new ArrayList<>();
@@ -266,7 +295,42 @@ public class AddItemFragment extends DialogFragment
         orderedItems.addAll(startsWithMatches);
         orderedItems.addAll(containsMatches);
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(context, R.layout.add_item_dropdown_item, R.id.tvItemName, orderedItems);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(context, R.layout.add_item_dropdown_item, orderedItems)
+        {
+            @NonNull
+            @Override
+            public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent)
+            {
+                if (convertView == null)
+                {
+                    convertView = activity.getLayoutInflater()
+                            .inflate(R.layout.add_item_dropdown_item, parent, false);
+                }
+
+                TextView tvName = convertView.findViewById(R.id.tvItemName);
+                String raw = getItem(position);
+                tvName.setText(decodeSanitizedKey(raw));
+
+                return convertView;
+            }
+
+            @Override
+            public View getDropDownView(int position, @Nullable View convertView, @NonNull ViewGroup parent)
+            {
+                if (convertView == null)
+                {
+                    convertView = activity.getLayoutInflater()
+                            .inflate(R.layout.add_item_dropdown_item, parent, false);
+                }
+
+                TextView tvName = convertView.findViewById(R.id.tvItemName);
+                String raw = getItem(position);
+                tvName.setText(decodeSanitizedKey(raw));
+
+                return convertView;
+            }
+        };
+
         searchItem.setAdapter(adapter);
 
         if (!orderedItems.isEmpty())
