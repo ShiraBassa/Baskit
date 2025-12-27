@@ -4,8 +4,7 @@
     android:layout_height="wrap_content"
     android:gravity="center_horizontal|top"
     android:orientation="vertical"
-    android:padding="10dp"
-    android:background="@color/white_smoke">
+    android:padding="10dp">
 
     <TextView
         android:id="@+id/tv_title"
@@ -13,7 +12,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="10dp"
         android:text="סופרים"
-        android:textColor="@color/evergreen"
+        android:textColor="?attr/colorPrimaryVariant"
         android:textSize="36sp"
         android:textStyle="bold"
         android:letterSpacing="0.02" />
@@ -30,7 +29,7 @@
             layout="@layout/supermarkets_list"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp" />
+            android:layout_marginBottom="5dp" />
 
         <LinearLayout
             android:id="@+id/layouts_bottom"
@@ -38,14 +37,14 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:orientation="horizontal"
-            android:padding="15dp">
+            android:padding="5dp">
 
             <Button
                 android:id="@+id/btn_remove_supermarket"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
                 android:layout_marginEnd="10dp"
-                android:backgroundTint="@color/deep_crimson"
+                android:backgroundTint="?attr/colorTertiary"
                 android:text="-"
                 android:textColor="@android:color/white"
                 android:textSize="24sp"
@@ -61,7 +60,7 @@
                 android:id="@+id/btn_add_supermarket"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
-                android:backgroundTint="@color/dark_teal"
+                android:backgroundTint="?attr/colorPrimary"
                 android:text="+"
                 android:textColor="@android:color/white"
                 android:textSize="24sp"

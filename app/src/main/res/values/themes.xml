@@ -4,10 +4,12 @@
 
         <!-- Primary actions = dark teal -->
         <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryVariant">@color/primary_variant</item>
         <item name="colorPrimaryContainer">@color/primary_variant</item>
 
         <!-- Secondary subtle actions = rich mahogany -->
         <item name="colorSecondary">@color/secondary</item>
+        <item name="colorSecondaryVariant">@color/secondary_variant</item>
         <item name="colorSecondaryContainer">@color/secondary_variant</item>
 
         <!-- Navigation + icons = dark teal -->
@@ -25,7 +27,7 @@
         <item name="colorOutline">@color/evergreen</item>
 
         <!-- Accents -->
-        <item name="colorTertiary">@color/accent</item>
+        <item name="colorTertiary">@color/deep_crimson</item>
     </style>
 
     <style name="Theme.Baskit" parent="Base.Theme.Baskit" />

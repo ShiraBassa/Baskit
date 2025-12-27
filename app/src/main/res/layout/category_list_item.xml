@@ -20,7 +20,6 @@
             android:textColor="@color/quantity"
             android:textSize="22sp"
             android:textStyle="bold"
-            android:layout_marginEnd="25dp"
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
             android:text="כמות"
@@ -28,10 +27,12 @@
             />
 
         <View
-            android:layout_width="1dp"
+            android:layout_width="2dp"
             android:layout_height="24dp"
-            android:layout_marginEnd="16dp"
-            android:background="@color/tan" />
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="15dp"
+            android:background="?attr/colorSecondaryVariant"
+            android:backgroundTint="?attr/colorSecondaryVariant"/>
 
         <TextView
             android:id="@+id/tv_price"
@@ -39,7 +40,7 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="20dp"
             android:text="מחיר"
-            android:textSize="18sp"
+            android:textSize="19sp"
             android:textStyle="bold"
             android:textColor="@color/price"
             android:letterSpacing="0.01" />
@@ -55,7 +56,7 @@
         android:id="@+id/tv_section_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="@color/dark_teal"
+        android:textColor="?attr/colorPrimaryVariant"
         android:textSize="22sp"
         android:textStyle="bold"
         android:maxLines="1"

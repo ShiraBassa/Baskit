@@ -85,20 +85,20 @@ public class HomeGridAdapter extends RecyclerView.Adapter<HomeGridAdapter.GridVi
     public GridViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType)
     {
         MaterialButton button = new SquareMaterialButton(parent.getContext());
-        button.setCornerRadius(24);
+        button.setCornerRadius(28);
 
         button.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
                 getAppColor(context, com.google.android.material.R.attr.colorSurface)));
 
-        button.setStrokeWidth(5);
+        button.setStrokeWidth(8);
         button.setStrokeColor(android.content.res.ColorStateList.valueOf(
-                getAppColor(context, com.google.android.material.R.attr.colorPrimaryVariant)
+                getAppColor(context, com.google.android.material.R.attr.colorPrimary)
         ));
 
-        button.setTextColor(getAppColor(context, com.google.android.material.R.attr.colorOnSurface));
+        button.setTextColor(getAppColor(context, com.google.android.material.R.attr.colorSecondary));
 
         button.setTypeface(Typeface.DEFAULT_BOLD);
-        button.setTextSize(20f);
+        button.setTextSize(24f);
         button.setSingleLine(false);
         button.setHorizontallyScrolling(false);
 
@@ -113,7 +113,7 @@ public class HomeGridAdapter extends RecyclerView.Adapter<HomeGridAdapter.GridVi
         button.setPadding(pad, pad, pad, pad);
 
         button.setRippleColor(android.content.res.ColorStateList.valueOf(
-                getAppColor(context, com.google.android.material.R.attr.colorPrimary)
+                getAppColor(context, com.google.android.material.R.attr.colorSecondary)
         ));
 
         int margin = (int) (12 * parent.getContext().getResources().getDisplayMetrics().density);

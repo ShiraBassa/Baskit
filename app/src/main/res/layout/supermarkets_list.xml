@@ -6,20 +6,12 @@
     android:orientation="vertical"
     android:padding="10dp">
 
-    <androidx.cardview.widget.CardView
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_supermarket"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:elevation="4dp"
-        android:background="@color/white_smoke">
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recycler_supermarket"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:nestedScrollingEnabled="false"
-            android:clipToPadding="false"
-            android:scrollbars="none"/>
-
-    </androidx.cardview.widget.CardView>
+        android:nestedScrollingEnabled="false"
+        android:clipToPadding="false"
+        android:scrollbars="none"/>
 
 </LinearLayout>

@@ -37,6 +37,7 @@ import com.example.baskit.MainComponents.Request;
 import com.example.baskit.MainComponents.User;
 import com.example.baskit.MasterActivity;
 import com.example.baskit.R;
+import com.google.android.material.button.MaterialButton;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -59,7 +60,8 @@ public class HomeActivity extends MasterActivity
     AlertDialog.Builder adb;
     LinearLayout adLayout;
     AlertDialog adCreateList;
-    Button adBtnCreate, btnCreateList;
+    Button adBtnCreate;
+    MaterialButton btnCreateList;
     ImageButton adBtnCancel, btnSettings;
     EditText adEtName;
     TextView tvTitle;

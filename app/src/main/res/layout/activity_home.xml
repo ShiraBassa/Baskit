@@ -33,7 +33,7 @@
                 android:src="@drawable/ic_settings"
                 android:scaleType="fitCenter"
                 android:background="@null"
-                app:tint="?attr/colorPrimary"/>
+                app:tint="?attr/colorSecondary"/>
 
         </LinearLayout>
 
@@ -76,21 +76,40 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:orientation="horizontal"
+        android:layout_marginBottom="5dp"
         android:padding="10dp"
         android:elevation="4dp">
 
-        <Button
-            android:id="@+id/btn_create_list"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:backgroundTint="?attr/colorPrimary"
-            android:text="צור רשימה"
-            android:textAlignment="center"
-            android:textColor="?attr/colorOnPrimary"
-            android:textSize="22sp"
-            android:textStyle="bold"
-            android:paddingHorizontal="32dp"
-            android:paddingVertical="14dp" />
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_create_list"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="צור רשימה"
+                android:textAlignment="center"
+                android:textColor="?attr/colorPrimary"
+                android:textSize="28sp"
+                android:textStyle="bold"
+                android:paddingHorizontal="32dp"
+                android:paddingVertical="14dp"
+
+                app:backgroundTint="@android:color/transparent"
+                app:strokeColor="?attr/colorPrimary"
+                app:strokeWidth="4dp"
+                app:cornerRadius="50dp"/>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="3dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginHorizontal="12dp"
+                android:background="?attr/colorSecondary"/>
+        </LinearLayout>
 
     </LinearLayout>
 

@@ -8,8 +8,8 @@
     <!-- 🎨 Brand Palette -->
     <color name="white_smoke">#F7F5F3</color>
     <color name="tan">#D7BD98</color>
-    <color name="dark_teal">#094142</color>
-    <color name="evergreen">#003D2B</color>
+    <color name="dark_teal">#0B5F73</color>
+    <color name="evergreen">#145C43</color>
     <color name="rich_mahogany">#3C1802</color>
     <color name="deep_crimson">#8E0413</color>
 
@@ -17,8 +17,8 @@
     <color name="tan_transparent">#D7BD98</color>
 
     <!-- 🟦 Semantic Roles -->
-    <color name="primary">@color/dark_teal</color>
-    <color name="primary_variant">@color/evergreen</color>
+    <color name="primary">@color/evergreen</color>
+    <color name="primary_variant">@color/dark_teal</color>
 
     <color name="secondary">@color/rich_mahogany</color>
     <color name="secondary_variant">@color/tan</color>

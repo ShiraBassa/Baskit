@@ -30,7 +30,7 @@
             android:scaleType="fitCenter"
             android:background="@null"
             android:src="@drawable/ic_back"
-            app:tint="?attr/colorPrimary" />
+            app:tint="?attr/colorSecondary" />
 
         <TextView
             android:id="@+id/tv_list_name"
@@ -40,7 +40,7 @@
             android:layout_marginHorizontal="10dp"
             android:text="רשימה"
             android:visibility="invisible"
-            android:textColor="?attr/colorOnSurface"
+            android:textColor="?attr/colorSecondary"
             android:textSize="32sp"
             android:textStyle="bold"
             android:letterSpacing="0.02" />
@@ -51,8 +51,8 @@
             android:layout_height="45dp"
             android:scaleType="fitCenter"
             android:background="@null"
-            android:src="@drawable/ic_share"
-            app:tint="?attr/colorSecondary" />
+            android:tint="?attr/colorPrimaryVariant"
+            android:src="@drawable/ic_share" />
     </LinearLayout>
 
     <com.google.android.material.button.MaterialButton
@@ -60,12 +60,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="סדר לפי הזול ביותר"
-        android:textColor="?attr/colorSecondary"
-        app:strokeColor="?attr/colorSecondary"
+        android:textColor="?attr/colorTertiary"
+        app:strokeColor="?attr/colorTertiary"
         android:backgroundTint="?attr/colorSurface"
         app:rippleColor="?attr/colorSecondaryContainer"
         android:layout_margin="10dp"
-        android:elevation="2dp"
+        android:elevation="3dp"
+        app:strokeWidth="2dp"
+        android:textStyle="bold"
         style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
 
 
