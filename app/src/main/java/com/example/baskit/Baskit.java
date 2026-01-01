@@ -7,6 +7,8 @@ import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
+import android.net.NetworkInfo;
+import android.net.NetworkRequest;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.TypedValue;
@@ -38,7 +40,7 @@ public class Baskit extends Application
         super.onCreate();
 
         context = getApplicationContext();
-        onlineLive.postValue(isOnlineNow(this));
+        onlineLive.postValue(isOnlineNow(Baskit.this));
 
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         if (cm != null)
@@ -54,7 +56,7 @@ public class Baskit extends Application
                 @Override
                 public void onLost(Network network)
                 {
-                    onlineLive.postValue(false);
+                    onlineLive.postValue(isOnlineNow(Baskit.this));
                 }
 
                 @Override
@@ -67,6 +69,13 @@ public class Baskit extends Application
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
             {
                 cm.registerDefaultNetworkCallback(networkCallback);
+            }
+            else
+            {
+                NetworkRequest request = new NetworkRequest.Builder()
+                        .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                        .build();
+                cm.registerNetworkCallback(request, networkCallback);
             }
         }
 
@@ -102,8 +111,17 @@ public class Baskit extends Application
 
     public static boolean isOnlineNow(Context context)
     {
+        if (context == null) return false;
+
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         if (cm == null) return false;
+
+        // Pre-Marshmallow fallback (no getActiveNetwork() / VALIDATED capability)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
+        {
+            NetworkInfo info = cm.getActiveNetworkInfo();
+            return info != null && info.isConnected();
+        }
 
         Network network = cm.getActiveNetwork();
         if (network == null) return false;
@@ -196,5 +214,29 @@ public class Baskit extends Application
         }
 
         return amountIsolated;
+    }
+
+    public static void notActivityRunWhenServerActive(Runnable work, Activity activity)
+    {
+        if (activity instanceof MasterActivity)
+        {
+            ((MasterActivity) activity).runWhenServerActive(work);
+        }
+        else
+        {
+            new Thread(work).start();
+        }
+    }
+
+    public static void notActivityRunIfOnline(Runnable work, Activity activity)
+    {
+        if (activity instanceof MasterActivity)
+        {
+            ((MasterActivity) activity).runIfOnline(work);
+        }
+        else
+        {
+            work.run();
+        }
     }
 }

@@ -2,6 +2,7 @@ package com.example.baskit.Home;
 
 import android.app.Activity;
 import android.content.Context;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -12,8 +13,10 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 
 import com.example.baskit.API.APIHandler;
+import com.example.baskit.Baskit;
 import com.example.baskit.Firebase.FirebaseAuthHandler;
 import com.example.baskit.MainComponents.Supermarket;
+import com.example.baskit.MasterActivity;
 import com.example.baskit.R;
 
 import org.json.JSONException;
@@ -55,23 +58,20 @@ public class AddSectionAlertDialog
         this.context = context;
         this.supermarketsAdapter = supermarketsAdapter;
 
-        new Thread(() ->
+        Baskit.notActivityRunWhenServerActive(() ->
         {
             try
             {
                 getAPIInfo();
+                activity.runOnUiThread(this::init);
             }
-            catch (JSONException e)
+            catch (JSONException | IOException e)
             {
-                throw new RuntimeException(e);
+                Log.e("AddSectionAlertDialog", "Failed to load store/branch data", e);
+                activity.runOnUiThread(() ->
+                        Toast.makeText(context, "שגיאה בטעינת נתונים", Toast.LENGTH_SHORT).show());
             }
-            catch (IOException e)
-            {
-                throw new RuntimeException(e);
-            }
-
-            activity.runOnUiThread(this::init);
-        }).start();
+        }, activity);
     }
 
     private void init()
@@ -155,29 +155,31 @@ public class AddSectionAlertDialog
                             @Override
                             public void onStoreAdded(String storeName, ArrayList<String> branches)
                             {
-                                new Thread(() ->
+                                Baskit.notActivityRunWhenServerActive(() ->
                                 {
                                     try
                                     {
                                         getAPIInfo();
+
+                                        activity.runOnUiThread(() ->
+                                        {
+                                            supermarkets.clear();
+                                            supermarkets.addAll(all_branches.keySet());
+                                            supermarkets.add(addStoreLabel);
+
+                                            ArrayAdapter<?> adapter = (ArrayAdapter<?>) spinnerSupermarkets.getAdapter();
+                                            adapter.notifyDataSetChanged();
+
+                                            spinnerSupermarkets.setSelection(supermarkets.indexOf(storeName));
+                                        });
                                     }
                                     catch (JSONException | IOException e)
                                     {
-                                        e.printStackTrace();
+                                        Log.e("AddSectionAlertDialog", "Failed to refresh store/branch data", e);
+                                        activity.runOnUiThread(() ->
+                                                Toast.makeText(context, "שגיאה בטעינת נתונים", Toast.LENGTH_SHORT).show());
                                     }
-
-                                    activity.runOnUiThread(() ->
-                                    {
-                                        supermarkets.clear();
-                                        supermarkets.addAll(all_branches.keySet());
-                                        supermarkets.add(addStoreLabel);
-
-                                        ArrayAdapter<?> adapter = (ArrayAdapter<?>) spinnerSupermarkets.getAdapter();
-                                        adapter.notifyDataSetChanged();
-
-                                        spinnerSupermarkets.setSelection(supermarkets.indexOf(storeName));
-                                    });
-                                }).start();
+                                }, activity);
                             }
                         }).show();
                     }
@@ -239,7 +241,7 @@ public class AddSectionAlertDialog
 
                 Supermarket supermarket = new Supermarket(supermarketName, sectionName);
 
-                authHandler.addSupermarketSection(supermarket, () ->
+                Baskit.notActivityRunIfOnline(() -> authHandler.addSupermarketSection(supermarket, () ->
                 {
                     activity.runOnUiThread(() ->
                     {
@@ -252,13 +254,16 @@ public class AddSectionAlertDialog
                             choices.put(supermarket.getSupermarket(), sectionsList);
                         }
 
-                        sectionsList.add(supermarket.getSection());
+                        if (!sectionsList.contains(supermarket.getSection()))
+                        {
+                            sectionsList.add(supermarket.getSection());
+                        }
 
                         supermarketsAdapter.updateData(choices);
                         supermarketsAdapter.notifyDataSetChanged();
                         ad.dismiss();
                     });
-                });
+                }), activity);
             }
         });
     }

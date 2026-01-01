@@ -2,6 +2,7 @@ package com.example.baskit.Home;
 
 import android.app.Activity;
 import android.content.Context;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -12,7 +13,8 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 
 import com.example.baskit.API.APIHandler;
-import com.example.baskit.Firebase.FirebaseAuthHandler;
+import com.example.baskit.Baskit;
+import com.example.baskit.MasterActivity;
 import com.example.baskit.R;
 
 import org.json.JSONException;
@@ -29,7 +31,6 @@ public class AddSupermarketAlertDialog
     AlertDialog.Builder adb;
     AlertDialog ad;
     Button btnAdd;
-    FirebaseAuthHandler authHandler;
     Spinner spinnerSupermarkets;
     ArrayList<String> all_stores;
     Map<String, ArrayList<String>> choices;
@@ -48,8 +49,6 @@ public class AddSupermarketAlertDialog
         this.choices = choices;
         this.onStoreAddedListener = onStoreAddedListener;
         this.all_stores = unchosen_stores;
-
-        authHandler = FirebaseAuthHandler.getInstance();
 
         adLayout = (LinearLayout) activity.getLayoutInflater()
                 .inflate(R.layout.alert_dialog_add_supermarket, null);
@@ -109,33 +108,31 @@ public class AddSupermarketAlertDialog
                 ArrayList<String> curr_supermarkets = new ArrayList<>(choices.keySet());
                 curr_supermarkets.add(supermarketName);
 
-                new Thread(() ->
+                Baskit.notActivityRunWhenServerActive(() ->
                 {
                     try
                     {
                         apiHandler.setStores(curr_supermarkets);
-                    }
-                    catch (IOException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                    catch (JSONException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
 
-                    activity.runOnUiThread(() ->
-                    {
-                        if (!choices.containsKey(supermarketName))
+                        activity.runOnUiThread(() ->
                         {
-                            choices.put(supermarketName, new ArrayList<>());
-                        }
+                            if (!choices.containsKey(supermarketName))
+                            {
+                                choices.put(supermarketName, new ArrayList<>());
+                            }
 
-                        onStoreAddedListener.onStoreAdded(supermarketName, new ArrayList<>());
+                            onStoreAddedListener.onStoreAdded(supermarketName, new ArrayList<>());
 
-                        ad.dismiss();
-                    });
-                }).start();
+                            ad.dismiss();
+                        });
+                    }
+                    catch (IOException | JSONException e)
+                    {
+                        Log.e("AddSupermarketAlertDialog", "Failed to set stores", e);
+                        activity.runOnUiThread(() ->
+                                Toast.makeText(context, "שגיאה בשמירת הסופרמרקט", Toast.LENGTH_SHORT).show());
+                    }
+                }, activity);
             }
         });
     }

@@ -9,6 +9,7 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,9 +23,11 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.baskit.Baskit;
 import com.example.baskit.Firebase.FirebaseDBHandler;
 import com.example.baskit.MainComponents.List;
 import com.example.baskit.MainComponents.Request;
+import com.example.baskit.MasterActivity;
 import com.example.baskit.R;
 
 import java.nio.charset.StandardCharsets;
@@ -61,13 +64,13 @@ public class ShareListAlertDialog
             @Override
             public void acceptRequest(Request request)
             {
-                dbHandler.acceptRequest(list, request);
+                Baskit.notActivityRunIfOnline(() -> dbHandler.acceptRequest(list, request), activity);
             }
 
             @Override
             public void declineRequest(Request request)
             {
-                dbHandler.declineRequest(list, request);
+                Baskit.notActivityRunIfOnline(() -> dbHandler.declineRequest(list, request), activity);
             }
         });
 
@@ -76,6 +79,7 @@ public class ShareListAlertDialog
 
         dbHandler.listenForRequests(list, updatedRequests ->
         {
+            if (activity == null || activity.isFinishing() || activity.isDestroyed()) return;
             requestsAdapter.updateRequests(updatedRequests);
         });
 
@@ -100,6 +104,9 @@ public class ShareListAlertDialog
 
     public void show()
     {
+        if (activity == null || activity.isFinishing() || activity.isDestroyed()) return;
+        if (list == null) return;
+
         tvListName.setText(list.getName());
 
         ad.show();
@@ -107,15 +114,21 @@ public class ShareListAlertDialog
 
     private String createLink()
     {
-        String listId = list.getId();
-        String invitationCode = Base64.encodeToString(listId.getBytes(StandardCharsets.UTF_8), Base64.NO_WRAP);
-        String link = "https://www.baskit.com/joinlist?inviteCode=" + invitationCode;
+        String listId = list != null ? list.getId() : null;
+        if (listId == null) return null;
 
-        return link;
+        String invitationCode = Base64.encodeToString(listId.getBytes(StandardCharsets.UTF_8), Base64.NO_WRAP);
+        return "https://www.baskit.com/joinlist?inviteCode=" + invitationCode;
     }
 
     private void copyLink(String link)
     {
+        if (link == null)
+        {
+            Toast.makeText(activity, "Cannot create invite link", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         ClipboardManager clipboard = (ClipboardManager) activity.getSystemService(CLIPBOARD_SERVICE);
         ClipData clip = ClipData.newPlainText("List Invite", link);
         clipboard.setPrimaryClip(clip);

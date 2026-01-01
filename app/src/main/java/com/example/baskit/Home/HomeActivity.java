@@ -1,11 +1,8 @@
 package com.example.baskit.Home;
 
-import static com.example.baskit.Firebase.FBRefs.refUsers;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Base64;
 import android.util.Log;
@@ -22,8 +19,6 @@ import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -33,24 +28,16 @@ import com.example.baskit.Firebase.FirebaseDBHandler;
 import com.example.baskit.Login.LoginActivity;
 import com.example.baskit.MainComponents.List;
 import com.example.baskit.List.ListActivity;
-import com.example.baskit.MainComponents.Request;
 import com.example.baskit.MainComponents.User;
 import com.example.baskit.MasterActivity;
 import com.example.baskit.R;
 import com.google.android.material.button.MaterialButton;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-
-import okhttp3.MediaType;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
 public class HomeActivity extends MasterActivity
 {
@@ -82,21 +69,25 @@ public class HomeActivity extends MasterActivity
                             {
                                 user = authHandler.getUser();
 
-                                new Thread(() -> {
-                                    try {
+                                runWhenServerActive(() ->
+                                {
+                                    try
+                                    {
                                         APIHandler.getInstance().preload();
-                                    } catch (JSONException e) {
-                                        throw new RuntimeException(e);
-                                    } catch (IOException e) {
-                                        throw new RuntimeException(e);
                                     }
-                                    runOnUiThread(() -> {
+                                    catch (JSONException | IOException e)
+                                    {
+                                        Log.e("HomeActivity", "Preload failed", e);
+                                    }
+
+                                    runOnUiThread(() ->
+                                    {
                                         setContentView(R.layout.activity_home);
                                         init();
                                     });
-                                }).start();
+                                });
 
-                                sendJoinRequest(inviteCode);
+                                runIfOnline(() -> sendJoinRequest(inviteCode));
                             }
                         }
                     }
@@ -119,48 +110,46 @@ public class HomeActivity extends MasterActivity
     {
         super.onCreate(savedInstanceState);
 
-        runIfOnline(() ->
+        authHandler = FirebaseAuthHandler.getInstance();
+        Intent intent = getIntent();
+        Uri data = intent.getData();
+
+        if (data != null)
         {
-            authHandler = FirebaseAuthHandler.getInstance();
-            Intent intent = getIntent();
-            Uri data = intent.getData();
+            String scheme = data.getScheme();
+            String host = data.getHost();
+            String path = data.getPath();
+            inviteCode = data.getQueryParameter("inviteCode");
 
-            if (data != null)
+            if ("https".equals(scheme) && "www.baskit.com".equals(host) && "/joinlist".equals(path) && inviteCode != null)
             {
-                String scheme = data.getScheme();
-                String host = data.getHost();
-                String path = data.getPath();
-                inviteCode = data.getQueryParameter("inviteCode");
+                Intent loginIntent = new Intent(this, LoginActivity.class);
+                loginIntent.putExtra("fromLink", true);
+                loginLauncher.launch(loginIntent);
+            }
+        }
+        else
+        {
+            user = authHandler.getUser();
 
-                if ("https".equals(scheme) && "www.baskit.com".equals(host) && "/joinlist".equals(path) && inviteCode != null)
+            runWhenServerActive(() ->
+            {
+                try
                 {
-                    Intent loginIntent = new Intent(this, LoginActivity.class);
-                    loginIntent.putExtra("fromLink", true);
-                    loginLauncher.launch(loginIntent);
+                    APIHandler.getInstance().preload();
                 }
-            }
-            else
-            {
-                user = authHandler.getUser();
-
-                new Thread(() ->
+                catch (JSONException | IOException e)
                 {
-                    try {
-                        APIHandler.getInstance().preload();
-                    } catch (JSONException e) {
-                        throw new RuntimeException(e);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
+                    Log.e("HomeActivity", "Preload failed", e);
+                }
 
-                    runOnUiThread(() ->
-                    {
-                        setContentView(R.layout.activity_home);
-                        init();
-                    });
-                }).start();
-            }
-        });
+                runOnUiThread(() ->
+                {
+                    setContentView(R.layout.activity_home);
+                    init();
+                });
+            });
+        }
     }
 
     private void sendJoinRequest(String invitationCode)
@@ -185,7 +174,8 @@ public class HomeActivity extends MasterActivity
         btnCreateList = findViewById(R.id.btn_create_list);
         tvTitle = findViewById(R.id.tv_title);
 
-        if (user != null) {
+        if (user != null)
+        {
             tvTitle.setText("היי " + user.getName());
         }
         else
@@ -206,19 +196,21 @@ public class HomeActivity extends MasterActivity
         });
 
         createListAlertDialog();
+        setButtons();
 
         listsRecycler = findViewById(R.id.lists_grid);
 
-        dbHandler.getListNames(user, new FirebaseDBHandler.GetListNamesCallback()
+        runIfOnline(() ->
         {
-            @Override
-            public void onNamesFetched(ArrayList<String> listNames)
+            dbHandler.getListNames(user, new FirebaseDBHandler.GetListNamesCallback()
             {
-                setListsRecycler(listNames);
-            }
+                @Override
+                public void onNamesFetched(ArrayList<String> listNames)
+                {
+                    setListsRecycler(listNames);
+                }
+            });
         });
-
-        setButtons();
     }
 
     private void setButtons()
@@ -262,17 +254,24 @@ public class HomeActivity extends MasterActivity
             {
                 String listId = user.getListIDs().get(position);
 
-                dbHandler.getList(listId, new FirebaseDBHandler.GetListCallback()
+                runIfOnline(() ->
                 {
-                    @Override
-                    public void onListFetched(List newList)
+                    dbHandler.getList(listId, new FirebaseDBHandler.GetListCallback()
                     {
-                        dbHandler.removeList(newList);
-                        user.removeList(listId);
-                    }
+                        @Override
+                        public void onListFetched(List newList)
+                        {
+                            runIfOnline(() ->
+                            {
+                                dbHandler.removeList(newList);
+                            });
 
-                    @Override
-                    public void onError(String error) {}
+                            user.removeList(listId);
+                        }
+
+                        @Override
+                        public void onError(String error) {}
+                    });
                 });
             }
         });
@@ -309,8 +308,13 @@ public class HomeActivity extends MasterActivity
 
         adBtnCreate.setOnClickListener(v ->
         {
-            createList(adEtName.getText().toString());
-            adCreateList.dismiss();
+            adBtnCreate.setActivated(false);
+
+            runIfOnline(() ->
+            {
+                createList(adEtName.getText().toString());
+                adCreateList.dismiss();
+            });
         });
     }
 

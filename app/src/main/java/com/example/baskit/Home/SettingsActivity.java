@@ -2,6 +2,7 @@ package com.example.baskit.Home;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -59,7 +60,8 @@ public class SettingsActivity extends MasterActivity
         btnAddCity = findViewById(R.id.btn_add_city);
         btnRemoveCity = findViewById(R.id.btn_remove_city);
 
-        new Thread(() -> {
+        runWhenServerActive(() ->
+        {
             try
             {
                 choices = apiHandler.getChoices();
@@ -85,8 +87,12 @@ public class SettingsActivity extends MasterActivity
                     recyclerCities.setHasFixedSize(false);
                     recyclerCities.setAdapter(citiesAdapter);
                 });
-            } catch (IOException | JSONException ignored) {}
-        }).start();
+            }
+            catch (IOException | JSONException e)
+            {
+                Log.e("SettingsActivity", "Failed to load settings data", e);
+            }
+        });
 
         setButtons();
     }
@@ -160,23 +166,26 @@ public class SettingsActivity extends MasterActivity
                     return;
                 }
 
-                authHandler.removeSupermarketSection(new Supermarket(supermarketName, sectionName), () ->
+                runIfOnline(() ->
                 {
-                    runOnUiThread(() ->
+                    authHandler.removeSupermarketSection(new Supermarket(supermarketName, sectionName), () ->
                     {
-                        ArrayList<String> sections = choices.get(supermarketName);
-                        if (sections != null)
+                        runOnUiThread(() ->
                         {
-                            sections.remove(sectionName);
-
-                            if (sections.isEmpty())
+                            ArrayList<String> sections = choices.get(supermarketName);
+                            if (sections != null)
                             {
-                                choices.remove(supermarketName);
-                            }
+                                sections.remove(sectionName);
 
-                            supermarketsAdapter.updateData(choices);
-                            supermarketsAdapter.notifyDataSetChanged();
-                        }
+                                if (sections.isEmpty())
+                                {
+                                    choices.remove(supermarketName);
+                                }
+
+                                supermarketsAdapter.updateData(choices);
+                                supermarketsAdapter.notifyDataSetChanged();
+                            }
+                        });
                     });
                 });
             }

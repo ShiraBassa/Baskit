@@ -1,4 +1,6 @@
 package com.example.baskit.List;
+import android.util.Log;
+import com.example.baskit.MasterActivity;
 
 import android.app.Activity;
 import android.content.Context;
@@ -360,7 +362,7 @@ public class AddItemFragment extends DialogFragment
             {
                 startProgressBar();
                 addItemInterface.addItem(selectedItem);
-                dismiss();
+                // Caller will dismiss/end progress when finished
             }
             else
             {
@@ -394,56 +396,73 @@ public class AddItemFragment extends DialogFragment
 
     private void loadSupermarketPrices()
     {
-        new Thread(() ->
+        if (selectedItem == null || isBadItemName(selectedItem.getName())) return;
+        if (activity == null) return;
+
+        final String itemName = selectedItem.getName();
+
+        Baskit.notActivityRunWhenServerActive(() ->
         {
             Map<String, Map<String, Double>> data = null;
 
             try
             {
-                data = apiHandler.getItemPricesByName(selectedItem.getName());
+                data = apiHandler.getItemPricesByName(itemName);
             }
-            catch (IOException | JSONException ignored) {}
+            catch (IOException | JSONException e)
+            {
+                Log.e("AddItemFragment", "Failed to load item prices", e);
+            }
 
             Map<String, Map<String, Double>> finalData = data;
 
-            pricesAdapter = new ItemViewPricesAdapter(context, finalData, null, new ItemViewPricesAdapter.OnSupermarketClickListener()
-            {
-                @Override
-                public void onSupermarketClick(Supermarket supermarket)
-                {
-                    if (supermarket == null || supermarket.getSupermarket() == null)
-                    {
-                        selectedItem.setSupermarket(null);
-                        selectedItem.setPrice(0);
-                    }
-                    else
-                    {
-                        selectedItem.setSupermarket(supermarket);
-
-                        Map<String, Double> sectionPrices = finalData.get(supermarket.getSupermarket());
-
-                        if (sectionPrices != null)
-                        {
-                            Double price = sectionPrices.get(supermarket.getSection());
-                            selectedItem.setPrice(price != null ? price : 0);
-                        }
-                        else
-                        {
-                            selectedItem.setPrice(0);
-                        }
-                    }
-                }
-            });
+            if (activity == null) return;
 
             activity.runOnUiThread(() ->
             {
-                new Handler(Looper.getMainLooper()).post(() ->
-                {
-                    recyclerSupermarkets.setLayoutManager(new LinearLayoutManager(context));
-                    recyclerSupermarkets.setAdapter(pricesAdapter);
-                });
+                // Fragment might be detached by the time we return
+                if (!isAdded() || fragmentView == null) return;
+
+                pricesAdapter = new ItemViewPricesAdapter(context, finalData, null,
+                        new ItemViewPricesAdapter.OnSupermarketClickListener()
+                        {
+                            @Override
+                            public void onSupermarketClick(Supermarket supermarket)
+                            {
+                                if (selectedItem == null) return;
+
+                                if (supermarket == null || supermarket.getSupermarket() == null)
+                                {
+                                    selectedItem.setSupermarket(null);
+                                    selectedItem.setPrice(0);
+                                    return;
+                                }
+
+                                selectedItem.setSupermarket(supermarket);
+
+                                if (finalData == null) {
+                                    selectedItem.setPrice(0);
+                                    return;
+                                }
+
+                                Map<String, Double> sectionPrices = finalData.get(supermarket.getSupermarket());
+
+                                if (sectionPrices != null)
+                                {
+                                    Double price = sectionPrices.get(supermarket.getSection());
+                                    selectedItem.setPrice(price != null ? price : 0);
+                                }
+                                else
+                                {
+                                    selectedItem.setPrice(0);
+                                }
+                            }
+                        });
+
+                recyclerSupermarkets.setLayoutManager(new LinearLayoutManager(context));
+                recyclerSupermarkets.setAdapter(pricesAdapter);
             });
-        }).start();
+        }, activity);
     }
 
     public void startProgressBar()
@@ -470,5 +489,14 @@ public class AddItemFragment extends DialogFragment
     {
         listItemNames = newListItemNames;
         init();
+    }
+
+    @Override
+    public void onDestroyView()
+    {
+        super.onDestroyView();
+        fragmentView = null;
+        recyclerSupermarkets = null;
+        pricesAdapter = null;
     }
 }

@@ -1,6 +1,7 @@
 package com.example.baskit.Categories;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -23,9 +24,6 @@ import com.example.baskit.MasterActivity;
 import com.example.baskit.R;
 import com.google.android.material.snackbar.Snackbar;
 
-import org.json.JSONException;
-
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -49,23 +47,40 @@ public class CategoryActivity extends MasterActivity
     boolean initialized = true;
     private RecyclerView recyclerItems;
     private CategoryItemsAdapter itemsAdapter;
+    private boolean categoryListenerAttached = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
 
-        runIfOnline(() ->
-        {
-            setContentView(R.layout.activity_category);
+        setContentView(R.layout.activity_category);
 
-            new Thread(() ->
+        String listId = getIntent().getStringExtra("listId");
+        String categoryName = getIntent().getStringExtra("categoryName");
+
+        if (listId == null || categoryName == null)
+        {
+            Toast.makeText(this, "Missing list/category", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
+        runWhenServerActive(() ->
+        {
+            try
             {
                 allItems = apiHandler.getItems();
                 itemsCodeNames = apiHandler.getItemsCodeName();
+            }
+            catch (Exception e)
+            {
+                Log.e("CategoryActivity", "Failed to load catalogs", e);
+                allItems = null;
+                itemsCodeNames = null;
+            }
 
-                runOnUiThread(this::init);
-            }).start();
+            runOnUiThread(this::init);
         });
     }
 
@@ -74,7 +89,7 @@ public class CategoryActivity extends MasterActivity
     {
         super.onResume();
 
-        if (!initialized)
+        if (!initialized && tvTotal != null && category != null)
         {
             tvTotal.setText(Baskit.getTotalDisplayString(category.getTotal(), category.allPricesKnown(), true, false));
         }
@@ -90,119 +105,194 @@ public class CategoryActivity extends MasterActivity
         tvTotal = findViewById(R.id.tv_total);
         btnCheapest = findViewById(R.id.btn_arrange_cheapest);
 
-        dbHandler.getList(getIntent().getStringExtra("listId"), new FirebaseDBHandler.GetListCallback()
+        final String listId = getIntent().getStringExtra("listId");
+        final String categoryName = getIntent().getStringExtra("categoryName");
+
+        runIfOnline(() ->
         {
-            @Override
-            public void onListFetched(List newList) throws JSONException, IOException
+            dbHandler.getList(listId, new FirebaseDBHandler.GetListCallback()
             {
-                CategoryActivity.this.list = newList;
-
-                categories = CategoryActivity.this.list.getCategories();
-                category = newList.getCategory(getIntent().getStringExtra("categoryName"));
-
-                tvListName.setText(newList.getName());
-                tvCategoryName.setText(category.getName());
-                tvListName.setVisibility(View.VISIBLE);
-                tvCategoryName.setVisibility(View.VISIBLE);
-
-                setButtons();
-
-                addItemFragment = new AddItemFragment(CategoryActivity.this,
-                        CategoryActivity.this,
-                        new ArrayList<>(itemsCodeNames.values()),
-                        list.toItemNames(),
-                        CategoryActivity.this::addItem);
-                recyclerItems = findViewById(R.id.recycler_category_items);
-
-                ArrayList<Supermarket> supermarkets = apiHandler.getSupermarkets();
-                itemsAdapter = new CategoryItemsAdapter(
-                        category,
-                        CategoryActivity.this,
-                        CategoryActivity.this,
-                        new ItemsAdapter.UpperClassFunctions()
-                        {
-                            @Override
-                            public void updateItemCategory(Item item)
-                            {
-                                if (category == null) return;
-                                dbHandler.updateItem(list, category, item);
-                            }
-
-                            @Override
-                            public void removeItemCategory(Item item)
-                            {
-                                if (category == null) return;
-                                dbHandler.removeItem(list, category, item);
-                            }
-
-                            @Override
-                            public void updateCategory()
-                            {
-                                if (category == null) return;
-                                dbHandler.updateItems(list, new ArrayList<>(category.getItems().values()));
-                            }
-
-                            @Override
-                            public void removeCategory()
-                            {
-                                dbHandler.removeCategory(list, category);
-                                finish();
-                            }
-                        },
-                        supermarkets,
-                        apiHandler.getItems()
-                );
-
-                recyclerItems.setLayoutManager(new LinearLayoutManager(CategoryActivity.this));
-                recyclerItems.setAdapter(itemsAdapter);
-
-                dbHandler.listenToCategory(list, category, new FirebaseDBHandler.GetCategoryCallback()
+                @Override
+                public void onListFetched(List newList)
                 {
-                    @Override
-                    public void onCategoryFetched(Category newCategory)
+                    CategoryActivity.this.list = newList;
+
+                    if (newList == null)
                     {
-                        category = newCategory;
-                        list.updateCategory(category);
+                        Toast.makeText(CategoryActivity.this, "List not found", Toast.LENGTH_SHORT).show();
+                        finish();
+                        return;
+                    }
 
-                        if (category.getItems().isEmpty())
+                    categories = newList.getCategories();
+                    category = newList.getCategory(categoryName);
+
+                    if (category == null)
+                    {
+                        Toast.makeText(CategoryActivity.this, "Category not found", Toast.LENGTH_SHORT).show();
+                        finish();
+                        return;
+                    }
+
+                    tvListName.setText(newList.getName());
+                    tvCategoryName.setText(category.getName());
+                    tvListName.setVisibility(View.VISIBLE);
+                    tvCategoryName.setVisibility(View.VISIBLE);
+
+                    setButtons();
+
+                    if (itemsCodeNames != null && itemsCodeNames.values() != null)
+                    {
+                        addItemFragment = new AddItemFragment(CategoryActivity.this,
+                                CategoryActivity.this,
+                                new ArrayList<>(itemsCodeNames.values()),
+                                list.toItemNames(),
+                                CategoryActivity.this::addItem);
+                        btnAddItem.setEnabled(true);
+                    }
+                    else
+                    {
+                        addItemFragment = null;
+                        btnAddItem.setEnabled(false);
+                    }
+
+                    recyclerItems = findViewById(R.id.recycler_category_items);
+                    recyclerItems.setLayoutManager(new LinearLayoutManager(CategoryActivity.this));
+
+                    runWhenServerActive(() ->
+                    {
+                        ArrayList<Supermarket> supermarkets;
+                        Map<String, Map<String, Map<String, Double>>> itemsCatalog;
+
+                        try
                         {
-                            finish();
-                            return;
+                            supermarkets = apiHandler.getSupermarkets();
+                        }
+                        catch (Exception e)
+                        {
+                            Log.e("CategoryActivity", "Failed to load supermarkets", e);
+                            supermarkets = new ArrayList<>();
                         }
 
-                        tvTotal.setText(Baskit.getTotalDisplayString(category.getTotal(), category.allPricesKnown(), true, false));
-                        tvTotal.setVisibility(View.VISIBLE);
+                        itemsCatalog = allItems;
 
-                        if (initialized)
+                        ArrayList<Supermarket> finalSupermarkets = supermarkets;
+                        Map<String, Map<String, Map<String, Double>>> finalItemsCatalog = itemsCatalog;
+
+                        runOnUiThread(() ->
                         {
-                            initialized = false;
-                            return;
-                        }
+                            itemsAdapter = new CategoryItemsAdapter(
+                                    category,
+                                    CategoryActivity.this,
+                                    CategoryActivity.this,
+                                    new ItemsAdapter.UpperClassFunctions()
+                                    {
+                                        @Override
+                                        public void updateItemCategory(Item item)
+                                        {
+                                            if (category == null) return;
+                                            runIfOnline(() -> dbHandler.updateItem(list, category, item));
+                                        }
 
-                        runOnUiThread(() -> {
-                            itemsAdapter.updateItems(new ArrayList<>(category.getItems().values()));
+                                        @Override
+                                        public void removeItemCategory(Item item)
+                                        {
+                                            if (category == null) return;
+                                            runIfOnline(() -> dbHandler.removeItem(list, category, item));
+                                        }
+
+                                        @Override
+                                        public void updateCategory()
+                                        {
+                                            if (category == null) return;
+                                            runIfOnline(() -> dbHandler.updateItems(list, new ArrayList<>(category.getItems().values())));
+                                        }
+
+                                        @Override
+                                        public void removeCategory()
+                                        {
+                                            runIfOnline(() ->
+                                            {
+                                                dbHandler.removeCategory(list, category);
+                                                finish();
+                                            });
+                                        }
+                                    },
+                                    finalSupermarkets,
+                                    finalItemsCatalog
+                            );
+
+                            recyclerItems.setAdapter(itemsAdapter);
                         });
+                    });
 
-                        addItemFragment.updateData(list.toItemNames());
-                    }
-
-                    @Override
-                    public void onError(String error)
+                    // Attach category listener once
+                    if (!categoryListenerAttached)
                     {
-                        initialized = false;
-                    }
-                });
-            }
+                        categoryListenerAttached = true;
 
-            @Override
-            public void onError(String error)
-            {
-                initialized = false;
-            }
+                        runIfOnline(() ->
+                        {
+                            dbHandler.listenToCategory(list, category, new FirebaseDBHandler.GetCategoryCallback()
+                            {
+                                @Override
+                                public void onCategoryFetched(Category newCategory)
+                                {
+                                    if (newCategory == null) return;
+
+                                    category = newCategory;
+                                    list.updateCategory(category);
+
+                                    if (category.getItems() == null || category.getItems().isEmpty())
+                                    {
+                                        finish();
+                                        return;
+                                    }
+
+                                    if (tvTotal != null)
+                                    {
+                                        tvTotal.setText(Baskit.getTotalDisplayString(category.getTotal(), category.allPricesKnown(), true, false));
+                                        tvTotal.setVisibility(View.VISIBLE);
+                                    }
+
+                                    if (initialized)
+                                    {
+                                        initialized = false;
+                                        return;
+                                    }
+
+                                    runOnUiThread(() ->
+                                    {
+                                        if (itemsAdapter != null)
+                                        {
+                                            itemsAdapter.updateItems(new ArrayList<>(category.getItems().values()));
+                                        }
+                                    });
+
+                                    if (addItemFragment != null)
+                                    {
+                                        addItemFragment.updateData(list.toItemNames());
+                                    }
+                                }
+
+                                @Override
+                                public void onError(String error)
+                                {
+                                    initialized = false;
+                                }
+                            });
+                        });
+                    }
+                }
+
+                @Override
+                public void onError(String error)
+                {
+                    initialized = false;
+                }
+            });
         });
     }
-
-
 
     @Override
     public boolean onOptionsItemSelected(android.view.MenuItem item) {
@@ -220,7 +310,7 @@ public class CategoryActivity extends MasterActivity
             @Override
             public void onClick(View view)
             {
-                dbHandler.finishCategory(list, category);
+                runIfOnline(() -> dbHandler.finishCategory(list, category));
             }
         });
 
@@ -238,7 +328,14 @@ public class CategoryActivity extends MasterActivity
             @Override
             public void onClick(View view)
             {
-                addItemFragment.show(getSupportFragmentManager(), "AddItemFragment");
+                if (addItemFragment != null)
+                {
+                    addItemFragment.show(getSupportFragmentManager(), "AddItemFragment");
+                }
+                else
+                {
+                    Toast.makeText(CategoryActivity.this, "Still loading…", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
@@ -247,64 +344,90 @@ public class CategoryActivity extends MasterActivity
             @Override
             public void onClick(View view)
             {
-                itemsAdapter.arrangeByCheapest();
+                if (itemsAdapter != null)
+                {
+                    itemsAdapter.arrangeByCheapest();
+                }
             }
         });
     }
 
     public void addItem(Item item)
     {
-        addItemFragment.startProgressBar();
+        if (addItemFragment != null)
+        {
+            addItemFragment.startProgressBar();
+        }
+
+        if (itemsCodeNames == null)
+        {
+            Toast.makeText(this, "Items are still loading…", Toast.LENGTH_SHORT).show();
+            if (addItemFragment != null) addItemFragment.endProgressBar();
+            return;
+        }
+
         item.updateId(getKeyByValue(itemsCodeNames, item.getName()));
 
-        aiHandler.getCategoryName(item, CategoryActivity.this, categoryName ->
+        runIfOnline(() ->
         {
-            if (!list.hasCategory(categoryName))
+            aiHandler.getCategoryName(item, CategoryActivity.this, categoryName ->
             {
-                dbHandler.addCategory(list, new Category(categoryName));
-            }
-
-            dbHandler.addItem(list, categoryName, item, new FirebaseDBHandler.DBCallback()
-            {
-                @Override
-                public void onComplete()
+                if (!list.hasCategory(categoryName))
                 {
-                    runOnUiThread(() ->
+                    runIfOnline(() -> dbHandler.addCategory(list, new Category(categoryName)));
+                }
+
+                runIfOnline(() ->
+                {
+                    dbHandler.addItem(list, categoryName, item, new FirebaseDBHandler.DBCallback()
                     {
-                        addItemFragment.endProgressBar();
-                        addItemFragment.dismiss();
-
-                        if (!categoryName.equals(category.getName()))
+                        @Override
+                        public void onComplete()
                         {
-                            Snackbar snackbar = Snackbar.make(
-                                    findViewById(android.R.id.content),
-                                    "הפריט נוסף לקטגוריה: " + categoryName,
-                                    Snackbar.LENGTH_LONG
-                            );
-
-                            snackbar.getView().setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
-
-                            snackbar.setAction("בטל", v ->
+                            runOnUiThread(() ->
                             {
-                                new Thread(() -> dbHandler.removeItem(list, categoryName, item)).start();
-                            });
+                                if (addItemFragment != null)
+                                {
+                                    addItemFragment.endProgressBar();
+                                    addItemFragment.dismiss();
+                                }
 
-                            snackbar.setAnchorView(btnAddItem);
-                            snackbar.show();
+                                if (!categoryName.equals(category.getName()))
+                                {
+                                    Snackbar snackbar = Snackbar.make(
+                                            findViewById(android.R.id.content),
+                                            "הפריט נוסף לקטגוריה: " + categoryName,
+                                            Snackbar.LENGTH_LONG
+                                    );
+
+                                    snackbar.getView().setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+
+                                    snackbar.setAction("בטל", v ->
+                                    {
+                                        runIfOnline(() -> dbHandler.removeItem(list, categoryName, item));
+                                    });
+
+                                    snackbar.setAnchorView(btnAddItem);
+                                    snackbar.show();
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void onFailure(Exception e)
+                        {
+                            runOnUiThread(() ->
+                            {
+                                if (addItemFragment != null)
+                                {
+                                    addItemFragment.endProgressBar();
+                                    addItemFragment.dismiss();
+                                }
+                                Toast.makeText(CategoryActivity.this, "שגיאה בניסיון להוסיף את הפריט", Toast.LENGTH_SHORT).show();
+                            });
                         }
                     });
-                }
-
-                @Override
-                public void onFailure(Exception e)
-                {
-                    runOnUiThread(() ->
-                    {
-                        addItemFragment.endProgressBar();
-                        addItemFragment.dismiss();
-                        Toast.makeText(CategoryActivity.this, "שגיאה בניסיון להוסיף את הפריט", Toast.LENGTH_SHORT).show();
-                    });
-                }
+                });
             });
         });
     }

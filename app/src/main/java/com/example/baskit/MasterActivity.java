@@ -6,6 +6,9 @@ import android.os.Handler;
 import android.os.Looper;
 import android.view.MotionEvent;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -20,10 +23,35 @@ public abstract class MasterActivity extends AppCompatActivity
     private AlertDialog offlineDialog;
     private AlertDialog serverDownDialog;
 
+    private void showOfflineDialog()
+    {
+        if (isFinishing() || isDestroyed()) return;
+
+        if (offlineDialog == null || !offlineDialog.isShowing())
+        {
+            offlineDialog = new AlertDialog.Builder(this)
+                    .setTitle("No Internet Connection")
+                    .setMessage("Please connect to Wi‑Fi or mobile data to use the app.")
+                    .setCancelable(false)
+                    .create();
+            offlineDialog.show();
+        }
+    }
+
+    private void dismissOfflineDialog()
+    {
+        if (offlineDialog != null && offlineDialog.isShowing())
+        {
+            offlineDialog.dismiss();
+        }
+        offlineDialog = null;
+    }
+
     private Runnable pendingAction;
     private Runnable pendingServerAction;
 
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private final ExecutorService bg = Executors.newSingleThreadExecutor();
     private Runnable serverRetryRunnable;
     private boolean serverCheckRunning = false;
 
@@ -38,26 +66,16 @@ public abstract class MasterActivity extends AppCompatActivity
 
             if (!isOnline)
             {
-                if (offlineDialog == null || !offlineDialog.isShowing())
-                {
-                    offlineDialog = new AlertDialog.Builder(this)
-                            .setTitle("No Internet Connection")
-                            .setMessage("Please connect to Wi‑Fi or mobile data to use the app.")
-                            .setCancelable(false)
-                            .create();
-                    offlineDialog.show();
-                }
+                showOfflineDialog();
 
                 stopServerPolling();
                 dismissServerDownDialog();
             }
             else
             {
-                if (offlineDialog != null && offlineDialog.isShowing())
-                {
-                    offlineDialog.dismiss();
-                    offlineDialog = null;
-                }
+                dismissOfflineDialog();
+
+                if (isFinishing() || isDestroyed()) return;
 
                 if (pendingAction != null)
                 {
@@ -83,12 +101,30 @@ public abstract class MasterActivity extends AppCompatActivity
         }
     }
 
+    @Override
+    protected void onStop()
+    {
+        super.onStop();
+        stopServerPolling();
+    }
+
+    @Override
+    protected void onStart()
+    {
+        super.onStart();
+
+        if (pendingServerAction != null && !serverCheckRunning && canUseApp())
+        {
+            startServerPolling(pendingServerAction);
+        }
+    }
+
     protected boolean canUseApp()
     {
         return Baskit.isOnlineNow(getApplicationContext());
     }
 
-    protected void runIfOnline(Runnable action)
+    public void runIfOnline(Runnable action)
     {
         if (action == null) return;
 
@@ -102,7 +138,7 @@ public abstract class MasterActivity extends AppCompatActivity
         }
     }
 
-    protected void runWhenServerActive(Runnable action)
+    public void runWhenServerActive(Runnable action)
     {
         if (action == null) return;
 
@@ -160,7 +196,14 @@ public abstract class MasterActivity extends AppCompatActivity
 
                             if (toRun != null)
                             {
-                                toRun.run();
+                                bg.execute(() ->
+                                {
+                                    try
+                                    {
+                                        toRun.run();
+                                    }
+                                    catch (Exception ignored) {}
+                                });
                             }
                         }
                         else
@@ -190,6 +233,8 @@ public abstract class MasterActivity extends AppCompatActivity
 
     private void showServerDownDialog()
     {
+        if (isFinishing() || isDestroyed()) return;
+
         if (serverDownDialog != null && serverDownDialog.isShowing()) return;
 
         serverDownDialog = new AlertDialog.Builder(this)
@@ -218,12 +263,8 @@ public abstract class MasterActivity extends AppCompatActivity
         stopServerPolling();
         dismissServerDownDialog();
 
-        if (offlineDialog != null && offlineDialog.isShowing())
-        {
-            offlineDialog.dismiss();
-        }
-
-        offlineDialog = null;
+        dismissOfflineDialog();
+        bg.shutdownNow();
     }
 
     private int edgePx() {

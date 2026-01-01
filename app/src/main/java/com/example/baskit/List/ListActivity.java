@@ -7,6 +7,7 @@ import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -14,8 +15,6 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import androidx.core.content.ContextCompat;
 
 import com.example.baskit.AI.AIHandler;
 import com.example.baskit.API.APIHandler;
@@ -56,6 +55,8 @@ public class ListActivity extends MasterActivity
     Map<String, String> itemsCodeNames;
     private boolean itemsLoaded = false;
     private boolean initialized = true;
+    private boolean listListenerAttached = false;
+    private boolean uiInitialized = false;
     ShareListAlertDialog shareAlertDialog;
 
     @Override
@@ -63,16 +64,38 @@ public class ListActivity extends MasterActivity
     {
         super.onCreate(savedInstanceState);
 
-        runIfOnline(() ->
+        setContentView(R.layout.activity_list);
+
+        createInit();
+        uiInitialized = true;
+
+        runWhenServerActive(() ->
         {
-            setContentView(R.layout.activity_list);
+            try
+            {
+                allItems = apiHandler.getItems();
+                itemsCodeNames = apiHandler.getItemsCodeName();
+                itemsLoaded = true;
+            }
+            catch (Exception e)
+            {
+                Log.e("ListActivity", "Failed to load items catalogs", e);
+                itemsLoaded = false;
+            }
 
-            allItems = apiHandler.getItems();
-            itemsCodeNames = apiHandler.getItemsCodeName();
+            runOnUiThread(() ->
+            {
+                if (itemsCodeNames != null && itemsCodeNames.values() != null)
+                {
+                    btnAddItem.setEnabled(true);
+                }
+                else
+                {
+                    btnAddItem.setEnabled(false);
+                }
 
-            createInit();
-            itemsLoaded = true;
-            resumeInit();
+                resumeInit();
+            });
         });
     }
 
@@ -81,15 +104,16 @@ public class ListActivity extends MasterActivity
     {
         super.onResume();
 
-        if (itemsLoaded)
+        // Only attach if we never attached before.
+        if (itemsLoaded && uiInitialized && !listListenerAttached)
         {
-            resumeInit();  // only run if the background thread has completed
+            resumeInit();
+        }
 
-            if (!initialized)
-            {
-                tvTotal.setText(Baskit.getTotalDisplayString(list.getTotal(), list.allPricesKnown(), true, true));
-                tvTotal.setVisibility(View.VISIBLE);
-            }
+        if (!initialized && tvTotal != null && list != null)
+        {
+            tvTotal.setText(Baskit.getTotalDisplayString(list.getTotal(), list.allPricesKnown(), true, true));
+            tvTotal.setVisibility(View.VISIBLE);
         }
     }
 
@@ -107,6 +131,13 @@ public class ListActivity extends MasterActivity
 
         listId = getIntent().getStringExtra("listId");
 
+        if (listId == null)
+        {
+            Toast.makeText(this, "Missing list id", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
         categoriesListContainer = findViewById(R.id.categories_container);
         categoriesListInflater = LayoutInflater.from(this);
 
@@ -115,88 +146,119 @@ public class ListActivity extends MasterActivity
 
     private void resumeInit()
     {
-        dbHandler.getList(listId, new FirebaseDBHandler.GetListCallback()
+        if (listId == null) return;
+
+        runIfOnline(() ->
         {
-            @Override
-            public void onListFetched(List newList)
+            dbHandler.getList(listId, new FirebaseDBHandler.GetListCallback()
             {
-                ListActivity.this.list = newList;
-
-                if (newList == null)
+                @Override
+                public void onListFetched(List newList)
                 {
-                    ListActivity.this.list = new List();
-                    categoriesListContainer.removeAllViews();
-                    return;
-                }
+                    ListActivity.this.list = newList;
 
-                tvListName.setText(ListActivity.this.list.getName());
-                tvListName.setVisibility(View.VISIBLE);
-                tvTotal.setText(Baskit.getTotalDisplayString(list.getTotal(), list.allPricesKnown(), true, true));
-                tvTotal.setVisibility(View.VISIBLE);
-
-               if (itemsCodeNames != null && itemsCodeNames.values() != null)
-                {
-                    addItemFragment = new AddItemFragment(ListActivity.this,
-                            ListActivity.this,
-                            new ArrayList<>(itemsCodeNames.values()),
-                            list.toItemNames(),
-                            ListActivity.this::addItem);
-                    btnAddItem.setEnabled(true);
-                }
-                else
-                {
-                    btnAddItem.setEnabled(false);
-                }
-
-                categories = ListActivity.this.list.getCategories();
-
-                if (categories == null)
-                {
-                    categories = new HashMap<>();
-                }
-
-                shareAlertDialog = new ShareListAlertDialog(list, ListActivity.this, ListActivity.this);
-
-                setCategoriesInflater();
-
-                dbHandler.listenToList(listId, new FirebaseDBHandler.GetListCallback()
-                {
-                    @Override
-                    public void onListFetched(List newList)
+                    if (newList == null)
                     {
-                        if (!list.getName().equals(newList.getName()))
-                        {
-                            tvListName.setText(newList.getName());
-                        }
+                        ListActivity.this.list = new List();
+                        categoriesListContainer.removeAllViews();
+                        return;
+                    }
 
-                        if (!list.getCategories().equals(newList.getCategories()))
-                        {
-                            Map<String, Category> newCategories = newList.getCategories();
+                    if (ListActivity.this.list.getId() == null)
+                    {
+                        ListActivity.this.list.setId(listId);
+                    }
 
-                            if (categories != null)
+                    tvListName.setText(ListActivity.this.list.getName());
+                    tvListName.setVisibility(View.VISIBLE);
+                    tvTotal.setText(Baskit.getTotalDisplayString(list.getTotal(), list.allPricesKnown(), true, true));
+                    tvTotal.setVisibility(View.VISIBLE);
+
+                    if (itemsCodeNames != null && itemsCodeNames.values() != null)
+                    {
+                        addItemFragment = new AddItemFragment(ListActivity.this,
+                                ListActivity.this,
+                                new ArrayList<>(itemsCodeNames.values()),
+                                list.toItemNames(),
+                                ListActivity.this::addItem);
+                        btnAddItem.setEnabled(true);
+                    }
+                    else
+                    {
+                        btnAddItem.setEnabled(false);
+                    }
+
+                    categories = ListActivity.this.list.getCategories();
+
+                    if (categories == null)
+                    {
+                        categories = new HashMap<>();
+                    }
+
+                    shareAlertDialog = new ShareListAlertDialog(list, ListActivity.this, ListActivity.this);
+
+                    setCategoriesInflater();
+
+                    if (!listListenerAttached)
+                    {
+                        listListenerAttached = true;
+
+                        dbHandler.listenToList(listId, new FirebaseDBHandler.GetListCallback()
+                        {
+                            @Override
+                            public void onListFetched(List newList)
                             {
-                                updateCategoriesInflater(newCategories);
+                                if (newList == null) return;
+
+                                ListActivity.this.list = newList;
+                                shareAlertDialog = new ShareListAlertDialog(newList, ListActivity.this, ListActivity.this);
+
+                                if (tvListName != null)
+                                {
+                                    tvListName.setText(newList.getName());
+                                    tvListName.setVisibility(View.VISIBLE);
+                                }
+
+                                if (tvTotal != null)
+                                {
+                                    tvTotal.setText(Baskit.getTotalDisplayString(newList.getTotal(), newList.allPricesKnown(), true, true));
+                                    tvTotal.setVisibility(View.VISIBLE);
+                                }
+
+                                Map<String, Category> newCategories = newList.getCategories();
+                                if (newCategories == null) newCategories = new HashMap<>();
+
+                                if (categoriesViews == null)
+                                {
+                                    categories = new HashMap<>(newCategories);
+                                    setCategoriesInflater();
+                                }
+                                else
+                                {
+                                    updateCategoriesInflater(newCategories);
+                                }
+
+                                if (addItemFragment != null)
+                                {
+                                    addItemFragment.updateData(newList.toItemNames());
+                                }
                             }
 
-                            //If needed categories = newCategories
-                        }
-
-                        addItemFragment.updateData(list.toItemNames());
+                            @Override
+                            public void onError(String error)
+                            {
+                                initialized = false;
+                            }
+                        });
                     }
+                }
 
-                    @Override
-                    public void onError(String error)
-                    {
-                        initialized = false;
-                    }
-                });
-            }
-
-            @Override
-            public void onError(String error)
-            {
-                initialized = false;
-            }
+                @Override
+                public void onError(String error)
+                {
+                    initialized = false;
+                }
+            });
         });
     }
 
@@ -216,7 +278,10 @@ public class ListActivity extends MasterActivity
             @Override
             public void onClick(View view)
             {
-                dbHandler.finishList(list);
+                runIfOnline(() ->
+                {
+                    dbHandler.finishList(list);
+                });
             }
         });
 
@@ -240,7 +305,14 @@ public class ListActivity extends MasterActivity
             @Override
             public void onClick(View v)
             {
-                shareAlertDialog.show();
+                if (shareAlertDialog != null)
+                {
+                    shareAlertDialog.show();
+                }
+                else
+                {
+                    Toast.makeText(ListActivity.this, "Still loading…", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
@@ -267,12 +339,12 @@ public class ListActivity extends MasterActivity
 
     private void updateCategoriesInflater(Map<String, Category> newCategories)
     {
-        for (String key : categories.keySet())
+        for (String key : new ArrayList<>(categories.keySet()))
         {
             if (!newCategories.containsKey(key))
             {
                 View toRemove = categoriesViews.get(key);
-                categoriesListContainer.removeView(toRemove);
+                if (toRemove != null) categoriesListContainer.removeView(toRemove);
                 categoriesViews.remove(key);
             }
         }
@@ -375,36 +447,51 @@ public class ListActivity extends MasterActivity
 
     public void addItem(Item item)
     {
+        if (itemsCodeNames == null)
+        {
+            Toast.makeText(this, "Items are still loading…", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         item.updateId(getKeyByValue(itemsCodeNames, item.getName()));
 
-        aiHandler.getCategoryName(item, ListActivity.this, categoryName ->
+        runIfOnline(() ->
         {
-            if (!list.hasCategory(categoryName))
+            aiHandler.getCategoryName(item, ListActivity.this, categoryName ->
             {
-                dbHandler.addCategory(list, new Category(categoryName));
-            }
-
-            dbHandler.addItem(list, categoryName, item, new FirebaseDBHandler.DBCallback() {
-                @Override
-                public void onComplete()
+                if (!list.hasCategory(categoryName))
                 {
-                    runOnUiThread(() ->
+                    runIfOnline(() ->
                     {
-                        addItemFragment.endProgressBar();
-                        addItemFragment.dismiss();
+                        dbHandler.addCategory(list, new Category(categoryName));
                     });
                 }
 
-                @Override
-                public void onFailure(Exception e)
+                runIfOnline(() ->
                 {
-                    runOnUiThread(() ->
-                    {
-                        addItemFragment.endProgressBar();
-                        addItemFragment.dismiss();
-                        Toast.makeText(ListActivity.this, "Failed to add item: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    dbHandler.addItem(list, categoryName, item, new FirebaseDBHandler.DBCallback() {
+                        @Override
+                        public void onComplete()
+                        {
+                            runOnUiThread(() ->
+                            {
+                                addItemFragment.endProgressBar();
+                                addItemFragment.dismiss();
+                            });
+                        }
+
+                        @Override
+                        public void onFailure(Exception e)
+                        {
+                            runOnUiThread(() ->
+                            {
+                                addItemFragment.endProgressBar();
+                                addItemFragment.dismiss();
+                                Toast.makeText(ListActivity.this, "Failed to add item: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            });
+                        }
                     });
-                }
+                });
             });
         });
     }
@@ -423,19 +510,40 @@ public class ListActivity extends MasterActivity
 
     private void setCheapest()
     {
+        if (allItems == null)
+        {
+            Toast.makeText(this, "Prices are still loading…", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (list == null || list.getCategories() == null)
+        {
+            Toast.makeText(this, "List is not ready yet", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         double lowest;
         Supermarket lowestSupermarket;
 
+        if (list == null || list.getCategories() == null) {
+            Toast.makeText(this, "List is not ready yet", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         for (Category category : list.getCategories().values())
         {
+            if (category == null || category.getItems() == null) continue;
+
             for (Item item : category.getItems().values())
             {
+                if (item == null) continue;
                 if (item.isChecked())
                 {
                     continue;
                 }
 
-                Map<String, Map<String, Double>> currItemPrices = allItems.get(item.getAbsoluteId());
+                String absId = item.getAbsoluteId();
+                Map<String, Map<String, Double>> currItemPrices = (absId == null) ? null : allItems.get(absId);
 
                 if (currItemPrices == null || currItemPrices.isEmpty())
                 {
@@ -447,11 +555,14 @@ public class ListActivity extends MasterActivity
                     lowest = Double.MAX_VALUE;
                     lowestSupermarket = null;
 
-                    for (Map.Entry<String, Map<String, Double>> SupermarketEntry : allItems.get(item.getAbsoluteId()).entrySet())
+                    for (Map.Entry<String, Map<String, Double>> SupermarketEntry : currItemPrices.entrySet())
                     {
                         String supermarket = SupermarketEntry.getKey();
 
-                        for (Map.Entry<String, Double> sectionEntry : SupermarketEntry.getValue().entrySet())
+                        Map<String, Double> sectionMap = SupermarketEntry.getValue();
+                        if (sectionMap == null) continue;
+
+                        for (Map.Entry<String, Double> sectionEntry : sectionMap.entrySet())
                         {
                             String section = sectionEntry.getKey();
                             Double price = sectionEntry.getValue();
@@ -470,6 +581,9 @@ public class ListActivity extends MasterActivity
             }
         }
 
-        dbHandler.updateList(list);
+        runIfOnline(() ->
+        {
+            dbHandler.updateList(list);
+        });
     }
 }

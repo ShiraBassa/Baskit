@@ -2,6 +2,7 @@ package com.example.baskit.Home;
 
 import android.app.Activity;
 import android.content.Context;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -12,8 +13,9 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 
 import com.example.baskit.API.APIHandler;
-import com.example.baskit.Firebase.FirebaseAuthHandler;
+import com.example.baskit.Baskit;
 import com.example.baskit.List.CitiesListAdapter;
+import com.example.baskit.MasterActivity;
 import com.example.baskit.R;
 
 import org.json.JSONException;
@@ -29,7 +31,6 @@ public class AddCityAlertDialog
     AlertDialog.Builder adb;
     AlertDialog ad;
     Button btnAdd;
-    FirebaseAuthHandler authHandler;
     Spinner spinnerCities;
     ArrayList<String> all_cities, city_choices, unchosen_cities;
     private final APIHandler apiHandler = APIHandler.getInstance();
@@ -51,8 +52,6 @@ public class AddCityAlertDialog
         unchosen_cities = new ArrayList<>();
         unchosen_cities.addAll(all_cities);
         unchosen_cities.removeAll(city_choices);
-
-        authHandler = FirebaseAuthHandler.getInstance();
 
         adLayout = (LinearLayout) activity.getLayoutInflater()
                 .inflate(R.layout.alert_dialog_add_city, null);
@@ -111,27 +110,25 @@ public class AddCityAlertDialog
 
                 city_choices.add(city);
 
-                new Thread(() ->
+                Baskit.notActivityRunWhenServerActive(() ->
                 {
                     try
                     {
                         apiHandler.setCities(city_choices);
-                    }
-                    catch (IOException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                    catch (JSONException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
 
-                    activity.runOnUiThread(() ->
+                        activity.runOnUiThread(() ->
+                        {
+                            citiesListAdapter.notifyDataSetChanged();
+                            ad.dismiss();
+                        });
+                    }
+                    catch (IOException | JSONException e)
                     {
-                        citiesListAdapter.notifyDataSetChanged();
-                        ad.dismiss();
-                    });
-                }).start();
+                        Log.e("AddCityAlertDialog", "Failed to set cities", e);
+                        activity.runOnUiThread(() ->
+                                Toast.makeText(context, "שגיאה בשמירת הערים", Toast.LENGTH_SHORT).show());
+                    }
+                }, activity);
             }
         });
     }

@@ -3,11 +3,13 @@ package com.example.baskit.List;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -18,6 +20,7 @@ import com.example.baskit.Baskit;
 import com.example.baskit.Categories.ItemsAdapter;
 import com.example.baskit.MainComponents.Item;
 import com.example.baskit.MainComponents.Supermarket;
+import com.example.baskit.MasterActivity;
 import com.example.baskit.R;
 
 import org.json.JSONException;
@@ -61,20 +64,31 @@ public class ItemViewAlertDialog
         recyclerSupermarkets = adLayout.findViewById(R.id.recycler_supermarket);
         adTvItemName = adLayout.findViewById(R.id.tv_item_name);
 
-        new Thread(() ->
+        Baskit.notActivityRunWhenServerActive(() ->
         {
             Map<String, Map<String, Double>> data = null;
 
             try
             {
-                data = apiHandler.getItemPricesByCode(item.getAbsoluteId());
+                String absId = item.getAbsoluteId();
+                if (absId != null)
+                {
+                    data = apiHandler.getItemPricesByCode(absId);
+                }
             }
-            catch (IOException | JSONException ignored) {}
+            catch (IOException | JSONException e)
+            {
+                Log.e("ItemViewAlertDialog", "Failed to load item prices", e);
+            }
 
             Map<String, Map<String, Double>> finalData = data;
 
+            if (activity == null) return;
+
             activity.runOnUiThread(() ->
             {
+                if (activity.isFinishing() || activity.isDestroyed()) return;
+
                 pricesAdapter = new ItemViewPricesAdapter(context, finalData, item.getSupermarket(), new ItemViewPricesAdapter.OnSupermarketClickListener()
                 {
                     @Override
@@ -84,30 +98,40 @@ public class ItemViewAlertDialog
                         {
                             item.setSupermarket(null);
                             item.setPrice(0);
+                            return;
+                        }
+
+                        item.setSupermarket(supermarket);
+
+                        if (finalData == null)
+                        {
+                            item.setPrice(0);
+                            return;
+                        }
+
+                        Map<String, Double> sectionPrices = finalData.get(supermarket.getSupermarket());
+
+                        if (sectionPrices != null)
+                        {
+                            Double price = sectionPrices.get(supermarket.getSection());
+                            item.setPrice(price != null ? price : 0);
                         }
                         else
                         {
-                            item.setSupermarket(supermarket);
-
-                            Map<String, Double> sectionPrices = finalData.get(supermarket.getSupermarket());
-
-                            if (sectionPrices != null)
-                            {
-                                Double price = sectionPrices.get(supermarket.getSection());
-                                item.setPrice(price != null ? price : 0);
-                            }
-                            else
-                            {
-                                item.setPrice(0);
-                            }
+                            item.setPrice(0);
                         }
                     }
                 });
 
                 recyclerSupermarkets.setLayoutManager(new LinearLayoutManager(context));
                 recyclerSupermarkets.setAdapter(pricesAdapter);
+
+                if (finalData == null)
+                {
+                    Toast.makeText(context, "No prices found", Toast.LENGTH_SHORT).show();
+                }
             });
-        }).start();
+        }, activity);
 
         adb = new AlertDialog.Builder(context);
         adb.setView(adLayout);
@@ -156,12 +180,19 @@ public class ItemViewAlertDialog
     {
         this.item = _item.clone();
 
-        if (pricesAdapter != null && item.getSupermarket() != null)
+        if (pricesAdapter != null)
         {
-            pricesAdapter.resetSelection(
-                    item.getSupermarket().getSupermarket(),
-                    item.getSupermarket().getSection()
-            );
+            if (item.getSupermarket() != null)
+            {
+                pricesAdapter.resetSelection(
+                        item.getSupermarket().getSupermarket(),
+                        item.getSupermarket().getSection()
+                );
+            }
+            else
+            {
+                pricesAdapter.resetSelection(null, null);
+            }
         }
 
         adBtnSave.setClickable(true);
