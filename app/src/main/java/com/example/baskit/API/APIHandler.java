@@ -1,5 +1,6 @@
 package com.example.baskit.API;
 
+import android.os.Looper;
 import android.util.Log;
 
 import com.example.baskit.Baskit;
@@ -20,6 +21,8 @@ import java.util.List;
 import java.util.Map;
 
 import okhttp3.*;
+
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 public class APIHandler
@@ -73,47 +76,133 @@ public class APIHandler
         }
     }
 
+    public void loadFromDbOnly()
+    {
+        try
+        {
+            cachedItems = loadItemsFromDB();
+            cachedCodeNames = loadCodeNamesFromDB();
+        }
+        catch (Exception e)
+        {
+            Log.e("APIHandler", "loadFromDbOnly DB load failed", e);
+        }
+
+        if (cachedItems == null) cachedItems = new HashMap<>();
+        if (cachedCodeNames == null) cachedCodeNames = new HashMap<>();
+
+        try
+        {
+            supermarkets = getUpdatedSupermarkets();
+        }
+        catch (Exception e)
+        {
+            Log.e("APIHandler", "loadFromDbOnly supermarkets refresh failed", e);
+            if (supermarkets == null) supermarkets = new ArrayList<>();
+        }
+    }
+
+    public void loadFromDbOnlyBlocking()
+    {
+        boolean onMain = Looper.myLooper() == Looper.getMainLooper();
+
+        if (!onMain)
+        {
+            loadFromDbOnly();
+            return;
+        }
+
+        CountDownLatch latch = new CountDownLatch(1);
+
+        new Thread(() ->
+        {
+            try
+            {
+                loadFromDbOnly();
+            }
+            catch (Exception e)
+            {
+                Log.e("APIHandler", "loadFromDbOnlyBlocking failed", e);
+            }
+            finally
+            {
+                latch.countDown();
+            }
+        }).start();
+
+        try
+        {
+            latch.await();
+        }
+        catch (InterruptedException ignored)
+        {
+            Thread.currentThread().interrupt();
+        }
+    }
+
     public void preload() throws JSONException, IOException
     {
         supermarkets = getUpdatedSupermarkets();
         cachedItems = loadItemsFromDB();
         cachedCodeNames = loadCodeNamesFromDB();
+        if (cachedItems == null) cachedItems = new HashMap<>();
+        if (cachedCodeNames == null) cachedCodeNames = new HashMap<>();
+
+        boolean onMain = Looper.myLooper() == Looper.getMainLooper();
 
         if (cachedItems.isEmpty())
         {
-            try
+            if (onMain)
             {
-                Map<String, Map<String, Map<String, Double>>> freshItems = getItemsFromAPI();
-                Map<String, String> freshCodeNames = getItemsCodeNameFromAPI(new ArrayList<>(freshItems.keySet()));
-
-                updateCache(freshItems, freshCodeNames);
-                saveItemsToDB(freshItems);
-                saveCodeNamesToDB(freshCodeNames);
+                new Thread(() ->
+                {
+                    try
+                    {
+                        refreshNowSync();
+                    }
+                    catch (Exception e)
+                    {
+                        Log.e("API Preload", String.valueOf(e.getMessage()));
+                    }
+                }).start();
             }
-            catch (Exception e)
+            else
             {
-                Log.e("API Preload", e.getMessage());
+                refreshNowSync();
             }
         }
         else
         {
-            try
+            if (onMain)
             {
                 new Thread(() ->
                 {
-                    Map<String, Map<String, Map<String, Double>>> freshItems = getItemsFromAPI();
-                    Map<String, String> freshCodeNames = getItemsCodeNameFromAPI(new ArrayList<>(freshItems.keySet()));
-
-                    updateCache(freshItems, freshCodeNames);
-                    saveItemsToDB(freshItems);
-                    saveCodeNamesToDB(freshCodeNames);
+                    try
+                    {
+                        refreshNowSync();
+                    }
+                    catch (Exception e)
+                    {
+                        Log.e("API load new data", String.valueOf(e.getMessage()));
+                    }
                 }).start();
             }
-            catch (Exception e)
+            else
             {
-                Log.e("API load new data", e.getMessage());
+                refreshNowSync();
             }
         }
+    }
+
+    private void refreshNowSync() throws IOException, JSONException
+    {
+        Map<String, Map<String, Map<String, Double>>> freshItems = getItemsFromAPI();
+        Map<String, String> freshCodeNames = getItemsCodeNameFromAPI(new ArrayList<>(freshItems.keySet()));
+
+        updateCache(freshItems, freshCodeNames);
+
+        saveItemsToDBSync(freshItems);
+        saveCodeNamesToDBSync(freshCodeNames);
     }
 
     private Map<String, Map<String, Map<String, Double>>> loadItemsFromDB()
@@ -153,11 +242,70 @@ public class APIHandler
     private void updateCache(Map<String, Map<String, Map<String, Double>>> freshItems,
                              Map<String, String> freshCodeNames)
     {
+        if (cachedItems == null) cachedItems = new HashMap<>();
+        if (cachedCodeNames == null) cachedCodeNames = new HashMap<>();
+
         cachedItems.clear();
-        cachedItems.putAll(freshItems);
+        if (freshItems != null) cachedItems.putAll(freshItems);
 
         cachedCodeNames.clear();
-        cachedCodeNames.putAll(freshCodeNames);
+        if (freshCodeNames != null) cachedCodeNames.putAll(freshCodeNames);
+    }
+
+    private void saveItemsToDBSync(Map<String, Map<String, Map<String, Double>>> freshItems) {
+        AppDatabase db = AppDatabase.getDatabase(Baskit.getContext());
+        db.itemDao().clearAll();
+
+        if (freshItems == null || freshItems.isEmpty()) return;
+
+        List<ItemEntity> itemsToInsert = new ArrayList<>();
+
+        for (String itemCode : freshItems.keySet())
+        {
+            Map<String, Map<String, Double>> freshStores = freshItems.get(itemCode);
+            if (freshStores == null) continue;
+
+            for (String store : freshStores.keySet())
+            {
+                Map<String, Double> freshBranches = freshStores.get(store);
+                if (freshBranches == null) continue;
+
+                for (String branch : freshBranches.keySet())
+                {
+                    Double priceObj = freshBranches.get(branch);
+                    double price = priceObj != null ? priceObj : 0;
+
+                    ItemEntity entity = new ItemEntity();
+                    entity.itemCode = itemCode;
+                    entity.store = store;
+                    entity.branch = branch;
+                    entity.price = price;
+                    itemsToInsert.add(entity);
+                }
+            }
+        }
+
+        if (!itemsToInsert.isEmpty()) db.itemDao().insertAll(itemsToInsert);
+    }
+
+    private void saveCodeNamesToDBSync(Map<String, String> freshCodeNames)
+    {
+        AppDatabase db = AppDatabase.getDatabase(Baskit.getContext());
+        db.itemCodesDao().clearAll();
+
+        if (freshCodeNames == null || freshCodeNames.isEmpty()) return;
+
+        List<ItemCodeName> codesToInsert = new ArrayList<>();
+
+        for (Map.Entry<String, String> entry : freshCodeNames.entrySet())
+        {
+            String code = entry.getKey();
+            String name = entry.getValue();
+            if (code == null || name == null) continue;
+            codesToInsert.add(new ItemCodeName(code, name));
+        }
+
+        if (!codesToInsert.isEmpty()) db.itemCodesDao().insertAll(codesToInsert);
     }
 
     private void saveItemsToDB(Map<String, Map<String, Map<String, Double>>> freshItems)

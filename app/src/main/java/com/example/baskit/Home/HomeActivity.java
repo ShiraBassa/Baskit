@@ -33,9 +33,6 @@ import com.example.baskit.MasterActivity;
 import com.example.baskit.R;
 import com.google.android.material.button.MaterialButton;
 
-import org.json.JSONException;
-
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
@@ -69,23 +66,18 @@ public class HomeActivity extends MasterActivity
                             {
                                 user = authHandler.getUser();
 
-                                runWhenServerActive(() ->
+                                try
                                 {
-                                    try
-                                    {
-                                        APIHandler.getInstance().preload();
-                                    }
-                                    catch (JSONException | IOException e)
-                                    {
-                                        Log.e("HomeActivity", "Preload failed", e);
-                                    }
+                                    // Load the latest local SQLite cache ONLY (no network)
+                                    APIHandler.getInstance().loadFromDbOnlyBlocking();
+                                }
+                                catch (Exception e)
+                                {
+                                    Log.e("HomeActivity", "DB load failed", e);
+                                }
 
-                                    runOnUiThread(() ->
-                                    {
-                                        setContentView(R.layout.activity_home);
-                                        init();
-                                    });
-                                });
+                                setContentView(R.layout.activity_home);
+                                init();
 
                                 runIfOnline(() -> sendJoinRequest(inviteCode));
                             }
@@ -132,23 +124,17 @@ public class HomeActivity extends MasterActivity
         {
             user = authHandler.getUser();
 
-            runWhenServerActive(() ->
+            try
             {
-                try
-                {
-                    APIHandler.getInstance().preload();
-                }
-                catch (JSONException | IOException e)
-                {
-                    Log.e("HomeActivity", "Preload failed", e);
-                }
+                APIHandler.getInstance().loadFromDbOnlyBlocking();
+            }
+            catch (Exception e)
+            {
+                Log.e("HomeActivity", "DB load failed", e);
+            }
 
-                runOnUiThread(() ->
-                {
-                    setContentView(R.layout.activity_home);
-                    init();
-                });
-            });
+            setContentView(R.layout.activity_home);
+            init();
         }
     }
 
