@@ -1,4 +1,4 @@
-package com.example.baskit.List;
+package com.example.baskit.Categories;
 
 import android.app.Activity;
 import android.content.Context;
@@ -17,10 +17,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.baskit.API.APIHandler;
 import com.example.baskit.Baskit;
-import com.example.baskit.Categories.ItemsAdapter;
 import com.example.baskit.MainComponents.Item;
 import com.example.baskit.MainComponents.Supermarket;
-import com.example.baskit.MasterActivity;
 import com.example.baskit.R;
 
 import org.json.JSONException;
@@ -64,13 +62,14 @@ public class ItemViewAlertDialog
         recyclerSupermarkets = adLayout.findViewById(R.id.recycler_supermarket);
         adTvItemName = adLayout.findViewById(R.id.tv_item_name);
 
-        Baskit.notActivityRunWhenServerActive(() ->
+        new Thread(() ->
         {
             Map<String, Map<String, Double>> data = null;
 
             try
             {
                 String absId = item.getAbsoluteId();
+
                 if (absId != null)
                 {
                     data = apiHandler.getItemPricesByCode(absId);
@@ -131,7 +130,7 @@ public class ItemViewAlertDialog
                     Toast.makeText(context, "No prices found", Toast.LENGTH_SHORT).show();
                 }
             });
-        }, activity);
+        }).start();
 
         adb = new AlertDialog.Builder(context);
         adb.setView(adLayout);

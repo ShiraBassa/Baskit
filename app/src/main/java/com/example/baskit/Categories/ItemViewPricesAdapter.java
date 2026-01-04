@@ -1,4 +1,4 @@
-package com.example.baskit.List;
+package com.example.baskit.Categories;
 
 import android.content.Context;
 import android.view.LayoutInflater;

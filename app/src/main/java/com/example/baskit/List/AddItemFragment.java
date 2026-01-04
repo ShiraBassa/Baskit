@@ -1,14 +1,13 @@
 package com.example.baskit.List;
 import android.util.Log;
-import com.example.baskit.MasterActivity;
+
+import com.example.baskit.Categories.ItemViewPricesAdapter;
 
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;

@@ -12,7 +12,6 @@ import android.widget.TextView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.baskit.Baskit;
-import com.example.baskit.List.ItemViewAlertDialog;
 import com.example.baskit.MainComponents.Item;
 import com.example.baskit.R;
 

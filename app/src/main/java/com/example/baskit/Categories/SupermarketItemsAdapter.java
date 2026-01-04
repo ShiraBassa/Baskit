@@ -41,8 +41,25 @@ public class SupermarketItemsAdapter extends ItemsAdapter
         Supermarket from = ogItem.getSupermarket();
         ImageView dragHandle = holder.itemView.findViewById(R.id.drag_handle);
 
+        if (ogItem.isChecked())
+        {
+            dragHandle.setActivated(false);
+            dragHandle.setEnabled(false);
+            dragHandle.setOnLongClickListener(null);
+            dragHandle.setAlpha(0.35f);
+            return;
+        }
+        else
+        {
+            dragHandle.setActivated(true);
+            dragHandle.setEnabled(true);
+            dragHandle.setAlpha(1f);
+        }
+
         dragHandle.setOnLongClickListener(v ->
         {
+            if (ogItem.isChecked()) return false;
+
             ViewGroup rootLayout = activity.findViewById(android.R.id.content);
 
             holder.itemView.setDrawingCacheEnabled(true);
