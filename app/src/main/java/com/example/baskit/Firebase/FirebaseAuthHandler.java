@@ -31,16 +31,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class FirebaseAuthHandler
 {
     private static FirebaseAuthHandler instance;
     private static User user;
     private final APIHandler apiHandler = APIHandler.getInstance();
-    private final Handler mainHandler = new Handler(Looper.getMainLooper());
-    private final ExecutorService bg = Executors.newSingleThreadExecutor();
 
     public interface AuthCallback
     {
@@ -60,37 +56,9 @@ public class FirebaseAuthHandler
 
     public static void resetInstance()
     {
-        if (instance != null)
-        {
-            try { instance.bg.shutdownNow(); } catch (Exception ignored) {}
-        }
-
         user = null;
         instance = null;
         instance = new FirebaseAuthHandler();
-    }
-
-    private void finishAuthSuccess(AuthCallback callback)
-    {
-        // Always load local cache first so UI can render even if the device disconnects right after.
-        bg.execute(() ->
-        {
-            try
-            {
-                apiHandler.loadFromDbOnly();
-            }
-            catch (Exception e)
-            {
-                Log.e("FirebaseAuthHandler", "loadFromDbOnly failed", e);
-            }
-
-            mainHandler.post(callback::onAuthSuccess);
-        });
-    }
-
-    private void finishAuthError(AuthCallback callback, String msg, ErrorType type)
-    {
-        mainHandler.post(() -> callback.onAuthError(msg, type));
     }
 
     public void checkCurrUser(AuthCallback callback)
@@ -99,7 +67,7 @@ public class FirebaseAuthHandler
 
         if (currUser == null)
         {
-            finishAuthError(callback, "", ErrorType.NOT_LOGGED);
+            callback.onAuthError("", ErrorType.NOT_LOGGED);
             return;
         }
 
@@ -108,7 +76,7 @@ public class FirebaseAuthHandler
             if (!task.isSuccessful())
             {
                 refAuth.signOut();
-                finishAuthError(callback, "Session expired. Please log in again.", ErrorType.GENERAL);
+                callback.onAuthError("Session expired. Please log in again.", ErrorType.GENERAL);
                 return;
             }
 
@@ -146,17 +114,15 @@ public class FirebaseAuthHandler
                                             }
                                         }
 
-                                        bg.execute(() ->
+                                        new Thread(() ->
                                         {
-                                            try { apiHandler.setFirebaseToken(idToken); } catch (Exception ignored) {}
-                                            // Wait for local SQL cache load before success
-                                            try { apiHandler.loadFromDbOnly(); } catch (Exception e) { Log.e("FirebaseAuthHandler", "loadFromDbOnly failed", e); }
-                                            mainHandler.post(callback::onAuthSuccess);
-                                        });
+                                            apiHandler.setFirebaseToken(idToken);
+                                            callback.onAuthSuccess();
+                                        }).start();
                                     }
                                     else
                                     {
-                                        finishAuthSuccess(callback);
+                                        callback.onAuthSuccess();
                                     }
                                 });
                             }
@@ -171,24 +137,18 @@ public class FirebaseAuthHandler
                                         String idToken = taskTwo.getResult().getToken();
                                         user.setToken(idToken);
 
-                                        bg.execute(() ->
+                                        new Thread(() ->
                                         {
-                                            try { apiHandler.setFirebaseToken(idToken); } catch (Exception ignored) {}
+                                            apiHandler.setFirebaseToken(idToken);
+                                            getUserInfo();
 
-                                            // Try to initialize defaults (best-effort; may fail offline)
-                                            try { getUserInfo(); } catch (Exception e) { Log.e("FirebaseAuthHandler", "getUserInfo failed", e); }
-
-                                            try { refUsers.child(user.getId()).setValue(user); } catch (Exception ignored) {}
-
-                                            // Ensure local SQL cache is loaded before continuing
-                                            try { apiHandler.loadFromDbOnly(); } catch (Exception e) { Log.e("FirebaseAuthHandler", "loadFromDbOnly failed", e); }
-
-                                            mainHandler.post(callback::onAuthSuccess);
-                                        });
+                                            refUsers.child(user.getId()).setValue(user);
+                                            callback.onAuthSuccess();
+                                        }).start();
                                     }
                                     else
                                     {
-                                        finishAuthSuccess(callback);
+                                        callback.onAuthSuccess();
                                     }
                                 });
                             }
@@ -197,7 +157,7 @@ public class FirebaseAuthHandler
                         @Override
                         public void onCancelled(@NonNull DatabaseError error)
                         {
-                            finishAuthError(callback, "DB error: " + error.getMessage(), ErrorType.GENERAL);
+                            callback.onAuthError("DB error: " + error.getMessage(), ErrorType.GENERAL);
                         }
                     });
         });
@@ -214,7 +174,7 @@ public class FirebaseAuthHandler
 
                         if (firebaseUser == null)
                         {
-                            finishAuthError(callback, "Signup failed: no user info", ErrorType.GENERAL);
+                            callback.onAuthError("Signup failed: no user info", ErrorType.GENERAL);
                             return;
                         }
 
@@ -227,22 +187,18 @@ public class FirebaseAuthHandler
                                 String idToken = taskTwo.getResult().getToken();
                                 user.setToken(idToken);
 
-                                bg.execute(() ->
+                                new Thread(() ->
                                 {
-                                    try { apiHandler.setFirebaseToken(idToken); } catch (Exception ignored) {}
-                                    try { getUserInfo(); } catch (Exception e) { Log.e("FirebaseAuthHandler", "getUserInfo failed", e); }
+                                    apiHandler.setFirebaseToken(idToken);
+                                    getUserInfo();
 
-                                    try { refUsers.child(user.getId()).setValue(user); } catch (Exception ignored) {}
-
-                                    // Load local SQL cache before success
-                                    try { apiHandler.loadFromDbOnly(); } catch (Exception e) { Log.e("FirebaseAuthHandler", "loadFromDbOnly failed", e); }
-
-                                    mainHandler.post(callback::onAuthSuccess);
-                                });
+                                    refUsers.child(user.getId()).setValue(user);
+                                    callback.onAuthSuccess();
+                                }).start();
                             }
                             else
                             {
-                                finishAuthSuccess(callback);
+                                callback.onAuthSuccess();
                             }
                         });
                     }
@@ -252,7 +208,7 @@ public class FirebaseAuthHandler
 
                         if (e instanceof FirebaseNetworkException)
                         {
-                            finishAuthError(callback, "Network error. Please check your connection", ErrorType.GENERAL);
+                            callback.onAuthError("Network error. Please check your connection", ErrorType.GENERAL);
                         }
                         else if (e instanceof FirebaseAuthUserCollisionException)
                         {
@@ -261,15 +217,15 @@ public class FirebaseAuthHandler
                         }
                         else if (e instanceof FirebaseAuthInvalidUserException)
                         {
-                            finishAuthError(callback, "Invalid email format", ErrorType.EMAIL);
+                            callback.onAuthError("Invalid email format", ErrorType.EMAIL);
                         }
                         else if (e instanceof FirebaseAuthWeakPasswordException)
                         {
-                            finishAuthError(callback, "Password too weak", ErrorType.PASSWORD);
+                            callback.onAuthError("Password too weak", ErrorType.PASSWORD);
                         }
                         else if (e instanceof FirebaseAuthInvalidCredentialsException)
                         {
-                            finishAuthError(callback, "General authentication failure", ErrorType.GENERAL);
+                            callback.onAuthError("General authentication failure", ErrorType.GENERAL);
                         }
                         else if (e instanceof FirebaseException)
                         {
@@ -277,24 +233,24 @@ public class FirebaseAuthHandler
 
                             if (msg.contains("password"))
                             {
-                                finishAuthError(callback, "Password too weak", ErrorType.PASSWORD);
+                                callback.onAuthError("Password too weak", ErrorType.PASSWORD);
                             }
                             else if (msg.contains("email"))
                             {
-                                finishAuthError(callback, "Invalid email format", ErrorType.EMAIL);
+                                callback.onAuthError("Invalid email format", ErrorType.EMAIL);
                             }
                             else if (msg.contains("network"))
                             {
-                                finishAuthError(callback, "Network error. Please check your connection", ErrorType.GENERAL);
+                                callback.onAuthError("Network error. Please check your connection", ErrorType.GENERAL);
                             }
                             else
                             {
-                                finishAuthError(callback, "An error occurred. Please try again later", ErrorType.GENERAL);
+                                callback.onAuthError("An error occurred. Please try again later", ErrorType.GENERAL);
                             }
                         }
                         else
                         {
-                            finishAuthError(callback, "An error occurred. Please try again later", ErrorType.GENERAL);
+                            callback.onAuthError("An error occurred. Please try again later", ErrorType.GENERAL);
                         }
                     }
                 });
@@ -311,15 +267,15 @@ public class FirebaseAuthHandler
 
                         if (e instanceof FirebaseAuthInvalidCredentialsException)
                         {
-                            finishAuthError(callback, "Invalid password", ErrorType.PASSWORD);
+                            callback.onAuthError("Invalid password", ErrorType.PASSWORD);
                         }
                         else if (e instanceof FirebaseNetworkException)
                         {
-                            finishAuthError(callback, "Network error. Please check your connection", ErrorType.GENERAL);
+                            callback.onAuthError("Network error. Please check your connection", ErrorType.GENERAL);
                         }
                         else
                         {
-                            finishAuthError(callback, "An error occurred. Please try again later", ErrorType.GENERAL);
+                            callback.onAuthError("An error occurred. Please try again later", ErrorType.GENERAL);
                         }
 
                         return;
@@ -329,7 +285,7 @@ public class FirebaseAuthHandler
 
                     if (firebaseUser == null)
                     {
-                        finishAuthError(callback, "Login failed: no user info", ErrorType.GENERAL);
+                        callback.onAuthError("Login failed: no user info", ErrorType.GENERAL);
                         return;
                     }
 
@@ -347,17 +303,15 @@ public class FirebaseAuthHandler
                                             String idToken = taskTwo.getResult().getToken();
                                             user.setToken(idToken);
 
-                                            bg.execute(() ->
+                                            new Thread(() ->
                                             {
-                                                try { apiHandler.setFirebaseToken(idToken); } catch (Exception ignored) {}
-                                                // Load local SQL cache before success
-                                                try { apiHandler.loadFromDbOnly(); } catch (Exception e) { Log.e("FirebaseAuthHandler", "loadFromDbOnly failed", e); }
-                                                mainHandler.post(callback::onAuthSuccess);
-                                            });
+                                                apiHandler.setFirebaseToken(idToken);
+                                                callback.onAuthSuccess();
+                                            }).start();
                                         }
                                         else
                                         {
-                                            finishAuthSuccess(callback);
+                                            callback.onAuthSuccess();
                                         }
                                     });
                                 }
@@ -372,21 +326,18 @@ public class FirebaseAuthHandler
                                             String idToken = taskTwo.getResult().getToken();
                                             user.setToken(idToken);
 
-                                            bg.execute(() ->
+                                            new Thread(() ->
                                             {
-                                                try { apiHandler.setFirebaseToken(idToken); } catch (Exception ignored) {}
-                                                try { getUserInfo(); } catch (Exception e) { Log.e("FirebaseAuthHandler", "getUserInfo failed", e); }
+                                                apiHandler.setFirebaseToken(idToken);
+                                                getUserInfo();
 
-                                                try { refUsers.child(user.getId()).setValue(user); } catch (Exception ignored) {}
-
-                                                // Load local SQL cache before success
-                                                try { apiHandler.loadFromDbOnly(); } catch (Exception e) { Log.e("FirebaseAuthHandler", "loadFromDbOnly failed", e); }
-                                                mainHandler.post(callback::onAuthSuccess);
-                                            });
+                                                refUsers.child(user.getId()).setValue(user);
+                                                callback.onAuthSuccess();
+                                            }).start();
                                         }
                                         else
                                         {
-                                            finishAuthSuccess(callback);
+                                            callback.onAuthSuccess();
                                         }
                                     });
                                 }
@@ -413,116 +364,68 @@ public class FirebaseAuthHandler
         try
         {
             ArrayList<String> all_cities = apiHandler.getAllCities();
-            if (all_cities == null || all_cities.isEmpty()) return;
 
             ArrayList<String> cities = new ArrayList<>();
             cities.add(all_cities.get(0));
             apiHandler.setCities(cities);
 
             ArrayList<String> all_stores = apiHandler.getStores();
-            if (all_stores == null || all_stores.isEmpty()) return;
 
             ArrayList<String> stores = new ArrayList<>();
             stores.add(all_stores.get(0));
             apiHandler.setStores(stores);
 
             Map<String, ArrayList<String>> all_branches = apiHandler.getBranches();
-            if (all_branches == null) return;
-
-            ArrayList<String> branchesForStore = all_branches.get(stores.get(0));
-            if (branchesForStore == null || branchesForStore.isEmpty()) return;
 
             Map<String, ArrayList<String>> branches = new HashMap<>();
-            ArrayList<String> picked = new ArrayList<>();
-            picked.add(branchesForStore.get(0));
-            if (branchesForStore.size() > 1) picked.add(branchesForStore.get(1));
-
-            branches.put(stores.get(0), picked);
+            branches.put(stores.get(0), new ArrayList<>(java.util.List.of(all_branches.get(stores.get(0)).get(0), all_branches.get(stores.get(0)).get(1))));
             apiHandler.setBranches(branches);
         }
-        catch (IOException | JSONException e)
-        {
-            Log.e("FirebaseAuthHandler", "getUserInfo failed", e);
-        }
+        catch (IOException | JSONException ignored) {}
     }
 
     public void addSupermarketSection(Supermarket supermarket, Runnable onComplete)
     {
-        bg.execute(() ->
+        new Thread(() ->
         {
             try
             {
-                Map<String, ArrayList<String>> branches;
-                try
-                {
-                    branches = apiHandler.getChoices();
-                }
-                catch (Exception e)
-                {
-                    Log.e("FirebaseAuthHandler", "getChoices failed (addSupermarketSection)", e);
-                    branches = apiHandler.getBranches();
-                }
-
-                if (branches == null) branches = new HashMap<>();
-
-                if (supermarket == null) return;
+                Map<String, ArrayList<String>> branches = apiHandler.getChoices();
                 String marketName = supermarket.getSupermarket();
                 String sectionName = supermarket.getSection();
-                if (marketName == null || sectionName == null) return;
 
                 // Initialize the list if it doesn't exist
                 if (!branches.containsKey(marketName) || branches.get(marketName) == null) {
                     branches.put(marketName, new ArrayList<>());
                 }
 
-                if (!branches.get(marketName).contains(sectionName))
-                {
-                    branches.get(marketName).add(sectionName);
-                }
+                branches.get(marketName).add(sectionName);
                 apiHandler.setBranches(branches);
                 apiHandler.updateSupermarkets();
 
                 if (onComplete != null)
                 {
-                    mainHandler.post(onComplete);
+                    new Handler(Looper.getMainLooper()).post(onComplete);
                 }
             }
             catch (IOException | JSONException e)
             {
-                Log.e("FirebaseAuthHandler", "addSupermarketSection failed", e);
+                e.printStackTrace();
             }
-        });
+        }).start();
     }
 
     public void removeSupermarketSection(Supermarket supermarket, Runnable onComplete)
     {
-        bg.execute(() ->
+        new Thread(() ->
         {
             try
             {
-                Map<String, ArrayList<String>> branches;
-                try
-                {
-                    branches = apiHandler.getChoices();
-                }
-                catch (Exception e)
-                {
-                    Log.e("FirebaseAuthHandler", "getChoices failed (removeSupermarketSection)", e);
-                    branches = apiHandler.getBranches();
-                }
-
-                if (branches == null) return;
-
-                if (supermarket == null) return;
+                Map<String, ArrayList<String>> branches = apiHandler.getChoices();
                 String supermarketName = supermarket.getSupermarket();
-                String section = supermarket.getSection();
-                if (supermarketName == null || section == null) return;
+                Objects.requireNonNull(branches.get(supermarketName)).remove(supermarket.getSection());
 
-                ArrayList<String> list = branches.get(supermarketName);
-                if (list == null) return;
-
-                list.remove(section);
-                if (list.isEmpty())
+                if (Objects.requireNonNull(branches.get(supermarketName)).isEmpty())
                 {
                     branches.remove(supermarketName);
                 }
@@ -532,68 +435,69 @@ public class FirebaseAuthHandler
 
                 if (onComplete != null)
                 {
-                    mainHandler.post(onComplete);
+                    new Handler(Looper.getMainLooper()).post(onComplete);
                 }
             }
             catch (IOException | JSONException e)
             {
-                Log.e("FirebaseAuthHandler", "removeSupermarketSection failed", e);
+                Log.e("Remove supermarket", e.getMessage());
             }
-        });
+        }).start();
     }
 
     public void addCity(String city, Runnable onComplete)
     {
-        bg.execute(() ->
+        new Thread(() ->
         {
             try
             {
-                if (city == null) return;
                 ArrayList<String> cities = apiHandler.getCities();
-                if (cities == null) cities = new ArrayList<>();
 
-                if (!cities.contains(city))
+                if (cities.contains(city))
                 {
-                    cities.add(city);
-                    apiHandler.setCities(cities);
+                    return;
                 }
+
+                cities.add(city);
+                apiHandler.setCities(cities);
 
                 if (onComplete != null)
                 {
-                    mainHandler.post(onComplete);
+                    new Handler(Looper.getMainLooper()).post(onComplete);
                 }
             }
             catch (IOException | JSONException e)
             {
-                Log.e("FirebaseAuthHandler", "addCity failed", e);
+                e.printStackTrace();
             }
-        });
+        }).start();
     }
 
     public void removeCity(String city, Runnable onComplete)
     {
-        bg.execute(() ->
+        new Thread(() ->
         {
             try
             {
-                if (city == null) return;
                 ArrayList<String> cities = apiHandler.getCities();
-                if (cities == null) return;
 
-                if (cities.remove(city))
+                if (!cities.contains(city))
                 {
-                    apiHandler.setCities(cities);
+                    return;
                 }
+
+                cities.remove(city);
+                apiHandler.setCities(cities);
 
                 if (onComplete != null)
                 {
-                    mainHandler.post(onComplete);
+                    new Handler(Looper.getMainLooper()).post(onComplete);
                 }
             }
             catch (IOException | JSONException e)
             {
-                Log.e("FirebaseAuthHandler", "removeCity failed", e);
+                e.printStackTrace();
             }
-        });
+        }).start();
     }
 }
