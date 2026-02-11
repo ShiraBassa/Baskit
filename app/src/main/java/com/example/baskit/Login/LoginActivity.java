@@ -6,6 +6,8 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.baskit.Firebase.FirebaseAuthHandler;
 import com.example.baskit.Home.HomeActivity;
@@ -34,7 +36,7 @@ public class LoginActivity extends MasterActivity implements FirebaseAuthHandler
         }
         else
         {
-            runIfOnline(() ->
+            runWhenServerActive(() ->
             {
                 authHandler.checkCurrUser(new FirebaseAuthHandler.AuthCallback()
                 {
@@ -72,8 +74,7 @@ public class LoginActivity extends MasterActivity implements FirebaseAuthHandler
             {
                 boolean focused = false;
 
-                btnSubmit.setEnabled(false);
-                btnSubmit.setError(null);
+                disableButtons();
                 etEmail.setError(null);
                 etPassword.setError(null);
 
@@ -82,16 +83,16 @@ public class LoginActivity extends MasterActivity implements FirebaseAuthHandler
 
                 if (email.isEmpty())
                 {
+                    enableButtons();
                     etEmail.setError("Please enter your email");
-                    btnSubmit.setEnabled(true);
                     etEmail.requestFocus();
                     focused = true;
                 }
 
                 if (password.isEmpty())
                 {
+                    enableButtons();
                     etPassword.setError("Please enter your password");
-                    btnSubmit.setEnabled(true);
 
                     if (!focused)
                     {
@@ -122,6 +123,20 @@ public class LoginActivity extends MasterActivity implements FirebaseAuthHandler
         });
     }
 
+    private void disableButtons()
+    {
+        etEmail.setEnabled(false);
+        etPassword.setEnabled(false);
+        btnSubmit.setEnabled(false);
+    }
+
+    private void enableButtons()
+    {
+        etEmail.setEnabled(true);
+        etPassword.setEnabled(true);
+        btnSubmit.setEnabled(true);
+    }
+
     @Override
     public void onAuthSuccess()
     {
@@ -144,12 +159,12 @@ public class LoginActivity extends MasterActivity implements FirebaseAuthHandler
                 break;
 
             case GENERAL:
-                btnSubmit.setError(msg);
-                btnSubmit.requestFocus();
+                Toast.makeText(LoginActivity.this, msg, Toast.LENGTH_LONG).show();
+                etEmail.requestFocus();
                 break;
         }
 
-        btnSubmit.setEnabled(true);
+        enableButtons();
     }
 
     private void startLogin()
