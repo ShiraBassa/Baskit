@@ -25,10 +25,10 @@ import java.util.concurrent.TimeUnit;
 public class APIHandler
 {
     private static APIHandler instance;
-    private static final String PRIVATE_NETWORK_URL = "192.168.1.204";
+    private static final String PRIVATE_NETWORK_URL = "192.168.1.197";
     private static final String EMULATOR_URL = "10.0.2.2";
 
-    private static final String SERVER_URL = "http://" + EMULATOR_URL + ":5001";
+    private static final String SERVER_URL = "http://" + PRIVATE_NETWORK_URL + ":5001";
     private static String firebaseToken;
     private final OkHttpClient client = new OkHttpClient.Builder()
             .connectTimeout(0, TimeUnit.SECONDS)
@@ -310,13 +310,13 @@ public class APIHandler
         instance = new APIHandler();
     }
 
-    public void setFirebaseToken(String firebaseToken)
+    public boolean setFirebaseToken(String firebaseToken)
     {
         APIHandler.firebaseToken = firebaseToken;
-        login();
+        return login();
     }
 
-    private void login()
+    private boolean login()
     {
         try
         {
@@ -331,15 +331,17 @@ public class APIHandler
             {
                 if (!response.isSuccessful())
                 {
-                    return;
+                    Log.e("LOGIN", "Login failed: " + response.code());
+                    return false;
                 }
 
-                ResponseBody responseBody = response.body();
+                return true;
             }
         }
         catch (Exception e)
         {
             e.printStackTrace();
+            return false;
         }
     }
 

@@ -61,13 +61,23 @@ public class FirebaseAuthHandler
         instance = new FirebaseAuthHandler();
     }
 
+    private void postSuccess(AuthCallback callback)
+    {
+        new Handler(Looper.getMainLooper()).post(callback::onAuthSuccess);
+    }
+
+    private void postError(AuthCallback callback, String msg, ErrorType type)
+    {
+        new Handler(Looper.getMainLooper()).post(() -> callback.onAuthError(msg, type));
+    }
+
     public void checkCurrUser(AuthCallback callback)
     {
         FirebaseUser currUser = refAuth.getCurrentUser();
 
         if (currUser == null)
         {
-            callback.onAuthError("", ErrorType.NOT_LOGGED);
+            postError(callback, "", ErrorType.NOT_LOGGED);
             return;
         }
 
@@ -76,7 +86,7 @@ public class FirebaseAuthHandler
             if (!task.isSuccessful())
             {
                 refAuth.signOut();
-                callback.onAuthError("Session expired. Please log in again.", ErrorType.GENERAL);
+                postError(callback, "Session expired. Please log in again.", ErrorType.GENERAL);
                 return;
             }
 
@@ -116,13 +126,17 @@ public class FirebaseAuthHandler
 
                                         new Thread(() ->
                                         {
-                                            apiHandler.setFirebaseToken(idToken);
-                                            callback.onAuthSuccess();
+                                            boolean ok = apiHandler.setFirebaseToken(idToken);
+                                            new Handler(Looper.getMainLooper()).post(() ->
+                                            {
+                                                if (ok) callback.onAuthSuccess();
+                                                else callback.onAuthError("Server login failed", ErrorType.GENERAL);
+                                            });
                                         }).start();
                                     }
                                     else
                                     {
-                                        callback.onAuthSuccess();
+                                        postError(callback, "Failed to get session token. Please try again.", ErrorType.GENERAL);
                                     }
                                 });
                             }
@@ -139,16 +153,33 @@ public class FirebaseAuthHandler
 
                                         new Thread(() ->
                                         {
-                                            apiHandler.setFirebaseToken(idToken);
+                                            boolean loginSuccess = apiHandler.setFirebaseToken(user.getToken());
+
+                                            if (!loginSuccess)
+                                            {
+                                                postError(callback, "Server login failed", ErrorType.GENERAL);
+                                                return;
+                                            }
+
                                             getUserInfo();
 
-                                            refUsers.child(user.getId()).setValue(user);
-                                            callback.onAuthSuccess();
+                                            refUsers.child(user.getId()).setValue(user)
+                                                    .addOnCompleteListener(taskDB ->
+                                                    {
+                                                        if (taskDB.isSuccessful())
+                                                        {
+                                                            postSuccess(callback);
+                                                        }
+                                                        else
+                                                        {
+                                                            postError(callback, "Database error", ErrorType.GENERAL);
+                                                        }
+                                                    });
                                         }).start();
                                     }
                                     else
                                     {
-                                        callback.onAuthSuccess();
+                                        postError(callback, "Failed to get session token. Please try again.", ErrorType.GENERAL);
                                     }
                                 });
                             }
@@ -157,7 +188,7 @@ public class FirebaseAuthHandler
                         @Override
                         public void onCancelled(@NonNull DatabaseError error)
                         {
-                            callback.onAuthError("DB error: " + error.getMessage(), ErrorType.GENERAL);
+                            postError(callback, "DB error: " + error.getMessage(), ErrorType.GENERAL);
                         }
                     });
         });
@@ -174,7 +205,7 @@ public class FirebaseAuthHandler
 
                         if (firebaseUser == null)
                         {
-                            callback.onAuthError("Signup failed: no user info", ErrorType.GENERAL);
+                            postError(callback, "Signup failed: no user info", ErrorType.GENERAL);
                             return;
                         }
 
@@ -189,16 +220,33 @@ public class FirebaseAuthHandler
 
                                 new Thread(() ->
                                 {
-                                    apiHandler.setFirebaseToken(idToken);
+                                    boolean loginSuccess = apiHandler.setFirebaseToken(user.getToken());
+
+                                    if (!loginSuccess)
+                                    {
+                                        postError(callback, "Server login failed", ErrorType.GENERAL);
+                                        return;
+                                    }
+
                                     getUserInfo();
 
-                                    refUsers.child(user.getId()).setValue(user);
-                                    callback.onAuthSuccess();
+                                    refUsers.child(user.getId()).setValue(user)
+                                            .addOnCompleteListener(taskDB ->
+                                            {
+                                                if (taskDB.isSuccessful())
+                                                {
+                                                    postSuccess(callback);
+                                                }
+                                                else
+                                                {
+                                                    postError(callback, "Database error", ErrorType.GENERAL);
+                                                }
+                                            });
                                 }).start();
                             }
                             else
                             {
-                                callback.onAuthSuccess();
+                                postError(callback, "Failed to get session token. Please try again.", ErrorType.GENERAL);
                             }
                         });
                     }
@@ -208,7 +256,7 @@ public class FirebaseAuthHandler
 
                         if (e instanceof FirebaseNetworkException)
                         {
-                            callback.onAuthError("Network error. Please check your connection", ErrorType.GENERAL);
+                            postError(callback, "Network error. Please check your connection", ErrorType.GENERAL);
                         }
                         else if (e instanceof FirebaseAuthUserCollisionException)
                         {
@@ -217,15 +265,15 @@ public class FirebaseAuthHandler
                         }
                         else if (e instanceof FirebaseAuthInvalidUserException)
                         {
-                            callback.onAuthError("Invalid email format", ErrorType.EMAIL);
+                            postError(callback, "Invalid email format", ErrorType.EMAIL);
                         }
                         else if (e instanceof FirebaseAuthWeakPasswordException)
                         {
-                            callback.onAuthError("Password too weak", ErrorType.PASSWORD);
+                            postError(callback, "Password too weak", ErrorType.PASSWORD);
                         }
                         else if (e instanceof FirebaseAuthInvalidCredentialsException)
                         {
-                            callback.onAuthError("General authentication failure", ErrorType.GENERAL);
+                            postError(callback, "General authentication failure", ErrorType.GENERAL);
                         }
                         else if (e instanceof FirebaseException)
                         {
@@ -233,24 +281,24 @@ public class FirebaseAuthHandler
 
                             if (msg.contains("password"))
                             {
-                                callback.onAuthError("Password too weak", ErrorType.PASSWORD);
+                                postError(callback, "Password too weak", ErrorType.PASSWORD);
                             }
                             else if (msg.contains("email"))
                             {
-                                callback.onAuthError("Invalid email format", ErrorType.EMAIL);
+                                postError(callback, "Invalid email format", ErrorType.EMAIL);
                             }
                             else if (msg.contains("network"))
                             {
-                                callback.onAuthError("Network error. Please check your connection", ErrorType.GENERAL);
+                                postError(callback, "Network error. Please check your connection", ErrorType.GENERAL);
                             }
                             else
                             {
-                                callback.onAuthError("An error occurred. Please try again later", ErrorType.GENERAL);
+                                postError(callback, "An error occurred. Please try again later", ErrorType.GENERAL);
                             }
                         }
                         else
                         {
-                            callback.onAuthError("An error occurred. Please try again later", ErrorType.GENERAL);
+                            postError(callback, "An error occurred. Please try again later", ErrorType.GENERAL);
                         }
                     }
                 });
@@ -267,15 +315,15 @@ public class FirebaseAuthHandler
 
                         if (e instanceof FirebaseAuthInvalidCredentialsException)
                         {
-                            callback.onAuthError("Invalid password", ErrorType.PASSWORD);
+                            postError(callback, "Invalid password", ErrorType.PASSWORD);
                         }
                         else if (e instanceof FirebaseNetworkException)
                         {
-                            callback.onAuthError("Network error. Please check your connection", ErrorType.GENERAL);
+                            postError(callback, "Network error. Please check your connection", ErrorType.GENERAL);
                         }
                         else
                         {
-                            callback.onAuthError("An error occurred. Please try again later", ErrorType.GENERAL);
+                            postError(callback, "An error occurred. Please try again later", ErrorType.GENERAL);
                         }
 
                         return;
@@ -285,7 +333,7 @@ public class FirebaseAuthHandler
 
                     if (firebaseUser == null)
                     {
-                        callback.onAuthError("Login failed: no user info", ErrorType.GENERAL);
+                        postError(callback, "Login failed: no user info", ErrorType.GENERAL);
                         return;
                     }
 
@@ -305,13 +353,20 @@ public class FirebaseAuthHandler
 
                                             new Thread(() ->
                                             {
-                                                apiHandler.setFirebaseToken(idToken);
-                                                callback.onAuthSuccess();
+                                                boolean ok = apiHandler.setFirebaseToken(user.getToken());
+
+                                                if (!ok)
+                                                {
+                                                    postError(callback, "Server login failed", ErrorType.GENERAL);
+                                                    return;
+                                                }
+
+                                                postSuccess(callback);
                                             }).start();
                                         }
                                         else
                                         {
-                                            callback.onAuthSuccess();
+                                            postError(callback, "Failed to get session token. Please try again.", ErrorType.GENERAL);
                                         }
                                     });
                                 }
@@ -328,16 +383,33 @@ public class FirebaseAuthHandler
 
                                             new Thread(() ->
                                             {
-                                                apiHandler.setFirebaseToken(idToken);
+                                                boolean loginSuccess = apiHandler.setFirebaseToken(user.getToken());
+
+                                                if (!loginSuccess)
+                                                {
+                                                    postError(callback, "Server login failed", ErrorType.GENERAL);
+                                                    return;
+                                                }
+
                                                 getUserInfo();
 
-                                                refUsers.child(user.getId()).setValue(user);
-                                                callback.onAuthSuccess();
+                                                refUsers.child(user.getId()).setValue(user)
+                                                        .addOnCompleteListener(taskDBTwo ->
+                                                        {
+                                                            if (taskDBTwo.isSuccessful())
+                                                            {
+                                                                postSuccess(callback);
+                                                            }
+                                                            else
+                                                            {
+                                                                postError(callback, "Database error", ErrorType.GENERAL);
+                                                            }
+                                                        });
                                             }).start();
                                         }
                                         else
                                         {
-                                            callback.onAuthSuccess();
+                                            postError(callback, "Failed to get session token. Please try again.", ErrorType.GENERAL);
                                         }
                                     });
                                 }
@@ -359,29 +431,70 @@ public class FirebaseAuthHandler
 
     private void getUserInfo()
     {
+        if (user == null)
+        {
+            Log.e("GET_USER_INFO", "User is null");
+            return;
+        }
+
         user.setName("משתמש");
 
         try
         {
             ArrayList<String> all_cities = apiHandler.getAllCities();
+            if (all_cities == null || all_cities.isEmpty())
+            {
+                Log.e("GET_USER_INFO", "No cities returned from server");
+                return;
+            }
 
             ArrayList<String> cities = new ArrayList<>();
             cities.add(all_cities.get(0));
             apiHandler.setCities(cities);
 
             ArrayList<String> all_stores = apiHandler.getStores();
+            if (all_stores == null || all_stores.isEmpty())
+            {
+                Log.e("GET_USER_INFO", "No stores returned from server");
+                return;
+            }
 
             ArrayList<String> stores = new ArrayList<>();
             stores.add(all_stores.get(0));
             apiHandler.setStores(stores);
 
             Map<String, ArrayList<String>> all_branches = apiHandler.getBranches();
+            if (all_branches == null)
+            {
+                Log.e("GET_USER_INFO", "No branches map returned from server");
+                return;
+            }
 
             Map<String, ArrayList<String>> branches = new HashMap<>();
-            branches.put(stores.get(0), new ArrayList<>(java.util.List.of(all_branches.get(stores.get(0)).get(0), all_branches.get(stores.get(0)).get(1))));
+            String firstStore = stores.get(0);
+            ArrayList<String> firstStoreBranches = all_branches.get(firstStore);
+
+            if (firstStoreBranches == null || firstStoreBranches.isEmpty())
+            {
+                Log.e("GET_USER_INFO", "No branches returned for store=" + firstStore);
+                return;
+            }
+
+            ArrayList<String> selectedBranches = new ArrayList<>();
+            selectedBranches.add(firstStoreBranches.get(0));
+            if (firstStoreBranches.size() > 1)
+            {
+                selectedBranches.add(firstStoreBranches.get(1));
+            }
+
+            branches.put(firstStore, selectedBranches);
             apiHandler.setBranches(branches);
         }
-        catch (IOException | JSONException ignored) {}
+        catch (IOException | JSONException e)
+        {
+            e.printStackTrace();
+            Log.e("GET_USER_INFO", "Error loading user info", e);
+        }
     }
 
     public void addSupermarketSection(Supermarket supermarket, Runnable onComplete)
