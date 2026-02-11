@@ -163,11 +163,6 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
             if (quantity == 0)
             {
                 removeItem(item);
-
-                if (upperClassFns != null)
-                {
-                    upperClassFns.removeItemCategory(item);
-                }
             }
             else
             {
@@ -225,27 +220,23 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
         Collections.sort(items, (i1, i2) -> i1.getId().compareTo(i2.getId()));
     }
 
-    public void removeItem(int position)
+    public void removeItemFromAdapter(int position)
     {
         if (position >= 0 && position < items.size())
         {
             items.remove(position);
             notifyItemRemoved(position);
         }
-
-        if (items.isEmpty())
-        {
-            upperClassFns.removeCategory();
-        }
     }
 
     public void removeItem(Item item)
     {
         int position = items.indexOf(item);
+        removeItemFromAdapter(position);
 
-        if (position != -1)
+        if (upperClassFns != null)
         {
-            removeItem(position);
+            upperClassFns.removeItemCategory(item);
         }
     }
 

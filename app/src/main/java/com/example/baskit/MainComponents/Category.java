@@ -193,4 +193,13 @@ public class Category
     {
         return items.isEmpty();
     }
+
+    public void removeItem(Item item)
+    {
+        if (item != null && item.getId() != null)
+        {
+            this.items.remove(item.getId());
+            updateFinished();
+        }
+    }
 }

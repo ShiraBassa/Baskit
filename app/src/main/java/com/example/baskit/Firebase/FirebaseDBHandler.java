@@ -460,21 +460,25 @@ public class FirebaseDBHandler
                 .child("items")
                 .child(item.getId())
                 .removeValue();
+
+        category.removeItem(item);
+
+        if (category.isEmpty())
+        {
+            removeCategory(list, category);
+        }
     }
 
     public void removeItem(List list, String categoryName, Item item)
     {
-        refLists.child(list.getId())
-                .child("categories")
-                .child(categoryName)
-                .child("items")
-                .child(item.getId())
-                .removeValue();
+        Category category = list.getCategory(categoryName);
+        removeItem(list, category, item);
     }
 
     public void removeItem(List list, Item item)
     {
-        removeItem(list, getCategory(list, item), item);
+        Category category = getCategory(list, item);
+        removeItem(list, category, item);
     }
 
     public void removeCategory(List list, Category category)
@@ -482,6 +486,14 @@ public class FirebaseDBHandler
         refLists.child(list.getId())
                 .child("categories")
                 .child(category.getName())
+                .removeValue();
+    }
+
+    public void removeCategory(List list, String categoryName)
+    {
+        refLists.child(list.getId())
+                .child("categories")
+                .child(categoryName)
                 .removeValue();
     }
 

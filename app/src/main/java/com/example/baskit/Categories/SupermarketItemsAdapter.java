@@ -125,7 +125,8 @@ public class SupermarketItemsAdapter extends ItemsAdapter
             }
 
             @Override
-            public void removeItemCategory(Item item) {
+            public void removeItemCategory(Item item)
+            {
                 upperClassFns.removeItemCategory(item);
             }
 

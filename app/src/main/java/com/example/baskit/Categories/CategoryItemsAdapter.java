@@ -48,7 +48,6 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
 
     boolean isDropped;
     boolean draggable = false;
-    private final APIHandler apiHandler = APIHandler.getInstance();
 
     public CategoryItemsAdapter(Category category, Activity activity, Context context,
                                 ItemsAdapter.UpperClassFunctions upperClassFns, ArrayList<Supermarket> supermarkets,
