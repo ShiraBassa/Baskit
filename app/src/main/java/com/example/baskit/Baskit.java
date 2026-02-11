@@ -29,8 +29,6 @@ public class Baskit extends Application
 {
     private static Context context;
     public static final Supermarket unassigned_supermarket = new Supermarket("לא נבחר", "");
-    public static final Supermarket other_supermarket = new Supermarket("אחר", "");
-
     private static final MutableLiveData<Boolean> onlineLive = new MutableLiveData<>(true);
     private ConnectivityManager.NetworkCallback networkCallback;
 

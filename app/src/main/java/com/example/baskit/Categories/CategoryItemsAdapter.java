@@ -38,13 +38,13 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
     protected Map<Supermarket, ArrayList<Item>> itemsBySupermarket;
     private Map<Supermarket, Boolean> expandedStates;
     private Map<String, Map<String, Map<String, Double>>> itemPrices;
+    private Map<String, Integer> supermarketSectionCounts;
 
     Activity activity;
     Context context;
     ItemsAdapter.UpperClassFunctions upperClassFns;
 
     public static final Supermarket unassigned_supermarket = Baskit.unassigned_supermarket;
-    public static final Supermarket other_supermarket = Baskit.other_supermarket;
 
     boolean isDropped;
     boolean draggable = false;
@@ -123,6 +123,7 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
     {
         itemsBySupermarket = new HashMap<>();
         expandedStates = new HashMap<>();
+        supermarketSectionCounts = new HashMap<>();
 
         for (Supermarket supermarket : baseSupermarkets)
         {
@@ -133,9 +134,6 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
         itemsBySupermarket.put(unassigned_supermarket, new ArrayList<>());
         expandedStates.put(unassigned_supermarket, true);
 
-        itemsBySupermarket.put(other_supermarket, new ArrayList<>());
-        expandedStates.put(other_supermarket, true);
-
         rebuildDisplaySupermarkets();
     }
 
@@ -144,9 +142,19 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
         ArrayList<Supermarket> nonEmpty = new ArrayList<>();
         ArrayList<Supermarket> empty = new ArrayList<>();
 
-        for (Supermarket sm : baseSupermarkets)
+        // reset section counts
+        supermarketSectionCounts.clear();
+
+        for (Supermarket sm : itemsBySupermarket.keySet())
         {
             ArrayList<Item> list = itemsBySupermarket.get(sm);
+
+            // count sections per supermarket name
+            String name = sm.getSupermarket();
+            supermarketSectionCounts.put(
+                    name,
+                    supermarketSectionCounts.getOrDefault(name, 0) + 1
+            );
 
             if (list != null && !list.isEmpty())
             {
@@ -158,22 +166,9 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
             }
         }
 
-        ArrayList<Supermarket> specialNonEmpty = new ArrayList<>();
-        ArrayList<Supermarket> specialEmpty = new ArrayList<>();
-
-        ArrayList<Item> unassigned = itemsBySupermarket.get(unassigned_supermarket);
-        if (unassigned != null && !unassigned.isEmpty()) specialNonEmpty.add(unassigned_supermarket);
-        else specialEmpty.add(unassigned_supermarket);
-
-        ArrayList<Item> other = itemsBySupermarket.get(other_supermarket);
-        if (other != null && !other.isEmpty()) specialNonEmpty.add(other_supermarket);
-        else specialEmpty.add(other_supermarket);
-
         ArrayList<Supermarket> result = new ArrayList<>();
         result.addAll(nonEmpty);
         result.addAll(empty);
-        result.addAll(specialNonEmpty);
-        result.addAll(specialEmpty);
 
         this.supermarkets = result;
     }
@@ -196,7 +191,9 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
                 }
                 else if (!itemsBySupermarket.containsKey(supermarket))
                 {
-                    itemsBySupermarket.get(other_supermarket).add(item);
+                    itemsBySupermarket.put(supermarket, new ArrayList<>());
+                    expandedStates.put(supermarket, true);
+                    itemsBySupermarket.get(supermarket).add(item);
                 }
                 else
                 {
@@ -223,7 +220,9 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
             }
             else if (!itemsBySupermarket.containsKey(supermarket))
             {
-                targetList = itemsBySupermarket.get(other_supermarket);
+                itemsBySupermarket.put(supermarket, new ArrayList<>());
+                expandedStates.put(supermarket, true);
+                targetList = itemsBySupermarket.get(supermarket);
             }
             else
             {
@@ -342,7 +341,7 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
         isDropped = false;
         Supermarket supermarket = supermarkets.get(position);
 
-        if (apiHandler.singleSectionInSupermarkets(supermarket))
+        if (isSingleSectionCurrently(supermarket))
         {
             holder.tvSupermarket.setText(supermarket.getSupermarket());
         }
@@ -502,6 +501,16 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
         });
     }
 
+    private boolean isSingleSectionCurrently(Supermarket current)
+    {
+        if (supermarketSectionCounts == null) return true;
+
+        String name = current.getSupermarket();
+        Integer count = supermarketSectionCounts.get(name);
+
+        return count == null || count <= 1;
+    }
+
     private boolean containsSupermarket(Item item, Supermarket supermarket)
     {
         if (supermarket == unassigned_supermarket)
@@ -550,6 +559,7 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
         if (itemsBySupermarket.get(to) == null)
         {
             itemsBySupermarket.put(to, new ArrayList<>());
+            expandedStates.put(to, true);
         }
 
         itemsBySupermarket.get(to).add(draggedItem);

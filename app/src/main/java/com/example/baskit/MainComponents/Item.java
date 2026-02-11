@@ -173,7 +173,7 @@ public class Item implements Cloneable
             return false;
         }
 
-        if (supermarket.equals(Baskit.unassigned_supermarket) || supermarket.equals(Baskit.other_supermarket) ||
+        if (supermarket.equals(Baskit.unassigned_supermarket) ||
                 price == 0)
         {
             return false;
