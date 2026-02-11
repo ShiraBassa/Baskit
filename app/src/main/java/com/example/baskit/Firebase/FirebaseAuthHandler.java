@@ -402,6 +402,7 @@ public class FirebaseAuthHandler
                 branches.get(marketName).add(sectionName);
                 apiHandler.setBranches(branches);
                 apiHandler.updateSupermarkets();
+                apiHandler.reset();
 
                 if (onComplete != null)
                 {
@@ -432,6 +433,7 @@ public class FirebaseAuthHandler
 
                 apiHandler.setBranches(branches);
                 apiHandler.updateSupermarkets();
+                apiHandler.reset();
 
                 if (onComplete != null)
                 {
@@ -460,6 +462,7 @@ public class FirebaseAuthHandler
 
                 cities.add(city);
                 apiHandler.setCities(cities);
+                apiHandler.reset();
 
                 if (onComplete != null)
                 {
@@ -488,6 +491,7 @@ public class FirebaseAuthHandler
 
                 cities.remove(city);
                 apiHandler.setCities(cities);
+                apiHandler.reset();
 
                 if (onComplete != null)
                 {

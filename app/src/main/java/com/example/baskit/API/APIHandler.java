@@ -72,6 +72,14 @@ public class APIHandler
         }
     }
 
+    public void reset() throws JSONException, IOException
+    {
+        cachedItems = null;
+        cachedCodeNames = null;
+
+        preload();
+    }
+
     public void preload() throws JSONException, IOException
     {
         supermarkets = getUpdatedSupermarkets();
