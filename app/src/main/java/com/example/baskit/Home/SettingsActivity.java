@@ -1,5 +1,6 @@
 package com.example.baskit.Home;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -132,7 +133,7 @@ public class SettingsActivity extends MasterActivity
 
             try
             {
-                new AddSectionAlertDialog(
+                new AddSupermarketAlertDialog(
                         SettingsActivity.this,
                         SettingsActivity.this,
                         supermarketsAdapter
@@ -220,6 +221,7 @@ public class SettingsActivity extends MasterActivity
 
         btnRemoveCity.setOnClickListener(new View.OnClickListener()
         {
+            @SuppressLint("NotifyDataSetChanged")
             @Override
             public void onClick(View v)
             {

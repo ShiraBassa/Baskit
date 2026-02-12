@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 public class APIHandler
 {
     private static APIHandler instance;
-    private static final String PRIVATE_NETWORK_URL = "192.168.1.197";
+    private static final String PRIVATE_NETWORK_URL = "192.168.1.247";
     private static final String EMULATOR_URL = "10.0.2.2";
 
     private static final String SERVER_URL = "http://" + PRIVATE_NETWORK_URL + ":5001";
@@ -108,12 +108,19 @@ public class APIHandler
             {
                 new Thread(() ->
                 {
-                    Map<String, Map<String, Map<String, Double>>> freshItems = getItemsFromAPI();
-                    Map<String, String> freshCodeNames = getItemsCodeNameFromAPI(new ArrayList<>(freshItems.keySet()));
+                    try
+                    {
+                        Map<String, Map<String, Map<String, Double>>> freshItems = getItemsFromAPI();
+                        Map<String, String> freshCodeNames = getItemsCodeNameFromAPI(new ArrayList<>(freshItems.keySet()));
 
-                    updateCache(freshItems, freshCodeNames);
-                    saveItemsToDB(freshItems);
-                    saveCodeNamesToDB(freshCodeNames);
+                        updateCache(freshItems, freshCodeNames);
+                        saveItemsToDB(freshItems);
+                        saveCodeNamesToDB(freshCodeNames);
+                    }
+                    catch (Exception e)
+                    {
+                        Log.e("API Background Refresh", e.getMessage());
+                    }
                 }).start();
             }
             catch (Exception e)
@@ -256,7 +263,7 @@ public class APIHandler
         }
         catch (Exception e)
         {
-            Log.e("API", e.getMessage());
+            Log.e("API", "Failed to fetch items", e);
         }
 
         return items;
@@ -310,14 +317,10 @@ public class APIHandler
         instance = new APIHandler();
     }
 
-    public boolean setFirebaseToken(String firebaseToken)
+    public boolean login(String firebaseToken)
     {
-        APIHandler.firebaseToken = firebaseToken;
-        return login();
-    }
+        this.firebaseToken = firebaseToken;
 
-    private boolean login()
-    {
         try
         {
             JSONObject body = new JSONObject();
@@ -331,7 +334,7 @@ public class APIHandler
             {
                 if (!response.isSuccessful())
                 {
-                    Log.e("LOGIN", "Login failed: " + response.code());
+                    Log.e("LOGIN", "Login failed: " + response.code() + " " + response.message());
                     return false;
                 }
 
@@ -437,11 +440,6 @@ public class APIHandler
             stores.add(storesJson.getString(i));
         }
         return stores;
-    }
-
-    public void setStores(ArrayList<String> stores) throws IOException, JSONException
-    {
-        postRaw("/stores", getBody("stores", stores));
     }
 
     // Branches
@@ -619,5 +617,73 @@ public class APIHandler
 
             return rb.string();
         }
+    }
+
+    public Map<String, Map<String, Map<String, Double>>> previewItems(String store, String branch)
+            throws IOException, JSONException
+    {
+        String endpoint = "/preview_items?"
+                + "store=" + URLEncoder.encode(store, "UTF-8")
+                + "&branch=" + URLEncoder.encode(branch, "UTF-8");
+
+        String raw = getRaw(endpoint);
+        JSONObject itemsJson = new JSONObject(raw);
+
+        Map<String, Map<String, Map<String, Double>>> items = new HashMap<>();
+
+        for (Iterator<String> itemIter = itemsJson.keys(); itemIter.hasNext();)
+        {
+            String itemCode = itemIter.next();
+            JSONObject storesJson = itemsJson.getJSONObject(itemCode);
+            Map<String, Map<String, Double>> storeMap = parsePriceResponse(storesJson.toString());
+
+            items.put(itemCode, storeMap);
+        }
+
+        return items;
+    }
+
+    public ArrayList<String> getAllBranches(String store) throws IOException, JSONException
+    {
+        String endpoint = "/all_branches?"
+                + "store=" + URLEncoder.encode(store, "UTF-8");
+
+        String raw = getRaw(endpoint);
+        JSONArray arr = new JSONArray(raw);
+
+        ArrayList<String> branches = new ArrayList<>();
+
+        for (int i = 0; i < arr.length(); i++)
+        {
+            branches.add(arr.getString(i));
+        }
+
+        return branches;
+    }
+
+    public Map<String, ArrayList<String>> getAllBranchesBulk()
+            throws IOException, JSONException
+    {
+        String raw = getRaw("/all_branches_bulk");
+        JSONObject json = new JSONObject(raw);
+
+        Map<String, ArrayList<String>> result = new HashMap<>();
+
+        Iterator<String> keys = json.keys();
+        while (keys.hasNext())
+        {
+            String store = keys.next();
+            JSONArray arr = json.getJSONArray(store);
+
+            ArrayList<String> branches = new ArrayList<>();
+            for (int i = 0; i < arr.length(); i++)
+            {
+                branches.add(arr.getString(i));
+            }
+
+            result.put(store, branches);
+        }
+
+        return result;
     }
 }

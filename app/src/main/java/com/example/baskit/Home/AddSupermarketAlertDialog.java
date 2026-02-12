@@ -14,13 +14,15 @@ import androidx.appcompat.app.AlertDialog;
 
 import com.example.baskit.API.APIHandler;
 import com.example.baskit.Baskit;
-import com.example.baskit.MasterActivity;
+import com.example.baskit.Firebase.FirebaseAuthHandler;
+import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;
 
 import org.json.JSONException;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 
 public class AddSupermarketAlertDialog
@@ -31,44 +33,117 @@ public class AddSupermarketAlertDialog
     AlertDialog.Builder adb;
     AlertDialog ad;
     Button btnAdd;
-    Spinner spinnerSupermarkets;
-    ArrayList<String> all_stores;
+    FirebaseAuthHandler authHandler;
+    Spinner spinnerSupermarkets, spinnerSections;
+    Map<String, ArrayList<String>> unchosen_branches;
+    ArrayList<String> supermarkets;
+    ArrayList<String> all_stores, unchosen_stores;
+    ArrayList<String> sections;
     Map<String, ArrayList<String>> choices;
-    AddSectionAlertDialog.OnStoreAddedListener onStoreAddedListener;
+    SupermarketsListAdapter supermarketsAdapter;
     private final APIHandler apiHandler = APIHandler.getInstance();
+
+    public interface OnStoreAddedListener {
+        void onStoreAdded(String storeName, ArrayList<String> branches);
+    }
 
     public AddSupermarketAlertDialog(Activity activity,
                                      Context context,
-                                     Map<String, ArrayList<String>> choices,
-                                     ArrayList<String> unchosen_stores,
-                                     AddSectionAlertDialog.OnStoreAddedListener onStoreAddedListener)
+                                     SupermarketsListAdapter supermarketsAdapter)
             throws JSONException, IOException
     {
         this.activity = activity;
         this.context = context;
-        this.choices = choices;
-        this.onStoreAddedListener = onStoreAddedListener;
-        this.all_stores = unchosen_stores;
+        this.supermarketsAdapter = supermarketsAdapter;
+
+        Baskit.notActivityRunWhenServerActive(() ->
+        {
+            try
+            {
+                getAPIInfo();
+                activity.runOnUiThread(this::init);
+            }
+            catch (JSONException | IOException e)
+            {
+                Log.e("AddSectionAlertDialog", "Failed to load store/branch data", e);
+                activity.runOnUiThread(() ->
+                        Toast.makeText(context, "שגיאה בטעינת נתונים", Toast.LENGTH_SHORT).show());
+            }
+        }, activity);
+    }
+
+    private void init()
+    {
+        authHandler = FirebaseAuthHandler.getInstance();
+
+        supermarkets = new ArrayList<>(unchosen_stores);
 
         adLayout = (LinearLayout) activity.getLayoutInflater()
-                .inflate(R.layout.alert_dialog_add_supermarket, null);
+                .inflate(R.layout.alert_dialog_add_section, null);
         spinnerSupermarkets = adLayout.findViewById(R.id.spinner_supermarkets);
+        spinnerSections = adLayout.findViewById(R.id.spinner_sections);
         btnAdd = adLayout.findViewById(R.id.btn_add);
 
         adb = new AlertDialog.Builder(context);
         adb.setView(adLayout);
         ad = adb.create();
 
-        setSpinner();
+        setSpinners();
         setButton();
+
+        ad.show();
     }
 
-    private void setSpinner()
+    private void getAPIInfo() throws JSONException, IOException
+    {
+        all_stores = apiHandler.getStores();
+        choices = apiHandler.getChoices();
+
+        unchosen_branches = new HashMap<>();
+        unchosen_stores = new ArrayList<>();
+
+        Map<String, ArrayList<String>> allBranches =
+                apiHandler.getAllBranchesBulk();
+
+        for (String store : allBranches.keySet())
+        {
+            try
+            {
+                ArrayList<String> allBranchesForStore = allBranches.get(store);
+                ArrayList<String> selectedBranches = choices.get(store);
+
+                ArrayList<String> availableBranches = new ArrayList<>();
+
+                if (allBranchesForStore != null)
+                {
+                    for (String branch : allBranchesForStore)
+                    {
+                        if (selectedBranches == null || !selectedBranches.contains(branch))
+                        {
+                            availableBranches.add(branch);
+                        }
+                    }
+                }
+
+                if (!availableBranches.isEmpty())
+                {
+                    unchosen_branches.put(store, availableBranches);
+                    unchosen_stores.add(store);
+                }
+            }
+            catch (Exception e)
+            {
+                Log.e("AddSectionAlertDialog", "Failed loading branches for " + store, e);
+            }
+        }
+    }
+
+    private void setSpinners()
     {
         ArrayAdapter<String> supermarketAdapter =
                 new ArrayAdapter<>(context,
                         android.R.layout.simple_spinner_dropdown_item,
-                        all_stores);
+                        supermarkets);
 
         spinnerSupermarkets.setAdapter(supermarketAdapter);
 
@@ -77,17 +152,34 @@ public class AddSupermarketAlertDialog
             @Override
             public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id)
             {
-                btnAdd.setEnabled(true);
+                String selectedSupermarket = supermarkets.get(position);
+
+                sections = unchosen_branches.get(selectedSupermarket);
+
+                if (sections == null || sections.isEmpty())
+                {
+                    spinnerSections.setAdapter(null);
+                    spinnerSections.setEnabled(false);
+                    return;
+                }
+
+                ArrayAdapter<String> sectionAdapter =
+                        new ArrayAdapter<>(context,
+                                android.R.layout.simple_spinner_dropdown_item,
+                                sections);
+
+                spinnerSections.setAdapter(sectionAdapter);
+                spinnerSections.setEnabled(true);
             }
 
             @Override
             public void onNothingSelected(android.widget.AdapterView<?> parent)
             {
-                btnAdd.setEnabled(false);
+                spinnerSections.setEnabled(false);
             }
         });
 
-        btnAdd.setEnabled(false);
+        spinnerSections.setEnabled(false);
     }
 
     private void setButton()
@@ -101,44 +193,44 @@ public class AddSupermarketAlertDialog
 
                 if (supermarketName == null)
                 {
-                    Toast.makeText(context, "נא לבחור סופרמרקט", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "נא לבחור סופרמרקט ומחלקה", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-                ArrayList<String> curr_supermarkets = new ArrayList<>(choices.keySet());
-                curr_supermarkets.add(supermarketName);
+                String sectionName = (String) spinnerSections.getSelectedItem();
 
-                Baskit.notActivityRunWhenServerActive(() ->
+                if (sectionName == null)
                 {
-                    try
-                    {
-                        apiHandler.setStores(curr_supermarkets);
+                    Toast.makeText(context, "נא לבחור סופרמרקט ומחלקה", Toast.LENGTH_SHORT).show();
+                    return;
+                }
 
-                        activity.runOnUiThread(() ->
+                Supermarket supermarket = new Supermarket(supermarketName, sectionName);
+
+                Baskit.notActivityRunIfOnline(() -> authHandler.addSupermarketSection(supermarket, () ->
+                {
+                    activity.runOnUiThread(() ->
+                    {
+                        choices.putIfAbsent(supermarket.getSupermarket(), new ArrayList<>());
+                        ArrayList<String> sectionsList = choices.get(supermarket.getSupermarket());
+
+                        if (sectionsList == null)
                         {
-                            if (!choices.containsKey(supermarketName))
-                            {
-                                choices.put(supermarketName, new ArrayList<>());
-                            }
+                            sectionsList = new ArrayList<>();
+                            choices.put(supermarket.getSupermarket(), sectionsList);
+                        }
 
-                            onStoreAddedListener.onStoreAdded(supermarketName, new ArrayList<>());
+                        if (!sectionsList.contains(supermarket.getSection()))
+                        {
+                            sectionsList.add(supermarket.getSection());
+                        }
 
-                            ad.dismiss();
-                        });
-                    }
-                    catch (IOException | JSONException e)
-                    {
-                        Log.e("AddSupermarketAlertDialog", "Failed to set stores", e);
-                        activity.runOnUiThread(() ->
-                                Toast.makeText(context, "שגיאה בשמירת הסופרמרקט", Toast.LENGTH_SHORT).show());
-                    }
-                }, activity);
+                        supermarketsAdapter.updateData(choices);
+                        supermarketsAdapter.notifyDataSetChanged();
+                        ad.dismiss();
+                    });
+                }), activity);
             }
         });
-    }
-
-    public void show()
-    {
-        ad.show();
     }
 }

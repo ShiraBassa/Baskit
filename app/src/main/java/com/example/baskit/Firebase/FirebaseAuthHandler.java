@@ -81,8 +81,10 @@ public class FirebaseAuthHandler
             return;
         }
 
+        // Current session
         currUser.reload().addOnCompleteListener(task ->
         {
+            // No current session
             if (!task.isSuccessful())
             {
                 refAuth.signOut();
@@ -90,43 +92,54 @@ public class FirebaseAuthHandler
                 return;
             }
 
+            // There is a current session -> user info
             refUsers.child(currUser.getUid())
                     .addListenerForSingleValueEvent(new ValueEventListener()
                     {
                         @Override
                         public void onDataChange(@NonNull DataSnapshot snapshot)
                         {
-                            if (snapshot.exists())
+                            if (snapshot.exists()) //There is info about the current user in the firebase
                             {
-                                user = snapshot.getValue(User.class);
+                                user = snapshot.getValue(User.class); // Unwrap the info
 
-                                currUser.getIdToken(true).addOnCompleteListener(taskTwo ->
+                                // Get the session token
+                                currUser.getIdToken(false).addOnCompleteListener(taskTwo ->
                                 {
-                                    if (taskTwo.isSuccessful())
+                                    if (taskTwo.isSuccessful()) // There is a token
                                     {
                                         String idToken = taskTwo.getResult().getToken();
                                         user.setToken(idToken);
 
                                         ArrayList<String> listIDs = user.getListIDs();
 
+                                        // There are lists
                                         if (listIDs != null)
                                         {
-                                            listIDs.removeIf(Objects::isNull);
                                             user.setListIDs(listIDs);
 
-                                            if (listIDs.isEmpty())
+                                            // Correcting the interrupted listIDs snapshots
+                                            if (!listIDs.isEmpty())
                                             {
-                                                refUsers.child(user.getId()).child("listIDs").removeValue();
-                                            }
-                                            else
-                                            {
-                                                refUsers.child(user.getId()).child("listIDs").setValue(listIDs);
+                                                listIDs.removeIf(Objects::isNull); // Remove the null object lists (no actual list, not referring to an empty list but to an broken one)
+                                                user.setListIDs(listIDs);
+
+                                                // Update the firebase
+                                                if (listIDs.isEmpty())
+                                                {
+                                                    refUsers.child(user.getId()).child("listIDs").removeValue();
+                                                }
+                                                else
+                                                {
+                                                    refUsers.child(user.getId()).child("listIDs").setValue(listIDs);
+                                                }
                                             }
                                         }
 
+                                        // Login to the server
                                         new Thread(() ->
                                         {
-                                            boolean ok = apiHandler.setFirebaseToken(idToken);
+                                            boolean ok = apiHandler.login(idToken);
                                             new Handler(Looper.getMainLooper()).post(() ->
                                             {
                                                 if (ok) callback.onAuthSuccess();
@@ -134,17 +147,17 @@ public class FirebaseAuthHandler
                                             });
                                         }).start();
                                     }
-                                    else
+                                    else // There is no token
                                     {
                                         postError(callback, "Failed to get session token. Please try again.", ErrorType.GENERAL);
                                     }
                                 });
                             }
-                            else
+                            else //There is no info about the current user in the firebase
                             {
                                 user = new User(currUser.getUid(), currUser.getEmail());
 
-                                currUser.getIdToken(true).addOnCompleteListener(taskTwo ->
+                                currUser.getIdToken(false).addOnCompleteListener(taskTwo ->
                                 {
                                     if (taskTwo.isSuccessful())
                                     {
@@ -153,15 +166,13 @@ public class FirebaseAuthHandler
 
                                         new Thread(() ->
                                         {
-                                            boolean loginSuccess = apiHandler.setFirebaseToken(user.getToken());
+                                            boolean loginSuccess = apiHandler.login(user.getToken());
 
                                             if (!loginSuccess)
                                             {
                                                 postError(callback, "Server login failed", ErrorType.GENERAL);
                                                 return;
                                             }
-
-                                            getUserInfo();
 
                                             refUsers.child(user.getId()).setValue(user)
                                                     .addOnCompleteListener(taskDB ->
@@ -211,7 +222,7 @@ public class FirebaseAuthHandler
 
                         user = new User(firebaseUser.getUid(), email);
 
-                        firebaseUser.getIdToken(true).addOnCompleteListener(taskTwo ->
+                        firebaseUser.getIdToken(false).addOnCompleteListener(taskTwo ->
                         {
                             if (taskTwo.isSuccessful())
                             {
@@ -220,15 +231,13 @@ public class FirebaseAuthHandler
 
                                 new Thread(() ->
                                 {
-                                    boolean loginSuccess = apiHandler.setFirebaseToken(user.getToken());
+                                    boolean loginSuccess = apiHandler.login(user.getToken());
 
                                     if (!loginSuccess)
                                     {
                                         postError(callback, "Server login failed", ErrorType.GENERAL);
                                         return;
                                     }
-
-                                    getUserInfo();
 
                                     refUsers.child(user.getId()).setValue(user)
                                             .addOnCompleteListener(taskDB ->
@@ -344,7 +353,7 @@ public class FirebaseAuthHandler
                                 {
                                     user = taskDB.getResult().getValue(User.class);
 
-                                    firebaseUser.getIdToken(true).addOnCompleteListener(taskTwo ->
+                                    firebaseUser.getIdToken(false).addOnCompleteListener(taskTwo ->
                                     {
                                         if (taskTwo.isSuccessful())
                                         {
@@ -353,7 +362,7 @@ public class FirebaseAuthHandler
 
                                             new Thread(() ->
                                             {
-                                                boolean ok = apiHandler.setFirebaseToken(user.getToken());
+                                                boolean ok = apiHandler.login(user.getToken());
 
                                                 if (!ok)
                                                 {
@@ -374,7 +383,7 @@ public class FirebaseAuthHandler
                                 {
                                     user = new User(firebaseUser.getUid(), firebaseUser.getEmail());
 
-                                    firebaseUser.getIdToken(true).addOnCompleteListener(taskTwo ->
+                                    firebaseUser.getIdToken(false).addOnCompleteListener(taskTwo ->
                                     {
                                         if(taskTwo.isSuccessful())
                                         {
@@ -383,15 +392,13 @@ public class FirebaseAuthHandler
 
                                             new Thread(() ->
                                             {
-                                                boolean loginSuccess = apiHandler.setFirebaseToken(user.getToken());
+                                                boolean loginSuccess = apiHandler.login(user.getToken());
 
                                                 if (!loginSuccess)
                                                 {
                                                     postError(callback, "Server login failed", ErrorType.GENERAL);
                                                     return;
                                                 }
-
-                                                getUserInfo();
 
                                                 refUsers.child(user.getId()).setValue(user)
                                                         .addOnCompleteListener(taskDBTwo ->
@@ -427,74 +434,6 @@ public class FirebaseAuthHandler
         refAuth.signOut();
         resetInstance();
         apiHandler.resetInstance();
-    }
-
-    private void getUserInfo()
-    {
-        if (user == null)
-        {
-            Log.e("GET_USER_INFO", "User is null");
-            return;
-        }
-
-        user.setName("משתמש");
-
-        try
-        {
-            ArrayList<String> all_cities = apiHandler.getAllCities();
-            if (all_cities == null || all_cities.isEmpty())
-            {
-                Log.e("GET_USER_INFO", "No cities returned from server");
-                return;
-            }
-
-            ArrayList<String> cities = new ArrayList<>();
-            cities.add(all_cities.get(0));
-            apiHandler.setCities(cities);
-
-            ArrayList<String> all_stores = apiHandler.getStores();
-            if (all_stores == null || all_stores.isEmpty())
-            {
-                Log.e("GET_USER_INFO", "No stores returned from server");
-                return;
-            }
-
-            ArrayList<String> stores = new ArrayList<>();
-            stores.add(all_stores.get(0));
-            apiHandler.setStores(stores);
-
-            Map<String, ArrayList<String>> all_branches = apiHandler.getBranches();
-            if (all_branches == null)
-            {
-                Log.e("GET_USER_INFO", "No branches map returned from server");
-                return;
-            }
-
-            Map<String, ArrayList<String>> branches = new HashMap<>();
-            String firstStore = stores.get(0);
-            ArrayList<String> firstStoreBranches = all_branches.get(firstStore);
-
-            if (firstStoreBranches == null || firstStoreBranches.isEmpty())
-            {
-                Log.e("GET_USER_INFO", "No branches returned for store=" + firstStore);
-                return;
-            }
-
-            ArrayList<String> selectedBranches = new ArrayList<>();
-            selectedBranches.add(firstStoreBranches.get(0));
-            if (firstStoreBranches.size() > 1)
-            {
-                selectedBranches.add(firstStoreBranches.get(1));
-            }
-
-            branches.put(firstStore, selectedBranches);
-            apiHandler.setBranches(branches);
-        }
-        catch (IOException | JSONException e)
-        {
-            e.printStackTrace();
-            Log.e("GET_USER_INFO", "Error loading user info", e);
-        }
     }
 
     public void addSupermarketSection(Supermarket supermarket, Runnable onComplete)

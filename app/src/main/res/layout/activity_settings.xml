@@ -29,7 +29,7 @@
             android:src="@drawable/ic_log_out"
             android:scaleType="fitCenter"
             android:background="@null"
-            android:tint="?attr/colorPrimaryVariant" />
+            app:tint="?attr/colorPrimaryVariant" />
 
         <TextView
             android:id="@+id/tv_title"
@@ -68,8 +68,7 @@
 
             <include
                 android:id="@+id/supermarkets_table"
-                layout="@layout/supermarkets_table"
-                android:layout_marginBottom="20dp"/>
+                layout="@layout/supermarkets_table"/>
 
             <include
                 android:id="@+id/cities_table"
