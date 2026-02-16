@@ -1,5 +1,6 @@
 package com.example.baskit.Home;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
@@ -42,19 +43,24 @@ public class AddSupermarketAlertDialog
     Map<String, ArrayList<String>> choices;
     SupermarketsListAdapter supermarketsAdapter;
     private final APIHandler apiHandler = APIHandler.getInstance();
+    private OnSubmit onSubmit;
+    private ArrayList<String> cities;
 
-    public interface OnStoreAddedListener {
-        void onStoreAdded(String storeName, ArrayList<String> branches);
+    public interface OnSubmit
+    {
+        void OnSubmit(Supermarket supermarket);
     }
 
     public AddSupermarketAlertDialog(Activity activity,
                                      Context context,
-                                     SupermarketsListAdapter supermarketsAdapter)
+                                     SupermarketsListAdapter supermarketsAdapter,
+                                     OnSubmit onSubmit)
             throws JSONException, IOException
     {
         this.activity = activity;
         this.context = context;
         this.supermarketsAdapter = supermarketsAdapter;
+        this.onSubmit = onSubmit;
 
         Baskit.notActivityRunWhenServerActive(() ->
         {
@@ -72,7 +78,18 @@ public class AddSupermarketAlertDialog
         }, activity);
     }
 
-    private void init()
+    public AddSupermarketAlertDialog(Activity activity,
+                                     Context context,
+                                     SupermarketsListAdapter supermarketsAdapter,
+                                     OnSubmit onSubmit,
+                                     ArrayList<String> cities)
+            throws JSONException, IOException
+    {
+        this(activity, context, supermarketsAdapter, onSubmit);
+        this.cities = cities;
+    }
+
+        private void init()
     {
         authHandler = FirebaseAuthHandler.getInstance();
 
@@ -102,8 +119,18 @@ public class AddSupermarketAlertDialog
         unchosen_branches = new HashMap<>();
         unchosen_stores = new ArrayList<>();
 
-        Map<String, ArrayList<String>> allBranches =
-                apiHandler.getAllBranchesBulk();
+        Map<String, ArrayList<String>> allBranches;
+
+        if (cities == null)
+        {
+            allBranches =
+                    apiHandler.getAllBranchesBulk();
+        }
+        else
+        {
+            allBranches =
+                    apiHandler.getAllBranchesBulk(cities);
+        }
 
         for (String store : allBranches.keySet())
         {
@@ -206,30 +233,8 @@ public class AddSupermarketAlertDialog
                 }
 
                 Supermarket supermarket = new Supermarket(supermarketName, sectionName);
-
-                Baskit.notActivityRunIfOnline(() -> authHandler.addSupermarketSection(supermarket, () ->
-                {
-                    activity.runOnUiThread(() ->
-                    {
-                        choices.putIfAbsent(supermarket.getSupermarket(), new ArrayList<>());
-                        ArrayList<String> sectionsList = choices.get(supermarket.getSupermarket());
-
-                        if (sectionsList == null)
-                        {
-                            sectionsList = new ArrayList<>();
-                            choices.put(supermarket.getSupermarket(), sectionsList);
-                        }
-
-                        if (!sectionsList.contains(supermarket.getSection()))
-                        {
-                            sectionsList.add(supermarket.getSection());
-                        }
-
-                        supermarketsAdapter.updateData(choices);
-                        supermarketsAdapter.notifyDataSetChanged();
-                        ad.dismiss();
-                    });
-                }), activity);
+                onSubmit.OnSubmit(supermarket);
+                ad.dismiss();
             }
         });
     }

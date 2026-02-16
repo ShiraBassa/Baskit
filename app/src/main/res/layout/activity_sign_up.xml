@@ -41,6 +41,10 @@
         android:id="@+id/cities_table"
         layout="@layout/cities_table" />
 
+    <include
+        android:id="@+id/supermarkets_table"
+        layout="@layout/supermarkets_table"/>
+
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

@@ -7,11 +7,13 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.Toast;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.baskit.API.APIHandler;
+import com.example.baskit.Baskit;
 import com.example.baskit.Firebase.FirebaseAuthHandler;
 import com.example.baskit.List.CitiesListAdapter;
 import com.example.baskit.Login.LoginActivity;
@@ -136,7 +138,37 @@ public class SettingsActivity extends MasterActivity
                 new AddSupermarketAlertDialog(
                         SettingsActivity.this,
                         SettingsActivity.this,
-                        supermarketsAdapter
+                        supermarketsAdapter,
+                        new AddSupermarketAlertDialog.OnSubmit()
+                        {
+                            @Override
+                            public void OnSubmit(Supermarket supermarket)
+                            {
+                                Baskit.notActivityRunIfOnline(() -> authHandler.addSupermarketSection(supermarket, () ->
+                                {
+                                    SettingsActivity.this.runOnUiThread(() ->
+                                    {
+                                        choices.putIfAbsent(supermarket.getSupermarket(), new ArrayList<>());
+                                        ArrayList<String> sectionsList = choices.get(supermarket.getSupermarket());
+
+                                        if (sectionsList == null)
+                                        {
+                                            sectionsList = new ArrayList<>();
+                                            choices.put(supermarket.getSupermarket(), sectionsList);
+                                        }
+
+                                        if (!sectionsList.contains(supermarket.getSection()))
+                                        {
+                                            sectionsList.add(supermarket.getSection());
+                                        }
+
+                                        supermarketsAdapter.updateData(choices);
+                                        supermarketsAdapter.notifyDataSetChanged();
+                                    });
+                                }), SettingsActivity.this);
+                            }
+                        },
+                        cities
                 );
             }
             catch (JSONException e)
@@ -206,7 +238,32 @@ public class SettingsActivity extends MasterActivity
                         SettingsActivity.this,
                         cities,
                         all_cities,
-                        citiesAdapter
+                        citiesAdapter,
+                        new AddCityAlertDialog.OnSubmit()
+                        {
+                            @Override
+                            public void OnSubmit(ArrayList<String> city_choices)
+                            {
+                                Baskit.notActivityRunWhenServerActive(() ->
+                                {
+                                    try
+                                    {
+                                        apiHandler.setCities(city_choices);
+
+                                        SettingsActivity.this.runOnUiThread(() ->
+                                        {
+                                            citiesAdapter.notifyDataSetChanged();
+                                        });
+                                    }
+                                    catch (IOException | JSONException e)
+                                    {
+                                        Log.e("AddCityAlertDialog", "Failed to set cities", e);
+                                        SettingsActivity.this.runOnUiThread(() ->
+                                                Toast.makeText(SettingsActivity.this, "שגיאה בשמירת הערים", Toast.LENGTH_SHORT).show());
+                                    }
+                                }, SettingsActivity.this);
+                            }
+                        }
                 ).show();
             }
             catch (JSONException e)

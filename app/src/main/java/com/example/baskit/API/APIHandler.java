@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 public class APIHandler
 {
     private static APIHandler instance;
-    private static final String PRIVATE_NETWORK_URL = "192.168.1.247";
+    private static final String PRIVATE_NETWORK_URL = "172.20.10.13";
     private static final String EMULATOR_URL = "10.0.2.2";
 
     private static final String SERVER_URL = "http://" + PRIVATE_NETWORK_URL + ":5001";
@@ -661,10 +661,27 @@ public class APIHandler
         return branches;
     }
 
-    public Map<String, ArrayList<String>> getAllBranchesBulk()
+    public Map<String, ArrayList<String>> getAllBranchesBulk(ArrayList<String> cities)
             throws IOException, JSONException
     {
-        String raw = getRaw("/all_branches_bulk");
+        StringBuilder endpoint = new StringBuilder("/all_branches_bulk");
+
+        if (cities != null && !cities.isEmpty())
+        {
+            endpoint.append("?");
+            for (int i = 0; i < cities.size(); i++)
+            {
+                endpoint.append("cities=");
+                endpoint.append(URLEncoder.encode(cities.get(i), "UTF-8"));
+
+                if (i < cities.size() - 1)
+                {
+                    endpoint.append("&");
+                }
+            }
+        }
+
+        String raw = getRaw(endpoint.toString());
         JSONObject json = new JSONObject(raw);
 
         Map<String, ArrayList<String>> result = new HashMap<>();
@@ -685,5 +702,11 @@ public class APIHandler
         }
 
         return result;
+    }
+
+    public Map<String, ArrayList<String>> getAllBranchesBulk()
+            throws IOException, JSONException
+    {
+        return getAllBranchesBulk(null);
     }
 }

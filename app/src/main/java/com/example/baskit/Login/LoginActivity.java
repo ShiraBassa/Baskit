@@ -60,7 +60,7 @@ public class LoginActivity extends MasterActivity implements FirebaseAuthHandler
                     {
                         User user = authHandler.getUser();
 
-                        if (user.getName().isEmpty() || user.getCities() == null)
+                        if (user.getName().isEmpty())
                         {
                             signUpLauncher.launch(new Intent(LoginActivity.this, SignUpActivity.class));
                         }
@@ -166,7 +166,7 @@ public class LoginActivity extends MasterActivity implements FirebaseAuthHandler
     {
         User user = authHandler.getUser();
 
-        if (user.getName().isEmpty() || user.getCities() == null)
+        if (user.getName().isEmpty())
         {
             signUpLauncher.launch(new Intent(LoginActivity.this, SignUpActivity.class));
         }

@@ -15,6 +15,7 @@ import androidx.appcompat.app.AlertDialog;
 import com.example.baskit.API.APIHandler;
 import com.example.baskit.Baskit;
 import com.example.baskit.List.CitiesListAdapter;
+import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.MasterActivity;
 import com.example.baskit.R;
 
@@ -35,12 +36,19 @@ public class AddCityAlertDialog
     ArrayList<String> all_cities, city_choices, unchosen_cities;
     private final APIHandler apiHandler = APIHandler.getInstance();
     CitiesListAdapter citiesListAdapter;
+    private OnSubmit onSubmit;
+
+    public interface OnSubmit
+    {
+        void OnSubmit(ArrayList<String> city_choices);
+    }
 
     public AddCityAlertDialog(Activity activity,
                               Context context,
                               ArrayList<String> city_choices,
                               ArrayList<String> all_cities,
-                              CitiesListAdapter citiesListAdapter)
+                              CitiesListAdapter citiesListAdapter,
+                              OnSubmit onSubmit)
             throws JSONException, IOException
     {
         this.activity = activity;
@@ -48,6 +56,7 @@ public class AddCityAlertDialog
         this.city_choices = city_choices;
         this.citiesListAdapter = citiesListAdapter;
         this.all_cities = all_cities;
+        this.onSubmit = onSubmit;
 
         unchosen_cities = new ArrayList<>();
         unchosen_cities.addAll(all_cities);
@@ -109,26 +118,8 @@ public class AddCityAlertDialog
                 }
 
                 city_choices.add(city);
-
-                Baskit.notActivityRunWhenServerActive(() ->
-                {
-                    try
-                    {
-                        apiHandler.setCities(city_choices);
-
-                        activity.runOnUiThread(() ->
-                        {
-                            citiesListAdapter.notifyDataSetChanged();
-                            ad.dismiss();
-                        });
-                    }
-                    catch (IOException | JSONException e)
-                    {
-                        Log.e("AddCityAlertDialog", "Failed to set cities", e);
-                        activity.runOnUiThread(() ->
-                                Toast.makeText(context, "שגיאה בשמירת הערים", Toast.LENGTH_SHORT).show());
-                    }
-                }, activity);
+                onSubmit.OnSubmit(city_choices);
+                ad.dismiss();
             }
         });
     }

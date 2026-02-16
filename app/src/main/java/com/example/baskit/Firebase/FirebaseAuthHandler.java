@@ -436,67 +436,80 @@ public class FirebaseAuthHandler
         apiHandler.resetInstance();
     }
 
+    public void setSupermarkets(Map<String, ArrayList<String>> supermarkets, Runnable onComplete)
+    {
+        try
+        {
+            apiHandler.setBranches(supermarkets);
+            apiHandler.updateSupermarkets();
+            apiHandler.reset();
+
+            if (onComplete != null)
+            {
+                new Handler(Looper.getMainLooper()).post(onComplete);
+            }
+        }
+        catch (IOException | JSONException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
     public void addSupermarketSection(Supermarket supermarket, Runnable onComplete)
     {
-        new Thread(() ->
+        try
         {
-            try
-            {
-                Map<String, ArrayList<String>> branches = apiHandler.getChoices();
-                String marketName = supermarket.getSupermarket();
-                String sectionName = supermarket.getSection();
+            Map<String, ArrayList<String>> branches = apiHandler.getChoices();
+            String marketName = supermarket.getSupermarket();
+            String sectionName = supermarket.getSection();
 
-                // Initialize the list if it doesn't exist
-                if (!branches.containsKey(marketName) || branches.get(marketName) == null) {
-                    branches.put(marketName, new ArrayList<>());
-                }
-
-                branches.get(marketName).add(sectionName);
-                apiHandler.setBranches(branches);
-                apiHandler.updateSupermarkets();
-                apiHandler.reset();
-
-                if (onComplete != null)
-                {
-                    new Handler(Looper.getMainLooper()).post(onComplete);
-                }
+            // Initialize the list if it doesn't exist
+            if (!branches.containsKey(marketName) || branches.get(marketName) == null) {
+                branches.put(marketName, new ArrayList<>());
             }
-            catch (IOException | JSONException e)
+
+            branches.get(marketName).add(sectionName);
+            apiHandler.setBranches(branches);
+            apiHandler.updateSupermarkets();
+            apiHandler.reset();
+
+            if (onComplete != null)
             {
-                e.printStackTrace();
+                new Handler(Looper.getMainLooper()).post(onComplete);
             }
-        }).start();
+        }
+        catch (IOException | JSONException e)
+        {
+            e.printStackTrace();
+        }
     }
 
     public void removeSupermarketSection(Supermarket supermarket, Runnable onComplete)
     {
-        new Thread(() ->
+        try
         {
-            try
+            Map<String, ArrayList<String>> branches = apiHandler.getChoices();
+            String supermarketName = supermarket.getSupermarket();
+            Objects.requireNonNull(branches.get(supermarketName)).remove(supermarket.getSection());
+
+            if (Objects.requireNonNull(branches.get(supermarketName)).isEmpty())
             {
-                Map<String, ArrayList<String>> branches = apiHandler.getChoices();
-                String supermarketName = supermarket.getSupermarket();
-                Objects.requireNonNull(branches.get(supermarketName)).remove(supermarket.getSection());
-
-                if (Objects.requireNonNull(branches.get(supermarketName)).isEmpty())
-                {
-                    branches.remove(supermarketName);
-                }
-
-                apiHandler.setBranches(branches);
-                apiHandler.updateSupermarkets();
-                apiHandler.reset();
-
-                if (onComplete != null)
-                {
-                    new Handler(Looper.getMainLooper()).post(onComplete);
-                }
+                branches.remove(supermarketName);
             }
-            catch (IOException | JSONException e)
+
+            apiHandler.setBranches(branches);
+            apiHandler.updateSupermarkets();
+            apiHandler.reset();
+
+            if (onComplete != null)
             {
-                Log.e("Remove supermarket", e.getMessage());
+                new Handler(Looper.getMainLooper()).post(onComplete);
             }
-        }).start();
+        }
+        catch (IOException | JSONException e)
+        {
+            Log.e("Remove supermarket", e.getMessage());
+        }
     }
 
     public void addCity(String city, Runnable onComplete)
