@@ -1,5 +1,6 @@
 package com.example.baskit.List;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -23,7 +24,7 @@ public class CitiesListAdapter extends RecyclerView.Adapter<CitiesListAdapter.Vi
 
     private ArrayList<String> cities;
     private int selectedPosition = RecyclerView.NO_POSITION;
-    private Context context;
+    private final Context context;
 
     public CitiesListAdapter(Context context, ArrayList<String> cities)
     {
@@ -52,7 +53,7 @@ public class CitiesListAdapter extends RecyclerView.Adapter<CitiesListAdapter.Vi
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position)
+    public void onBindViewHolder(@NonNull ViewHolder holder, @SuppressLint("RecyclerView") int position)
     {
         String city = cities.get(position);
         holder.tvCity.setText(city);

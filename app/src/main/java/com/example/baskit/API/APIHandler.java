@@ -28,7 +28,7 @@ public class APIHandler
     private static final String PRIVATE_NETWORK_URL = "172.20.10.13";
     private static final String EMULATOR_URL = "10.0.2.2";
 
-    private static final String SERVER_URL = "http://" + PRIVATE_NETWORK_URL + ":5001";
+    private static final String SERVER_URL = "http://" + EMULATOR_URL + ":5001";
     private static String firebaseToken;
     private final OkHttpClient client = new OkHttpClient.Builder()
             .connectTimeout(0, TimeUnit.SECONDS)

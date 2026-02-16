@@ -82,8 +82,6 @@ public class ItemViewAlertDialog
 
             Map<String, Map<String, Double>> finalData = data;
 
-            if (activity == null) return;
-
             activity.runOnUiThread(() ->
             {
                 if (activity.isFinishing() || activity.isDestroyed()) return;

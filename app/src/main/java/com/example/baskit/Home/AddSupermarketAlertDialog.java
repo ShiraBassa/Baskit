@@ -44,23 +44,26 @@ public class AddSupermarketAlertDialog
     SupermarketsListAdapter supermarketsAdapter;
     private final APIHandler apiHandler = APIHandler.getInstance();
     private OnSubmit onSubmit;
+    private boolean runInBackground;
     private ArrayList<String> cities;
 
     public interface OnSubmit
     {
-        void OnSubmit(Supermarket supermarket);
+        void onSubmit(Supermarket supermarket);
     }
 
     public AddSupermarketAlertDialog(Activity activity,
                                      Context context,
                                      SupermarketsListAdapter supermarketsAdapter,
-                                     OnSubmit onSubmit)
+                                     OnSubmit onSubmit,
+                                     boolean runInBackground)
             throws JSONException, IOException
     {
         this.activity = activity;
         this.context = context;
         this.supermarketsAdapter = supermarketsAdapter;
         this.onSubmit = onSubmit;
+        this.runInBackground = runInBackground;
 
         Baskit.notActivityRunWhenServerActive(() ->
         {
@@ -82,10 +85,11 @@ public class AddSupermarketAlertDialog
                                      Context context,
                                      SupermarketsListAdapter supermarketsAdapter,
                                      OnSubmit onSubmit,
+                                     boolean runInBackground,
                                      ArrayList<String> cities)
             throws JSONException, IOException
     {
-        this(activity, context, supermarketsAdapter, onSubmit);
+        this(activity, context, supermarketsAdapter, onSubmit, runInBackground);
         this.cities = cities;
     }
 
@@ -211,30 +215,47 @@ public class AddSupermarketAlertDialog
 
     private void setButton()
     {
-        btnAdd.setOnClickListener(new View.OnClickListener()
+        btnAdd.setOnClickListener(v ->
         {
-            @Override
-            public void onClick(View v)
+            String supermarketName = (String) spinnerSupermarkets.getSelectedItem();
+            String sectionName = (String) spinnerSections.getSelectedItem();
+
+            if (supermarketName == null || sectionName == null)
             {
-                String supermarketName = (String) spinnerSupermarkets.getSelectedItem();
+                Toast.makeText(context, "נא לבחור סופרמרקט ומחלקה", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-                if (supermarketName == null)
+            Supermarket supermarket = new Supermarket(supermarketName, sectionName);
+
+            if (runInBackground)
+            {
+                new Thread(() ->
                 {
-                    Toast.makeText(context, "נא לבחור סופרמרקט ומחלקה", Toast.LENGTH_SHORT).show();
-                    return;
-                }
+                    try
+                    {
+                        onSubmit.onSubmit(supermarket);
 
-                String sectionName = (String) spinnerSections.getSelectedItem();
-
-                if (sectionName == null)
+                        activity.runOnUiThread(ad::dismiss);
+                    }
+                    catch (Exception e)
+                    {
+                        activity.runOnUiThread(() ->
+                                Toast.makeText(context, "שגיאה בהוספה", Toast.LENGTH_SHORT).show());
+                    }
+                }).start();
+            }
+            else
+            {
+                try
                 {
-                    Toast.makeText(context, "נא לבחור סופרמרקט ומחלקה", Toast.LENGTH_SHORT).show();
-                    return;
+                    onSubmit.onSubmit(supermarket);
+                    ad.dismiss();
                 }
-
-                Supermarket supermarket = new Supermarket(supermarketName, sectionName);
-                onSubmit.OnSubmit(supermarket);
-                ad.dismiss();
+                catch (Exception e)
+                {
+                    Toast.makeText(context, "שגיאה בהוספה", Toast.LENGTH_SHORT).show();
+                }
             }
         });
     }

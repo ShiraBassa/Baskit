@@ -340,13 +340,52 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
         isDropped = false;
         Supermarket supermarket = supermarkets.get(position);
 
-        if (isSingleSectionCurrently(supermarket))
+        boolean isChosenSupermarket = false;
+
+        // Unassigned supermarket should NEVER be treated as chosen
+        if (supermarket == unassigned_supermarket)
         {
-            holder.tvSupermarket.setText(supermarket.getSupermarket());
+            holder.tvSupermarket.setText(supermarket.toString());
+            holder.tvSupermarket.setTextColor(
+                    Baskit.getAppColor(context, com.google.android.material.R.attr.colorPrimary)
+            );
+            holder.tvSupermarket.setAlpha(1f);
         }
         else
         {
-            holder.tvSupermarket.setText(supermarket.toString());
+            for (Supermarket base : baseSupermarkets)
+            {
+                if (base.getSupermarket().equals(supermarket.getSupermarket()))
+                {
+                    isChosenSupermarket = true;
+                    break;
+                }
+            }
+
+            // If this section does NOT belong to chosen supermarkets,
+            // always show full "supermarket - section"
+            if (!isChosenSupermarket)
+            {
+                holder.tvSupermarket.setText(supermarket.toString());
+                holder.tvSupermarket.setTextColor(
+                        Baskit.getAppColor(context, com.google.android.material.R.attr.colorPrimary)
+                );
+                holder.tvSupermarket.setAlpha(1f);
+            }
+            else if (isSingleSectionCurrently(supermarket))
+            {
+                holder.tvSupermarket.setText(supermarket.getSupermarket());
+                holder.tvSupermarket.setTextColor(
+                        Baskit.getAppColor(context, com.google.android.material.R.attr.colorOnSurface)
+                );
+            }
+            else
+            {
+                holder.tvSupermarket.setText(supermarket.toString());
+                holder.tvSupermarket.setTextColor(
+                        Baskit.getAppColor(context, com.google.android.material.R.attr.colorOnSurface)
+                );
+            }
         }
 
         ArrayList<Item> items = itemsBySupermarket.get(supermarket);

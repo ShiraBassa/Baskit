@@ -14,16 +14,12 @@ import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.View;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.ColorUtils;
-import androidx.core.text.BidiFormatter;
-import androidx.core.text.TextDirectionHeuristicsCompat;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.baskit.MainComponents.Supermarket;
-import com.google.android.material.snackbar.Snackbar;
 
 public class Baskit extends Application
 {
@@ -38,7 +34,7 @@ public class Baskit extends Application
         super.onCreate();
 
         context = getApplicationContext();
-        onlineLive.postValue(isOnlineNow(Baskit.this));
+        onlineLive.postValue(isOnline(Baskit.this));
 
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         if (cm != null)
@@ -48,19 +44,19 @@ public class Baskit extends Application
                 @Override
                 public void onAvailable(Network network)
                 {
-                    onlineLive.postValue(isOnlineNow(Baskit.this));
+                    onlineLive.postValue(isOnline(Baskit.this));
                 }
 
                 @Override
                 public void onLost(Network network)
                 {
-                    onlineLive.postValue(isOnlineNow(Baskit.this));
+                    onlineLive.postValue(isOnline(Baskit.this));
                 }
 
                 @Override
                 public void onCapabilitiesChanged(Network network, NetworkCapabilities caps)
                 {
-                    onlineLive.postValue(isOnlineNow(Baskit.this));
+                    onlineLive.postValue(isOnline(Baskit.this));
                 }
             };
 
@@ -107,7 +103,7 @@ public class Baskit extends Application
         return onlineLive;
     }
 
-    public static boolean isOnlineNow(Context context)
+    public static boolean isOnline(Context context)
     {
         if (context == null) return false;
 

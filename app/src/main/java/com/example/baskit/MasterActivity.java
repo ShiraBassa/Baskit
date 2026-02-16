@@ -121,7 +121,7 @@ public abstract class MasterActivity extends AppCompatActivity
 
     protected boolean canUseApp()
     {
-        return Baskit.isOnlineNow(getApplicationContext());
+        return Baskit.isOnline(getApplicationContext());
     }
 
     public void runIfOnline(Runnable action)

@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -48,7 +49,9 @@ public class SignUpActivity extends MasterActivity
     CitiesListAdapter citiesAdapter;
     Map<String, ArrayList<String>> choices;
     SupermarketsListAdapter supermarketsAdapter;
+    TextView tvWelcome;
     User user;
+    final String WELCOME_MESSAGE = "Welcome to Baskit\nPlease provide your info below";
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -72,6 +75,9 @@ public class SignUpActivity extends MasterActivity
         btnAddSupermarket = findViewById(R.id.btn_add_supermarket);
         btnRemoveSupermarket = findViewById(R.id.btn_remove_supermarket);
         recyclerSupermarkets = findViewById(R.id.recycler_supermarket);
+        tvWelcome = findViewById(R.id.tv_welcome);
+
+        tvWelcome.setText(WELCOME_MESSAGE);
 
         cities = new ArrayList<>();
         choices = new HashMap<>();
@@ -81,8 +87,8 @@ public class SignUpActivity extends MasterActivity
             try
             {
                 all_cities = apiHandler.getAllCities();
-                citiesAdapter = new CitiesListAdapter(this, cities);
-                supermarketsAdapter = new SupermarketsListAdapter(this, choices);
+                citiesAdapter = new CitiesListAdapter(SignUpActivity.this, cities);
+                supermarketsAdapter = new SupermarketsListAdapter(SignUpActivity.this, choices);
 
                 runOnUiThread(() ->
                 {
@@ -202,7 +208,7 @@ public class SignUpActivity extends MasterActivity
                         new AddSupermarketAlertDialog.OnSubmit()
                         {
                             @Override
-                            public void OnSubmit(Supermarket supermarket)
+                            public void onSubmit(Supermarket supermarket)
                             {
                                 choices.putIfAbsent(supermarket.getSupermarket(), new ArrayList<>());
                                 ArrayList<String> sectionsList = choices.get(supermarket.getSupermarket());
@@ -222,6 +228,7 @@ public class SignUpActivity extends MasterActivity
                                 supermarketsAdapter.notifyDataSetChanged();
                             }
                         },
+                        false,
                         cities
                 );
             }

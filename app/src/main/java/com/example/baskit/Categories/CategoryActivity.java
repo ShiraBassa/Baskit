@@ -245,7 +245,9 @@ public class CategoryActivity extends MasterActivity
 
                                     if (category.getItems() == null || category.getItems().isEmpty())
                                     {
-                                        finish();
+                                        if (!isFinishing()) {
+                                            finish();
+                                        }
                                         return;
                                     }
 
@@ -392,7 +394,7 @@ public class CategoryActivity extends MasterActivity
                                     addItemFragment.dismiss();
                                 }
 
-                                if (!categoryName.equals(category.getName()))
+                                if (category != null && !categoryName.equals(category.getName()))
                                 {
                                     Snackbar snackbar = Snackbar.make(
                                             findViewById(android.R.id.content),

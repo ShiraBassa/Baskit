@@ -67,14 +67,15 @@
             android:orientation="vertical">
 
             <include
-                android:id="@+id/supermarkets_table"
-                layout="@layout/supermarkets_table"/>
-
-            <include
                 android:id="@+id/cities_table"
                 layout="@layout/cities_table" />
 
-    </LinearLayout>
+            <include
+                android:id="@+id/supermarkets_table"
+                layout="@layout/supermarkets_table"/>
+
+        </LinearLayout>
+
     </androidx.core.widget.NestedScrollView>
 
 </LinearLayout>

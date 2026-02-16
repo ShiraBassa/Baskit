@@ -26,6 +26,7 @@ import org.json.JSONException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Set;
 
 public class SettingsActivity extends MasterActivity
 {
@@ -142,7 +143,7 @@ public class SettingsActivity extends MasterActivity
                         new AddSupermarketAlertDialog.OnSubmit()
                         {
                             @Override
-                            public void OnSubmit(Supermarket supermarket)
+                            public void onSubmit(Supermarket supermarket)
                             {
                                 Baskit.notActivityRunIfOnline(() -> authHandler.addSupermarketSection(supermarket, () ->
                                 {
@@ -168,6 +169,7 @@ public class SettingsActivity extends MasterActivity
                                 }), SettingsActivity.this);
                             }
                         },
+                        true,
                         cities
                 );
             }
@@ -199,28 +201,35 @@ public class SettingsActivity extends MasterActivity
                     return;
                 }
 
-                runIfOnline(() ->
+                if (!Baskit.isOnline(SettingsActivity.this))
                 {
-                    authHandler.removeSupermarketSection(new Supermarket(supermarketName, sectionName), () ->
-                    {
-                        runOnUiThread(() ->
-                        {
-                            ArrayList<String> sections = choices.get(supermarketName);
-                            if (sections != null)
+                    Toast.makeText(SettingsActivity.this, "אין חיבור לאינטרנט", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                new Thread(() ->
+                {
+                    authHandler.removeSupermarketSection(
+                            new Supermarket(supermarketName, sectionName),
+                            () ->
                             {
-                                sections.remove(sectionName);
-
-                                if (sections.isEmpty())
+                                runOnUiThread(() ->
                                 {
-                                    choices.remove(supermarketName);
-                                }
+                                    ArrayList<String> sections = choices.get(supermarketName);
+                                    if (sections != null)
+                                    {
+                                        sections.remove(sectionName);
 
-                                supermarketsAdapter.updateData(choices);
-                                supermarketsAdapter.notifyDataSetChanged();
-                            }
-                        });
-                    });
-                });
+                                        if (sections.isEmpty())
+                                            choices.remove(supermarketName);
+
+                                        supermarketsAdapter.updateData(choices);
+                                        supermarketsAdapter.notifyDataSetChanged();
+                                    }
+                                });
+                            });
+
+                }).start();
             }
         });
 
