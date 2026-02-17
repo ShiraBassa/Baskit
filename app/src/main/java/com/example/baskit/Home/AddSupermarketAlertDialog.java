@@ -86,11 +86,13 @@ public class AddSupermarketAlertDialog
                                      SupermarketsListAdapter supermarketsAdapter,
                                      OnSubmit onSubmit,
                                      boolean runInBackground,
-                                     ArrayList<String> cities)
+                                     ArrayList<String> cities,
+                                     Map<String, ArrayList<String>> currentChoices)
             throws JSONException, IOException
     {
         this(activity, context, supermarketsAdapter, onSubmit, runInBackground);
         this.cities = cities;
+        this.choices = currentChoices;
     }
 
         private void init()
@@ -118,7 +120,7 @@ public class AddSupermarketAlertDialog
     private void getAPIInfo() throws JSONException, IOException
     {
         all_stores = apiHandler.getStores();
-        choices = apiHandler.getChoices();
+        // Removed line: choices = apiHandler.getChoices();
 
         unchosen_branches = new HashMap<>();
         unchosen_stores = new ArrayList<>();

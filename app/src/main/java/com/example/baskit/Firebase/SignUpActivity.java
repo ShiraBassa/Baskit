@@ -218,7 +218,8 @@ public class SignUpActivity extends MasterActivity
                             }
                         },
                         false,
-                        cities
+                        cities,
+                        choices
                 );
             }
             catch (JSONException e)

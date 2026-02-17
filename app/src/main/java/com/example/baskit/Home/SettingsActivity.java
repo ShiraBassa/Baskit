@@ -223,7 +223,8 @@ public class SettingsActivity extends MasterActivity
                             }
                         },
                         true,
-                        cities
+                        cities,
+                        choices
                 );
             }
             catch (JSONException e)
