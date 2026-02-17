@@ -86,7 +86,21 @@ public class ItemViewAlertDialog
             {
                 if (activity.isFinishing() || activity.isDestroyed()) return;
 
-                pricesAdapter = new ItemViewPricesAdapter(context, finalData, item.getSupermarket(), new ItemViewPricesAdapter.OnSupermarketClickListener()
+                Supermarket initialSupermarket = item.getSupermarket();
+
+                if (initialSupermarket != null && finalData != null)
+                {
+                    Map<String, Double> sections = finalData.get(initialSupermarket.getSupermarket());
+
+                    if (sections == null || !sections.containsKey(initialSupermarket.getSection()))
+                    {
+                        initialSupermarket = null;
+                        item.setSupermarket(null);
+                        item.setPrice(0);
+                    }
+                }
+
+                pricesAdapter = new ItemViewPricesAdapter(context, finalData, initialSupermarket, new ItemViewPricesAdapter.OnSupermarketClickListener()
                 {
                     @Override
                     public void onSupermarketClick(Supermarket supermarket)
@@ -176,6 +190,22 @@ public class ItemViewAlertDialog
     public void show(Item _item)
     {
         this.item = _item.clone();
+
+        if (pricesAdapter != null && pricesAdapter.getData() != null)
+        {
+            Supermarket currentSm = item.getSupermarket();
+
+            if (currentSm != null)
+            {
+                Map<String, Double> sections = pricesAdapter.getData().get(currentSm.getSupermarket());
+
+                if (sections == null || !sections.containsKey(currentSm.getSection()))
+                {
+                    item.setSupermarket(null);
+                    item.setPrice(0);
+                }
+            }
+        }
 
         if (pricesAdapter != null)
         {

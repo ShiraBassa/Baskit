@@ -4,9 +4,12 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -42,11 +45,35 @@ public class SettingsActivity extends MasterActivity
     Map<String, ArrayList<String>> choices;
     ArrayList<String> cities, all_cities;
 
+    private View loadingOverlay;
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
+
+        loadingOverlay = new FrameLayout(this);
+        loadingOverlay.setBackgroundColor(0x88000000); // semi-transparent black
+        loadingOverlay.setClickable(true);
+        loadingOverlay.setFocusable(true);
+        loadingOverlay.setVisibility(View.GONE);
+
+        ProgressBar progressBar = new ProgressBar(this);
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
+        );
+        params.gravity = Gravity.CENTER;
+        ((FrameLayout) loadingOverlay).addView(progressBar, params);
+
+        addContentView(
+                loadingOverlay,
+                new FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.MATCH_PARENT,
+                        FrameLayout.LayoutParams.MATCH_PARENT
+                )
+        );
 
         authHandler = FirebaseAuthHandler.getInstance();
 
@@ -101,6 +128,25 @@ public class SettingsActivity extends MasterActivity
         setButtons();
     }
 
+    private void setLoading(boolean loading)
+    {
+        runOnUiThread(() ->
+        {
+            btnAddSupermarket.setEnabled(!loading);
+            btnRemoveSupermarket.setEnabled(!loading);
+            btnAddCity.setEnabled(!loading);
+            btnRemoveCity.setEnabled(!loading);
+
+            recyclerSupermarkets.setEnabled(!loading);
+            recyclerCities.setEnabled(!loading);
+
+            if (loadingOverlay != null)
+            {
+                loadingOverlay.setVisibility(loading ? View.VISIBLE : View.GONE);
+            }
+        });
+    }
+
     private void setButtons()
     {
         btnHome.setOnClickListener(new View.OnClickListener()
@@ -145,6 +191,7 @@ public class SettingsActivity extends MasterActivity
                             @Override
                             public void onSubmit(Supermarket supermarket)
                             {
+                                setLoading(true);
                                 Baskit.notActivityRunIfOnline(() -> authHandler.addSupermarketSection(supermarket, () ->
                                 {
                                     new Thread(() ->
@@ -163,6 +210,8 @@ public class SettingsActivity extends MasterActivity
 
                                                 citiesAdapter.updateData(cities);
                                                 citiesAdapter.notifyDataSetChanged();
+
+                                                setLoading(false);
                                             });
                                         }
                                         catch (Exception e)
@@ -211,6 +260,8 @@ public class SettingsActivity extends MasterActivity
                     return;
                 }
 
+                setLoading(true);
+
                 new Thread(() ->
                 {
                     authHandler.removeSupermarketSection(
@@ -233,11 +284,14 @@ public class SettingsActivity extends MasterActivity
 
                                             citiesAdapter.updateData(cities);
                                             citiesAdapter.notifyDataSetChanged();
+
+                                            setLoading(false);
                                         });
                                     }
                                     catch (Exception e)
                                     {
                                         Log.e("SettingsActivity", "Full refresh after remove failed", e);
+                                        runOnUiThread(() -> setLoading(false));
                                     }
                                 }).start();
                             });
@@ -266,6 +320,7 @@ public class SettingsActivity extends MasterActivity
                             @Override
                             public void OnSubmit(ArrayList<String> city_choices)
                             {
+                                setLoading(true);
                                 Baskit.notActivityRunWhenServerActive(() ->
                                 {
                                     try
@@ -275,11 +330,13 @@ public class SettingsActivity extends MasterActivity
                                         SettingsActivity.this.runOnUiThread(() ->
                                         {
                                             citiesAdapter.notifyDataSetChanged();
+                                            setLoading(false);
                                         });
                                     }
                                     catch (IOException | JSONException e)
                                     {
                                         Log.e("AddCityAlertDialog", "Failed to set cities", e);
+                                        SettingsActivity.this.runOnUiThread(() -> setLoading(false));
                                         SettingsActivity.this.runOnUiThread(() ->
                                                 Toast.makeText(SettingsActivity.this, "שגיאה בשמירת הערים", Toast.LENGTH_SHORT).show());
                                     }
@@ -316,6 +373,8 @@ public class SettingsActivity extends MasterActivity
                     return;
                 }
 
+                setLoading(true);
+
                 authHandler.removeCity(city, () ->
                 {
                     runOnUiThread(() ->
@@ -325,6 +384,7 @@ public class SettingsActivity extends MasterActivity
                             cities.remove(city);
                             citiesAdapter.updateData(cities);
                             citiesAdapter.notifyDataSetChanged();
+                            setLoading(false);
                         }
                     });
                 });

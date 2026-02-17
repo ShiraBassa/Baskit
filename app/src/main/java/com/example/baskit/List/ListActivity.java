@@ -488,6 +488,15 @@ public class ListActivity extends MasterActivity
                                     {
                                         addItemFragment.endProgressBar();
                                         addItemFragment.dismiss();
+
+                                        addItemFragment = new AddItemFragment(
+                                                ListActivity.this,
+                                                ListActivity.this,
+                                                new ArrayList<>(itemsCodeNames.values()),
+                                                list.toItemNames(),
+                                                ListActivity.this::addItem
+                                        );
+                                        addItemFragment.show(getSupportFragmentManager(), "AddItemFragment");
                                     }
                                 });
                             }
@@ -531,6 +540,15 @@ public class ListActivity extends MasterActivity
                         {
                             addItemFragment.endProgressBar();
                             addItemFragment.dismiss();
+
+                            addItemFragment = new AddItemFragment(
+                                    ListActivity.this,
+                                    ListActivity.this,
+                                    new ArrayList<>(itemsCodeNames.values()),
+                                    list.toItemNames(),
+                                    ListActivity.this::addItem
+                            );
+                            addItemFragment.show(getSupportFragmentManager(), "AddItemFragment");
                         }
                     });
                 }
@@ -578,68 +596,159 @@ public class ListActivity extends MasterActivity
             return;
         }
 
-        double lowest;
-        Supermarket lowestSupermarket;
-
-        if (list == null || list.getCategories() == null) {
-            Toast.makeText(this, "List is not ready yet", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        for (Category category : list.getCategories().values())
+        runWhenServerActive(() ->
         {
-            if (category == null || category.getItems() == null) continue;
+            ArrayList<Supermarket> chosenSupermarkets = new ArrayList<>();
 
-            for (Item item : category.getItems().values())
+            try
             {
-                if (item == null) continue;
-                if (item.isChecked())
+                Map<String, ArrayList<String>> choices = apiHandler.getChoices();
+                if (choices != null)
                 {
-                    continue;
-                }
-
-                String absId = item.getAbsoluteId();
-                Map<String, Map<String, Double>> currItemPrices = (absId == null) ? null : allItems.get(absId);
-
-                if (currItemPrices == null || currItemPrices.isEmpty())
-                {
-                    lowest = 0.0;
-                    lowestSupermarket = Baskit.unassigned_supermarket;
-                }
-                else
-                {
-                    lowest = Double.MAX_VALUE;
-                    lowestSupermarket = null;
-
-                    for (Map.Entry<String, Map<String, Double>> SupermarketEntry : currItemPrices.entrySet())
+                    for (Map.Entry<String, ArrayList<String>> entry : choices.entrySet())
                     {
-                        String supermarket = SupermarketEntry.getKey();
+                        String supermarketName = entry.getKey();
+                        ArrayList<String> sections = entry.getValue();
 
-                        Map<String, Double> sectionMap = SupermarketEntry.getValue();
-                        if (sectionMap == null) continue;
-
-                        for (Map.Entry<String, Double> sectionEntry : sectionMap.entrySet())
+                        if (sections != null)
                         {
-                            String section = sectionEntry.getKey();
-                            Double price = sectionEntry.getValue();
-
-                            if (price < lowest)
+                            for (String section : sections)
                             {
-                                lowest = price;
-                                lowestSupermarket = new Supermarket(supermarket, section);
+                                chosenSupermarkets.add(new Supermarket(supermarketName, section));
                             }
                         }
                     }
                 }
-
-                item.setPrice(lowest);
-                item.setSupermarket(lowestSupermarket);
             }
-        }
+            catch (Exception e)
+            {
+                Log.e("ListActivity", "Failed to fetch chosen supermarkets", e);
+            }
 
-        runIfOnline(() ->
-        {
-            dbHandler.updateList(list);
+            for (Category category : list.getCategories().values())
+            {
+                if (category == null || category.getItems() == null) continue;
+
+                for (Item item : category.getItems().values())
+                {
+                    if (item == null || item.isChecked()) continue;
+
+                    String absId = item.getAbsoluteId();
+                    Map<String, Map<String, Double>> currItemPrices = (absId == null) ? null : allItems.get(absId);
+
+                    double lowest = 0.0;
+                    Supermarket lowestSupermarket = Baskit.unassigned_supermarket;
+
+                    if (currItemPrices == null || currItemPrices.isEmpty())
+                    {
+                        Supermarket currentSm = item.getSupermarket();
+
+                        if (currentSm != null)
+                        {
+                            continue;
+                        }
+
+                        lowest = 0.0;
+                        lowestSupermarket = Baskit.unassigned_supermarket;
+                        item.setPrice(lowest);
+                        item.setSupermarket(lowestSupermarket);
+                        continue;
+                    }
+
+                    if (currItemPrices != null && !currItemPrices.isEmpty())
+                    {
+                        double chosenLowest = Double.MAX_VALUE;
+                        Supermarket chosenLowestSupermarket = null;
+
+                        for (Map.Entry<String, Map<String, Double>> supermarketEntry : currItemPrices.entrySet())
+                        {
+                            String supermarketName = supermarketEntry.getKey();
+                            Map<String, Double> sectionMap = supermarketEntry.getValue();
+                            if (sectionMap == null) continue;
+
+                            for (Map.Entry<String, Double> sectionEntry : sectionMap.entrySet())
+                            {
+                                String section = sectionEntry.getKey();
+                                Double price = sectionEntry.getValue();
+
+                                boolean isChosen = false;
+                                for (Supermarket sm : chosenSupermarkets)
+                                {
+                                    if (sm.getSupermarket().equals(supermarketName)
+                                            && sm.getSection().equals(section))
+                                    {
+                                        isChosen = true;
+                                        break;
+                                    }
+                                }
+
+                                if (!isChosen) continue;
+
+                                if (price < chosenLowest)
+                                {
+                                    chosenLowest = price;
+                                    chosenLowestSupermarket = new Supermarket(supermarketName, section);
+                                }
+                            }
+                        }
+
+                        if (chosenLowestSupermarket != null)
+                        {
+                            lowest = chosenLowest;
+                            lowestSupermarket = chosenLowestSupermarket;
+                        }
+                        else
+                        {
+                            Supermarket currentSm = item.getSupermarket();
+
+                            if (currentSm != null)
+                            {
+                                lowest = item.getPrice();
+                                lowestSupermarket = currentSm;
+                                continue;
+                            }
+
+                            double absoluteLowest = Double.MAX_VALUE;
+                            Supermarket absoluteLowestSm = null;
+
+                            for (Map.Entry<String, Map<String, Double>> entry : currItemPrices.entrySet())
+                            {
+                                String supermarketName = entry.getKey();
+                                Map<String, Double> sectionMap = entry.getValue();
+                                if (sectionMap == null) continue;
+
+                                for (Map.Entry<String, Double> sectionEntry : sectionMap.entrySet())
+                                {
+                                    if (sectionEntry.getValue() < absoluteLowest)
+                                    {
+                                        absoluteLowest = sectionEntry.getValue();
+                                        absoluteLowestSm = new Supermarket(supermarketName, sectionEntry.getKey());
+                                    }
+                                }
+                            }
+
+                            if (absoluteLowestSm != null)
+                            {
+                                lowest = absoluteLowest;
+                                lowestSupermarket = absoluteLowestSm;
+                            }
+                            else
+                            {
+                                lowest = 0.0;
+                                lowestSupermarket = Baskit.unassigned_supermarket;
+                            }
+                        }
+                    }
+
+                    item.setPrice(lowest);
+                    item.setSupermarket(lowestSupermarket);
+                }
+            }
+
+            runOnUiThread(() ->
+            {
+                runIfOnline(() -> dbHandler.updateList(list));
+            });
         });
     }
 }

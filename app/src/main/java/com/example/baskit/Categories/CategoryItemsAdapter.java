@@ -240,11 +240,11 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
 
     private void setCheapest()
     {
-        double lowest;
-        Supermarket lowestSupermarket;
-
         for (Item item : category.getItems().values())
         {
+            double lowest = 0.0;
+            Supermarket lowestSupermarket = unassigned_supermarket;
+
             if (item.isChecked())
             {
                 continue;
@@ -254,27 +254,91 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
 
             if (currItemPrices == null || currItemPrices.isEmpty())
             {
+                Supermarket currentSm = item.getSupermarket();
+
+                if (currentSm != null)
+                {
+                    continue;
+                }
+
                 lowest = 0.0;
                 lowestSupermarket = unassigned_supermarket;
             }
             else
             {
-                lowest = Double.MAX_VALUE;
-                lowestSupermarket = null;
+                double chosenLowest = Double.MAX_VALUE;
+                Supermarket chosenLowestSupermarket = null;
 
-                for (Map.Entry<String, Map<String, Double>> SupermarketEntry : itemPrices.get(item.getAbsoluteId()).entrySet())
+                for (Map.Entry<String, Map<String, Double>> supermarketEntry : currItemPrices.entrySet())
                 {
-                    String supermarket = SupermarketEntry.getKey();
+                    String supermarketName = supermarketEntry.getKey();
 
-                    for (Map.Entry<String, Double> sectionEntry : SupermarketEntry.getValue().entrySet())
+                    boolean isChosen = false;
+                    for (Supermarket base : baseSupermarkets)
+                    {
+                        if (base.getSupermarket().equals(supermarketName))
+                        {
+                            isChosen = true;
+                            break;
+                        }
+                    }
+
+                    for (Map.Entry<String, Double> sectionEntry : supermarketEntry.getValue().entrySet())
                     {
                         String section = sectionEntry.getKey();
                         Double price = sectionEntry.getValue();
 
-                        if (price < lowest)
+                        if (isChosen && price < chosenLowest)
                         {
-                            lowest = price;
-                            lowestSupermarket = new Supermarket(supermarket, section);
+                            chosenLowest = price;
+                            chosenLowestSupermarket = new Supermarket(supermarketName, section);
+                        }
+                    }
+                }
+
+                if (chosenLowestSupermarket != null)
+                {
+                    lowest = chosenLowest;
+                    lowestSupermarket = chosenLowestSupermarket;
+                }
+                else
+                {
+                    Supermarket currentSm = item.getSupermarket();
+
+                    if (currentSm != null)
+                    {
+                        lowestSupermarket = currentSm;
+                        lowest = item.getPrice();
+                        continue;
+                    }
+
+                    if (currentSm == null)
+                    {
+                        double absoluteLowest = Double.MAX_VALUE;
+                        Supermarket absoluteLowestSm = null;
+
+                        for (Map.Entry<String, Map<String, Double>> entry : currItemPrices.entrySet())
+                        {
+                            String supermarketName = entry.getKey();
+                            for (Map.Entry<String, Double> sectionEntry : entry.getValue().entrySet())
+                            {
+                                if (sectionEntry.getValue() < absoluteLowest)
+                                {
+                                    absoluteLowest = sectionEntry.getValue();
+                                    absoluteLowestSm = new Supermarket(supermarketName, sectionEntry.getKey());
+                                }
+                            }
+                        }
+
+                        if (absoluteLowestSm != null)
+                        {
+                            lowest = absoluteLowest;
+                            lowestSupermarket = absoluteLowestSm;
+                        }
+                        else
+                        {
+                            lowest = 0.0;
+                            lowestSupermarket = Baskit.unassigned_supermarket;
                         }
                     }
                 }

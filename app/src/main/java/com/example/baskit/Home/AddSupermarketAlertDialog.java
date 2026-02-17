@@ -230,13 +230,13 @@ public class AddSupermarketAlertDialog
 
             if (runInBackground)
             {
+                ad.dismiss();
+
                 new Thread(() ->
                 {
                     try
                     {
                         onSubmit.onSubmit(supermarket);
-
-                        activity.runOnUiThread(ad::dismiss);
                     }
                     catch (Exception e)
                     {

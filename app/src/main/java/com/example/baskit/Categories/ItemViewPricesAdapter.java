@@ -25,6 +25,7 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
     private String selectedSupermarket, selectedSection;
     private final APIHandler apiHandler = APIHandler.getInstance();
     private Context context;
+    private Map<String, Map<String, Double>> originalPricesMap;
 
     public interface OnSupermarketClickListener
     {
@@ -33,6 +34,7 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
 
     public ItemViewPricesAdapter(Context context, Map<String, Map<String, Double>> pricesMap, Supermarket preselected_supermarket, OnSupermarketClickListener onSupermarketClickListener)
     {
+        this.originalPricesMap = pricesMap;
         this.context = context;
         this.listener = onSupermarketClickListener;
 
@@ -62,6 +64,11 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
                         pricesMap.get(supermarketName).get(sectionName)));
             }
         }
+    }
+
+    public Map<String, Map<String, Double>> getData()
+    {
+        return originalPricesMap;
     }
 
     public void resetSelection(String supermarketName, String sectionName)
