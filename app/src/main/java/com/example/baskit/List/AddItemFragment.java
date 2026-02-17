@@ -193,9 +193,9 @@ public class AddItemFragment extends DialogFragment
                     ViewGroup.LayoutParams.MATCH_PARENT
             );
 
-            // Force keyboard to open automatically
             getDialog().getWindow().setSoftInputMode(
-                    WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE
+                    WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+                            | WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE
             );
         }
 
@@ -206,13 +206,6 @@ public class AddItemFragment extends DialogFragment
         searchItem.setFocusableInTouchMode(true);
         searchItem.requestFocus();
 
-        InputMethodManager imm = (InputMethodManager)
-                requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-
-        if (imm != null)
-        {
-            imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
-        }
     }
 
     private void setupAutocomplete()
@@ -256,6 +249,37 @@ public class AddItemFragment extends DialogFragment
         searchItem.setThreshold(1);
         searchItem.setOnClickListener(v -> searchItem.showDropDown());
 
+        searchItem.setImeOptions(android.view.inputmethod.EditorInfo.IME_ACTION_DONE);
+        searchItem.setOnEditorActionListener((v, actionId, event) ->
+        {
+            if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_DONE)
+            {
+                searchItem.clearFocus();
+                hideKeyboard();
+                searchItem.post(() -> searchItem.showDropDown());
+                return true;
+            }
+            return false;
+        });
+
+        searchItem.setDropDownAnchor(searchItem.getId());
+        searchItem.setDropDownVerticalOffset(0);
+
+        searchItem.post(() ->
+        {
+            if (fragmentView == null) return;
+
+            int fragmentHeight = fragmentView.getHeight();
+            int searchBottom = searchItem.getBottom();
+
+            int maxHeightInsideFragment = fragmentHeight - searchBottom;
+
+            if (maxHeightInsideFragment > 0)
+            {
+                searchItem.setDropDownHeight(maxHeightInsideFragment);
+            }
+        });
+
         searchItem.setOnItemClickListener((parent, view, position, id) ->
         {
             String clickedName = Item.decodeKey((String) parent.getItemAtPosition(position));
@@ -276,10 +300,9 @@ public class AddItemFragment extends DialogFragment
 
             loadSupermarketPrices();
             infoLayout.setVisibility(View.VISIBLE);
+            searchItem.clearFocus();
             hideKeyboard();
         });
-
-        searchItem.setDropDownHeight(ViewGroup.LayoutParams.WRAP_CONTENT);
     }
 
     private void handleItemTyped()
