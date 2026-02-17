@@ -39,7 +39,7 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
         this.listener = onSupermarketClickListener;
 
         if (pricesMap != null && preselected_supermarket != null &&
-                preselected_supermarket != Baskit.unassigned_supermarket &&
+                preselected_supermarket != Baskit.UNASSIGNED_SUPERMARKET &&
                 pricesMap.containsKey(preselected_supermarket.getSupermarket()) &&
                 pricesMap.
                         get(preselected_supermarket.getSupermarket()).
@@ -88,7 +88,7 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
         if (exists &&
                 supermarketName != null &&
                 sectionName != null &&
-                !supermarketName.equals(Baskit.unassigned_supermarket.getSupermarket()))
+                !supermarketName.equals(Baskit.UNASSIGNED_SUPERMARKET.getSupermarket()))
         {
             selectedSupermarket = supermarketName;
             selectedSection = sectionName;

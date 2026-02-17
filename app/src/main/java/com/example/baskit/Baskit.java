@@ -24,9 +24,14 @@ import com.example.baskit.MainComponents.Supermarket;
 public class Baskit extends Application
 {
     private static Context context;
-    public static final Supermarket unassigned_supermarket = new Supermarket("לא נבחר", "");
+    public static final Supermarket UNASSIGNED_SUPERMARKET = new Supermarket("לא נבחר", "");
     private static final MutableLiveData<Boolean> onlineLive = new MutableLiveData<>(true);
     private ConnectivityManager.NetworkCallback networkCallback;
+    public static final String PRIVATE_NETWORK_URL = "172.20.10.13";
+    public static final String EMULATOR_URL = "10.0.2.2";
+
+    public static final String SERVER_URL = "http://" + EMULATOR_URL + ":5001";
+    public static final int SQLITE_CATEGORIES_CHUNK_SIZE = 40;
 
     @Override
     public void onCreate()

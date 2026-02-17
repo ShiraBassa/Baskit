@@ -637,7 +637,7 @@ public class ListActivity extends MasterActivity
                     Map<String, Map<String, Double>> currItemPrices = (absId == null) ? null : allItems.get(absId);
 
                     double lowest = 0.0;
-                    Supermarket lowestSupermarket = Baskit.unassigned_supermarket;
+                    Supermarket lowestSupermarket = Baskit.UNASSIGNED_SUPERMARKET;
 
                     if (currItemPrices == null || currItemPrices.isEmpty())
                     {
@@ -649,7 +649,7 @@ public class ListActivity extends MasterActivity
                         }
 
                         lowest = 0.0;
-                        lowestSupermarket = Baskit.unassigned_supermarket;
+                        lowestSupermarket = Baskit.UNASSIGNED_SUPERMARKET;
                         item.setPrice(lowest);
                         item.setSupermarket(lowestSupermarket);
                         continue;
@@ -735,7 +735,7 @@ public class ListActivity extends MasterActivity
                             else
                             {
                                 lowest = 0.0;
-                                lowestSupermarket = Baskit.unassigned_supermarket;
+                                lowestSupermarket = Baskit.UNASSIGNED_SUPERMARKET;
                             }
                         }
                     }

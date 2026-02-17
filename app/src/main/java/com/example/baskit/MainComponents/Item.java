@@ -6,9 +6,6 @@ import com.example.baskit.Baskit;
 import com.google.firebase.database.Exclude;
 import com.google.firebase.database.IgnoreExtraProperties;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @IgnoreExtraProperties
 public class Item implements Cloneable
 {
@@ -173,7 +170,7 @@ public class Item implements Cloneable
             return false;
         }
 
-        if (supermarket.equals(Baskit.unassigned_supermarket) ||
+        if (supermarket.equals(Baskit.UNASSIGNED_SUPERMARKET) ||
                 price == 0)
         {
             return false;
@@ -189,7 +186,7 @@ public class Item implements Cloneable
             return true;
         }
 
-        if (supermarket.equals(Baskit.unassigned_supermarket))
+        if (supermarket.equals(Baskit.UNASSIGNED_SUPERMARKET))
         {
             return true;
         }

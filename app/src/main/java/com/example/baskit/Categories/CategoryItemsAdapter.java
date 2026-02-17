@@ -19,7 +19,6 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.baskit.API.APIHandler;
 import com.example.baskit.Baskit;
 import com.example.baskit.MainComponents.Category;
 import com.example.baskit.MainComponents.Item;
@@ -44,7 +43,7 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
     Context context;
     ItemsAdapter.UpperClassFunctions upperClassFns;
 
-    public static final Supermarket unassigned_supermarket = Baskit.unassigned_supermarket;
+    public static final Supermarket unassigned_supermarket = Baskit.UNASSIGNED_SUPERMARKET;
 
     boolean isDropped;
     boolean draggable = false;
@@ -338,7 +337,7 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
                         else
                         {
                             lowest = 0.0;
-                            lowestSupermarket = Baskit.unassigned_supermarket;
+                            lowestSupermarket = Baskit.UNASSIGNED_SUPERMARKET;
                         }
                     }
                 }

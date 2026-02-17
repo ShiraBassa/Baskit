@@ -32,10 +32,6 @@ import java.util.concurrent.Future;
 public class APIHandler
 {
     private static APIHandler instance;
-    private static final String PRIVATE_NETWORK_URL = "172.20.10.13";
-    private static final String EMULATOR_URL = "10.0.2.2";
-
-    private static final String SERVER_URL = "http://" + EMULATOR_URL + ":5001";
     private static String firebaseToken;
     private final OkHttpClient client = new OkHttpClient.Builder()
             .connectTimeout(30, TimeUnit.SECONDS)
@@ -70,7 +66,7 @@ public class APIHandler
         try
         {
             Request request = new Request.Builder()
-                    .url(SERVER_URL + "/active")
+                    .url(Baskit.SERVER_URL + "/active")
                     .get()
                     .build();
 
@@ -486,15 +482,12 @@ public class APIHandler
                     return;
                 }
 
-                final int CHUNK_SIZE = 40;
-
                 List<String> codes = new ArrayList<>(missingCodeToName.keySet());
-
                 List<Future<Map<String, String>>> futures = new ArrayList<>();
 
-                for (int start = 0; start < codes.size(); start += CHUNK_SIZE)
+                for (int start = 0; start < codes.size(); start += Baskit.SQLITE_CATEGORIES_CHUNK_SIZE)
                 {
-                    int end = Math.min(start + CHUNK_SIZE, codes.size());
+                    int end = Math.min(start + Baskit.SQLITE_CATEGORIES_CHUNK_SIZE, codes.size());
 
                     Map<String, String> chunkMap = new HashMap<>();
                     for (int i = start; i < end; i++)
@@ -622,7 +615,7 @@ public class APIHandler
         {
             JSONObject body = new JSONObject();
             Request request = new Request.Builder()
-                    .url(SERVER_URL + "/user")
+                    .url(Baskit.SERVER_URL + "/user")
                     .addHeader("FirebaseToken", firebaseToken)
                     .post(RequestBody.create(body.toString(), MediaType.parse("application/json")))
                     .build();
@@ -649,7 +642,7 @@ public class APIHandler
     private String getRaw(String endpoint) throws IOException
     {
         Request request = new Request.Builder()
-                .url(SERVER_URL + endpoint)
+                .url(Baskit.SERVER_URL + endpoint)
                 .addHeader("FirebaseToken", firebaseToken)
                 .build();
 
@@ -670,7 +663,7 @@ public class APIHandler
 
     private void postRaw(String endpoint, String body) throws IOException {
         Request request = new Request.Builder()
-                .url(SERVER_URL + endpoint)
+                .url(Baskit.SERVER_URL + endpoint)
                 .addHeader("FirebaseToken", firebaseToken)
                 .post(RequestBody.create(body, MediaType.parse("application/json")))
                 .build();
@@ -900,7 +893,7 @@ public class APIHandler
     private String postRawWithResponse(String endpoint, String body) throws IOException
     {
         Request request = new Request.Builder()
-                .url(SERVER_URL + endpoint)
+                .url(Baskit.SERVER_URL + endpoint)
                 .addHeader("FirebaseToken", firebaseToken)
                 .post(RequestBody.create(body, MediaType.parse("application/json")))
                 .build();
