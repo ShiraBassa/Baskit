@@ -1,5 +1,7 @@
 package com.example.baskit.MainComponents;
 
+import com.example.baskit.Baskit;
+
 import java.util.Objects;
 
 public class Supermarket implements Cloneable
@@ -19,20 +21,34 @@ public class Supermarket implements Cloneable
         this.section = section;
     }
 
-    public String getSupermarket() {
+    public String getSupermarket()
+    {
         return supermarket;
     }
 
-    public void setSupermarket(String supermarket) {
-        this.supermarket = supermarket;
+    public String getDecodedSupermarket()
+    {
+        return Baskit.decodeKey(supermarket);
     }
 
-    public String getSection() {
+    public void setSupermarket(String supermarket)
+    {
+        this.supermarket = Baskit.encodeKey(supermarket);
+    }
+
+    public String getSection()
+    {
         return section;
     }
 
-    public void setSection(String section) {
-        this.section = section;
+    public String getDecodedSection()
+    {
+        return Baskit.decodeKey(section);
+    }
+
+    public void setSection(String section)
+    {
+        this.section = Baskit.encodeKey(section);
     }
 
     @Override
@@ -40,10 +56,10 @@ public class Supermarket implements Cloneable
     {
         if (section.isEmpty())
         {
-            return supermarket;
+            return getDecodedSupermarket();
         }
 
-        return supermarket + " ," + section;
+        return getDecodedSupermarket() + ", " + getDecodedSection();
     }
 
     @Override

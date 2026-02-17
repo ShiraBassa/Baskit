@@ -28,7 +28,6 @@ import org.json.JSONException;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -460,15 +459,14 @@ public class FirebaseAuthHandler
         try
         {
             Map<String, ArrayList<String>> branches = apiHandler.getChoices();
-            String marketName = supermarket.getSupermarket();
+            String supermarketName = supermarket.getSupermarket();
             String sectionName = supermarket.getSection();
 
-            // Initialize the list if it doesn't exist
-            if (!branches.containsKey(marketName) || branches.get(marketName) == null) {
-                branches.put(marketName, new ArrayList<>());
+            if (!branches.containsKey(supermarketName) || branches.get(supermarketName) == null) {
+                branches.put(supermarketName, new ArrayList<>());
             }
 
-            branches.get(marketName).add(sectionName);
+            branches.get(supermarketName).add(sectionName);
             apiHandler.setBranches(branches);
             apiHandler.updateSupermarkets();
             apiHandler.reset();

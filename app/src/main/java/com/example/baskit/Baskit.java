@@ -238,4 +238,30 @@ public class Baskit extends Application
             work.run();
         }
     }
+
+    public static String encodeKey(String s)
+    {
+        if (s == null) return null;
+        String out = s;
+        out = out.replace(".", "__dot__");
+        out = out.replace("$", "__dollar__");
+        out = out.replace("#", "__hash__");
+        out = out.replace("[", "__lbracket__");
+        out = out.replace("]", "__rbracket__");
+        out = out.replace("/", "__slash__");
+        return out;
+    }
+
+    public static String decodeKey(String s)
+    {
+        if (s == null) return null;
+        String out = s;
+        out = out.replace("__dot__", ".");
+        out = out.replace("__dollar__", "$");
+        out = out.replace("__hash__", "#");
+        out = out.replace("__lbracket__", "[");
+        out = out.replace("__rbracket__", "]");
+        out = out.replace("__slash__", "/");
+        return out;
+    }
 }

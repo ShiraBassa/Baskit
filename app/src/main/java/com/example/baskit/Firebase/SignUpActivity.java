@@ -3,34 +3,21 @@ package com.example.baskit.Firebase;
 import static com.example.baskit.Firebase.FBRefs.refUsers;
 
 import android.annotation.SuppressLint;
-import android.content.Intent;
 import android.os.Bundle;
-import android.text.SpannableString;
-import android.text.Spanned;
-import android.text.style.AbsoluteSizeSpan;
-import android.text.style.StyleSpan;
-import android.text.style.LeadingMarginSpan;
-import android.graphics.Typeface;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Spinner;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.baskit.API.APIHandler;
-import com.example.baskit.Baskit;
 import com.example.baskit.Home.AddCityAlertDialog;
 import com.example.baskit.Home.AddSupermarketAlertDialog;
-import com.example.baskit.Home.SettingsActivity;
 import com.example.baskit.Home.SupermarketsListAdapter;
 import com.example.baskit.List.CitiesListAdapter;
-import com.example.baskit.Login.ErrorType;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.MainComponents.User;
 import com.example.baskit.MasterActivity;

@@ -1,7 +1,5 @@
 package com.example.baskit.List;
 
-import android.graphics.Color;
-
 import android.app.Activity;
 import android.content.Context;
 import android.text.SpannableStringBuilder;
@@ -17,7 +15,6 @@ import com.example.baskit.Categories.SupermarketItemsAdapter;
 import com.example.baskit.MainComponents.Item;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;
-import com.google.android.material.transition.Hold;
 
 import java.util.ArrayList;
 import java.util.Map;

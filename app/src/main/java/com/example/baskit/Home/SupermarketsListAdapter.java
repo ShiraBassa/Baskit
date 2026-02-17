@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.baskit.Baskit;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;
 
@@ -101,7 +102,7 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
         }
 
         holder.sectionsAdapter.updateSelectedSection(selectedSupermarketName, selectedSectionName);
-        holder.tvSupermarketName.setText(supermarketName);
+        holder.tvSupermarketName.setText(Baskit.decodeKey(supermarketName));
     }
 
     @Override

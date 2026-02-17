@@ -108,7 +108,7 @@ public class SectionsListAdapter extends RecyclerView.Adapter<SectionsListAdapte
             }
         });
 
-        holder.tvSectionName.setText(sectionName);
+        holder.tvSectionName.setText(Baskit.decodeKey(sectionName));
     }
 
     @Override

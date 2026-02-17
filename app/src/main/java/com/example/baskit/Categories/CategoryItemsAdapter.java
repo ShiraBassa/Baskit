@@ -437,7 +437,7 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
             }
             else if (isSingleSectionCurrently(supermarket))
             {
-                holder.tvSupermarket.setText(supermarket.getSupermarket());
+                holder.tvSupermarket.setText(supermarket.getDecodedSupermarket());
                 holder.tvSupermarket.setTextColor(
                         Baskit.getAppColor(context, com.google.android.material.R.attr.colorOnSurface)
                 );

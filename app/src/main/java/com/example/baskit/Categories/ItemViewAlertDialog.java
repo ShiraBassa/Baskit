@@ -52,6 +52,7 @@ public class ItemViewAlertDialog
         this.showQuantity = showQuantity;
 
         adLayout = (LinearLayout) activity.getLayoutInflater().inflate(R.layout.alert_dialog_item_view, null);
+        adLayout.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         adBtnCancel = adLayout.findViewById(R.id.btn_cancel);
         adBtnSave = adLayout.findViewById(R.id.btn_save);
         adBtnUp = adLayout.findViewById(R.id.btn_up);

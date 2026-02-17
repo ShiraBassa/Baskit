@@ -282,7 +282,7 @@ public class AddItemFragment extends DialogFragment
 
         searchItem.setOnItemClickListener((parent, view, position, id) ->
         {
-            String clickedName = Item.decodeKey((String) parent.getItemAtPosition(position));
+            String clickedName = Baskit.decodeKey((String) parent.getItemAtPosition(position));
 
             if (isBadItemName(clickedName))
             {

@@ -20,9 +20,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.google.gson.*;
-import com.google.gson.stream.JsonReader;
-
 import okhttp3.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.ExecutorService;

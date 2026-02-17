@@ -60,12 +60,12 @@ public class Item implements Cloneable
 
     public String getDecodedName()
     {
-        return decodeKey(this.name);
+        return Baskit.decodeKey(this.name);
     }
 
     public void setName(String name)
     {
-        this.name = encodeKey(name);
+        this.name = Baskit.encodeKey(name);
     }
 
     public double getPrice() {
@@ -82,6 +82,12 @@ public class Item implements Cloneable
     public double getTotal(double otherPrice)
     {
         return Math.round(otherPrice * this.quantity * 100.0) / 100.0;
+    }
+
+    @Exclude
+    public static double getTotal(double otherPrice, int otherQuantity)
+    {
+        return Math.round(otherPrice * otherQuantity * 100.0) / 100.0;
     }
 
     public void setPrice(double price) {
@@ -198,31 +204,5 @@ public class Item implements Cloneable
         }
 
         return false;
-    }
-
-   public static String encodeKey(String s)
-    {
-        if (s == null) return null;
-        String out = s;
-        out = out.replace(".", "__dot__");
-        out = out.replace("$", "__dollar__");
-        out = out.replace("#", "__hash__");
-        out = out.replace("[", "__lbracket__");
-        out = out.replace("]", "__rbracket__");
-        out = out.replace("/", "__slash__");
-        return out;
-    }
-
-    public static String decodeKey(String s)
-    {
-        if (s == null) return null;
-        String out = s;
-        out = out.replace("__dot__", ".");
-        out = out.replace("__dollar__", "$");
-        out = out.replace("__hash__", "#");
-        out = out.replace("__lbracket__", "[");
-        out = out.replace("__rbracket__", "]");
-        out = out.replace("__slash__", "/");
-        return out;
     }
 }

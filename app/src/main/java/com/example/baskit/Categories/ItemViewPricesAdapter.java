@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.baskit.API.APIHandler;
 import com.example.baskit.Baskit;
+import com.example.baskit.MainComponents.Item;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;
 
@@ -133,7 +134,7 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
         Supermarket supermarket = entry.getKey();
         Double price = entry.getValue();
 
-        holder.tvSupermarketName.setText(supermarket.getSupermarket());
+        holder.tvSupermarketName.setText(supermarket.getDecodedSupermarket());
 
         if (apiHandler.singleSectionInSupermarkets(supermarket))
         {
@@ -141,7 +142,7 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
         }
         else
         {
-            holder.tvSectionName.setText(supermarket.getSection());
+            holder.tvSectionName.setText(supermarket.getDecodedSection());
         }
 
         holder.tvPrice.setText(Baskit.getTotalDisplayString(price, true, false, false));

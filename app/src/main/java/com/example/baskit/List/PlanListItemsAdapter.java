@@ -5,7 +5,6 @@ import static com.example.baskit.Baskit.getAppColor;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -301,7 +300,7 @@ public class PlanListItemsAdapter extends RecyclerView.Adapter<PlanListItemsAdap
             }
             else if (isSingleSectionCurrently(supermarket))
             {
-                holder.tvSupermarket.setText(supermarket.getSupermarket());
+                holder.tvSupermarket.setText(supermarket.getDecodedSupermarket());
                 holder.tvSupermarket.setAlpha(1f);
                 holder.btnExpand.setAlpha(1f);
             }
