@@ -61,10 +61,15 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
 
     public static class ViewHolder extends RecyclerView.ViewHolder
     {
-        protected TextView tvName, tvQuantity, tvPrice;
-        protected ImageButton btnUp, btnDown, btnCheckBox, dragHandle;
-        protected LinearLayout loutQuantity;
-        protected ItemViewAlertDialog itemViewAlertDialog;
+        public TextView tvName;
+        public TextView tvQuantity;
+        public TextView tvPrice;
+        public ImageButton btnUp;
+        public ImageButton btnDown;
+        public ImageButton btnCheckBox;
+        public ImageButton dragHandle;
+        public LinearLayout loutQuantity;
+        public ItemViewAlertDialog itemViewAlertDialog;
 
         public ViewHolder(View itemView)
         {

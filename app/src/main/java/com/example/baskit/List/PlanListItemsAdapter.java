@@ -19,8 +19,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.baskit.Baskit;
 import com.example.baskit.Categories.ItemsAdapter;
 import com.example.baskit.Categories.SupermarketItemsAdapter;
-import com.example.baskit.Categories.SupermarketItemsAdapterPlan;
-import com.example.baskit.MainComponents.Category;
 import com.example.baskit.MainComponents.Item;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;
@@ -73,6 +71,7 @@ public class PlanListItemsAdapter extends RecyclerView.Adapter<PlanListItemsAdap
         itemsBySupermarket.get(to).add(draggedItem);
         rebuildDisplaySupermarkets();
         notifyDataSetChanged();
+        upperClassFns.updateCategory();
     };
 
     public PlanListItemsAdapter(com.example.baskit.MainComponents.List list, Activity activity, Context context,
@@ -280,20 +279,19 @@ public class PlanListItemsAdapter extends RecyclerView.Adapter<PlanListItemsAdap
     public void onBindViewHolder(@NonNull ViewHolder holder, @SuppressLint("RecyclerView") int position)
     {
         Supermarket supermarket = supermarkets.get(position);
-        boolean isChosenSupermarket = false;
 
         if (supermarket == unassigned_supermarket)
         {
             holder.tvSupermarket.setText(supermarket.toString());
             holder.tvSupermarket.setTextColor(
-                    Baskit.getAppColor(context, R.color.black)
+                    Baskit.getAppColor(context, R.color.plan_screen_base)
             );
             holder.tvSupermarket.setAlpha(0.5f);
             holder.btnExpand.setAlpha(0.5f);
         }
         else
         {
-            isChosenSupermarket = baseSupermarkets.contains(supermarket);
+            boolean isChosenSupermarket = baseSupermarkets.contains(supermarket);
 
             if (!isChosenSupermarket)
             {
@@ -318,16 +316,20 @@ public class PlanListItemsAdapter extends RecyclerView.Adapter<PlanListItemsAdap
         if (selectedSupermarket != null && selectedSupermarket.equals(supermarket))
         {
             holder.tvSupermarket.setTextColor(
-                    Baskit.getAppColor(context, com.google.android.material.R.attr.colorPrimaryVariant)
+                    Baskit.getAppColor(context, R.color.plan_screen_chosen)
             );
             holder.btnExpand.setColorFilter(
-                    Baskit.getAppColor(context, com.google.android.material.R.attr.colorPrimaryVariant)
+                    Baskit.getAppColor(context, R.color.plan_screen_chosen)
             );
         }
         else
         {
-            holder.tvSupermarket.setTextColor(Color.BLACK);
-            holder.btnExpand.setColorFilter(Color.BLACK);
+            holder.tvSupermarket.setTextColor(
+                    Baskit.getAppColor(context, R.color.plan_screen_base)
+            );
+            holder.btnExpand.setColorFilter(
+                    Baskit.getAppColor(context, R.color.plan_screen_base)
+            );
         }
 
         ArrayList<Item> items = itemsBySupermarket.get(supermarket);

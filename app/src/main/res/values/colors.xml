@@ -43,4 +43,9 @@
     <!-- App -->
     <color name="price">@color/evergreen</color>
     <color name="quantity">@color/rich_mahogany</color>
+
+    <color name="plan_screen_base">@color/black</color>
+    <color name="plan_screen_unavailable">@color/gray</color>
+    <color name="plan_screen_chosen">@color/primary_variant</color>
+
 </resources>

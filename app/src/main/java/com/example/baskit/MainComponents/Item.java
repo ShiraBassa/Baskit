@@ -78,6 +78,12 @@ public class Item implements Cloneable
         return Math.round(this.price * this.quantity * 100.0) / 100.0;
     }
 
+    @Exclude
+    public double getTotal(double otherPrice)
+    {
+        return Math.round(otherPrice * this.quantity * 100.0) / 100.0;
+    }
+
     public void setPrice(double price) {
         this.price = price;
     }

@@ -2,6 +2,9 @@ package com.example.baskit.List;
 
 import android.os.Bundle;
 
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,7 +17,6 @@ import android.widget.Toast;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.baskit.AI.AIHandler;
 import com.example.baskit.API.APIHandler;
 import com.example.baskit.Baskit;
 import com.example.baskit.Categories.ItemsAdapter;
@@ -32,7 +34,6 @@ public class PlanListActivity extends MasterActivity
 {
     ImageButton btnCancel;
     Button btnSave;
-    ArrayList<Item> items;
     List list;
     TextView tvListName, tvTotal;
     FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
@@ -49,12 +50,22 @@ public class PlanListActivity extends MasterActivity
     private boolean itemsLoaded = false;
     private boolean listListenerAttached = false;
     private boolean uiInitialized = false;
+    private double oldTotal;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_planing_list);
+        setContentView(R.layout.activity_plan_list);
+
+        listId = getIntent().getStringExtra("listId");
+
+        if (listId == null)
+        {
+            Toast.makeText(this, "Missing list id", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
 
         createInit();
         uiInitialized = true;
@@ -105,15 +116,6 @@ public class PlanListActivity extends MasterActivity
         tvListName = findViewById(R.id.tv_list_name);
         tvTotal = findViewById(R.id.tv_total);
 
-        listId = getIntent().getStringExtra("listId");
-
-        if (listId == null)
-        {
-            Toast.makeText(this, "Missing list id", Toast.LENGTH_SHORT).show();
-            finish();
-            return;
-        }
-
         categoriesListContainer = findViewById(R.id.categories_container);
         categoriesListInflater = LayoutInflater.from(this);
 
@@ -132,6 +134,10 @@ public class PlanListActivity extends MasterActivity
                 public void onListFetched(List newList)
                 {
                     PlanListActivity.this.list = new List(newList);
+
+                    oldTotal = list.getTotal();
+                    tvTotal.setText(Baskit.getTotalDisplayString(list.getTotal(), true, false, false));
+                    tvTotal.setVisibility(View.VISIBLE);
 
                     if (newList == null)
                     {
@@ -175,21 +181,15 @@ public class PlanListActivity extends MasterActivity
                                     new ItemsAdapter.UpperClassFunctions()
                                     {
                                         @Override
-                                        public void updateItemCategory(Item item)
-                                        {
-                                            runIfOnline(() -> dbHandler.updateItem(list, item));
-                                        }
+                                        public void updateItemCategory(Item item) {}
 
                                         @Override
-                                        public void removeItemCategory(Item item)
-                                        {
-                                            runIfOnline(() -> dbHandler.removeItem(list, item));
-                                        }
+                                        public void removeItemCategory(Item item) {}
 
                                         @Override
                                         public void updateCategory()
                                         {
-                                            runIfOnline(() -> dbHandler.updateItems(list, list.getItems()));
+                                            displayTotalDif();
                                         }
 
                                         @Override
@@ -212,6 +212,45 @@ public class PlanListActivity extends MasterActivity
                 }
             });
         });
+    }
+
+    private void displayTotalDif()
+    {
+        double priceDif = list.getTotal() - oldTotal;
+        String priceStr = Baskit.getTotalDisplayString(list.getTotal(), true, false, false);
+        String difStr = Baskit.getTotalDisplayString(priceDif, true, false, false);
+
+        SpannableStringBuilder builder = new SpannableStringBuilder();
+        builder.append(priceStr);
+
+        if (priceDif != 0)
+        {
+            String formattedDiff;
+
+            if (priceDif > 0)
+            {
+                formattedDiff = " (+" + difStr + ")";
+            }
+            else
+            {
+                formattedDiff = " (" + difStr + ")";
+            }
+
+            int start = builder.length();
+            builder.append(formattedDiff);
+            int end = builder.length();
+
+            builder.setSpan(
+                    new ForegroundColorSpan(
+                            Baskit.getAppColor(PlanListActivity.this, com.google.android.material.R.attr.colorPrimaryVariant)
+                    ),
+                    start,
+                    end,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            );
+        }
+
+        tvTotal.setText(builder);
     }
 
     private void finish(boolean save)
