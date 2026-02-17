@@ -455,43 +455,99 @@ public class ListActivity extends MasterActivity
 
         item.updateId(getKeyByValue(itemsCodeNames, item.getName()));
 
-        runIfOnline(() ->
+        String categoryName = apiHandler.getItemCategoryDB(item.getAbsoluteId());
+
+        if (categoryName == null || categoryName.isEmpty())
         {
-            aiHandler.getCategoryName(item, ListActivity.this, categoryName ->
+            runIfOnline(() ->
             {
-                if (!list.hasCategory(categoryName))
+                aiHandler.getItemCategoryAI(item, ListActivity.this, aiCategoryName ->
                 {
+                    if (aiCategoryName == null || aiCategoryName.isEmpty())
+                    {
+                        runOnUiThread(() ->
+                                Toast.makeText(ListActivity.this, "לא נמצאה קטגוריה לפריט", Toast.LENGTH_SHORT).show());
+                        return;
+                    }
+
                     runIfOnline(() ->
                     {
-                        dbHandler.addCategory(list, new Category(categoryName));
+                        if (!list.hasCategory(aiCategoryName))
+                        {
+                            dbHandler.addCategory(list, new Category(aiCategoryName));
+                        }
+
+                        dbHandler.addItem(list, aiCategoryName, item, new FirebaseDBHandler.DBCallback()
+                        {
+                            @Override
+                            public void onComplete()
+                            {
+                                runOnUiThread(() ->
+                                {
+                                    if (addItemFragment != null)
+                                    {
+                                        addItemFragment.endProgressBar();
+                                        addItemFragment.dismiss();
+                                    }
+                                });
+                            }
+
+                            @Override
+                            public void onFailure(Exception e)
+                            {
+                                runOnUiThread(() ->
+                                {
+                                    if (addItemFragment != null)
+                                    {
+                                        addItemFragment.endProgressBar();
+                                        addItemFragment.dismiss();
+                                    }
+                                    Toast.makeText(ListActivity.this, "Failed to add item: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                });
+                            }
+                        });
+                    });
+                });
+            });
+
+            return;
+        }
+
+        runIfOnline(() ->
+        {
+            if (!list.hasCategory(categoryName))
+            {
+                dbHandler.addCategory(list, new Category(categoryName));
+            }
+
+            dbHandler.addItem(list, categoryName, item, new FirebaseDBHandler.DBCallback()
+            {
+                @Override
+                public void onComplete()
+                {
+                    runOnUiThread(() ->
+                    {
+                        if (addItemFragment != null)
+                        {
+                            addItemFragment.endProgressBar();
+                            addItemFragment.dismiss();
+                        }
                     });
                 }
 
-                runIfOnline(() ->
+                @Override
+                public void onFailure(Exception e)
                 {
-                    dbHandler.addItem(list, categoryName, item, new FirebaseDBHandler.DBCallback() {
-                        @Override
-                        public void onComplete()
+                    runOnUiThread(() ->
+                    {
+                        if (addItemFragment != null)
                         {
-                            runOnUiThread(() ->
-                            {
-                                addItemFragment.endProgressBar();
-                                addItemFragment.dismiss();
-                            });
+                            addItemFragment.endProgressBar();
+                            addItemFragment.dismiss();
                         }
-
-                        @Override
-                        public void onFailure(Exception e)
-                        {
-                            runOnUiThread(() ->
-                            {
-                                addItemFragment.endProgressBar();
-                                addItemFragment.dismiss();
-                                Toast.makeText(ListActivity.this, "Failed to add item: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                            });
-                        }
+                        Toast.makeText(ListActivity.this, "Failed to add item: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     });
-                });
+                }
             });
         });
     }

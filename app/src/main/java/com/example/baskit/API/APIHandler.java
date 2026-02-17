@@ -6,6 +6,7 @@ import com.example.baskit.Baskit;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.SQLite.AppDatabase;
 import com.example.baskit.SQLite.ItemCodeName;
+import com.example.baskit.SQLite.ItemCategory;
 import com.example.baskit.SQLite.ItemEntity;
 
 import org.json.JSONArray;
@@ -19,8 +20,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gson.*;
+import com.google.gson.stream.JsonReader;
+
 import okhttp3.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class APIHandler
 {
@@ -31,14 +38,20 @@ public class APIHandler
     private static final String SERVER_URL = "http://" + EMULATOR_URL + ":5001";
     private static String firebaseToken;
     private final OkHttpClient client = new OkHttpClient.Builder()
-            .connectTimeout(0, TimeUnit.SECONDS)
-            .readTimeout(0, TimeUnit.SECONDS)
-            .writeTimeout(0, TimeUnit.SECONDS)
-            .callTimeout(0, TimeUnit.SECONDS)
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .callTimeout(90, TimeUnit.SECONDS)
             .build();
     private Map<String, Map<String, Map<String, Double>>> cachedItems = null;
     private Map<String, String> cachedCodeNames = null;
+    private Map<String, String> cachedItemCategories = new HashMap<>();
     private ArrayList<Supermarket> supermarkets = null;
+
+    // Shared executors
+    private final ExecutorService dbExecutor = Executors.newSingleThreadExecutor();
+    private final ExecutorService networkExecutor = Executors.newFixedThreadPool(3);
+    private final ExecutorService geminiExecutor = Executors.newFixedThreadPool(3);
 
     private APIHandler() {}
 
@@ -76,6 +89,7 @@ public class APIHandler
     {
         cachedItems = null;
         cachedCodeNames = null;
+        cachedItemCategories.clear();
 
         preload();
     }
@@ -85,8 +99,9 @@ public class APIHandler
         supermarkets = getUpdatedSupermarkets();
         cachedItems = loadItemsFromDB();
         cachedCodeNames = loadCodeNamesFromDB();
+        cachedItemCategories = loadCategoriesFromDB();
 
-        if (cachedItems.isEmpty())
+        if (cachedItems.isEmpty() || cachedCodeNames.isEmpty())
         {
             try
             {
@@ -96,6 +111,7 @@ public class APIHandler
                 updateCache(freshItems, freshCodeNames);
                 saveItemsToDB(freshItems);
                 saveCodeNamesToDB(freshCodeNames);
+                updateCategoriesAfterRefresh(freshItems);
             }
             catch (Exception e)
             {
@@ -106,7 +122,7 @@ public class APIHandler
         {
             try
             {
-                new Thread(() ->
+                networkExecutor.execute(() ->
                 {
                     try
                     {
@@ -116,12 +132,13 @@ public class APIHandler
                         updateCache(freshItems, freshCodeNames);
                         saveItemsToDB(freshItems);
                         saveCodeNamesToDB(freshCodeNames);
+                        updateCategoriesAfterRefresh(freshItems);
                     }
                     catch (Exception e)
                     {
                         Log.e("API Background Refresh", e.getMessage());
                     }
-                }).start();
+                });
             }
             catch (Exception e)
             {
@@ -176,7 +193,7 @@ public class APIHandler
 
     private void saveItemsToDB(Map<String, Map<String, Map<String, Double>>> freshItems)
     {
-        new Thread(() ->
+        dbExecutor.execute(() ->
         {
             AppDatabase db = AppDatabase.getDatabase(Baskit.getContext());
             db.itemDao().clearAll();
@@ -208,12 +225,12 @@ public class APIHandler
             {
                 db.itemDao().insertAll(itemsToInsert);
             }
-        }).start();
+        });
     }
 
     private void saveCodeNamesToDB(Map<String, String> freshCodeNames)
     {
-        new Thread(() ->
+        dbExecutor.execute(() ->
         {
             AppDatabase db = AppDatabase.getDatabase(Baskit.getContext());
             db.itemCodesDao().clearAll();
@@ -230,7 +247,7 @@ public class APIHandler
             {
                 db.itemCodesDao().insertAll(codesToInsert);
             }
-        }).start();
+        });
     }
 
     public Map<String, Map<String, Map<String, Double>>> getItems()
@@ -241,6 +258,286 @@ public class APIHandler
     public Map<String, String> getItemsCodeName()
     {
         return cachedCodeNames;
+    }
+
+    public String getItemCategoryDB(String itemCode)
+    {
+        if (itemCode == null) return null;
+        return cachedItemCategories.get(itemCode);
+    }
+
+    public void putItemCategoryIfAbsent(String itemCode, String category)
+    {
+        if (itemCode == null || category == null) return;
+
+        String normalized = itemCode.trim().toLowerCase();
+
+        if (!cachedItemCategories.containsKey(normalized))
+        {
+            cachedItemCategories.put(normalized, category);
+        }
+    }
+
+    public boolean hasCategory(String itemCode)
+    {
+        if (itemCode == null) return false;
+        return cachedItemCategories.containsKey(itemCode.trim().toLowerCase());
+    }
+
+    private Map<String, String> loadCategoriesFromDB()
+    {
+        List<ItemCategory> dbCategories = AppDatabase.getDatabase(Baskit.getContext())
+                .itemCategoryDao()
+                .getAll();
+
+        Map<String, String> categories = new HashMap<>();
+
+        for (ItemCategory category : dbCategories)
+        {
+            categories.put(category.getItemCode(), category.getCategory());
+        }
+
+        return categories;
+    }
+
+    private void saveCategoriesToDB(Map<String, String> categories)
+    {
+        dbExecutor.execute(() ->
+        {
+            AppDatabase db = AppDatabase.getDatabase(Baskit.getContext());
+
+            List<ItemCategory> list = new ArrayList<>();
+
+            for (Map.Entry<String, String> entry : categories.entrySet())
+            {
+                list.add(new ItemCategory(entry.getKey(), entry.getValue()));
+            }
+
+            if (!list.isEmpty())
+            {
+                db.itemCategoryDao().insertAll(list);
+            }
+        });
+    }
+
+    private Map<String, String> callGeminiForCategories(
+            Map<String, String> codeToName) throws Exception
+    {
+        List<String> itemNames = new ArrayList<>(codeToName.values());
+
+        String prompt = com.example.baskit.AI.AIHandler.getInstance()
+                .createBatchCategoryPromptFromNames(itemNames); // <-- new prompt method
+
+        String rawResult = com.example.baskit.AI.AIHandler.getInstance()
+                .classifyBatchBlocking(prompt);
+
+        if (rawResult != null)
+        {
+            rawResult = rawResult.trim();
+
+            if (rawResult.startsWith("```"))
+            {
+                rawResult = rawResult.replaceAll("(?s)```json", "")
+                                     .replaceAll("(?s)```", "")
+                                     .trim();
+            }
+        }
+
+        Map<String, String> resultMap = new HashMap<>();
+
+        if (rawResult == null || rawResult.isEmpty())
+        {
+            Log.e("AI_BATCH", "Empty Gemini response (quota/timeout)");
+            return resultMap;
+        }
+
+        try
+        {
+            int firstBrace = rawResult.indexOf("{");
+            int lastBrace = rawResult.lastIndexOf("}");
+
+            if (firstBrace != -1 && lastBrace != -1 && lastBrace > firstBrace)
+            {
+                rawResult = rawResult.substring(firstBrace, lastBrace + 1);
+            }
+
+            int openBraces = 0;
+            int closeBraces = 0;
+            int openBrackets = 0;
+            int closeBrackets = 0;
+
+            for (char c : rawResult.toCharArray())
+            {
+                if (c == '{') openBraces++;
+                if (c == '}') closeBraces++;
+                if (c == '[') openBrackets++;
+                if (c == ']') closeBrackets++;
+            }
+
+            StringBuilder balanced = new StringBuilder(rawResult);
+
+            while (closeBrackets < openBrackets)
+            {
+                balanced.append("]");
+                closeBrackets++;
+            }
+
+            while (closeBraces < openBraces)
+            {
+                balanced.append("}");
+                closeBraces++;
+            }
+
+            rawResult = balanced.toString();
+            rawResult = rawResult.replace(",]", "]");
+            rawResult = rawResult.replace(", }", " }");
+            rawResult = rawResult.replace(",}", "}");
+
+            String repaired = rawResult;
+            JSONObject rootObject = null;
+
+            for (int attempt = 0; attempt < 5; attempt++)
+            {
+                try
+                {
+                    rootObject = new JSONObject(repaired);
+                    break;
+                }
+                catch (JSONException ex)
+                {
+                    if (repaired.length() > 1)
+                    {
+                        repaired = repaired.substring(0, repaired.length() - 1).trim();
+                    }
+                }
+            }
+
+            if (rootObject == null)
+            {
+                Log.e("AI_BATCH", "Unable to repair malformed Gemini JSON after retries");
+                return resultMap;
+            }
+
+            Map<String, String> nameToCode = new HashMap<>();
+            for (Map.Entry<String, String> entry : codeToName.entrySet())
+            {
+                nameToCode.put(entry.getValue(), entry.getKey());
+            }
+
+            Iterator<String> categoryKeys = rootObject.keys();
+            while (categoryKeys.hasNext())
+            {
+                String category = categoryKeys.next();
+
+                try
+                {
+                    JSONArray arr = rootObject.getJSONArray(category);
+
+                    for (int i = 0; i < arr.length(); i++)
+                    {
+                        try
+                        {
+                            String name = arr.getString(i);
+                            String code = nameToCode.get(name);
+
+                            if (code != null)
+                            {
+                                resultMap.put(code.trim().toLowerCase(), category);
+                            }
+                        }
+                        catch (Exception ignored) {}
+                    }
+                }
+                catch (Exception ignored) {}
+            }
+        }
+        catch (Exception e)
+        {
+            Log.e("AI_BATCH", "Failed to parse Gemini JSON. Raw response: " + rawResult, e);
+        }
+
+        return resultMap;
+    }
+
+    private void updateCategoriesAfterRefresh(Map<String, Map<String, Map<String, Double>>> freshItems)
+    {
+        networkExecutor.execute(() ->
+        {
+            try
+            {
+                Map<String, String> missingCodeToName = new HashMap<>();
+
+                for (String itemCode : freshItems.keySet())
+                {
+                    String normalized = itemCode.trim().toLowerCase();
+
+                    if (!cachedItemCategories.containsKey(normalized))
+                    {
+                        String itemName = cachedCodeNames.get(itemCode);
+                        if (itemName != null)
+                        {
+                            missingCodeToName.put(normalized, itemName);
+                        }
+                    }
+                }
+
+                if (missingCodeToName.isEmpty())
+                {
+                    return;
+                }
+
+                final int CHUNK_SIZE = 40;
+
+                List<String> codes = new ArrayList<>(missingCodeToName.keySet());
+
+                List<Future<Map<String, String>>> futures = new ArrayList<>();
+
+                for (int start = 0; start < codes.size(); start += CHUNK_SIZE)
+                {
+                    int end = Math.min(start + CHUNK_SIZE, codes.size());
+
+                    Map<String, String> chunkMap = new HashMap<>();
+                    for (int i = start; i < end; i++)
+                    {
+                        String code = codes.get(i);
+                        chunkMap.put(code, missingCodeToName.get(code));
+                    }
+
+                    Future<Map<String, String>> future = geminiExecutor.submit(() ->
+                    {
+                        try
+                        {
+                            return callGeminiForCategories(chunkMap);
+                        }
+                        catch (Exception e)
+                        {
+                            Log.e("CATEGORY_REFRESH", "Gemini chunk failed", e);
+                            return new HashMap<>();
+                        }
+                    });
+
+                    futures.add(future);
+                }
+
+                for (Future<Map<String, String>> future : futures)
+                {
+                    try
+                    {
+                        Map<String, String> results = future.get();
+                        cachedItemCategories.putAll(results);
+                        saveCategoriesToDB(results);
+                    }
+                    catch (Exception e)
+                    {
+                        Log.e("CATEGORY_REFRESH", "Gemini future failed", e);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Log.e("CATEGORY_REFRESH", "Category update failed", e);
+            }
+        });
     }
 
     private Map<String, Map<String, Map<String, Double>>> getItemsFromAPI()

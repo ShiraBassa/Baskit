@@ -5,12 +5,19 @@ import static com.example.baskit.Firebase.FBRefs.refUsers;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.AbsoluteSizeSpan;
+import android.text.style.StyleSpan;
+import android.text.style.LeadingMarginSpan;
+import android.graphics.Typeface;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -49,9 +56,7 @@ public class SignUpActivity extends MasterActivity
     CitiesListAdapter citiesAdapter;
     Map<String, ArrayList<String>> choices;
     SupermarketsListAdapter supermarketsAdapter;
-    TextView tvWelcome;
     User user;
-    final String WELCOME_MESSAGE = "Welcome to Baskit\nPlease provide your info below";
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -75,9 +80,6 @@ public class SignUpActivity extends MasterActivity
         btnAddSupermarket = findViewById(R.id.btn_add_supermarket);
         btnRemoveSupermarket = findViewById(R.id.btn_remove_supermarket);
         recyclerSupermarkets = findViewById(R.id.recycler_supermarket);
-        tvWelcome = findViewById(R.id.tv_welcome);
-
-        tvWelcome.setText(WELCOME_MESSAGE);
 
         cities = new ArrayList<>();
         choices = new HashMap<>();
@@ -280,6 +282,16 @@ public class SignUpActivity extends MasterActivity
 
     private boolean checkInputs()
     {
+        if (username.isEmpty())
+        {
+            Toast.makeText(
+                    SignUpActivity.this,
+                    "יש להזין שם משתמש",
+                    Toast.LENGTH_SHORT
+            ).show();
+            return false;
+        }
+
         return true;
     }
 

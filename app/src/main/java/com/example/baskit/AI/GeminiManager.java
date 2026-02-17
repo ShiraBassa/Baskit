@@ -55,23 +55,43 @@ public class GeminiManager
                     {
                         if (result instanceof Result.Failure)
                         {
-                            activity.runOnUiThread(() ->
-                                    callback.onFailure(((Result.Failure) result).exception)
-                            );
+                            Throwable error = ((Result.Failure) result).exception;
+
+                            if (activity != null)
+                            {
+                                activity.runOnUiThread(() -> callback.onFailure(error));
+                            }
+                            else
+                            {
+                                callback.onFailure(error);
+                            }
                         }
                         else
                         {
                             String text = ((GenerateContentResponse) result).getText();
-                            activity.runOnUiThread(() ->
-                                    callback.onSuccess(text)
-                            );
+
+                            if (activity != null)
+                            {
+                                activity.runOnUiThread(() -> callback.onSuccess(text));
+                            }
+                            else
+                            {
+                                callback.onSuccess(text);
+                            }
                         }
                     }
                 });
             }
             catch (Exception e)
             {
-                activity.runOnUiThread(() -> callback.onFailure(e));
+                if (activity != null)
+                {
+                    activity.runOnUiThread(() -> callback.onFailure(e));
+                }
+                else
+                {
+                    callback.onFailure(e);
+                }
             }
         }).start();
     }

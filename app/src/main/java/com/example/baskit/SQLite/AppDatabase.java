@@ -8,11 +8,12 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import android.content.Context;
 
-@Database(entities = {ItemEntity.class, ItemCodeName.class}, version = 2, exportSchema = false)
+@Database(entities = {ItemEntity.class, ItemCodeName.class, ItemCategory.class}, version = 3, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase
 {
     public abstract ItemDao itemDao();
     public abstract ItemCodeNamesDao itemCodesDao();
+    public abstract ItemCategoryDao itemCategoryDao();
 
     private static volatile AppDatabase INSTANCE;
 

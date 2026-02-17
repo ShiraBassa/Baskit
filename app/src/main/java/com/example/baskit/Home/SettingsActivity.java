@@ -147,25 +147,29 @@ public class SettingsActivity extends MasterActivity
                             {
                                 Baskit.notActivityRunIfOnline(() -> authHandler.addSupermarketSection(supermarket, () ->
                                 {
-                                    SettingsActivity.this.runOnUiThread(() ->
+                                    new Thread(() ->
                                     {
-                                        choices.putIfAbsent(supermarket.getSupermarket(), new ArrayList<>());
-                                        ArrayList<String> sectionsList = choices.get(supermarket.getSupermarket());
-
-                                        if (sectionsList == null)
+                                        try
                                         {
-                                            sectionsList = new ArrayList<>();
-                                            choices.put(supermarket.getSupermarket(), sectionsList);
-                                        }
+                                            apiHandler.reset();
 
-                                        if (!sectionsList.contains(supermarket.getSection()))
+                                            choices = apiHandler.getChoices();
+                                            cities = apiHandler.getCities();
+
+                                            SettingsActivity.this.runOnUiThread(() ->
+                                            {
+                                                supermarketsAdapter.updateData(choices);
+                                                supermarketsAdapter.notifyDataSetChanged();
+
+                                                citiesAdapter.updateData(cities);
+                                                citiesAdapter.notifyDataSetChanged();
+                                            });
+                                        }
+                                        catch (Exception e)
                                         {
-                                            sectionsList.add(supermarket.getSection());
+                                            Log.e("SettingsActivity", "Full refresh after add failed", e);
                                         }
-
-                                        supermarketsAdapter.updateData(choices);
-                                        supermarketsAdapter.notifyDataSetChanged();
-                                    });
+                                    }).start();
                                 }), SettingsActivity.this);
                             }
                         },
@@ -213,20 +217,29 @@ public class SettingsActivity extends MasterActivity
                             new Supermarket(supermarketName, sectionName),
                             () ->
                             {
-                                runOnUiThread(() ->
+                                new Thread(() ->
                                 {
-                                    ArrayList<String> sections = choices.get(supermarketName);
-                                    if (sections != null)
+                                    try
                                     {
-                                        sections.remove(sectionName);
+                                        apiHandler.reset();
 
-                                        if (sections.isEmpty())
-                                            choices.remove(supermarketName);
+                                        choices = apiHandler.getChoices();
+                                        cities = apiHandler.getCities();
 
-                                        supermarketsAdapter.updateData(choices);
-                                        supermarketsAdapter.notifyDataSetChanged();
+                                        runOnUiThread(() ->
+                                        {
+                                            supermarketsAdapter.updateData(choices);
+                                            supermarketsAdapter.notifyDataSetChanged();
+
+                                            citiesAdapter.updateData(cities);
+                                            citiesAdapter.notifyDataSetChanged();
+                                        });
                                     }
-                                });
+                                    catch (Exception e)
+                                    {
+                                        Log.e("SettingsActivity", "Full refresh after remove failed", e);
+                                    }
+                                }).start();
                             });
 
                 }).start();

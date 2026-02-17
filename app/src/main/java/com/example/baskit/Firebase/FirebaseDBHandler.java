@@ -644,7 +644,7 @@ public class FirebaseDBHandler
 
     public boolean finishCategory(List list, Category category)
     {
-        for (Item item : category.getItems().values())
+        for (Item item : new ArrayList<>(category.getItems().values()))
         {
             if (item.isChecked())
             {

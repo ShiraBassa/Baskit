@@ -1,46 +1,70 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:tools="http://schemas.and👌🏼roid.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_margin="20dp"
+    android:padding="20dp"
     android:gravity="center"
     android:orientation="vertical"
-    tools:context=".Firebase.SignUpActivity">
+    tools:context=".Firebase.SignUpActivity"
+    android:background="@color/white_smoke">
 
     <TextView
-        android:id="@+id/tv_welcome"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:textSize="30sp" />
+        android:text="ברוך הבא ל\nBaskit🛒"
+        android:textStyle="bold"
+        android:layout_marginBottom="15dp"
+        android:textSize="42sp"
+        android:textColor="@color/black"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="אנא הכנס את פרטיך בשדות הנ״ל"
+        android:layout_marginBottom="15dp"
+        android:textSize="26sp" />
 
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
+        android:gravity="end|center_vertical"
+        android:layout_margin="10dp"
         android:orientation="horizontal">
 
         <EditText
             android:id="@+id/et_username"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:minWidth="100dp"
-            android:textSize="20sp" />
+            android:textColor="@color/black"
+            android:singleLine="true"
+            android:layoutDirection="rtl"
+            android:textDirection="rtl"
+            android:maxLength="20"
+            android:inputType="text"
+            android:digits=" אבגדהוזחטיכלמנסעפצקרשתךםןףץ"
+            android:textSize="28sp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="שם משתמש:"
-            android:textSize="20sp" />
+            android:textColor="@color/black"
+            android:textSize="28sp"
+            android:textStyle="bold"/>
 
     </LinearLayout>
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:layout_marginBottom="20dp"
         android:layout_weight="1"
         android:fillViewport="true">
 
@@ -66,6 +90,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="בוצע"
-        android:textSize="30sp" />
+        android:textSize="32sp" />
 
 </LinearLayout>

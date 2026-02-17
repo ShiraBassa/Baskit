@@ -1,4 +1,5 @@
 package com.example.baskit.List;
+import android.view.WindowManager;
 import android.util.Log;
 
 import com.example.baskit.Categories.ItemViewPricesAdapter;
@@ -171,6 +172,7 @@ public class AddItemFragment extends DialogFragment
         infoLayout = fragmentView.findViewById(R.id.lout_info);
         progressBar = fragmentView.findViewById(R.id.progressBar);
         recyclerSupermarkets = fragmentView.findViewById(R.id.recycler_supermarket);
+        recyclerSupermarkets.setLayoutManager(new LinearLayoutManager(context));
 
         setupAutocomplete();
         setupButtons();
@@ -190,15 +192,27 @@ public class AddItemFragment extends DialogFragment
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT
             );
+
+            // Force keyboard to open automatically
+            getDialog().getWindow().setSoftInputMode(
+                    WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE
+            );
         }
 
         selectedItem = null;
         searchItem.setText("");
-        recyclerSupermarkets.setAdapter(null);
-        recyclerSupermarkets.setLayoutManager(null);
         infoLayout.setVisibility(View.INVISIBLE);
         tvQuantity.setText("");
-        searchItem.clearFocus();
+        searchItem.setFocusableInTouchMode(true);
+        searchItem.requestFocus();
+
+        InputMethodManager imm = (InputMethodManager)
+                requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+
+        if (imm != null)
+        {
+            imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+        }
     }
 
     private void setupAutocomplete()
@@ -258,8 +272,6 @@ public class AddItemFragment extends DialogFragment
             btnDown.setBackgroundColor(Baskit.getAppColor(context, com.google.android.material.R.attr.colorOnSecondaryContainer));
 
             selectedItem.setQuantity(1);
-
-            recyclerSupermarkets.setLayoutManager(new LinearLayoutManager(context));
             recyclerSupermarkets.setAdapter(null);
 
             loadSupermarketPrices();
@@ -457,8 +469,6 @@ public class AddItemFragment extends DialogFragment
                                 }
                             }
                         });
-
-                recyclerSupermarkets.setLayoutManager(new LinearLayoutManager(context));
                 recyclerSupermarkets.setAdapter(pricesAdapter);
             });
         }, activity);

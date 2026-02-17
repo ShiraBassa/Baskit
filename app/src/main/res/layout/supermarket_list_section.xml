@@ -16,7 +16,7 @@
 
     <TextView
         android:id="@+id/tv_section_name"
-        android:textColor="?attr/colorPrimary"
+        android:textColor="?attr/colorSecondary"
         android:textSize="20sp"
         android:textStyle="bold"
         android:layout_height="wrap_content"

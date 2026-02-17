@@ -199,6 +199,8 @@ public class HomeActivity extends MasterActivity
         setButtons();
 
         listsRecycler = findViewById(R.id.lists_grid);
+        listsRecycler.setLayoutManager(new GridLayoutManager(this, 3));
+        listsRecycler.setAdapter(new HomeGridAdapter(this, new ArrayList<>(), null));
 
         runIfOnline(() ->
         {
@@ -236,7 +238,6 @@ public class HomeActivity extends MasterActivity
 
     private void setListsRecycler(ArrayList<String> listNamesRecycler)
     {
-        listsRecycler.setLayoutManager(new GridLayoutManager(this, 3)); // 3 columns
 
         listsGridAdapter = new HomeGridAdapter(this, listNamesRecycler, new HomeGridAdapter.OnItemClickListener()
         {

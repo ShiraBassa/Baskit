@@ -369,67 +369,138 @@ public class CategoryActivity extends MasterActivity
         }
 
         item.updateId(getKeyByValue(itemsCodeNames, item.getName()));
+        String categoryName = apiHandler.getItemCategoryDB(item.getAbsoluteId());
+
+        if (categoryName == null || categoryName.isEmpty())
+        {
+            runIfOnline(() ->
+            {
+                aiHandler.getItemCategoryAI(item, CategoryActivity.this, aiCategoryName ->
+                {
+                    if (aiCategoryName == null || aiCategoryName.isEmpty())
+                    {
+                        runOnUiThread(() ->
+                        {
+                            if (addItemFragment != null) addItemFragment.endProgressBar();
+                            Toast.makeText(CategoryActivity.this, "לא נמצאה קטגוריה לפריט", Toast.LENGTH_SHORT).show();
+                        });
+                        return;
+                    }
+
+                    runIfOnline(() ->
+                    {
+                        if (!list.hasCategory(aiCategoryName))
+                        {
+                            dbHandler.addCategory(list, new Category(aiCategoryName));
+                        }
+
+                        dbHandler.addItem(list, aiCategoryName, item, new FirebaseDBHandler.DBCallback()
+                        {
+                            @Override
+                            public void onComplete()
+                            {
+                                runOnUiThread(() ->
+                                {
+                                    if (addItemFragment != null)
+                                    {
+                                        addItemFragment.endProgressBar();
+                                        addItemFragment.dismiss();
+                                    }
+
+                                    if (category != null && !aiCategoryName.equals(category.getName()))
+                                    {
+                                        Snackbar snackbar = Snackbar.make(
+                                                findViewById(android.R.id.content),
+                                                "הפריט נוסף לקטגוריה: " + aiCategoryName,
+                                                Snackbar.LENGTH_LONG
+                                        );
+
+                                        snackbar.getView().setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+
+                                        snackbar.setAction("בטל", v ->
+                                                runIfOnline(() -> dbHandler.removeItem(list, aiCategoryName, item)));
+
+                                        snackbar.setAnchorView(btnAddItem);
+                                        snackbar.show();
+                                    }
+                                });
+                            }
+
+                            @Override
+                            public void onFailure(Exception e)
+                            {
+                                runOnUiThread(() ->
+                                {
+                                    if (addItemFragment != null)
+                                    {
+                                        addItemFragment.endProgressBar();
+                                        addItemFragment.dismiss();
+                                    }
+                                    Toast.makeText(CategoryActivity.this, "שגיאה בניסיון להוסיף את הפריט", Toast.LENGTH_SHORT).show();
+                                });
+                            }
+                        });
+                    });
+                });
+            });
+
+            return;
+        }
+
+        if (!list.hasCategory(categoryName))
+        {
+            runIfOnline(() -> dbHandler.addCategory(list, new Category(categoryName)));
+        }
 
         runIfOnline(() ->
         {
-            aiHandler.getCategoryName(item, CategoryActivity.this, categoryName ->
+            dbHandler.addItem(list, categoryName, item, new FirebaseDBHandler.DBCallback()
             {
-                if (!list.hasCategory(categoryName))
+                @Override
+                public void onComplete()
                 {
-                    runIfOnline(() -> dbHandler.addCategory(list, new Category(categoryName)));
-                }
-
-                runIfOnline(() ->
-                {
-                    dbHandler.addItem(list, categoryName, item, new FirebaseDBHandler.DBCallback()
+                    runOnUiThread(() ->
                     {
-                        @Override
-                        public void onComplete()
+                        if (addItemFragment != null)
                         {
-                            runOnUiThread(() ->
-                            {
-                                if (addItemFragment != null)
-                                {
-                                    addItemFragment.endProgressBar();
-                                    addItemFragment.dismiss();
-                                }
-
-                                if (category != null && !categoryName.equals(category.getName()))
-                                {
-                                    Snackbar snackbar = Snackbar.make(
-                                            findViewById(android.R.id.content),
-                                            "הפריט נוסף לקטגוריה: " + categoryName,
-                                            Snackbar.LENGTH_LONG
-                                    );
-
-                                    snackbar.getView().setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
-
-                                    snackbar.setAction("בטל", v ->
-                                    {
-                                        runIfOnline(() -> dbHandler.removeItem(list, categoryName, item));
-                                    });
-
-                                    snackbar.setAnchorView(btnAddItem);
-                                    snackbar.show();
-                                }
-                            });
+                            addItemFragment.endProgressBar();
+                            addItemFragment.dismiss();
                         }
 
-                        @Override
-                        public void onFailure(Exception e)
+                        if (category != null && !categoryName.equals(category.getName()))
                         {
-                            runOnUiThread(() ->
+                            Snackbar snackbar = Snackbar.make(
+                                    findViewById(android.R.id.content),
+                                    "הפריט נוסף לקטגוריה: " + categoryName,
+                                    Snackbar.LENGTH_LONG
+                            );
+
+                            snackbar.getView().setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+
+                            snackbar.setAction("בטל", v ->
                             {
-                                if (addItemFragment != null)
-                                {
-                                    addItemFragment.endProgressBar();
-                                    addItemFragment.dismiss();
-                                }
-                                Toast.makeText(CategoryActivity.this, "שגיאה בניסיון להוסיף את הפריט", Toast.LENGTH_SHORT).show();
+                                runIfOnline(() -> dbHandler.removeItem(list, categoryName, item));
                             });
+
+                            snackbar.setAnchorView(btnAddItem);
+                            snackbar.show();
                         }
                     });
-                });
+                }
+
+                @Override
+                public void onFailure(Exception e)
+                {
+                    runOnUiThread(() ->
+                    {
+                        if (addItemFragment != null)
+                        {
+                            addItemFragment.endProgressBar();
+                            addItemFragment.dismiss();
+                        }
+                        Toast.makeText(CategoryActivity.this, "שגיאה בניסיון להוסיף את הפריט", Toast.LENGTH_SHORT).show();
+                    });
+                }
             });
         });
     }
