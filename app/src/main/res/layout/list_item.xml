@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="8dp"
@@ -29,8 +30,8 @@
             android:layout_height="24dp"
             android:background="@null"
             android:scaleType="fitCenter"
-            android:tint="@color/quantity"
-            android:src="@drawable/ic_arrow_down"/>
+            android:src="@drawable/ic_arrow_down"
+            app:tint="@color/quantity" />
 
         <TextView
             android:id="@+id/tv_quantity"
@@ -48,8 +49,8 @@
             android:layout_height="24dp"
             android:background="@null"
             android:scaleType="fitCenter"
-            android:tint="@color/quantity"
-            android:src="@drawable/ic_arrow_up"/>
+            android:src="@drawable/ic_arrow_up"
+            app:tint="@color/quantity" />
     </LinearLayout>
 
     <!-- Price Section -->

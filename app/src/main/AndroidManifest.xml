@@ -17,6 +17,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Baskit">
         <activity
+            android:name=".List.PlanListActivity"
+            android:exported="false" />
+        <activity
             android:name=".Firebase.SignUpActivity"
             android:exported="false" />
         <activity
@@ -27,7 +30,7 @@
             android:exported="false" />
         <activity
             android:name=".Home.SettingsActivity"
-            android:exported="false"></activity>
+            android:exported="false" />
         <activity
             android:name=".Home.HomeActivity"
             android:exported="true">

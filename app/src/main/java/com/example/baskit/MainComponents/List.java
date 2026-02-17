@@ -29,6 +29,27 @@ public class List
         this.name = name;
     }
 
+    public List(List other)
+    {
+        if (other == null) return;
+
+        this.id = other.getId();
+        this.name = other.getName();
+        this.userIDs = other.userIDs;
+        this.requests = other.requests;
+
+        this.categories = new HashMap<>();
+
+        if (other.getCategories() != null)
+        {
+            for (Map.Entry<String, Category> entry : other.getCategories().entrySet())
+            {
+                Category originalCategory = entry.getValue();
+                this.categories.put(entry.getKey(), new Category(originalCategory));
+            }
+        }
+    }
+
     public String getId() {
         return id;
     }
@@ -91,13 +112,25 @@ public class List
         categories.remove(categoryName);
     }
 
-    public ArrayList<Item> getAllItems()
+    public ArrayList<Item> getItems()
     {
         ArrayList<Item> items = new ArrayList<>();
 
         for (Category category : categories.values())
         {
             items.addAll(category.getItems().values());
+        }
+
+        return items;
+    }
+
+    public ArrayList<Item> getRemainedItems()
+    {
+        ArrayList<Item> items = new ArrayList<>();
+
+        for (Category category : categories.values())
+        {
+            items.addAll(category.getRemainedItems());
         }
 
         return items;

@@ -51,8 +51,8 @@
             android:layout_height="45dp"
             android:scaleType="fitCenter"
             android:background="@null"
-            android:tint="?attr/colorPrimaryVariant"
-            android:src="@drawable/ic_share" />
+            android:src="@drawable/ic_share"
+            app:tint="?attr/colorPrimaryVariant" />
     </LinearLayout>
 
     <com.google.android.material.button.MaterialButton
@@ -102,7 +102,7 @@
 
     <!-- Bottom Bar -->
     <include
-        layout="@layout/bottom_bar"
+        layout="@layout/bottom_bar_plan"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 

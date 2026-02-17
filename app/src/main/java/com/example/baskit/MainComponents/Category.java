@@ -30,6 +30,24 @@ public class Category
         updateFinished();
     }
 
+    public Category(Category other)
+    {
+        if (other == null) return;
+
+        this.name = other.getName();
+        this.finished = other.isFinished();
+
+        this.items = new HashMap<>();
+
+        if (other.getItems() != null)
+        {
+            for (Map.Entry<String, Item> entry : other.getItems().entrySet())
+            {
+                this.items.put(entry.getKey(), new Item(entry.getValue()));
+            }
+        }
+    }
+
     public void updateFinished()
     {
         if (items != null && !items.isEmpty())
@@ -73,7 +91,23 @@ public class Category
         this.name = name;
     }
 
-    public Map<String, Item> getItems() {
+    public Map<String, Item> getItems()
+    {
+        return items;
+    }
+
+    public ArrayList<Item> getRemainedItems()
+    {
+        ArrayList<Item> items = new ArrayList<>();
+
+        for (Item item : this.items.values())
+        {
+            if (!item.isChecked())
+            {
+                items.add(item);
+            }
+        }
+
         return items;
     }
 

@@ -36,7 +36,7 @@ public class CategoryActivity extends MasterActivity
     TextView tvListName, tvCategoryName, tvTotal;
     ImageButton btnFinished, btnBack;
     Button btnCheapest;
-    Button btnAddItem;
+    ImageButton btnAddItem;
     FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
     AddItemFragment addItemFragment;
     AIHandler aiHandler = AIHandler.getInstance();
@@ -53,7 +53,6 @@ public class CategoryActivity extends MasterActivity
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_category);
 
         String listId = getIntent().getStringExtra("listId");
@@ -156,7 +155,7 @@ public class CategoryActivity extends MasterActivity
                         btnAddItem.setEnabled(false);
                     }
 
-                    recyclerItems = findViewById(R.id.recycler_category_items);
+                    recyclerItems = findViewById(R.id.recycler_supermarket_items);
                     recyclerItems.setLayoutManager(new LinearLayoutManager(CategoryActivity.this));
 
                     runWhenServerActive(() ->

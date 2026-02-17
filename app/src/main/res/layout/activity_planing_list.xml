@@ -5,13 +5,13 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Categories.CategoryActivity"
+    tools:context=".List.PlanListActivity"
     android:orientation="vertical"
     android:gravity="center"
-    android:paddingHorizontal="10dp"
-    android:background="?attr/colorSurface">
+    android:background="?attr/colorSurface"
+    android:paddingVertical="20dp"
+    android:paddingHorizontal="10dp">
 
-    <!-- Top Floating Header -->
     <LinearLayout
         android:id="@+id/layout_top_bar"
         android:layout_width="match_parent"
@@ -30,7 +30,7 @@
             android:gravity="center_vertical">
 
             <ImageButton
-                android:id="@+id/btn_back"
+                android:id="@+id/btn_cancel"
                 android:layout_width="45dp"
                 android:layout_height="45dp"
                 android:layout_marginEnd="10dp"
@@ -53,35 +53,16 @@
         </LinearLayout>
 
         <TextView
-            android:id="@+id/tv_category_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="קטגוריה"
+            android:text="ערוך"
             android:textSize="35sp"
             android:textStyle="bold"
             android:textColor="?attr/colorSecondary"
-            android:visibility="invisible"
-            android:gravity="center"/>
+            android:gravity="start"/>
 
     </LinearLayout>
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_arrange_cheapest"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="סדר לפי הזול ביותר"
-        android:textColor="?attr/colorTertiary"
-        app:strokeColor="?attr/colorTertiary"
-        android:backgroundTint="?attr/colorSurface"
-        app:rippleColor="?attr/colorSecondaryContainer"
-        android:layout_margin="10dp"
-        android:elevation="3dp"
-        app:strokeWidth="2dp"
-        android:textStyle="bold"
-        style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
-
-
-    <!-- Items List -->
     <LinearLayout
         android:id="@+id/layout_items"
         android:layout_width="match_parent"
@@ -95,8 +76,9 @@
             android:id="@+id/recycler_supermarket_items"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="2"
+            android:layout_weight="1"
             android:clipToPadding="false"
+            android:paddingTop="10dp"
             android:scrollbars="vertical" />
 
         <TextView
@@ -109,13 +91,18 @@
             android:visibility="invisible"
             android:text="סך הכל: _ ש״ח" />
 
-    </LinearLayout>
+        <Button
+            android:id="@+id/btn_save"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="15dp"
+            android:layout_marginVertical="10dp"
+            android:textColor="@color/white_smoke"
+            android:textSize="40sp"
+            android:textStyle="bold"
+            android:backgroundTint="?attr/colorPrimary"
+            android:text="שמור" />
 
-    <!-- Bottom Bar -->
-    <include
-        android:id="@+id/bottom_bar"
-        layout="@layout/bottom_bar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+    </LinearLayout>
 
 </LinearLayout>

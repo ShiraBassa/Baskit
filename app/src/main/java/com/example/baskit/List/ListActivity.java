@@ -1,5 +1,6 @@
 package com.example.baskit.List;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -46,8 +47,8 @@ public class ListActivity extends MasterActivity
     FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
     Map<String, View> categoriesViews;
     AddItemFragment addItemFragment;
-    Button btnAddItem, btnCheapest;;
-    ImageButton btnShare;
+    Button btnCheapest;
+    ImageButton btnAddItem, btnPlan, btnShare;
     AIHandler aiHandler = AIHandler.getInstance();
     APIHandler apiHandler = APIHandler.getInstance();
 
@@ -63,7 +64,6 @@ public class ListActivity extends MasterActivity
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_list);
 
         createInit();
@@ -126,6 +126,7 @@ public class ListActivity extends MasterActivity
         tvTotal = findViewById(R.id.tv_total);
         btnShare = findViewById(R.id.btn_share);
         btnCheapest = findViewById(R.id.btn_arrange_cheapest);
+        btnPlan = findViewById(R.id.btn_plan);
 
         btnAddItem.setEnabled(false);
 
@@ -322,6 +323,17 @@ public class ListActivity extends MasterActivity
             public void onClick(View view)
             {
                 setCheapest();
+            }
+        });
+
+        btnPlan.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                Intent intent = new Intent(ListActivity.this, PlanListActivity.class);
+                intent.putExtra("listId", list.getId());
+                startActivity(intent);
             }
         });
     }

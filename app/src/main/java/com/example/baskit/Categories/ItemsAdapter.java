@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
@@ -61,7 +62,8 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
     public static class ViewHolder extends RecyclerView.ViewHolder
     {
         protected TextView tvName, tvQuantity, tvPrice;
-        protected ImageButton btnUp, btnDown, btnCheckBox;
+        protected ImageButton btnUp, btnDown, btnCheckBox, dragHandle;
+        protected LinearLayout loutQuantity;
         protected ItemViewAlertDialog itemViewAlertDialog;
 
         public ViewHolder(View itemView)
@@ -74,6 +76,8 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
             btnDown = itemView.findViewById(R.id.btn_down);
             btnCheckBox = itemView.findViewById(R.id.check_box);
             tvPrice = itemView.findViewById(R.id.tv_price);
+            loutQuantity = itemView.findViewById(R.id.layout_quantity);
+            dragHandle = itemView.findViewById(R.id.drag_handle);
         }
     }
 
