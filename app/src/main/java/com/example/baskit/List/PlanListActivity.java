@@ -51,6 +51,7 @@ public class PlanListActivity extends MasterActivity
     private boolean listListenerAttached = false;
     private boolean uiInitialized = false;
     private double oldTotal;
+    private String categoryName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -59,6 +60,7 @@ public class PlanListActivity extends MasterActivity
         setContentView(R.layout.activity_plan_list);
 
         listId = getIntent().getStringExtra("listId");
+        categoryName = getIntent().getStringExtra("category");
 
         if (listId == null)
         {
@@ -146,7 +148,14 @@ public class PlanListActivity extends MasterActivity
                         return;
                     }
 
-                    tvListName.setText(newList.getName());
+                    String title = newList.getName();
+
+                    if (categoryName != null)
+                    {
+                        title += " (" + categoryName + ")";
+                    }
+
+                    tvListName.setText(title);
                     tvListName.setVisibility(View.VISIBLE);
 
                     recyclerItems = findViewById(R.id.recycler_supermarket_items);
@@ -196,7 +205,8 @@ public class PlanListActivity extends MasterActivity
                                         public void removeCategory() {}
                                     },
                                     finalSupermarkets,
-                                    finalItemsCatalog
+                                    finalItemsCatalog,
+                                    categoryName
                             );
 
                             recyclerItems.setAdapter(itemsAdapter);

@@ -1,5 +1,6 @@
 package com.example.baskit.Categories;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -16,6 +17,8 @@ import com.example.baskit.API.APIHandler;
 import com.example.baskit.Baskit;
 import com.example.baskit.Firebase.FirebaseDBHandler;
 import com.example.baskit.List.AddItemFragment;
+import com.example.baskit.List.ListActivity;
+import com.example.baskit.List.PlanListActivity;
 import com.example.baskit.MainComponents.Category;
 import com.example.baskit.MainComponents.Item;
 import com.example.baskit.MainComponents.List;
@@ -36,7 +39,7 @@ public class CategoryActivity extends MasterActivity
     TextView tvListName, tvCategoryName, tvTotal;
     ImageButton btnFinished, btnBack;
     Button btnCheapest;
-    ImageButton btnAddItem;
+    ImageButton btnAddItem, btnPlan;
     FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
     AddItemFragment addItemFragment;
     AIHandler aiHandler = AIHandler.getInstance();
@@ -103,6 +106,7 @@ public class CategoryActivity extends MasterActivity
         btnAddItem = findViewById(R.id.btn_add_item);
         tvTotal = findViewById(R.id.tv_total);
         btnCheapest = findViewById(R.id.btn_arrange_cheapest);
+        btnPlan = findViewById(R.id.btn_plan);
 
         final String listId = getIntent().getStringExtra("listId");
         final String categoryName = getIntent().getStringExtra("categoryName");
@@ -349,6 +353,18 @@ public class CategoryActivity extends MasterActivity
                 {
                     itemsAdapter.arrangeByCheapest();
                 }
+            }
+        });
+
+        btnPlan.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                Intent intent = new Intent(CategoryActivity.this, PlanListActivity.class);
+                intent.putExtra("listId", list.getId());
+                intent.putExtra("category", category.getName());
+                startActivity(intent);
             }
         });
     }

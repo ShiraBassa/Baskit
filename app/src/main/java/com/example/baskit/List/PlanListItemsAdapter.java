@@ -42,6 +42,7 @@ public class PlanListItemsAdapter extends RecyclerView.Adapter<PlanListItemsAdap
 
     public static final Supermarket unassigned_supermarket = Baskit.UNASSIGNED_SUPERMARKET;
     Supermarket selectedSupermarket = null;
+    private String categoryName;
 
     private final SupermarketItemsAdapter.OnItemMovedListener listener = (draggedItem, from, to) ->
     {
@@ -75,11 +76,12 @@ public class PlanListItemsAdapter extends RecyclerView.Adapter<PlanListItemsAdap
 
     public PlanListItemsAdapter(com.example.baskit.MainComponents.List list, Activity activity, Context context,
                                 ItemsAdapter.UpperClassFunctions upperClassFns, ArrayList<Supermarket> supermarkets,
-                                Map<String, Map<String, Map<String, Double>>> itemPrices)
+                                Map<String, Map<String, Map<String, Double>>> itemPrices, String categoryName)
     {
         this.list = list;
         this.activity = activity;
         this.context = context;
+        this.categoryName = categoryName;
         this.upperClassFns = new ItemsAdapter.UpperClassFunctions()
         {
             @Override
@@ -197,7 +199,28 @@ public class PlanListItemsAdapter extends RecyclerView.Adapter<PlanListItemsAdap
 
     private void sortByExisting()
     {
-        for (Item item : list.getRemainedItems())
+        if (list == null || list.getCategories() == null) return;
+
+        ArrayList<Item> sourceItems = new ArrayList<>();
+
+        if (categoryName != null)
+        {
+            if (list.getCategories().containsKey(categoryName))
+            {
+                sourceItems.addAll(
+                        list.getCategories()
+                                .get(categoryName)
+                                .getItems()
+                                .values()
+                );
+            }
+        }
+        else
+        {
+            sourceItems.addAll(list.getRemainedItems());
+        }
+
+        for (Item item : sourceItems)
         {
             Supermarket supermarket = item.getSupermarket();
             ArrayList<Item> targetList;
