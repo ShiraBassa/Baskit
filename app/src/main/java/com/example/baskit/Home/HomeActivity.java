@@ -23,6 +23,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.baskit.API.APIHandler;
+import com.example.baskit.Baskit;
 import com.example.baskit.Firebase.FirebaseAuthHandler;
 import com.example.baskit.Firebase.FirebaseDBHandler;
 import com.example.baskit.Login.LoginActivity;
@@ -199,7 +200,7 @@ public class HomeActivity extends MasterActivity
         setButtons();
 
         listsRecycler = findViewById(R.id.lists_grid);
-        listsRecycler.setLayoutManager(new GridLayoutManager(this, 3));
+        listsRecycler.setLayoutManager(new GridLayoutManager(this, Baskit.HOME_GRID_NUM_BOXES));
         listsRecycler.setAdapter(new HomeGridAdapter(this, new ArrayList<>(), null));
 
         runIfOnline(() ->
@@ -231,6 +232,7 @@ public class HomeActivity extends MasterActivity
             @Override
             public void onClick(View view)
             {
+                adEtName.setText("");
                 adCreateList.show();
             }
         });

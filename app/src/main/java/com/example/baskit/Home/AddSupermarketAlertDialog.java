@@ -57,7 +57,6 @@ public class AddSupermarketAlertDialog
                                      SupermarketsListAdapter supermarketsAdapter,
                                      OnSubmit onSubmit,
                                      boolean runInBackground)
-            throws JSONException, IOException
     {
         this.activity = activity;
         this.context = context;

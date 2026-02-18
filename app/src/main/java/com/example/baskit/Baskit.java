@@ -32,6 +32,7 @@ public class Baskit extends Application
 
     public static final String SERVER_URL = "http://" + PRIVATE_NETWORK_URL + ":5001";
     public static final int SQLITE_CATEGORIES_CHUNK_SIZE = 40;
+    public static final int HOME_GRID_NUM_BOXES = 2;
 
     @Override
     public void onCreate()

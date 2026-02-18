@@ -101,6 +101,12 @@ public class HomeGridAdapter extends RecyclerView.Adapter<HomeGridAdapter.GridVi
         button.setTextSize(24f);
         button.setSingleLine(false);
         button.setHorizontallyScrolling(false);
+        button.setAutoSizeTextTypeUniformWithConfiguration(
+                12,
+                40,
+                1,
+                android.util.TypedValue.COMPLEX_UNIT_SP
+        );
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             button.setBreakStrategy(LineBreaker.BREAK_STRATEGY_HIGH_QUALITY);
