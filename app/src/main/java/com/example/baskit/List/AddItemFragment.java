@@ -80,7 +80,7 @@ public class AddItemFragment extends DialogFragment
 
     public interface AddItemInterface
     {
-        void addItem(Item item);
+        void addItem(Item item) throws IOException;
     }
 
     public AddItemFragment(Activity activity, Context context,
@@ -395,8 +395,14 @@ public class AddItemFragment extends DialogFragment
             if (selectedItem != null)
             {
                 startProgressBar();
-                addItemInterface.addItem(selectedItem);
-                // Caller will dismiss/end progress when finished
+                try
+                {
+                    addItemInterface.addItem(selectedItem);
+                }
+                catch (IOException e)
+                {
+                    throw new RuntimeException(e);
+                }
             }
             else
             {

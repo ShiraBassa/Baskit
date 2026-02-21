@@ -161,7 +161,7 @@ public class AIHandler
         builder.append("אני יוצרת רשימת קניות מחולקת לפי מחלקות בסופר.\n");
         builder.append("קבל רשימת שמות מוצרים.\n");
         builder.append("עליך לשייך כל מוצר לקטגוריה מתאימה.\n");
-        builder.append("השתמש בעיקר בקטגוריות הבאות ואם אין התאמה תיצור קטגוריה חדשה:\n");
+        builder.append("השתמש רק בקטגוריות הבאות, אין ליצור קטגוריות חדשות:\n");
         builder.append(String.join(", ", defaultCategoryNames));
         builder.append(".\n\n");
 

@@ -45,7 +45,7 @@
                 android:layout_height="wrap_content"
                 android:text="רשימה"
                 android:textSize="28sp"
-                android:textColor="?attr/colorSecondary"
+                android:textColor="?attr/colorPrimary"
                 android:visibility="invisible"
                 android:gravity="center_vertical" />
 
@@ -82,7 +82,7 @@
 
         <TextView
             android:id="@+id/tv_total"
-            android:textColor="@color/black"
+            android:textColor="?attr/colorSecondary"
             android:textSize="24sp"
             android:textStyle="bold"
             android:layout_height="wrap_content"
@@ -99,7 +99,7 @@
             android:textColor="@color/white_smoke"
             android:textSize="36sp"
             android:textStyle="bold"
-            android:backgroundTint="?attr/colorSecondary"
+            android:backgroundTint="?attr/colorPrimaryVariant"
             android:text="שמור" />
 
     </LinearLayout>

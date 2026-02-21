@@ -28,6 +28,9 @@ import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.MasterActivity;
 import com.example.baskit.R;
 
+import org.json.JSONException;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -460,125 +463,85 @@ public class ListActivity extends MasterActivity
     {
         if (itemsCodeNames == null)
         {
+            if (addItemFragment != null) addItemFragment.endProgressBar();
             Toast.makeText(this, "Items are still loading…", Toast.LENGTH_SHORT).show();
             return;
         }
 
         item.updateId(getKeyByValue(itemsCodeNames, item.getName()));
 
-        String categoryName = apiHandler.getItemCategoryDB(item.getAbsoluteId());
-
-        if (categoryName == null || categoryName.isEmpty())
+        new Thread(() ->
         {
-            runIfOnline(() ->
+            String categoryName;
+
+            try
             {
-                aiHandler.getItemCategoryAI(item, ListActivity.this, aiCategoryName ->
-                {
-                    if (aiCategoryName == null || aiCategoryName.isEmpty())
-                    {
-                        runOnUiThread(() ->
-                                Toast.makeText(ListActivity.this, "לא נמצאה קטגוריה לפריט", Toast.LENGTH_SHORT).show());
-                        return;
-                    }
-
-                    runIfOnline(() ->
-                    {
-                        if (!list.hasCategory(aiCategoryName))
-                        {
-                            dbHandler.addCategory(list, new Category(aiCategoryName));
-                        }
-
-                        dbHandler.addItem(list, aiCategoryName, item, new FirebaseDBHandler.DBCallback()
-                        {
-                            @Override
-                            public void onComplete()
-                            {
-                                runOnUiThread(() ->
-                                {
-                                    if (addItemFragment != null)
-                                    {
-                                        addItemFragment.endProgressBar();
-                                        addItemFragment.dismiss();
-
-                                        addItemFragment = new AddItemFragment(
-                                                ListActivity.this,
-                                                ListActivity.this,
-                                                new ArrayList<>(itemsCodeNames.values()),
-                                                list.toItemNames(),
-                                                ListActivity.this::addItem
-                                        );
-                                        addItemFragment.show(getSupportFragmentManager(), "AddItemFragment");
-                                    }
-                                });
-                            }
-
-                            @Override
-                            public void onFailure(Exception e)
-                            {
-                                runOnUiThread(() ->
-                                {
-                                    if (addItemFragment != null)
-                                    {
-                                        addItemFragment.endProgressBar();
-                                        addItemFragment.dismiss();
-                                    }
-                                    Toast.makeText(ListActivity.this, "Failed to add item: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                                });
-                            }
-                        });
-                    });
-                });
-            });
-
-            return;
-        }
-
-        runIfOnline(() ->
-        {
-            if (!list.hasCategory(categoryName))
+                categoryName = apiHandler.getItemCategory(item);
+            }
+            catch (IOException e)
             {
-                dbHandler.addCategory(list, new Category(categoryName));
+                throw new RuntimeException(e);
+            }
+            catch (JSONException e)
+            {
+                throw new RuntimeException(e);
             }
 
-            dbHandler.addItem(list, categoryName, item, new FirebaseDBHandler.DBCallback()
+            if (categoryName == null || categoryName.isEmpty())
             {
-                @Override
-                public void onComplete()
-                {
-                    runOnUiThread(() ->
-                    {
-                        if (addItemFragment != null)
-                        {
-                            addItemFragment.endProgressBar();
-                            addItemFragment.dismiss();
+                runOnUiThread(() ->
+                        Toast.makeText(ListActivity.this, "לא נמצאה קטגוריה לפריט", Toast.LENGTH_SHORT).show()
+                );
+                return;
+            }
 
-                            addItemFragment = new AddItemFragment(
-                                    ListActivity.this,
-                                    ListActivity.this,
-                                    new ArrayList<>(itemsCodeNames.values()),
-                                    list.toItemNames(),
-                                    ListActivity.this::addItem
-                            );
-                            addItemFragment.show(getSupportFragmentManager(), "AddItemFragment");
-                        }
-                    });
+            runIfOnline(() ->
+            {
+                if (!list.hasCategory(categoryName))
+                {
+                    dbHandler.addCategory(list, new Category(categoryName));
                 }
 
-                @Override
-                public void onFailure(Exception e)
+                dbHandler.addItem(list, categoryName, item, new FirebaseDBHandler.DBCallback()
                 {
-                    runOnUiThread(() ->
+                    @Override
+                    public void onComplete()
                     {
-                        if (addItemFragment != null)
+                        runOnUiThread(() ->
                         {
-                            addItemFragment.endProgressBar();
-                            addItemFragment.dismiss();
-                        }
-                        Toast.makeText(ListActivity.this, "Failed to add item: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    });
-                }
+                            if (addItemFragment != null)
+                            {
+                                addItemFragment.endProgressBar();
+                                addItemFragment.dismiss();
+
+                                addItemFragment = new AddItemFragment(
+                                        ListActivity.this,
+                                        ListActivity.this,
+                                        new ArrayList<>(itemsCodeNames.values()),
+                                        list.toItemNames(),
+                                        ListActivity.this::addItem
+                                );
+                                addItemFragment.show(getSupportFragmentManager(), "AddItemFragment");
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onFailure(Exception e)
+                    {
+                        runOnUiThread(() ->
+                        {
+                            if (addItemFragment != null)
+                            {
+                                addItemFragment.endProgressBar();
+                                addItemFragment.dismiss();
+                            }
+                            Toast.makeText(ListActivity.this, "Failed to add item: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        });
+                    }
+                });
             });
-        });
+        }).start();
     }
 
     private String getKeyByValue(Map<String, String> map, String value)

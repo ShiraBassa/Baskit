@@ -27,10 +27,10 @@ public class Baskit extends Application
     public static final Supermarket UNASSIGNED_SUPERMARKET = new Supermarket("לא נבחר", "");
     private static final MutableLiveData<Boolean> onlineLive = new MutableLiveData<>(true);
     private ConnectivityManager.NetworkCallback networkCallback;
-    public static final String PRIVATE_NETWORK_URL = "192.168.1.248";
+    public static final String PRIVATE_NETWORK_URL = "172.20.10.13";
     public static final String EMULATOR_URL = "10.0.2.2";
 
-    public static final String SERVER_URL = "http://" + PRIVATE_NETWORK_URL + ":5001";
+    public static final String SERVER_URL = "http://" + EMULATOR_URL + ":5001";
     public static final int SQLITE_CATEGORIES_CHUNK_SIZE = 40;
     public static final int HOME_GRID_NUM_BOXES = 2;
 
