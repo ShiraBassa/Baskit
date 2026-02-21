@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="horizontal"
     android:padding="4dp">
 
@@ -13,18 +14,38 @@
         android:elevation="2dp"
         android:backgroundTint="@color/white_smoke">
 
-        <TextView
-            android:id="@+id/tvItemName"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/dark_teal"
-            android:textSize="22sp"
-            android:textDirection="rtl"
-            android:singleLine="true"
-            android:gravity="start"
-            android:padding="12dp"
-            android:background="?attr/selectableItemBackground"
-            android:text="שם"/>
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="8dp">
+
+            <ImageView
+                android:id="@+id/ivStar"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:scaleType="fitCenter"
+                android:visibility="gone"
+                android:src="@drawable/ic_star"
+                app:tint="?attr/colorPrimary"/>
+
+            <TextView
+                android:id="@+id/tvItemName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="@color/dark_teal"
+                android:textSize="22sp"
+                android:textDirection="rtl"
+                android:singleLine="true"
+                android:gravity="start"
+                android:padding="4dp"
+                android:background="?attr/selectableItemBackground"
+                android:text="שם"/>
+
+        </LinearLayout>
+
     </androidx.cardview.widget.CardView>
 
 </LinearLayout>

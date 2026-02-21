@@ -152,7 +152,8 @@ public class CategoryActivity extends MasterActivity
                                 CategoryActivity.this,
                                 new ArrayList<>(itemsCodeNames.values()),
                                 list.toItemNames(),
-                                CategoryActivity.this::addItem);
+                                CategoryActivity.this::addItem,
+                                list.getItemSuggestions());
                         btnAddItem.setEnabled(true);
                     }
                     else

@@ -183,7 +183,8 @@ public class ListActivity extends MasterActivity
                                 ListActivity.this,
                                 new ArrayList<>(itemsCodeNames.values()),
                                 list.toItemNames(),
-                                ListActivity.this::addItem);
+                                ListActivity.this::addItem,
+                                list.getItemSuggestions());
                         btnAddItem.setEnabled(true);
                     }
                     else
@@ -519,7 +520,8 @@ public class ListActivity extends MasterActivity
                                         ListActivity.this,
                                         new ArrayList<>(itemsCodeNames.values()),
                                         list.toItemNames(),
-                                        ListActivity.this::addItem
+                                        ListActivity.this::addItem,
+                                        list.getItemSuggestions()
                                 );
                                 addItemFragment.show(getSupportFragmentManager(), "AddItemFragment");
                             }

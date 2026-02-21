@@ -17,6 +17,7 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -65,6 +66,7 @@ public class AddItemFragment extends DialogFragment
 
     private APIHandler apiHandler = APIHandler.getInstance();
     private ArrayList<String> listItemNames;
+    private ArrayList<String> itemSuggestions;
 
     private String decodeSanitizedKey(String s)
     {
@@ -88,13 +90,15 @@ public class AddItemFragment extends DialogFragment
     public AddItemFragment(Activity activity, Context context,
                            ArrayList<String> allItemNames,
                            ArrayList<String> listItemNames,
-                           AddItemInterface addItemInterface)
+                           AddItemInterface addItemInterface,
+                           ArrayList<String> itemSuggestions)
     {
         this.activity = activity;
         this.context = context;
         this.allItemNames = allItemNames;
         this.listItemNames = listItemNames;
         this.addItemInterface = addItemInterface;
+        this.itemSuggestions = itemSuggestions;
 
         init();
     }
@@ -212,25 +216,57 @@ public class AddItemFragment extends DialogFragment
 
     private void setupAutocomplete()
     {
-        final ArrayList<String> filteredResults = new ArrayList<>(allItemNames);
+        final ArrayList<String> filteredResults = new ArrayList<>();
+        final ArrayList<Boolean> filteredIsSuggestion = new ArrayList<>();
+        final ArrayList<String> suggestionKeywords = new ArrayList<>();
+
+        if (itemSuggestions != null)
+        {
+            for (String s : itemSuggestions)
+            {
+                String dec = decodeSanitizedKey(s);
+
+                if (dec != null)
+                {
+                    String trimmed = dec.trim();
+                    if (!trimmed.isEmpty()) suggestionKeywords.add(trimmed.toLowerCase(Locale.ROOT));
+                }
+            }
+        }
 
         final ArrayAdapter<String> adapter = new ArrayAdapter<String>(context, R.layout.add_item_dropdown_item, filteredResults) {
             @NonNull
             @Override
             public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-                if (convertView == null) {
+                if (convertView == null)
+                {
                     convertView = activity.getLayoutInflater()
                             .inflate(R.layout.add_item_dropdown_item, parent, false);
                 }
 
                 TextView tvName = convertView.findViewById(R.id.tvItemName);
+                ImageView ivStar = convertView.findViewById(R.id.ivStar);
 
-                if (position < 0 || position >= filteredResults.size()) {
+                if (position < 0 || position >= filteredResults.size())
+                {
                     tvName.setText("");
+                    if (ivStar != null) ivStar.setVisibility(View.GONE);
                     return convertView;
                 }
 
                 String decoded = decodeSanitizedKey(filteredResults.get(position));
+                boolean isSuggestion = false;
+
+                if (position < filteredIsSuggestion.size())
+                {
+                    isSuggestion = filteredIsSuggestion.get(position);
+                }
+
+                if (ivStar != null)
+                {
+                    ivStar.setVisibility(isSuggestion ? View.VISIBLE : View.GONE);
+                }
+
                 CharSequence userInput = searchItem.getText();
 
                 if (userInput != null && userInput.length() > 0)
@@ -284,7 +320,7 @@ public class AddItemFragment extends DialogFragment
                     }
 
                     android.text.SpannableString spannable = new android.text.SpannableString(decoded);
-                    int highlightColor = 0xFF388E3C;
+                    int highlightColor = Baskit.getAppColor(context, com.google.android.material.R.attr.colorPrimary);
 
                     for (int[] range : matchRanges)
                     {
@@ -322,12 +358,12 @@ public class AddItemFragment extends DialogFragment
                     protected FilterResults performFiltering(CharSequence constraint)
                     {
                         FilterResults results = new FilterResults();
-
                         results.values = filteredResults;
                         results.count = filteredResults.size();
 
                         return results;
                     }
+
                     @Override
                     protected void publishResults(CharSequence constraint, FilterResults results) {}
                 };
@@ -337,8 +373,8 @@ public class AddItemFragment extends DialogFragment
         searchItem.setAdapter(adapter);
         searchItem.setThreshold(1);
         searchItem.setOnClickListener(v -> searchItem.showDropDown());
-
         searchItem.setImeOptions(android.view.inputmethod.EditorInfo.IME_ACTION_DONE);
+
         searchItem.setOnEditorActionListener((v, actionId, event) ->
         {
             if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_DONE)
@@ -346,8 +382,10 @@ public class AddItemFragment extends DialogFragment
                 searchItem.clearFocus();
                 hideKeyboard();
                 searchItem.post(() -> searchItem.showDropDown());
+
                 return true;
             }
+
             return false;
         });
 
@@ -357,9 +395,11 @@ public class AddItemFragment extends DialogFragment
         searchItem.post(() ->
         {
             if (fragmentView == null) return;
+
             int fragmentHeight = fragmentView.getHeight();
             int searchBottom = searchItem.getBottom();
             int maxHeightInsideFragment = fragmentHeight - searchBottom;
+
             if (maxHeightInsideFragment > 0)
             {
                 searchItem.setDropDownHeight(maxHeightInsideFragment);
@@ -371,85 +411,176 @@ public class AddItemFragment extends DialogFragment
             private final long FILTER_DEBOUNCE_DELAY = 120;
             private Runnable filterRunnable = null;
 
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
-            @Override
-            public void afterTextChanged(android.text.Editable str)
-            {
-                if (filterRunnable != null)
-                {
-                    searchItem.removeCallbacks(filterRunnable);
-                }
+            public void afterTextChanged(android.text.Editable str) {
+                if (filterRunnable != null) searchItem.removeCallbacks(filterRunnable);
 
                 filterRunnable = new Runnable()
                 {
                     @Override
-                    public void run()
-                    {
+                    public void run() {
                         String input = str == null ? "" : str.toString();
-                        String trimmedInput = input.trim();
                         ArrayList<String> inputWords = new ArrayList<>();
+                        ArrayList<Boolean> wordCompleted = new ArrayList<>();
 
-                        if (!trimmedInput.isEmpty())
+                        if (input != null && !input.isEmpty())
                         {
-                            for (String word : trimmedInput.split("\\s+"))
+                            java.util.regex.Matcher m = java.util.regex.Pattern.compile("([^\\s]+)(\\s*)").matcher(input);
+
+                            while (m.find())
                             {
-                                String w = word.trim();
-                                if (!w.isEmpty()) inputWords.add(w.toLowerCase(Locale.ROOT));
+                                String word = m.group(1);
+                                String spaces = m.group(2);
+
+                                if (word != null && !word.isEmpty())
+                                {
+                                    inputWords.add(word.toLowerCase(Locale.ROOT));
+                                    wordCompleted.add(spaces != null && !spaces.isEmpty());
+                                }
                             }
                         }
 
                         filteredResults.clear();
+                        filteredIsSuggestion.clear();
+
+                        ArrayList<ScoredItem> suggestions = new ArrayList<>();
+                        ArrayList<ScoredItem> nonsuggestions = new ArrayList<>();
+
+                        java.util.function.BiPredicate<String, String> containsFullWord = (text, word) ->
+                        {
+                            String regex = "\\b" + java.util.regex.Pattern.quote(word) + "\\b";
+                            return java.util.regex.Pattern.compile(regex, java.util.regex.Pattern.CASE_INSENSITIVE | java.util.regex.Pattern.UNICODE_CASE)
+                                    .matcher(text).find();
+                        };
 
                         if (inputWords.isEmpty())
                         {
-                            filteredResults.addAll(allItemNames);
+                            for (String s : allItemNames)
+                            {
+                                String decoded = decodeSanitizedKey(s);
+                                String low = decoded.trim().toLowerCase(Locale.ROOT);
+                                boolean isSuggestion = false;
+
+                                for (String keyword : suggestionKeywords)
+                                {
+                                    if (!keyword.isEmpty() && containsFullWord.test(low, keyword))
+                                    {
+                                        isSuggestion = true;
+                                        break;
+                                    }
+                                }
+                                ScoredItem item = new ScoredItem(s, 0, isSuggestion);
+                                if (isSuggestion) suggestions.add(item);
+                                else nonsuggestions.add(item);
+                            }
                         }
                         else
                         {
-                            class ScoredItem
+                            for (String s : allItemNames)
                             {
-                                String item;
-                                int score;
-                                ScoredItem(String item, int score) { this.item = item; this.score = score; }
-                            }
-
-                            ArrayList<ScoredItem> scoredMatches = new ArrayList<>();
-
-                            for (String item : allItemNames)
-                            {
-                                String decoded = decodeSanitizedKey(item);
-                                String lowItem = decoded.toLowerCase(Locale.ROOT);
+                                String decoded = decodeSanitizedKey(s);
+                                String low = decoded.trim().toLowerCase(Locale.ROOT);
                                 boolean allPresent = true;
 
-                                for (String word : inputWords)
+                                for (int i = 0; i < inputWords.size(); ++i)
                                 {
-                                    if (!lowItem.contains(word))
+                                    String w = inputWords.get(i);
+                                    boolean completed = wordCompleted.get(i);
+
+                                    if (completed)
                                     {
-                                        allPresent = false;
-                                        break;
+                                        if (!containsFullWord.test(low, w)) { allPresent = false; break; }
+                                    }
+                                    else
+                                    {
+                                        if (!low.contains(w))
+                                        {
+                                            allPresent = false; break;
+                                        }
                                     }
                                 }
 
                                 if (!allPresent) continue;
+
                                 int score = 0;
-                                String lowInput = String.join(" ", inputWords);
+                                StringBuilder inputJoinedBuilder = new StringBuilder();
 
-                                if (!lowInput.isEmpty() && lowItem.contains(lowInput)) score += 10;
-                                if (!inputWords.isEmpty() && lowItem.startsWith(inputWords.get(0))) score += 5;
+                                for (int i = 0; i < inputWords.size(); ++i)
+                                {
+                                    if (i > 0) inputJoinedBuilder.append(" ");
+                                    inputJoinedBuilder.append(inputWords.get(i));
+                                }
 
-                                scoredMatches.add(new ScoredItem(item, score));
+                                String inputJoined = inputJoinedBuilder.toString();
+
+                                if (!inputJoined.isEmpty() && low.contains(inputJoined)) score += 10;
+                                if (!inputWords.isEmpty() && low.startsWith(inputWords.get(0))) score += 5;
+
+                                int lastIdx = -1;
+                                boolean inOrder = true;
+
+                                for (String w : inputWords)
+                                {
+                                    int idx = low.indexOf(w, lastIdx + 1);
+
+                                    if (idx == -1 || (lastIdx >= 0 && idx < lastIdx))
+                                    {
+                                        inOrder = false;
+                                        break;
+                                    }
+
+                                    lastIdx = idx;
+                                }
+
+                                if (inOrder && inputWords.size() > 1) score += 2;
+
+                                boolean isSuggestion = false;
+
+                                for (String keyword : suggestionKeywords)
+                                {
+                                    if (!keyword.isEmpty() && containsFullWord.test(low, keyword))
+                                    {
+                                        isSuggestion = true;
+                                        break;
+                                    }
+                                }
+
+                                ScoredItem item = new ScoredItem(s, score, isSuggestion);
+
+                                if (isSuggestion)
+                                {
+                                    suggestions.add(item);
+                                }
+                                else
+                                {
+                                    nonsuggestions.add(item);
+                                }
                             }
 
-                            Collections.sort(scoredMatches, (a, b) -> {
+                            java.util.Comparator<ScoredItem> comp = (a, b) ->
+                            {
                                 int cmp = Integer.compare(b.score, a.score);
                                 if (cmp != 0) return cmp;
                                 return decodeSanitizedKey(a.item).compareToIgnoreCase(decodeSanitizedKey(b.item));
-                            });
+                            };
 
-                            for (ScoredItem sc : scoredMatches) filteredResults.add(sc.item);
+                            java.util.Collections.sort(suggestions, comp);
+                            java.util.Collections.sort(nonsuggestions, comp);
+                        }
+
+                        for (ScoredItem si : suggestions)
+                        {
+                            filteredResults.add(si.item);
+                            filteredIsSuggestion.add(true);
+                        }
+
+                        for (ScoredItem si : nonsuggestions)
+                        {
+                            filteredResults.add(si.item);
+                            filteredIsSuggestion.add(false);
                         }
 
                         try
@@ -510,17 +641,32 @@ public class AddItemFragment extends DialogFragment
 
                 searchItem.postDelayed(filterRunnable, FILTER_DEBOUNCE_DELAY);
             }
+
+            class ScoredItem
+            {
+                String item;
+                int score;
+                boolean isSuggestion;
+                ScoredItem(String item, int score, boolean isSuggestion)
+                {
+                    this.item = item;
+                    this.score = score;
+                    this.isSuggestion = isSuggestion;
+                }
+            }
         });
 
         searchItem.setOnItemClickListener((parent, view, position, id) ->
         {
             String clickedName = Baskit.decodeKey((String) parent.getItemAtPosition(position));
+
             if (isBadItemName(clickedName))
             {
                 searchItem.setError("שם פריט לא תקין");
                 selectedItem = null;
                 return;
             }
+
             selectedItem = new Item(clickedName);
             tvQuantity.setText("1");
             btnDown.setBackgroundColor(Baskit.getAppColor(context, com.google.android.material.R.attr.colorOnSecondaryContainer));
