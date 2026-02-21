@@ -3,6 +3,8 @@ package com.example.baskit.AI;
 import android.app.Activity;
 import android.util.Log;
 
+import org.json.JSONArray;
+
 import java.util.ArrayList;
 
 public class AIHandler
@@ -39,26 +41,39 @@ public class AIHandler
             @Override
             public void onSuccess(String result)
             {
-                String cleaned = result.replaceAll("\\[|\\]|'", "").trim();
-                String[] items = cleaned.split("\\s*,\\s*");
-
                 ArrayList<String> suggestions = new ArrayList<>();
 
-                for (String item : items)
+                try
                 {
-                    if (!item.isEmpty())
-                    {
-                        suggestions.add(item.trim());
-                    }
-                }
+                    String normalized = result.trim();
+                    String cleaned = normalized.replace("'", "").replace("\\", "").replaceAll("[^\\p{L}\\p{N}, ]", "").trim();
+                    String[] items = cleaned.split(",");
 
-                onGeminiResult.onResult(suggestions);
+                    for (String item : items)
+                    {
+                        String trimmed = item.trim();
+
+                        if (!trimmed.isEmpty())
+                        {
+                            suggestions.add(trimmed);
+                        }
+                    }
+
+                    onGeminiResult.onResult(suggestions);
+                }
+                catch (Exception e)
+                {
+                    Log.e("AI_PARSE", "Failed to parse Gemini response: " + result);
+                    Log.e("AI_PARSE", e.toString());
+                    onGeminiResult.onResult(new ArrayList<>());
+                }
             }
 
             @Override
             public void onFailure(Throwable error)
             {
                 Log.e("AI", error.toString());
+                onGeminiResult.onResult(new ArrayList<>());
             }
         });
     }
@@ -68,7 +83,7 @@ public class AIHandler
         return "אני יוצרת רשימות קניות לסופר כאשר לכל רשימה יש את השם שלה. " +
                 "קבל שם רשימה ולפיו תציע לי עד 10 מוצרים בסיסיים הקשורים בה. " +
                 "אם שם הרשימה לא מאפשר להציע מוצרים בסיסיים נאותים, תחזיר תשובה ריקה. " +
-                "החזרת התוצאה צריכה להיות בפורמט רשימה של מחרוזות, לדוגמה: ['מוצר1', 'מוצר2']. " +
+                "החזרת התוצאה צריכה להיות בפורמט רשימה של מחרוזות, לדוגמה: ['מוצר1', 'מוצר2']. בלי סימנים מיותרים. " +
                 "שם הרשימה: '" + listName + "'";
     }
 }
