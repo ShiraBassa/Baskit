@@ -37,6 +37,8 @@ import org.json.JSONException;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.LinkedHashMap;
 import java.util.Locale;
@@ -210,38 +212,125 @@ public class AddItemFragment extends DialogFragment
 
     private void setupAutocomplete()
     {
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(context, R.layout.add_item_dropdown_item, allItemNames) {
+        final ArrayList<String> filteredResults = new ArrayList<>(allItemNames);
+
+        final ArrayAdapter<String> adapter = new ArrayAdapter<String>(context, R.layout.add_item_dropdown_item, filteredResults) {
             @NonNull
             @Override
-            public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent)
-            {
-                if (convertView == null)
-                {
+            public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+                if (convertView == null) {
                     convertView = activity.getLayoutInflater()
                             .inflate(R.layout.add_item_dropdown_item, parent, false);
                 }
 
                 TextView tvName = convertView.findViewById(R.id.tvItemName);
-                String raw = getItem(position);
-                tvName.setText(decodeSanitizedKey(raw));
 
+                if (position < 0 || position >= filteredResults.size()) {
+                    tvName.setText("");
+                    return convertView;
+                }
+
+                String decoded = decodeSanitizedKey(filteredResults.get(position));
+                CharSequence userInput = searchItem.getText();
+
+                if (userInput != null && userInput.length() > 0)
+                {
+                    String[] inputWords = userInput.toString().trim().split("\\s+");
+                    String decodedLower = decoded.toLowerCase(Locale.ROOT);
+                    ArrayList<int[]> matchRanges = new ArrayList<>();
+
+                    for (String word : inputWords)
+                    {
+                        if (!word.isEmpty())
+                        {
+                            String wordLower = word.toLowerCase(Locale.ROOT);
+                            int startIdx = 0;
+
+                            while (startIdx < decoded.length())
+                            {
+                                int found = decodedLower.indexOf(wordLower, startIdx);
+                                if (found == -1) break;
+
+                                matchRanges.add(new int[]{found, found + word.length()});
+                                startIdx = found + word.length();
+                            }
+                        }
+                    }
+
+                    if (!matchRanges.isEmpty())
+                    {
+                        java.util.Collections.sort(matchRanges, (a, b) -> Integer.compare(a[0], b[0]));
+
+                        ArrayList<int[]> merged = new ArrayList<>();
+                        int[] prev = matchRanges.get(0);
+
+                        for (int i = 1; i < matchRanges.size(); i++)
+                        {
+                            int[] curr = matchRanges.get(i);
+
+                            if (curr[0] <= prev[1])
+                            {
+                                prev[1] = Math.max(prev[1], curr[1]);
+                            }
+                            else
+                            {
+                                merged.add(prev);
+                                prev = curr;
+                            }
+                        }
+
+                        merged.add(prev);
+                        matchRanges = merged;
+                    }
+
+                    android.text.SpannableString spannable = new android.text.SpannableString(decoded);
+                    int highlightColor = 0xFF388E3C;
+
+                    for (int[] range : matchRanges)
+                    {
+                        int start = Math.max(0, Math.min(decoded.length(), range[0]));
+                        int end = Math.max(0, Math.min(decoded.length(), range[1]));
+
+                        if (start < end)
+                        {
+                            spannable.setSpan(new android.text.style.ForegroundColorSpan(highlightColor), start, end, android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            spannable.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD), start, end, android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        }
+                    }
+
+                    tvName.setText(spannable, TextView.BufferType.SPANNABLE);
+                }
+                else
+                {
+                    tvName.setText(decoded);
+                }
                 return convertView;
             }
 
             @Override
             public View getDropDownView(int position, @Nullable View convertView, @NonNull ViewGroup parent)
             {
-                if (convertView == null)
+                return getView(position, convertView, parent);
+            }
+
+            @Override
+            public android.widget.Filter getFilter()
+            {
+                return new android.widget.Filter()
                 {
-                    convertView = activity.getLayoutInflater()
-                            .inflate(R.layout.add_item_dropdown_item, parent, false);
-                }
+                    @Override
+                    protected FilterResults performFiltering(CharSequence constraint)
+                    {
+                        FilterResults results = new FilterResults();
 
-                TextView tvName = convertView.findViewById(R.id.tvItemName);
-                String raw = getItem(position);
-                tvName.setText(decodeSanitizedKey(raw));
+                        results.values = filteredResults;
+                        results.count = filteredResults.size();
 
-                return convertView;
+                        return results;
+                    }
+                    @Override
+                    protected void publishResults(CharSequence constraint, FilterResults results) {}
+                };
             }
         };
 
@@ -268,111 +357,180 @@ public class AddItemFragment extends DialogFragment
         searchItem.post(() ->
         {
             if (fragmentView == null) return;
-
             int fragmentHeight = fragmentView.getHeight();
             int searchBottom = searchItem.getBottom();
-
             int maxHeightInsideFragment = fragmentHeight - searchBottom;
-
             if (maxHeightInsideFragment > 0)
             {
                 searchItem.setDropDownHeight(maxHeightInsideFragment);
             }
         });
 
+        searchItem.addTextChangedListener(new android.text.TextWatcher()
+        {
+            private final long FILTER_DEBOUNCE_DELAY = 120;
+            private Runnable filterRunnable = null;
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override
+            public void afterTextChanged(android.text.Editable str)
+            {
+                if (filterRunnable != null)
+                {
+                    searchItem.removeCallbacks(filterRunnable);
+                }
+
+                filterRunnable = new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        String input = str == null ? "" : str.toString();
+                        String trimmedInput = input.trim();
+                        ArrayList<String> inputWords = new ArrayList<>();
+
+                        if (!trimmedInput.isEmpty())
+                        {
+                            for (String word : trimmedInput.split("\\s+"))
+                            {
+                                String w = word.trim();
+                                if (!w.isEmpty()) inputWords.add(w.toLowerCase(Locale.ROOT));
+                            }
+                        }
+
+                        filteredResults.clear();
+
+                        if (inputWords.isEmpty())
+                        {
+                            filteredResults.addAll(allItemNames);
+                        }
+                        else
+                        {
+                            class ScoredItem
+                            {
+                                String item;
+                                int score;
+                                ScoredItem(String item, int score) { this.item = item; this.score = score; }
+                            }
+
+                            ArrayList<ScoredItem> scoredMatches = new ArrayList<>();
+
+                            for (String item : allItemNames)
+                            {
+                                String decoded = decodeSanitizedKey(item);
+                                String lowItem = decoded.toLowerCase(Locale.ROOT);
+                                boolean allPresent = true;
+
+                                for (String word : inputWords)
+                                {
+                                    if (!lowItem.contains(word))
+                                    {
+                                        allPresent = false;
+                                        break;
+                                    }
+                                }
+
+                                if (!allPresent) continue;
+                                int score = 0;
+                                String lowInput = String.join(" ", inputWords);
+
+                                if (!lowInput.isEmpty() && lowItem.contains(lowInput)) score += 10;
+                                if (!inputWords.isEmpty() && lowItem.startsWith(inputWords.get(0))) score += 5;
+
+                                scoredMatches.add(new ScoredItem(item, score));
+                            }
+
+                            Collections.sort(scoredMatches, (a, b) -> {
+                                int cmp = Integer.compare(b.score, a.score);
+                                if (cmp != 0) return cmp;
+                                return decodeSanitizedKey(a.item).compareToIgnoreCase(decodeSanitizedKey(b.item));
+                            });
+
+                            for (ScoredItem sc : scoredMatches) filteredResults.add(sc.item);
+                        }
+
+                        try
+                        {
+                            adapter.notifyDataSetChanged();
+                        }
+                        catch (Exception e) {}
+
+                        searchItem.post(() ->
+                        {
+                            try
+                            {
+                                int itemCount = filteredResults.size();
+                                int itemHeightPx = 0;
+
+                                if (itemCount > 0)
+                                {
+                                    View tempView = adapter.getView(0, null, (ViewGroup) fragmentView);
+                                    tempView.measure(
+                                            View.MeasureSpec.makeMeasureSpec(searchItem.getWidth(), View.MeasureSpec.AT_MOST),
+                                            View.MeasureSpec.UNSPECIFIED
+                                    );
+                                    itemHeightPx = tempView.getMeasuredHeight();
+                                }
+
+                                int desiredDropdownHeight = itemCount > 0 ? itemHeightPx * itemCount : ViewGroup.LayoutParams.WRAP_CONTENT;
+                                int[] location = new int[2];
+
+                                searchItem.getLocationOnScreen(location);
+
+                                int y = location[1];
+                                int screenHeight = fragmentView.getResources().getDisplayMetrics().heightPixels;
+                                int availableBelow = screenHeight - (y + searchItem.getHeight());
+                                int finalDropdownHeight = Math.min(desiredDropdownHeight, availableBelow);
+
+                                if (finalDropdownHeight > 0)
+                                {
+                                    searchItem.setDropDownHeight(finalDropdownHeight);
+                                }
+                                else
+                                {
+                                    searchItem.setDropDownHeight(availableBelow);
+                                }
+
+                                searchItem.showDropDown();
+                            }
+                            catch (Exception e)
+                            {
+                                try
+                                {
+                                    searchItem.showDropDown();
+                                }
+                                catch (Exception ex) {}
+                            }
+                        });
+                    }
+                };
+
+                searchItem.postDelayed(filterRunnable, FILTER_DEBOUNCE_DELAY);
+            }
+        });
+
         searchItem.setOnItemClickListener((parent, view, position, id) ->
         {
             String clickedName = Baskit.decodeKey((String) parent.getItemAtPosition(position));
-
             if (isBadItemName(clickedName))
             {
                 searchItem.setError("שם פריט לא תקין");
                 selectedItem = null;
                 return;
             }
-
             selectedItem = new Item(clickedName);
             tvQuantity.setText("1");
             btnDown.setBackgroundColor(Baskit.getAppColor(context, com.google.android.material.R.attr.colorOnSecondaryContainer));
-
             selectedItem.setQuantity(1);
             recyclerSupermarkets.setAdapter(null);
-
             loadSupermarketPrices();
             infoLayout.setVisibility(View.VISIBLE);
             searchItem.clearFocus();
             hideKeyboard();
         });
-    }
-
-    private void handleItemTyped()
-    {
-        String typed = searchItem.getText().toString().trim();
-        if (typed.isEmpty()) return;
-
-        ArrayList<String> exactMatches = new ArrayList<>();
-        ArrayList<String> startsWithMatches = new ArrayList<>();
-        ArrayList<String> containsMatches = new ArrayList<>();
-
-        for (String name : allItemNames)
-        {
-            String decodedName = decodeSanitizedKey(name);
-            if (isBadItemName(decodedName)) continue;
-
-            String lowerName = decodedName.toLowerCase();
-            String lowerTyped = typed.toLowerCase();
-            if (lowerName.equals(lowerTyped)) exactMatches.add(decodedName);
-            else if (lowerName.startsWith(lowerTyped)) startsWithMatches.add(decodedName);
-            else containsMatches.add(decodedName);
-        }
-
-        ArrayList<String> orderedItems = new ArrayList<>();
-        orderedItems.addAll(exactMatches);
-        orderedItems.addAll(startsWithMatches);
-        orderedItems.addAll(containsMatches);
-
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(context, R.layout.add_item_dropdown_item, orderedItems)
-        {
-            @NonNull
-            @Override
-            public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent)
-            {
-                if (convertView == null)
-                {
-                    convertView = activity.getLayoutInflater()
-                            .inflate(R.layout.add_item_dropdown_item, parent, false);
-                }
-
-                TextView tvName = convertView.findViewById(R.id.tvItemName);
-                String raw = getItem(position);
-                tvName.setText(decodeSanitizedKey(raw));
-
-                return convertView;
-            }
-
-            @Override
-            public View getDropDownView(int position, @Nullable View convertView, @NonNull ViewGroup parent)
-            {
-                if (convertView == null)
-                {
-                    convertView = activity.getLayoutInflater()
-                            .inflate(R.layout.add_item_dropdown_item, parent, false);
-                }
-
-                TextView tvName = convertView.findViewById(R.id.tvItemName);
-                String raw = getItem(position);
-                tvName.setText(decodeSanitizedKey(raw));
-
-                return convertView;
-            }
-        };
-
-        searchItem.setAdapter(adapter);
-
-        if (!orderedItems.isEmpty())
-        {
-            searchItem.showDropDown();
-        }
     }
 
     private void hideKeyboard()

@@ -2,6 +2,7 @@ package com.example.baskit.Home;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.media.tv.AitInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Base64;
@@ -22,6 +23,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.baskit.AI.AIHandler;
 import com.example.baskit.API.APIHandler;
 import com.example.baskit.Baskit;
 import com.example.baskit.Firebase.FirebaseAuthHandler;
@@ -57,6 +59,7 @@ public class HomeActivity extends MasterActivity
     FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
     User user;
     String inviteCode;
+    AIHandler aiHandler = AIHandler.getInstance();
 
     private ActivityResultLauncher<Intent> loginLauncher =
             registerForActivityResult(
@@ -196,7 +199,7 @@ public class HomeActivity extends MasterActivity
             }
         });
 
-        createListAlertDialog();
+        createAddListAlertDialog();
         setButtons();
 
         listsRecycler = findViewById(R.id.lists_grid);
@@ -295,7 +298,7 @@ public class HomeActivity extends MasterActivity
         });
     }
 
-    private void createListAlertDialog()
+    private void createAddListAlertDialog()
     {
         adLayout = (LinearLayout) getLayoutInflater().inflate(R.layout.alert_dialog_create_list, null);
         adBtnCancel = adLayout.findViewById(R.id.btn_cancel);
@@ -316,7 +319,6 @@ public class HomeActivity extends MasterActivity
             runIfOnline(() ->
             {
                 createList(adEtName.getText().toString());
-                adCreateList.dismiss();
             });
         });
     }
@@ -326,6 +328,16 @@ public class HomeActivity extends MasterActivity
         List list = new List(dbHandler.getUniqueId(), name);
         list.addUser(user.getId());
 
-        dbHandler.addList(list, user);
+        aiHandler.getListSuggestions(list.getName(), this, new AIHandler.OnGeminiResult()
+        {
+            @Override
+            public void onResult(ArrayList<String> suggestions)
+            {
+                list.setItemSuggestions(suggestions);
+                dbHandler.addList(list, user);
+
+                adCreateList.dismiss();
+            }
+        });
     }
 }

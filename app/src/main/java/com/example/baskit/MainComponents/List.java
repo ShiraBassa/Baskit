@@ -15,6 +15,7 @@ public class List
     private ArrayList<String> userIDs = new ArrayList<>();
     private Map<String, Category> categories = new HashMap<>();
     private ArrayList<Request> requests = new ArrayList<>();
+    ArrayList<String> itemSuggestions = new ArrayList<>();
 
     public List() {}
 
@@ -223,5 +224,15 @@ public class List
         }
 
         return true;
+    }
+
+    public ArrayList<String> getItemSuggestions()
+    {
+        return itemSuggestions;
+    }
+
+    public void setItemSuggestions(ArrayList<String> itemSuggestions)
+    {
+        this.itemSuggestions = itemSuggestions;
     }
 }
