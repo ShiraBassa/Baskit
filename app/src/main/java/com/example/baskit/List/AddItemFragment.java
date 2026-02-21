@@ -381,11 +381,8 @@ public class AddItemFragment extends DialogFragment
             {
                 searchItem.clearFocus();
                 hideKeyboard();
-                searchItem.post(() -> searchItem.showDropDown());
-
                 return true;
             }
-
             return false;
         });
 
@@ -593,45 +590,50 @@ public class AddItemFragment extends DialogFragment
                         {
                             try
                             {
-                                int itemCount = filteredResults.size();
-                                int itemHeightPx = 0;
+                                if (searchItem.hasFocus()) {
+                                    int itemCount = filteredResults.size();
+                                    int itemHeightPx = 0;
 
-                                if (itemCount > 0)
-                                {
-                                    View tempView = adapter.getView(0, null, (ViewGroup) fragmentView);
-                                    tempView.measure(
-                                            View.MeasureSpec.makeMeasureSpec(searchItem.getWidth(), View.MeasureSpec.AT_MOST),
-                                            View.MeasureSpec.UNSPECIFIED
-                                    );
-                                    itemHeightPx = tempView.getMeasuredHeight();
+                                    if (itemCount > 0)
+                                    {
+                                        View tempView = adapter.getView(0, null, (ViewGroup) fragmentView);
+                                        tempView.measure(
+                                                View.MeasureSpec.makeMeasureSpec(searchItem.getWidth(), View.MeasureSpec.AT_MOST),
+                                                View.MeasureSpec.UNSPECIFIED
+                                        );
+                                        itemHeightPx = tempView.getMeasuredHeight();
+                                    }
+
+                                    int desiredDropdownHeight = itemCount > 0 ? itemHeightPx * itemCount : ViewGroup.LayoutParams.WRAP_CONTENT;
+                                    int[] location = new int[2];
+
+                                    searchItem.getLocationOnScreen(location);
+
+                                    int y = location[1];
+                                    int screenHeight = fragmentView.getResources().getDisplayMetrics().heightPixels;
+                                    int availableBelow = screenHeight - (y + searchItem.getHeight());
+                                    int finalDropdownHeight = Math.min(desiredDropdownHeight, availableBelow);
+
+                                    if (finalDropdownHeight > 0)
+                                    {
+                                        searchItem.setDropDownHeight(finalDropdownHeight);
+                                    }
+                                    else
+                                    {
+                                        searchItem.setDropDownHeight(availableBelow);
+                                    }
+
+                                    searchItem.showDropDown();
                                 }
-
-                                int desiredDropdownHeight = itemCount > 0 ? itemHeightPx * itemCount : ViewGroup.LayoutParams.WRAP_CONTENT;
-                                int[] location = new int[2];
-
-                                searchItem.getLocationOnScreen(location);
-
-                                int y = location[1];
-                                int screenHeight = fragmentView.getResources().getDisplayMetrics().heightPixels;
-                                int availableBelow = screenHeight - (y + searchItem.getHeight());
-                                int finalDropdownHeight = Math.min(desiredDropdownHeight, availableBelow);
-
-                                if (finalDropdownHeight > 0)
-                                {
-                                    searchItem.setDropDownHeight(finalDropdownHeight);
-                                }
-                                else
-                                {
-                                    searchItem.setDropDownHeight(availableBelow);
-                                }
-
-                                searchItem.showDropDown();
                             }
                             catch (Exception e)
                             {
                                 try
                                 {
-                                    searchItem.showDropDown();
+                                    if (searchItem.hasFocus())
+                                    {
+                                        searchItem.showDropDown();
+                                    }
                                 }
                                 catch (Exception ex) {}
                             }
@@ -668,26 +670,46 @@ public class AddItemFragment extends DialogFragment
             }
 
             selectedItem = new Item(clickedName);
+            selectedItem.setQuantity(1);
             tvQuantity.setText("1");
             btnDown.setBackgroundColor(Baskit.getAppColor(context, com.google.android.material.R.attr.colorOnSecondaryContainer));
-            selectedItem.setQuantity(1);
             recyclerSupermarkets.setAdapter(null);
-            loadSupermarketPrices();
+            loadSupermarketPricesImmediate();
             infoLayout.setVisibility(View.VISIBLE);
             searchItem.clearFocus();
             hideKeyboard();
+
+            if (activity != null)
+            {
+                activity.runOnUiThread(() -> searchItem.dismissDropDown());
+            }
+            else
+            {
+                searchItem.post(() -> searchItem.dismissDropDown());
+            }
         });
     }
 
     private void hideKeyboard()
     {
-        View view = getView();
+        if (activity == null) return;
 
-        if (view != null)
+        activity.runOnUiThread(() ->
         {
-            InputMethodManager imm = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-        }
+            View focusView = activity.getCurrentFocus();
+            View fallbackView = searchItem;
+            View targetView = focusView != null ? focusView : fallbackView;
+
+            if (targetView != null)
+            {
+                InputMethodManager imm = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+
+                if (imm != null)
+                {
+                    imm.hideSoftInputFromWindow(targetView.getWindowToken(), 0);
+                }
+            }
+        });
     }
 
     private void setupButtons()
@@ -738,17 +760,17 @@ public class AddItemFragment extends DialogFragment
         });
     }
 
-    private void loadSupermarketPrices()
+    private void loadSupermarketPricesImmediate()
     {
         if (selectedItem == null || isBadItemName(selectedItem.getName())) return;
         if (activity == null) return;
 
         final String itemName = selectedItem.getName();
+        final Item itemForAdapter = selectedItem;
 
         Baskit.notActivityRunWhenServerActive(() ->
         {
             Map<String, Map<String, Double>> data = null;
-
             try
             {
                 data = apiHandler.getItemPricesByName(itemName);
@@ -757,17 +779,15 @@ public class AddItemFragment extends DialogFragment
             {
                 Log.e("AddItemFragment", "Failed to load item prices", e);
             }
-
             Map<String, Map<String, Double>> finalData = data;
-
             if (activity == null) return;
-
             activity.runOnUiThread(() ->
             {
                 // Fragment might be detached by the time we return
                 if (!isAdded() || fragmentView == null) return;
 
-                pricesAdapter = new ItemViewPricesAdapter(context, finalData, null,
+                // Pass selectedItem to the adapter so it can highlight the correct supermarket and update price in real time
+                pricesAdapter = new ItemViewPricesAdapter(context, finalData, itemForAdapter.getSupermarket(),
                         new ItemViewPricesAdapter.OnSupermarketClickListener()
                         {
                             @Override
@@ -779,6 +799,7 @@ public class AddItemFragment extends DialogFragment
                                 {
                                     selectedItem.setSupermarket(null);
                                     selectedItem.setPrice(0);
+                                    pricesAdapter.notifyDataSetChanged();
                                     return;
                                 }
 
@@ -786,6 +807,7 @@ public class AddItemFragment extends DialogFragment
 
                                 if (finalData == null) {
                                     selectedItem.setPrice(0);
+                                    pricesAdapter.notifyDataSetChanged();
                                     return;
                                 }
 
@@ -800,8 +822,10 @@ public class AddItemFragment extends DialogFragment
                                 {
                                     selectedItem.setPrice(0);
                                 }
+                                pricesAdapter.notifyDataSetChanged();
                             }
-                        });
+                        }
+                );
                 recyclerSupermarkets.setAdapter(pricesAdapter);
             });
         }, activity);

@@ -82,7 +82,7 @@ public class APIHandler
     {
         cachedItems = null;
         cachedCodeNames = null;
-        cachedItemCategories.clear();
+        cachedItemCategories = null;
 
         preload();
     }
