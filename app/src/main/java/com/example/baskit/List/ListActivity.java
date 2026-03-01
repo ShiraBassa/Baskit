@@ -39,6 +39,7 @@ public class ListActivity extends MasterActivity
 {
     TextView tvListName, tvTotal;
     ImageButton btnBack, btnFinished;
+    View shareListDot;
 
     List list;
     String listId;
@@ -129,6 +130,7 @@ public class ListActivity extends MasterActivity
         btnShare = findViewById(R.id.btn_share);
         btnCheapest = findViewById(R.id.btn_arrange_cheapest);
         btnPlan = findViewById(R.id.btn_plan);
+        shareListDot = findViewById(R.id.share_list_dot);
 
         btnAddItem.setEnabled(false);
 
@@ -150,6 +152,8 @@ public class ListActivity extends MasterActivity
     private void resumeInit()
     {
         if (listId == null) return;
+
+        shareListDot.setVisibility(View.GONE);
 
         runIfOnline(() ->
         {
@@ -201,6 +205,11 @@ public class ListActivity extends MasterActivity
 
                     shareAlertDialog = new ShareListAlertDialog(list, ListActivity.this, ListActivity.this);
 
+                    if (!list.getRequests().isEmpty())
+                    {
+                        shareListDot.setVisibility(View.VISIBLE);
+                    }
+
                     setCategoriesInflater();
 
                     if (!listListenerAttached)
@@ -216,6 +225,15 @@ public class ListActivity extends MasterActivity
 
                                 ListActivity.this.list = newList;
                                 shareAlertDialog = new ShareListAlertDialog(newList, ListActivity.this, ListActivity.this);
+
+                                if (!list.getRequests().isEmpty())
+                                {
+                                    shareListDot.setVisibility(View.VISIBLE);
+                                }
+                                else
+                                {
+                                    shareListDot.setVisibility(View.GONE);
+                                }
 
                                 if (tvListName != null)
                                 {

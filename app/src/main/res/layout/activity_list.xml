@@ -44,14 +44,30 @@
             android:textStyle="bold"
             android:letterSpacing="0.02" />
 
-        <ImageButton
-            android:id="@+id/btn_share"
+        <FrameLayout
             android:layout_width="45dp"
-            android:layout_height="45dp"
-            android:scaleType="fitCenter"
-            android:background="@null"
-            android:src="@drawable/ic_share"
-            app:tint="?attr/colorPrimaryVariant" />
+            android:layout_height="45dp">
+
+            <ImageButton
+                android:id="@+id/btn_share"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitCenter"
+                android:background="@null"
+                android:src="@drawable/ic_share"
+                app:tint="?attr/colorPrimaryVariant" />
+
+            <View
+                android:id="@+id/share_list_dot"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:layout_gravity="top|end"
+                android:layout_margin="3dp"
+                android:visibility="gone"
+                android:background="@drawable/share_list_dot"/>
+
+        </FrameLayout>
+
     </LinearLayout>
 
     <com.google.android.material.button.MaterialButton
