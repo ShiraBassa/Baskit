@@ -8,7 +8,7 @@
     android:padding="20dp"
     android:gravity="center"
     android:orientation="vertical"
-    tools:context=".Firebase.SignUpActivity">
+    tools:context=".Login.SignUpActivity">
 
     <TextView
         android:layout_width="match_parent"

@@ -3,13 +3,9 @@ package com.example.baskit.Login;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -17,7 +13,6 @@ import androidx.activity.result.contract.ActivityResultContracts;
 
 import com.example.baskit.Baskit;
 import com.example.baskit.Firebase.FirebaseAuthHandler;
-import com.example.baskit.Firebase.SignUpActivity;
 import com.example.baskit.Home.HomeActivity;
 import com.example.baskit.MainComponents.User;
 import com.example.baskit.MasterActivity;

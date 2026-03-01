@@ -20,7 +20,7 @@
             android:name=".List.PlanListActivity"
             android:exported="false" />
         <activity
-            android:name=".Firebase.SignUpActivity"
+            android:name=".Login.SignUpActivity"
             android:exported="false" />
         <activity
             android:name=".Categories.CategoryActivity"

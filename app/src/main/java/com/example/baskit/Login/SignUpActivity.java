@@ -1,4 +1,4 @@
-package com.example.baskit.Firebase;
+package com.example.baskit.Login;
 
 import static com.example.baskit.Firebase.FBRefs.refUsers;
 
@@ -8,13 +8,13 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Toast;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.baskit.API.APIHandler;
 import com.example.baskit.Baskit;
+import com.example.baskit.Firebase.FirebaseAuthHandler;
 import com.example.baskit.Home.AddCityAlertDialog;
 import com.example.baskit.Home.AddSupermarketAlertDialog;
 import com.example.baskit.Home.SupermarketsListAdapter;
