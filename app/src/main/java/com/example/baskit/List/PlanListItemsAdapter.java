@@ -44,6 +44,11 @@ public class PlanListItemsAdapter extends RecyclerView.Adapter<PlanListItemsAdap
     Supermarket selectedSupermarket = null;
     private String categoryName;
 
+    private final int colorBase;
+    @SuppressLint("PrivateResource")
+    private final int colorUnavailable;
+    private final int colorChosen;
+
     private final SupermarketItemsAdapter.OnItemMovedListener listener = (draggedItem, from, to) ->
     {
         if (itemsBySupermarket.get(from) != null)
@@ -74,6 +79,7 @@ public class PlanListItemsAdapter extends RecyclerView.Adapter<PlanListItemsAdap
         upperClassFns.updateCategory();
     };
 
+    @SuppressLint("PrivateResource")
     public PlanListItemsAdapter(com.example.baskit.MainComponents.List list, Activity activity, Context context,
                                 ItemsAdapter.UpperClassFunctions upperClassFns, ArrayList<Supermarket> supermarkets,
                                 Map<String, Map<String, Map<String, Double>>> itemPrices, String categoryName)
@@ -135,6 +141,10 @@ public class PlanListItemsAdapter extends RecyclerView.Adapter<PlanListItemsAdap
         this.baseSupermarkets = supermarkets != null ? new ArrayList<>(supermarkets) : new ArrayList<>();
         this.supermarkets = new ArrayList<>(this.baseSupermarkets);
         this.itemPrices = itemPrices;
+
+        colorBase = Baskit.getAppColor(context, com.google.android.material.R.attr.colorOnBackground);
+        colorUnavailable = Baskit.getAppColor(context, com.google.android.material.R.attr.colorOnContainerUnchecked);
+        colorChosen = Baskit.getAppColor(context, com.google.android.material.R.attr.colorPrimaryVariant);
 
         restart();
         sortByExisting();
@@ -305,9 +315,7 @@ public class PlanListItemsAdapter extends RecyclerView.Adapter<PlanListItemsAdap
         if (supermarket == unassigned_supermarket)
         {
             holder.tvSupermarket.setText(supermarket.toString());
-            holder.tvSupermarket.setTextColor(
-                    Baskit.getAppColor(context, R.color.plan_screen_base)
-            );
+            holder.tvSupermarket.setTextColor(colorBase);
             holder.tvSupermarket.setAlpha(0.5f);
             holder.btnExpand.setAlpha(0.5f);
         }
@@ -337,21 +345,13 @@ public class PlanListItemsAdapter extends RecyclerView.Adapter<PlanListItemsAdap
 
         if (selectedSupermarket != null && selectedSupermarket.equals(supermarket))
         {
-            holder.tvSupermarket.setTextColor(
-                    Baskit.getAppColor(context, R.color.plan_screen_chosen)
-            );
-            holder.btnExpand.setColorFilter(
-                    Baskit.getAppColor(context, R.color.plan_screen_chosen)
-            );
+            holder.tvSupermarket.setTextColor(colorChosen);
+            holder.btnExpand.setColorFilter(colorChosen);
         }
         else
         {
-            holder.tvSupermarket.setTextColor(
-                    Baskit.getAppColor(context, R.color.plan_screen_base)
-            );
-            holder.btnExpand.setColorFilter(
-                    Baskit.getAppColor(context, R.color.plan_screen_base)
-            );
+            holder.tvSupermarket.setTextColor(colorBase);
+            holder.btnExpand.setColorFilter(colorBase);
         }
 
         ArrayList<Item> items = itemsBySupermarket.get(supermarket);

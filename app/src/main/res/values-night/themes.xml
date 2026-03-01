@@ -1,7 +1,41 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+
     <style name="Base.Theme.Baskit" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+
+        <!-- Primary actions = dark teal -->
+        <item name="colorPrimary">@color/primary_night</item>
+        <item name="colorPrimaryVariant">@color/primary_variant_night</item>
+        <item name="colorPrimaryContainer">@color/primary_variant_night</item>
+
+        <!-- Secondary subtle actions = rich mahogany -->
+        <item name="colorSecondary">@color/secondary_night</item>
+        <item name="colorSecondaryVariant">@color/secondary_variant_night</item>
+        <item name="colorSecondaryContainer">@color/secondary_variant_night</item>
+
+        <!-- Navigation + icons = dark teal -->
+        <item name="colorOnPrimary">@color/on_primary_night</item>
+        <item name="colorOnSecondary">@color/on_secondary_night</item>
+
+        <!-- Background & surfaces -->
+        <item name="colorSurface">@color/surface_night</item>
+        <item name="colorOnSurface">@color/on_surface_night</item>
+        <item name="colorOnBackground">@color/on_background_night</item>
+
+        <!-- Destructive actions -->
+        <item name="colorError">@color/destructive_night</item>
+
+        <!-- Outline, borders, dividers -->
+        <item name="colorOutline">@color/primary_night</item>
+
+        <!-- Accents -->
+        <item name="colorTertiary">@color/destructive_night</item>
+
+        <item name="android:colorBackground">@color/background_night</item>
+        <item name="backgroundColor">@color/background_night</item>
+        <item name="colorOnContainerUnchecked">@color/unchecked_night</item>
+
     </style>
+
+    <style name="Theme.Baskit" parent="Base.Theme.Baskit" />
+
 </resources>

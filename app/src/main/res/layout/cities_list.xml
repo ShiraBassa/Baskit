@@ -19,6 +19,7 @@
             android:nestedScrollingEnabled="false"
             android:overScrollMode="never"
             android:scrollbars="none"/>
+
     </androidx.cardview.widget.CardView>
 
 </LinearLayout>

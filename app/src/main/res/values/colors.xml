@@ -2,8 +2,6 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="gray">#808080</color>
-    <color name="checked">#808080</color>
 
     <!-- 🎨 Brand Palette -->
     <color name="white_smoke">#F7F5F3</color>
@@ -23,7 +21,7 @@
     <color name="secondary">@color/rich_mahogany</color>
     <color name="secondary_variant">@color/tan</color>
 
-    <color name="surface">@color/white_smoke</color>
+    <color name="surface">@color/background</color>
 
     <!-- ❗ Destructive -->
     <color name="destructive">@color/deep_crimson</color>
@@ -35,17 +33,41 @@
     <color name="on_primary">@color/white_smoke</color>
     <color name="on_secondary">@color/white_smoke</color>
     <color name="on_surface">@color/dark_teal</color>
+    <color name="on_background">@color/black</color>
 
     <!-- 💡 States -->
-    <color name="pressed_primary">@color/evergreen</color>
-    <color name="pressed_secondary">@color/dark_teal</color>
+    <color name="pressed_primary">@color/primary</color>
+    <color name="pressed_secondary">@color/primary_variant</color>
+    <color name="unchecked">#808080</color>
 
-    <!-- App -->
-    <color name="price">@color/evergreen</color>
-    <color name="quantity">@color/rich_mahogany</color>
+    <color name="background">@color/white_smoke</color>
 
-    <color name="plan_screen_base">@color/black</color>
-    <color name="plan_screen_unavailable">@color/gray</color>
-    <color name="plan_screen_chosen">@color/dark_teal</color>
+
+    <color name="primary_night">#145C43</color>
+    <color name="primary_variant_night">@color/dark_teal</color>
+
+    <color name="secondary_night">#6A3A1A</color>
+    <color name="secondary_variant_night">#A88F6C</color>
+
+    <color name="surface_night">#121917</color>
+
+    <!-- ❗ Destructive -->
+    <color name="destructive_night">#9E2A2F</color>
+
+    <!-- 🌿 Accents -->
+    <color name="accent_night">@color/primary</color>
+
+    <!-- 📝 Text Colors -->
+    <color name="on_primary_night">#F7F5F3</color>
+    <color name="on_secondary_night">#AAB3AF</color>
+    <color name="on_surface_night">@color/primary_variant_night</color>
+    <color name="on_background_night">#DDD6CC</color>
+
+    <!-- 💡 States -->
+    <color name="pressed_primary_night">@color/primary_night</color>
+    <color name="pressed_secondary_night">@color/primary_variant_night</color>
+    <color name="unchecked_night">#A79F94</color>
+
+    <color name="background_night">#0B0F0E</color>
 
 </resources>

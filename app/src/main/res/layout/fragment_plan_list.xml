@@ -5,8 +5,8 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:paddingVertical="20dp"
-    android:paddingHorizontal="10dp"
-    android:background="@color/white_smoke">
+    android:background="?attr/colorSurface"
+    android:paddingHorizontal="10dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -37,7 +37,7 @@
                     android:scaleType="fitCenter"
                     android:background="@null"
                     android:src="@drawable/ic_cancel"
-                    android:tint="@color/dark_teal" />
+                    app:tint="?attr/colorPrimaryVariant" />
 
             </androidx.cardview.widget.CardView>
 
@@ -52,7 +52,7 @@
             <TextView
                 android:id="@+id/tv_title"
                 android:visibility="invisible"
-                android:textColor="@color/evergreen"
+                android:textColor="?attr/colorPrimary"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:textSize="24sp"
@@ -60,7 +60,7 @@
                 />
 
             <TextView
-                android:textColor="@color/evergreen"
+                android:textColor="?attr/colorPrimary"
                 android:textSize="48sp"
                 android:textStyle="bold"
                 android:layout_height="wrap_content"
@@ -90,7 +90,7 @@
 
         <TextView
             android:id="@+id/tv_total"
-            android:textColor="@color/dark_teal"
+            android:textColor="?attr/colorPrimaryVariant"
             android:textSize="32sp"
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
@@ -103,10 +103,10 @@
             android:id="@+id/btn_save"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/white_smoke"
+            android:textColor="?attr/colorOnPrimary"
             android:textSize="40sp"
             android:textStyle="bold"
-            android:backgroundTint="@color/dark_teal"
+            android:backgroundTint="?attr/colorPrimaryVariant"
             app:cornerRadius="16dp"
             android:text="שמור"/>
 

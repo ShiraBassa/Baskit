@@ -162,7 +162,8 @@ public class ItemViewAlertDialog
             public void onClick(View view)
             {
                 adTvQuantity.setText(Integer.toString(item.raiseQuantity()));
-                adBtnDown.setBackgroundColor(Color.TRANSPARENT);
+                adBtnDown.setVisibility(View.VISIBLE);
+                adBtnDown.setActivated(true);
             }
         });
 
@@ -180,7 +181,8 @@ public class ItemViewAlertDialog
 
                 if (quantity == 1)
                 {
-                    adBtnDown.setBackgroundColor(Baskit.getAppColor(context, R.color.quantity));
+                    adBtnDown.setVisibility(View.INVISIBLE);
+                    adBtnDown.setActivated(false);
                 }
 
                 adTvQuantity.setText(Integer.toString(quantity));
@@ -227,6 +229,7 @@ public class ItemViewAlertDialog
         adBtnCancel.setClickable(true);
         adBtnUp.setClickable(true);
         adBtnDown.setClickable(true);
+        adBtnDown.setVisibility(View.VISIBLE);
 
         adTvItemName.setText(item.getDecodedName());
 
@@ -241,11 +244,8 @@ public class ItemViewAlertDialog
 
         if (item.getQuantity() == 1)
         {
-            adBtnDown.setBackgroundColor(Baskit.getAppColor(context, R.color.quantity));
-        }
-        else
-        {
-            adBtnDown.setBackgroundColor(Color.TRANSPARENT);
+            adBtnDown.setVisibility(View.INVISIBLE);
+            adBtnDown.setClickable(false);
         }
 
         adItemView.show();

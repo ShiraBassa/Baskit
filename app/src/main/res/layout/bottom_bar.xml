@@ -6,7 +6,7 @@
     android:orientation="horizontal"
     android:padding="15dp"
     android:gravity="center"
-    android:background="?attr/colorSurface"
+    android:backgroundTint="?attr/colorSurface"
     android:elevation="8dp">
 
     <LinearLayout

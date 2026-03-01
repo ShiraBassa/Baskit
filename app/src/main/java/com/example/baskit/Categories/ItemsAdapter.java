@@ -70,6 +70,7 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
         public ImageButton dragHandle;
         public LinearLayout loutQuantity;
         public ItemViewAlertDialog itemViewAlertDialog;
+        public View spacer;
 
         public ViewHolder(View itemView)
         {
@@ -83,6 +84,7 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
             tvPrice = itemView.findViewById(R.id.tv_price);
             loutQuantity = itemView.findViewById(R.id.layout_quantity);
             dragHandle = itemView.findViewById(R.id.drag_handle);
+            spacer = itemView.findViewById(R.id.spacer);
         }
     }
 
@@ -107,21 +109,21 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
 
         int quantity = item.getQuantity();
         holder.tvQuantity.setText(String.valueOf(quantity));
-        holder.tvQuantity.setTextColor(Baskit.getAppColor(context, R.color.quantity));
+        holder.tvQuantity.setTextColor(Baskit.getAppColor(context, com.google.android.material.R.attr.colorSecondary));
 
         if (quantity == 1)
         {
-            holder.btnDown.setBackgroundColor(Baskit.getAppColor(context, com.google.android.material.R.attr.colorSecondaryContainer));
+            holder.btnDown.setColorFilter(Baskit.getAppColor(context, com.google.android.material.R.attr.colorTertiary));
         }
         else
         {
-            holder.btnDown.setBackgroundColor(Color.TRANSPARENT);
+            holder.btnDown.setColorFilter(Baskit.getAppColor(context, com.google.android.material.R.attr.colorSecondary));
         }
 
         if (!item.isUnassigned())
         {
             holder.tvPrice.setText(Baskit.getTotalDisplayString(item.getTotal(), item.isPriceKnown(), false, false));
-            holder.tvPrice.setTextColor(Baskit.getAppColor(context, R.color.price));
+            holder.tvPrice.setTextColor(Baskit.getAppColor(context, com.google.android.material.R.attr.colorPrimary));
             holder.tvPrice.setVisibility(View.VISIBLE);
         }
         else
@@ -152,7 +154,7 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
 
             item.setQuantity(item.raiseQuantity());
             holder.tvQuantity.setText(String.valueOf(item.getQuantity()));
-            holder.btnDown.setBackgroundColor(Color.TRANSPARENT);
+            holder.btnDown.setColorFilter(Baskit.getAppColor(context, com.google.android.material.R.attr.colorSecondary));
 
             upperClassFns.updateItemCategory(item);
         });
@@ -177,7 +179,7 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
             {
                 if (quantity == 1)
                 {
-                    holder.btnDown.setBackgroundColor(Baskit.getAppColor(context, com.google.android.material.R.attr.colorSecondaryContainer));
+                    holder.btnDown.setColorFilter(Baskit.getAppColor(context, com.google.android.material.R.attr.colorTertiary));
                 }
 
                 holder.tvQuantity.setText(String.valueOf(item.getQuantity()));

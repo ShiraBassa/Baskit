@@ -5,8 +5,8 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:padding="15dp"
+    android:backgroundTint="?attr/colorSurface"
     android:gravity="center"
-    android:background="?attr/colorSurface"
     android:elevation="8dp">
 
     <LinearLayout

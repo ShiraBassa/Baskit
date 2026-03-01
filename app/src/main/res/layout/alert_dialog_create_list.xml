@@ -6,7 +6,7 @@
     android:orientation="vertical"
     android:gravity="center"
     android:padding="12dp"
-    android:background="@color/white_smoke">
+    android:background="?attr/colorSurface">
 
     <!-- Title and Cancel -->
     <LinearLayout
@@ -18,17 +18,17 @@
 
         <ImageButton
             android:id="@+id/btn_cancel"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_marginBottom="8dp"
             android:scaleType="fitCenter"
             android:background="@null"
             android:src="@drawable/ic_cancel"
-            android:tint="@color/dark_teal" />
+            app:tint="?attr/colorPrimaryVariant" />
 
         <TextView
             android:id="@+id/tv_title"
-            android:textColor="@color/evergreen"
+            android:textColor="?attr/colorPrimary"
             android:textSize="42sp"
             android:textStyle="bold"
             android:layout_height="wrap_content"
@@ -51,8 +51,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="12dp"
-            android:textColor="@color/dark_teal"
-            android:textColorHint="@color/dark_teal_transparent"
+            android:textColor="?attr/colorPrimaryVariant"
+            android:textColorHint="?attr/colorPrimaryVariant"
             android:textSize="36sp"
             android:textDirection="rtl"
             android:singleLine="true"
@@ -68,11 +68,11 @@
         android:layout_height="wrap_content"
         android:text="צור"
         android:textSize="38sp"
-        android:textColor="@color/white_smoke"
+        android:textColor="?attr/colorOnPrimary"
         android:paddingHorizontal="20dp"
         android:paddingVertical="12dp"
         app:cornerRadius="12dp"
-        android:backgroundTint="@color/dark_teal"
+        android:backgroundTint="?attr/colorPrimaryVariant"
         app:iconGravity="textStart"
         android:textStyle="bold"/>
 </LinearLayout>

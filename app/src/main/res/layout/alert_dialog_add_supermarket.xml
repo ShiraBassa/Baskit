@@ -4,13 +4,13 @@
     android:padding="20dp"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:gravity="center"
-    android:background="@color/white_smoke">
+    android:background="?attr/colorSurface"
+    android:gravity="center">
 
     <TextView
         android:text="בחר סופרמרקט"
         android:textSize="22sp"
-        android:textColor="@color/dark_teal"
+        android:textColor="?attr/colorPrimaryVariant"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="12dp"/>
@@ -20,12 +20,13 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="20dp"
         android:elevation="4dp"
-        android:backgroundTint="@color/white_smoke">
+        android:backgroundTint="?attr/colorSurface">
 
         <Spinner
             android:id="@+id/spinner_supermarkets"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
+
     </androidx.cardview.widget.CardView>
 
     <Button
@@ -33,8 +34,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="הוסף"
-        android:textColor="@color/white_smoke"
-        android:backgroundTint="@color/dark_teal"
+        android:textColor="?attr/colorOnPrimary"
+        android:backgroundTint="?attr/colorPrimaryVariant"
         android:layout_gravity="center"/>
 
 </LinearLayout>

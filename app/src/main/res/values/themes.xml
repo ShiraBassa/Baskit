@@ -19,15 +19,21 @@
         <!-- Background & surfaces -->
         <item name="colorSurface">@color/surface</item>
         <item name="colorOnSurface">@color/on_surface</item>
+        <item name="colorOnBackground">@color/on_background</item>
 
         <!-- Destructive actions -->
         <item name="colorError">@color/destructive</item>
 
         <!-- Outline, borders, dividers -->
-        <item name="colorOutline">@color/evergreen</item>
+        <item name="colorOutline">@color/primary</item>
 
         <!-- Accents -->
-        <item name="colorTertiary">@color/deep_crimson</item>
+        <item name="colorTertiary">@color/destructive</item>
+
+        <item name="android:colorBackground">@color/background</item>
+        <item name="backgroundColor">@color/background</item>
+        <item name="colorOnContainerUnchecked">@color/unchecked</item>
+
     </style>
 
     <style name="Theme.Baskit" parent="Base.Theme.Baskit" />

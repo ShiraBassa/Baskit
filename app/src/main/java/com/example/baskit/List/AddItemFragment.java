@@ -452,6 +452,12 @@ public class AddItemFragment extends DialogFragment
                             return java.util.regex.Pattern.compile(regex, java.util.regex.Pattern.CASE_INSENSITIVE | java.util.regex.Pattern.UNICODE_CASE)
                                     .matcher(text).find();
                         };
+                        java.util.function.BiPredicate<String, String> startsWithFullWord = (text, word) ->
+                        {
+                            String regex = "^" + java.util.regex.Pattern.quote(word) + "\\b";
+                            return java.util.regex.Pattern.compile(regex, java.util.regex.Pattern.CASE_INSENSITIVE | java.util.regex.Pattern.UNICODE_CASE)
+                                    .matcher(text).find();
+                        };
 
                         if (inputWords.isEmpty())
                         {
@@ -463,7 +469,7 @@ public class AddItemFragment extends DialogFragment
 
                                 for (String keyword : suggestionKeywords)
                                 {
-                                    if (!keyword.isEmpty() && containsFullWord.test(low, keyword))
+                                    if (!keyword.isEmpty() && startsWithFullWord.test(low, keyword))
                                     {
                                         isSuggestion = true;
                                         break;
@@ -538,7 +544,7 @@ public class AddItemFragment extends DialogFragment
 
                                 for (String keyword : suggestionKeywords)
                                 {
-                                    if (!keyword.isEmpty() && containsFullWord.test(low, keyword))
+                                    if (!keyword.isEmpty() && startsWithFullWord.test(low, keyword))
                                     {
                                         isSuggestion = true;
                                         break;

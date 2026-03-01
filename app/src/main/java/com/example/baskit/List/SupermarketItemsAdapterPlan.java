@@ -1,5 +1,6 @@
 package com.example.baskit.List;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.text.SpannableStringBuilder;
@@ -24,7 +25,12 @@ public class SupermarketItemsAdapterPlan extends ItemsAdapter
     private final Map<String, Map<String, Map<String, Double>>> itemPrices;
     private final Supermarket supermarket, selectedSupermarketParent;
     private final SupermarketItemsAdapter.OnItemMovedListener onItemMovedListener;
+    private final int colorBase;
+    @SuppressLint("PrivateResource")
+    private final int colorUnavailable;
+    private final int colorChosen;
 
+    @SuppressLint("PrivateResource")
     public SupermarketItemsAdapterPlan(ArrayList<Item> items,
                                        Activity activity, Context context,
                                        UpperClassFunctions upperClassFns,
@@ -39,6 +45,10 @@ public class SupermarketItemsAdapterPlan extends ItemsAdapter
         this.selectedSupermarketParent = selectedSupermarketParent;
         this.itemPrices = itemPrices;
         this.onItemMovedListener = onItemMovedListener;
+
+        colorBase = Baskit.getAppColor(context, com.google.android.material.R.attr.colorOnBackground);
+        colorUnavailable = Baskit.getAppColor(context, com.google.android.material.R.attr.colorOnContainerUnchecked);
+        colorChosen = Baskit.getAppColor(context, com.google.android.material.R.attr.colorPrimaryVariant);
     }
 
     @Override
@@ -54,52 +64,34 @@ public class SupermarketItemsAdapterPlan extends ItemsAdapter
         holder.btnUp.setVisibility(View.GONE);
         holder.btnCheckBox.setVisibility(View.GONE);
         holder.dragHandle.setVisibility(View.GONE);
+        holder.spacer.setVisibility(View.VISIBLE);
 
-        holder.tvName.setTextColor(
-                Baskit.getAppColor(context, R.color.plan_screen_base)
-        );
-        holder.tvQuantity.setTextColor(
-                Baskit.getAppColor(context, R.color.plan_screen_base)
-        );
-        holder.tvPrice.setTextColor(
-                Baskit.getAppColor(context, R.color.plan_screen_base)
-        );
-        holder.dragHandle.setColorFilter(
-                Baskit.getAppColor(context, R.color.plan_screen_base)
-        );
+        holder.tvName.setTextColor(colorBase);
+        holder.tvQuantity.setTextColor(colorBase);
+        holder.tvPrice.setTextColor(colorBase);
+        holder.dragHandle.setColorFilter(colorBase);
+        holder.spacer.setBackgroundColor(colorBase);
 
         if (selectedSupermarketParent == supermarket)
         {
-            holder.tvName.setTextColor(
-                    Baskit.getAppColor(context, R.color.plan_screen_chosen)
-            );
-            holder.tvPrice.setTextColor(
-                    Baskit.getAppColor(context, R.color.plan_screen_chosen)
-            );
-            holder.tvQuantity.setTextColor(
-                    Baskit.getAppColor(context, R.color.plan_screen_chosen)
-            );
+            holder.tvName.setTextColor(colorChosen);
+            holder.tvPrice.setTextColor(colorChosen);
+            holder.tvQuantity.setTextColor(colorChosen);
+            holder.spacer.setBackgroundColor(colorChosen);
         }
         else if (selectedSupermarketParent != null && itemHasSelectedSupermarket(item))
         {
-            holder.dragHandle.setColorFilter(
-                    Baskit.getAppColor(context, R.color.plan_screen_chosen)
-            );
+            holder.dragHandle.setColorFilter(colorChosen);
             holder.dragHandle.setVisibility(View.VISIBLE);
 
             showItemPriceDif(holder, item);
         }
         else
         {
-            holder.tvName.setTextColor(
-                    Baskit.getAppColor(context, R.color.plan_screen_unavailable)
-            );
-            holder.tvQuantity.setTextColor(
-                    Baskit.getAppColor(context, R.color.plan_screen_unavailable)
-            );
-            holder.tvPrice.setTextColor(
-                    Baskit.getAppColor(context, R.color.plan_screen_unavailable)
-            );
+            holder.tvName.setTextColor(colorUnavailable);
+            holder.tvQuantity.setTextColor(colorUnavailable);
+            holder.tvPrice.setTextColor(colorUnavailable);
+            holder.spacer.setBackgroundColor(colorUnavailable);
         }
 
         setItemButtons(holder, item);
@@ -119,9 +111,7 @@ public class SupermarketItemsAdapterPlan extends ItemsAdapter
         if (supermarket == Baskit.UNASSIGNED_SUPERMARKET)
         {
             holder.tvPrice.setVisibility(View.VISIBLE);
-            holder.tvPrice.setTextColor(
-                    Baskit.getAppColor(context, R.color.plan_screen_chosen)
-            );
+            holder.tvPrice.setTextColor(colorChosen);
         }
         else if (priceDif != 0)
         {
@@ -141,9 +131,7 @@ public class SupermarketItemsAdapterPlan extends ItemsAdapter
             int end = builder.length();
 
             builder.setSpan(
-                    new ForegroundColorSpan(
-                            Baskit.getAppColor(context, R.color.plan_screen_chosen)
-                    ),
+                    new ForegroundColorSpan(colorChosen),
                     start,
                     end,
                     Spanned.SPAN_EXCLUSIVE_EXCLUSIVE

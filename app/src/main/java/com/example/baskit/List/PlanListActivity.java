@@ -1,5 +1,6 @@
 package com.example.baskit.List;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 
 import android.text.SpannableStringBuilder;
@@ -52,12 +53,22 @@ public class PlanListActivity extends MasterActivity
     private boolean uiInitialized = false;
     private double oldTotal;
     private String categoryName;
+    private int colorBase;
+    @SuppressLint("PrivateResource")
+    private int colorUnavailable;
+    private int colorChosen;
 
+
+    @SuppressLint("PrivateResource")
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_plan_list);
+
+        colorBase = Baskit.getAppColor(this, com.google.android.material.R.attr.colorOnBackground);
+        colorUnavailable = Baskit.getAppColor(this, com.google.android.material.R.attr.colorOnContainerUnchecked);
+        colorChosen = Baskit.getAppColor(this, com.google.android.material.R.attr.colorPrimaryVariant);
 
         listId = getIntent().getStringExtra("listId");
         categoryName = getIntent().getStringExtra("category");
@@ -251,9 +262,7 @@ public class PlanListActivity extends MasterActivity
             int end = builder.length();
 
             builder.setSpan(
-                    new ForegroundColorSpan(
-                            Baskit.getAppColor(PlanListActivity.this, com.google.android.material.R.attr.colorPrimaryVariant)
-                    ),
+                    new ForegroundColorSpan(colorChosen),
                     start,
                     end,
                     Spanned.SPAN_EXCLUSIVE_EXCLUSIVE

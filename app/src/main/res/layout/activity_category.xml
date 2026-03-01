@@ -8,8 +8,7 @@
     tools:context=".Categories.CategoryActivity"
     android:orientation="vertical"
     android:gravity="center"
-    android:paddingHorizontal="10dp"
-    android:background="?attr/colorSurface">
+    android:paddingHorizontal="10dp">
 
     <!-- Top Floating Header -->
     <LinearLayout
@@ -101,7 +100,7 @@
 
         <TextView
             android:id="@+id/tv_total"
-            android:textColor="@color/price"
+            android:textColor="?attr/colorPrimary"
             android:textSize="26sp"
             android:textStyle="bold"
             android:layout_height="wrap_content"

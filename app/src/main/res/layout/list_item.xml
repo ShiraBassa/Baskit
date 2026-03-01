@@ -5,7 +5,6 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="8dp"
-    android:background="?attr/colorSurface"
     android:elevation="3dp"
     android:orientation="horizontal"
     android:gravity="center_vertical"
@@ -21,37 +20,44 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:orientation="horizontal"
-        android:layout_marginEnd="4dp">
+        android:orientation="horizontal">
 
         <ImageButton
             android:id="@+id/btn_down"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
             android:background="@null"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_arrow_down"
-            app:tint="@color/quantity" />
+            app:tint="?attr/colorSecondary" />
 
         <TextView
             android:id="@+id/tv_quantity"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="כמות"
-            android:textColor="@color/quantity"
+            android:textColor="?attr/colorSecondary"
             android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginHorizontal="2dp"/>
+            android:textStyle="bold"/>
 
         <ImageButton
             android:id="@+id/btn_up"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
             android:background="@null"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_arrow_up"
-            app:tint="@color/quantity" />
+            app:tint="?attr/colorSecondary" />
+
     </LinearLayout>
+
+    <View
+        android:id="@+id/spacer"
+        android:visibility="gone"
+        android:layout_width="2dp"
+        android:layout_height="24dp"
+        android:layout_marginHorizontal="6dp"
+        android:background="?attr/colorOnBackground"/>
 
     <!-- Price Section -->
     <TextView
@@ -59,10 +65,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="מחיר"
-        android:textColor="@color/price"
-        android:textSize="18sp"
-        android:visibility="gone"
-        android:layout_marginEnd="12dp"/>
+        android:textColor="?attr/colorPrimary"
+        android:textSize="16sp"
+        android:layout_marginEnd="2dp"
+        android:visibility="gone"/>
 
     <!-- Item Name and Checkbox -->
     <LinearLayout
@@ -83,29 +89,30 @@
             android:scrollHorizontally="false"
             android:text="מוצר"
             android:textColor="?attr/colorPrimaryVariant"
-            android:textSize="16sp"
+            android:textSize="18sp"
             android:layout_marginEnd="4dp"
             android:layout_weight="1"
             android:textStyle="bold"/>
 
         <ImageButton
             android:id="@+id/check_box"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="26dp"
+            android:layout_height="26dp"
             android:background="@null"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_check_box_unchecked"
-            android:tint="?attr/colorSecondary"
-            android:layout_marginEnd="8dp"/>
+            android:layout_marginEnd="6dp"
+            app:tint="?attr/colorSecondary" />
 
         <ImageButton
             android:id="@+id/drag_handle"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
             android:background="@null"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_drag_handle"
-            android:tint="?attr/colorSecondary"/>
+            app:tint="?attr/colorSecondary" />
+
     </LinearLayout>
 
 </LinearLayout>
