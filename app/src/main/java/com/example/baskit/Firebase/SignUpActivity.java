@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.baskit.API.APIHandler;
+import com.example.baskit.Baskit;
 import com.example.baskit.Home.AddCityAlertDialog;
 import com.example.baskit.Home.AddSupermarketAlertDialog;
 import com.example.baskit.Home.SupermarketsListAdapter;
@@ -114,7 +115,7 @@ public class SignUpActivity extends MasterActivity
             {
                 username = etUsername.getText().toString();
 
-                if (checkInputs())
+                if (Baskit.isValidUserName(username, true))
                 {
                     submit();
                 }
@@ -266,21 +267,6 @@ public class SignUpActivity extends MasterActivity
                 }
             }
         });
-    }
-
-    private boolean checkInputs()
-    {
-        if (username.isEmpty())
-        {
-            Toast.makeText(
-                    SignUpActivity.this,
-                    "יש להזין שם משתמש",
-                    Toast.LENGTH_SHORT
-            ).show();
-            return false;
-        }
-
-        return true;
     }
 
     private void submit()

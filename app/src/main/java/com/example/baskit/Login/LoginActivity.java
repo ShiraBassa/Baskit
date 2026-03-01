@@ -15,6 +15,7 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 
+import com.example.baskit.Baskit;
 import com.example.baskit.Firebase.FirebaseAuthHandler;
 import com.example.baskit.Firebase.SignUpActivity;
 import com.example.baskit.Home.HomeActivity;
@@ -166,7 +167,7 @@ public class LoginActivity extends MasterActivity implements FirebaseAuthHandler
     {
         User user = authHandler.getUser();
 
-        if (user.getName().isEmpty())
+        if (!Baskit.isValidUserName(user.getName(), true))
         {
             signUpLauncher.launch(new Intent(LoginActivity.this, SignUpActivity.class));
         }

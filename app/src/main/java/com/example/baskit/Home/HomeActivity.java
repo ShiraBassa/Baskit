@@ -161,7 +161,7 @@ public class HomeActivity extends MasterActivity
         String listId = new String(Base64.decode(invitationCode, Base64.NO_WRAP), StandardCharsets.UTF_8);
 
         dbHandler.sendJoinRequest(listId, user);
-        Toast.makeText(this, "Waiting for approval...", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "נשלחה בקשה, מחכה לאישור...", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -170,6 +170,18 @@ public class HomeActivity extends MasterActivity
         super.onResume();
 
         user = authHandler.getUser();
+
+        if (tvTitle == null) return;
+
+        if (user != null)
+        {
+            tvTitle.setText("היי " + user.getName());
+        }
+        else
+        {
+            tvTitle.setText("היי");
+            Log.w("HomeActivity", "User is null in init()");
+        }
     }
 
     private void init()
@@ -184,7 +196,7 @@ public class HomeActivity extends MasterActivity
         }
         else
         {
-            tvTitle.setText("היי"); // fallback
+            tvTitle.setText("היי");
             Log.w("HomeActivity", "User is null in init()");
             return;
         }

@@ -14,12 +14,14 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.ColorUtils;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.example.baskit.Home.SettingsActivity;
 import com.example.baskit.MainComponents.Supermarket;
 
 public class Baskit extends Application
@@ -264,5 +266,17 @@ public class Baskit extends Application
         out = out.replace("__rbracket__", "]");
         out = out.replace("__slash__", "/");
         return out;
+    }
+
+    public static boolean isValidUserName(String username, boolean showError)
+    {
+        boolean valid = !username.isBlank();
+
+        if (!valid)
+        {
+            Toast.makeText(context, "יש להזין שם משתמש" + username, Toast.LENGTH_SHORT).show();
+        }
+
+        return valid;
     }
 }

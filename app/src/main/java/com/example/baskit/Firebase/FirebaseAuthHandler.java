@@ -36,6 +36,7 @@ public class FirebaseAuthHandler
     private static FirebaseAuthHandler instance;
     private static User user;
     private final APIHandler apiHandler = APIHandler.getInstance();
+    private final FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
 
     public interface AuthCallback
     {
@@ -566,5 +567,11 @@ public class FirebaseAuthHandler
                 e.printStackTrace();
             }
         }).start();
+    }
+
+    public void changeUserName(String username)
+    {
+        dbHandler.changeUserName(user, username);
+        user.setName(username);
     }
 }

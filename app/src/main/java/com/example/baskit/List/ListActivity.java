@@ -180,8 +180,10 @@ public class ListActivity extends MasterActivity
                     tvListName.setVisibility(View.VISIBLE);
                     tvTotal.setText(Baskit.getTotalDisplayString(list.getTotal(), list.allPricesKnown(), true, true));
                     tvTotal.setVisibility(View.VISIBLE);
+                    btnAddItem.setEnabled(true);
+                    btnAddItem.setAlpha(1f);
 
-                    if (itemsCodeNames != null && itemsCodeNames.values() != null)
+                    if (itemsCodeNames != null && itemsCodeNames.values() != null & !itemsCodeNames.isEmpty())
                     {
                         addItemFragment = new AddItemFragment(ListActivity.this,
                                 ListActivity.this,
@@ -189,11 +191,10 @@ public class ListActivity extends MasterActivity
                                 list.toItemNames(),
                                 ListActivity.this::addItem,
                                 list.getItemSuggestions());
-                        btnAddItem.setEnabled(true);
                     }
                     else
                     {
-                        btnAddItem.setEnabled(false);
+                        btnAddItem.setAlpha(0.5f);
                     }
 
                     categories = ListActivity.this.list.getCategories();
@@ -312,9 +313,15 @@ public class ListActivity extends MasterActivity
             @Override
             public void onClick(View view)
             {
+                if (itemsCodeNames.isEmpty())
+                {
+                    Toast.makeText(ListActivity.this, "נא לבחור סופרים בהגדרות", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 if (addItemFragment == null)
                 {
-                    Toast.makeText(ListActivity.this, "Items are still loading…", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ListActivity.this, "עדיין טוען מסך זה...", Toast.LENGTH_SHORT).show();
                     return;
                 }
 

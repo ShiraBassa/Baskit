@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
@@ -29,7 +30,6 @@ import org.json.JSONException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.Set;
 
 public class SettingsActivity extends MasterActivity
 {
@@ -44,6 +44,8 @@ public class SettingsActivity extends MasterActivity
     Button btnAddSupermarket, btnRemoveSupermarket, btnAddCity, btnRemoveCity;
     Map<String, ArrayList<String>> choices;
     ArrayList<String> cities, all_cities;
+    Button btnChangeUsername;
+    EditText etUsername;
 
     private View loadingOverlay;
 
@@ -90,6 +92,10 @@ public class SettingsActivity extends MasterActivity
         recyclerCities = findViewById(R.id.recycler_cities);
         btnAddCity = findViewById(R.id.btn_add_city);
         btnRemoveCity = findViewById(R.id.btn_remove_city);
+        btnChangeUsername = findViewById(R.id.btn_change_username);
+        etUsername = findViewById(R.id.et_username);
+
+        etUsername.setText(authHandler.getUser().getName());
 
         runWhenServerActive(() ->
         {
@@ -140,6 +146,9 @@ public class SettingsActivity extends MasterActivity
             recyclerSupermarkets.setEnabled(!loading);
             recyclerCities.setEnabled(!loading);
 
+            etUsername.setEnabled(!loading);
+            btnChangeUsername.setEnabled(!loading);
+
             if (loadingOverlay != null)
             {
                 loadingOverlay.setVisibility(loading ? View.VISIBLE : View.GONE);
@@ -170,6 +179,23 @@ public class SettingsActivity extends MasterActivity
 
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 startActivity(intent);
+            }
+        });
+
+        btnChangeUsername.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                String username = etUsername.getText().toString();
+
+                if (!Baskit.isValidUserName(username, true))
+                {
+                    return;
+                }
+
+                runIfOnline(() -> authHandler.changeUserName(username));
+                Toast.makeText(SettingsActivity.this, "שם המשתמש שונה ל" + username, Toast.LENGTH_SHORT).show();
             }
         });
 

@@ -10,8 +10,6 @@ import com.example.baskit.MainComponents.Item;
 import com.example.baskit.MainComponents.List;
 import com.example.baskit.MainComponents.Request;
 import com.example.baskit.MainComponents.User;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -21,11 +19,7 @@ import com.google.firebase.database.ValueEventListener;
 import org.json.JSONException;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
 
 public class FirebaseDBHandler
 {
@@ -592,6 +586,16 @@ public class FirebaseDBHandler
                 @Override
                 public void onCancelled(@NonNull DatabaseError error) {}
             });
+    }
+
+    public void changeUserName(User user, String username)
+    {
+        if (user.getName().equals(username))
+        {
+            return;
+        }
+
+        refUsers.child(user.getId()).child("name").setValue(username);
     }
 
     public void sendJoinRequest(String listID, User user)
