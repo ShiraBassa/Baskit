@@ -27,8 +27,8 @@
 
         <ImageButton
             android:id="@+id/btn_expand"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:background="@null"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_arrow_up"
@@ -40,7 +40,7 @@
         android:id="@+id/recycler_items"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="14dp"
+        android:paddingEnd="5dp"
         android:paddingTop="8dp"
         android:paddingBottom="8dp"
         android:clipToPadding="true"

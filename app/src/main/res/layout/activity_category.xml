@@ -35,7 +35,7 @@
                 android:scaleType="fitCenter"
                 android:background="@null"
                 android:src="@drawable/ic_back"
-                app:tint="?attr/colorSecondary" />
+                app:tint="?attr/colorPrimary" />
 
             <TextView
                 android:id="@+id/tv_list_name"
@@ -44,7 +44,7 @@
                 android:layout_height="wrap_content"
                 android:text="רשימה"
                 android:textSize="28sp"
-                android:textColor="?attr/colorSecondary"
+                android:textColor="?attr/colorPrimary"
                 android:visibility="invisible"
                 android:gravity="center_vertical" />
 
@@ -66,7 +66,7 @@
             android:text="קטגוריה"
             android:textSize="35sp"
             android:textStyle="bold"
-            android:textColor="?attr/colorSecondary"
+            android:textColor="?attr/colorPrimaryVariant"
             android:visibility="invisible"
             android:gravity="center"/>
 

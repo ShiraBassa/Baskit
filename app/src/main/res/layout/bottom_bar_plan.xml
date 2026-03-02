@@ -23,7 +23,7 @@
             android:clickable="true"
             android:focusable="true"
             android:src="@drawable/ic_check"
-            app:tint="?attr/colorError" />
+            app:tint="?attr/colorOnContainerUnchecked"/>
 
     </LinearLayout>
 

@@ -28,7 +28,7 @@
             android:scaleType="fitCenter"
             android:background="@null"
             android:src="@drawable/ic_back"
-            app:tint="?attr/colorSecondary" />
+            app:tint="?attr/colorPrimary" />
 
         <TextView
             android:id="@+id/tv_list_name"
@@ -38,7 +38,7 @@
             android:layout_marginHorizontal="10dp"
             android:text="רשימה"
             android:visibility="invisible"
-            android:textColor="?attr/colorSecondary"
+            android:textColor="?attr/colorPrimary"
             android:textSize="32sp"
             android:textStyle="bold"
             android:letterSpacing="0.02" />

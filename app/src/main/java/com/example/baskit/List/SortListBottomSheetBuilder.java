@@ -67,7 +67,7 @@ public class SortListBottomSheetBuilder
                                 cheapestPreview.getTotal(),
                                 cheapestPreview.allPricesKnown(),
                                 false,
-                                true
+                                false
                         )
                 );
 
@@ -105,7 +105,7 @@ public class SortListBottomSheetBuilder
                                     total,
                                     allKnown.get(sm),
                                     false,
-                                    true
+                                    false
                             )
                     );
 
