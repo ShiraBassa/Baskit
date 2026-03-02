@@ -429,7 +429,7 @@ public class FirebaseDBHandler
         return null;
     }
 
-    public void updateItems(List list, ArrayList<Item> items)
+    public void updateItemsIndividuals(List list, ArrayList<Item> items)
     {
         if (items == null) return;
 
@@ -675,7 +675,7 @@ public class FirebaseDBHandler
 
     public void updateCategory(List list, Category category)
     {
-        updateItems(list, new ArrayList<>(category.getItems().values()));
+        updateItemsIndividuals(list, new ArrayList<>(category.getItems().values()));
     }
 
     public void updateList(List list)
@@ -684,5 +684,29 @@ public class FirebaseDBHandler
         {
             updateCategory(list, category);
         }
+    }
+
+    public void renameList(String listID, String newName)
+    {
+        refLists.child(listID)
+                .child("name")
+                .setValue(newName);
+    }
+
+    public void renameList(List list, String newName)
+    {
+        renameList(list.getId(), newName);
+    }
+
+    public void removeItems(String listID)
+    {
+        refLists.child(listID)
+                .child("categories")
+                .removeValue();
+    }
+
+    public void removeItems(List list)
+    {
+        removeItems(list.getId());
     }
 }

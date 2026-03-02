@@ -9,14 +9,15 @@ import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.baskit.AI.AIHandler;
 import com.example.baskit.API.APIHandler;
 import com.example.baskit.Baskit;
 import com.example.baskit.Categories.CategoryActivity;
@@ -39,7 +40,7 @@ import java.util.Map;
 public class ListActivity extends MasterActivity
 {
     TextView tvListName, tvTotal;
-    ImageButton btnBack, btnFinished;
+    ImageButton btnBack, btnFinished, btnMore;
     View shareListDot;
 
     List list;
@@ -53,11 +54,10 @@ public class ListActivity extends MasterActivity
     AddItemFragment addItemFragment;
     Button btnSortList;
     ImageButton btnAddItem, btnPlan, btnShare;
-    AIHandler aiHandler = AIHandler.getInstance();
     APIHandler apiHandler = APIHandler.getInstance();
-    FirebaseAuthHandler authHandler = FirebaseAuthHandler.getInstance();
 
     Map<String, Map<String, Map<String, Double>>> allItems;
+    FirebaseAuthHandler authHandler = FirebaseAuthHandler.getInstance();
     Map<String, String> itemsCodeNames;
     private boolean itemsLoaded = false;
     private boolean initialized = true;
@@ -133,6 +133,7 @@ public class ListActivity extends MasterActivity
         btnSortList = findViewById(R.id.btn_sort_list);
         btnPlan = findViewById(R.id.btn_plan);
         shareListDot = findViewById(R.id.share_list_dot);
+        btnMore = findViewById(R.id.btn_more);
 
         btnAddItem.setEnabled(false);
 
@@ -378,6 +379,100 @@ public class ListActivity extends MasterActivity
                 Intent intent = new Intent(ListActivity.this, PlanListActivity.class);
                 intent.putExtra("listId", list.getId());
                 startActivity(intent);
+            }
+        });
+
+        btnMore.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                PopupMenu popup = new PopupMenu(ListActivity.this, v);
+                popup.getMenuInflater().inflate(R.menu.list_options_menu, popup.getMenu());
+
+                popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener()
+                {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem item)
+                    {
+                        int id = item.getItemId();
+
+                        if (id == R.id.action_rename)
+                        {
+                            final android.widget.EditText input = new android.widget.EditText(ListActivity.this);
+                            input.setText(list.getName());
+                            input.setSelection(input.getText().length());
+
+                            new androidx.appcompat.app.AlertDialog.Builder(ListActivity.this)
+                                    .setTitle("שנה שם")
+                                    .setMessage("הכנס שם חדש לרשימה")
+                                    .setView(input)
+                                    .setPositiveButton("שמור", (dialog, which) ->
+                                    {
+                                        String newName = input.getText().toString().trim();
+
+                                        if (!newName.isEmpty())
+                                        {
+                                            list.setName(newName);
+                                            runIfOnline(() -> dbHandler.renameList(list, newName));
+                                        }
+                                        else
+                                        {
+                                            Toast.makeText(ListActivity.this,
+                                                    "נא להזין שם",
+                                                    Toast.LENGTH_SHORT).show();
+                                        }
+                                    })
+                                    .setNegativeButton("בטל", null)
+                                    .show();
+
+                            return true;
+                        }
+                        else if (id == R.id.action_duplicate)
+                        {
+                            runIfOnline(() ->
+                            {
+                                authHandler.duplicateList(list, new FirebaseAuthHandler.CreateListCallback()
+                                {
+                                    @Override
+                                    public void onSuccess(List newList)
+                                    {
+                                        Toast.makeText(ListActivity.this,
+                                                "הרשימה שוכפלה",
+                                                Toast.LENGTH_SHORT).show();
+                                    }
+
+                                    @Override
+                                    public void onError(String message)
+                                    {
+                                        Toast.makeText(ListActivity.this,
+                                                message,
+                                                Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                            });
+
+                            return true;
+                        }
+                        else if (id == R.id.action_delete_items)
+                        {
+                            list.deleteAllItems();
+                            runIfOnline(() -> dbHandler.removeItems(list));
+                            return true;
+                        }
+                        else if (id == R.id.action_delete_list)
+                        {
+                            runIfOnline(() -> dbHandler.removeList(listId));
+                            authHandler.getUser().removeList(listId);
+                            finish();
+                            return true;
+                        }
+
+                        return false;
+                    }
+                });
+
+                popup.show();
             }
         });
     }

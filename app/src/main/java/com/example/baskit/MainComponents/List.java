@@ -1,5 +1,7 @@
 package com.example.baskit.MainComponents;
 
+import android.text.style.AlignmentSpan;
+
 import com.google.firebase.database.Exclude;
 import com.google.firebase.database.IgnoreExtraProperties;
 
@@ -38,6 +40,7 @@ public class List implements SortableEntity
         this.name = other.getName();
         this.userIDs = other.userIDs;
         this.requests = other.requests;
+        this.itemSuggestions = other.itemSuggestions;
 
         this.categories = new HashMap<>();
 
@@ -300,5 +303,10 @@ public class List implements SortableEntity
     public SortableEntity copy()
     {
         return new List(this);
+    }
+
+    public void deleteAllItems()
+    {
+        this.categories = new HashMap<>();
     }
 }

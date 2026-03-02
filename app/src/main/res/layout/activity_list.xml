@@ -67,6 +67,15 @@
 
         </FrameLayout>
 
+        <ImageButton
+            android:id="@+id/btn_more"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:scaleType="fitCenter"
+            android:background="@null"
+            android:src="@drawable/ic_more"
+            app:tint="?attr/colorSecondary" />
+
     </LinearLayout>
 
     <com.google.android.material.button.MaterialButton
@@ -75,8 +84,8 @@
         android:layout_height="wrap_content"
         android:text="סדר ▼"
         android:layout_margin="10dp"
-        android:textColor="?attr/colorSecondary"
-        app:strokeColor="?attr/colorSecondary"
+        android:textColor="?attr/colorSecondaryVariant"
+        app:strokeColor="?attr/colorSecondaryVariant"
         android:backgroundTint="?attr/colorSurface"
         app:rippleColor="?attr/colorSecondaryContainer"
         android:elevation="3dp"

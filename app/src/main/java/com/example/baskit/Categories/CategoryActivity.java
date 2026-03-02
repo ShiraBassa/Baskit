@@ -1,18 +1,11 @@
 package com.example.baskit.Categories;
 
 import android.content.Intent;
-import android.graphics.Typeface;
 import android.os.Bundle;
-import android.text.SpannableString;
-import android.text.Spanned;
-import android.text.style.ForegroundColorSpan;
-import android.text.style.StyleSpan;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,7 +17,6 @@ import com.example.baskit.API.APIHandler;
 import com.example.baskit.Baskit;
 import com.example.baskit.Firebase.FirebaseDBHandler;
 import com.example.baskit.List.AddItemFragment;
-import com.example.baskit.List.ListActivity;
 import com.example.baskit.List.PlanListActivity;
 import com.example.baskit.List.SortListBottomSheetBuilder;
 import com.example.baskit.MainComponents.Category;
@@ -39,7 +31,6 @@ import org.json.JSONException;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 
 public class CategoryActivity extends MasterActivity
@@ -221,7 +212,7 @@ public class CategoryActivity extends MasterActivity
                                         public void updateCategory()
                                         {
                                             if (category == null) return;
-                                            runIfOnline(() -> dbHandler.updateItems(list, new ArrayList<>(category.getItems().values())));
+                                            runIfOnline(() -> dbHandler.updateItemsIndividuals(list, new ArrayList<>(category.getItems().values())));
                                         }
 
                                         @Override

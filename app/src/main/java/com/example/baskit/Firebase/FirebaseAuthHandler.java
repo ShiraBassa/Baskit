@@ -3,14 +3,17 @@ package com.example.baskit.Firebase;
 import static com.example.baskit.Firebase.FBRefs.refAuth;
 import static com.example.baskit.Firebase.FBRefs.refUsers;
 
+import android.app.Activity;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import com.example.baskit.AI.AIHandler;
 import com.example.baskit.API.APIHandler;
 import com.example.baskit.Login.ErrorType;
+import com.example.baskit.MainComponents.List;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.MainComponents.User;
 import com.google.firebase.FirebaseException;
@@ -37,11 +40,18 @@ public class FirebaseAuthHandler
     private static User user;
     private final APIHandler apiHandler = APIHandler.getInstance();
     private final FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
+    private final AIHandler aiHandler = AIHandler.getInstance();
 
     public interface AuthCallback
     {
         void onAuthSuccess();
         void onAuthError(String msg, ErrorType type);
+    }
+
+    public interface CreateListCallback
+    {
+        void onSuccess(List newList);
+        void onError(String message);
     }
 
     public static FirebaseAuthHandler getInstance()
@@ -573,5 +583,43 @@ public class FirebaseAuthHandler
     {
         dbHandler.changeUserName(user, username);
         user.setName(username);
+    }
+
+    public void duplicateList(List list, CreateListCallback callback)
+    {
+        List listNew = new List(dbHandler.getUniqueId(), list.getName() + " 2");
+        listNew.addUser(user.getId());
+        listNew.setItemSuggestions(list.getItemSuggestions());
+        listNew.setCategories(list.getCategories());
+
+        dbHandler.addList(listNew, user);
+
+        if (callback != null)
+        {
+            new Handler(Looper.getMainLooper()).post(() ->
+                    callback.onSuccess(listNew));
+        }
+    }
+
+    public void createList(String name, Activity activity, CreateListCallback callback)
+    {
+        List list = new List(dbHandler.getUniqueId(), name);
+        list.addUser(user.getId());
+
+        aiHandler.getListSuggestions(list.getName(), activity, new AIHandler.OnGeminiResult()
+        {
+            @Override
+            public void onResult(ArrayList<String> suggestions)
+            {
+                list.setItemSuggestions(suggestions);
+                dbHandler.addList(list, user);
+
+                if (callback != null)
+                {
+                    new Handler(Looper.getMainLooper()).post(() ->
+                            callback.onSuccess(list));
+                }
+            }
+        });
     }
 }

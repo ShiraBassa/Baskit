@@ -182,6 +182,27 @@ public class HomeActivity extends MasterActivity
             tvTitle.setText("היי");
             Log.w("HomeActivity", "User is null in init()");
         }
+
+        if (user != null)
+        {
+            runIfOnline(() ->
+            {
+                dbHandler.getListNames(user, new FirebaseDBHandler.GetListNamesCallback()
+                {
+                    @Override
+                    public void onNamesFetched(ArrayList<String> listNames)
+                    {
+                        runOnUiThread(() ->
+                        {
+                            if (listsGridAdapter != null)
+                            {
+                                listsGridAdapter.updateList(listNames);
+                            }
+                        });
+                    }
+                });
+            });
+        }
     }
 
     private void init()
@@ -261,10 +282,7 @@ public class HomeActivity extends MasterActivity
             @Override
             public void onItemClick(int position)
             {
-                Intent intent = new Intent(HomeActivity.this, ListActivity.class);
-                intent.putExtra("listId", user.getListIDs().get(position));
-
-                startActivity(intent);
+                openListScreen(user.getListIDs().get(position));
             }
 
             @Override
@@ -330,26 +348,35 @@ public class HomeActivity extends MasterActivity
 
             runIfOnline(() ->
             {
-                createList(adEtName.getText().toString());
+                authHandler.createList(adEtName.getText().toString(), HomeActivity.this, new FirebaseAuthHandler.CreateListCallback()
+                {
+                    @Override
+                    public void onSuccess(List newList)
+                    {
+                        adCreateList.dismiss();
+                        Toast.makeText(HomeActivity.this,
+                                "הרשימה " + newList.getName() + " נוצרה",
+                                Toast.LENGTH_SHORT).show();
+                        openListScreen(newList.getId());
+                    }
+
+                    @Override
+                    public void onError(String message)
+                    {
+                        Toast.makeText(HomeActivity.this,
+                                message,
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
             });
         });
     }
 
-    private void createList(String name)
+    private void openListScreen(String listID)
     {
-        List list = new List(dbHandler.getUniqueId(), name);
-        list.addUser(user.getId());
+        Intent intent = new Intent(HomeActivity.this, ListActivity.class);
+        intent.putExtra("listId", listID);
 
-        aiHandler.getListSuggestions(list.getName(), this, new AIHandler.OnGeminiResult()
-        {
-            @Override
-            public void onResult(ArrayList<String> suggestions)
-            {
-                list.setItemSuggestions(suggestions);
-                dbHandler.addList(list, user);
-
-                adCreateList.dismiss();
-            }
-        });
+        startActivity(intent);
     }
 }
