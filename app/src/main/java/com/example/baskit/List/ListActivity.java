@@ -20,6 +20,7 @@ import com.example.baskit.AI.AIHandler;
 import com.example.baskit.API.APIHandler;
 import com.example.baskit.Baskit;
 import com.example.baskit.Categories.CategoryActivity;
+import com.example.baskit.Firebase.FirebaseAuthHandler;
 import com.example.baskit.Firebase.FirebaseDBHandler;
 import com.example.baskit.MainComponents.Category;
 import com.example.baskit.MainComponents.Item;
@@ -50,10 +51,11 @@ public class ListActivity extends MasterActivity
     FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
     Map<String, View> categoriesViews;
     AddItemFragment addItemFragment;
-    Button btnCheapest;
+    Button btnSortList;
     ImageButton btnAddItem, btnPlan, btnShare;
     AIHandler aiHandler = AIHandler.getInstance();
     APIHandler apiHandler = APIHandler.getInstance();
+    FirebaseAuthHandler authHandler = FirebaseAuthHandler.getInstance();
 
     Map<String, Map<String, Map<String, Double>>> allItems;
     Map<String, String> itemsCodeNames;
@@ -128,7 +130,7 @@ public class ListActivity extends MasterActivity
         btnAddItem = findViewById(R.id.btn_add_item);
         tvTotal = findViewById(R.id.tv_total);
         btnShare = findViewById(R.id.btn_share);
-        btnCheapest = findViewById(R.id.btn_arrange_cheapest);
+        btnSortList = findViewById(R.id.btn_sort_list);
         btnPlan = findViewById(R.id.btn_plan);
         shareListDot = findViewById(R.id.share_list_dot);
 
@@ -345,12 +347,26 @@ public class ListActivity extends MasterActivity
             }
         });
 
-        btnCheapest.setOnClickListener(new View.OnClickListener()
+        btnSortList.setOnClickListener(new View.OnClickListener()
         {
             @Override
-            public void onClick(View view)
+            public void onClick(View v)
             {
-                setCheapest();
+                if (!list.getRemainedItems().isEmpty())
+                {
+                    try
+                    {
+                        showSortBottomSheet();
+                    }
+                    catch (JSONException e)
+                    {
+                        throw new RuntimeException(e);
+                    }
+                    catch (IOException e)
+                    {
+                        throw new RuntimeException(e);
+                    }
+                }
             }
         });
 
@@ -433,7 +449,7 @@ public class ListActivity extends MasterActivity
 
         categoryView = categoriesListInflater.inflate(R.layout.category_list_item, categoriesListContainer, false);
 
-        tvName = categoryView.findViewById(R.id.tv_section_name);
+        tvName = categoryView.findViewById(R.id.tv_supermarket);
         tvCount  = categoryView.findViewById(R.id.tv_count);
         tvPrice = categoryView.findViewById(R.id.tv_price);
         loutInfo = categoryView.findViewById(R.id.lout_info);
@@ -583,173 +599,45 @@ public class ListActivity extends MasterActivity
         return null;
     }
 
-    private void setCheapest()
+    private void showSortBottomSheet() throws JSONException, IOException
     {
-        if (allItems == null)
-        {
-            Toast.makeText(this, "Prices are still loading…", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (list == null || list.getCategories() == null)
-        {
-            Toast.makeText(this, "List is not ready yet", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        runWhenServerActive(() ->
-        {
-            ArrayList<Supermarket> chosenSupermarkets = new ArrayList<>();
-
-            try
-            {
-                Map<String, ArrayList<String>> choices = apiHandler.getChoices();
-                if (choices != null)
+        SortListBottomSheetBuilder.show(
+                this,
+                list,
+                allItems,
+                apiHandler.getSupermarkets(),
+                new SortListBottomSheetBuilder.ApplyListener()
                 {
-                    for (Map.Entry<String, ArrayList<String>> entry : choices.entrySet())
+                    @Override
+                    public void onApplyCheapest()
                     {
-                        String supermarketName = entry.getKey();
-                        ArrayList<String> sections = entry.getValue();
+                        list.setCheapestFromStringsMap(allItems);
+                        tvTotal.setText(
+                                Baskit.getTotalDisplayString(
+                                        list.getTotal(),
+                                        list.allPricesKnown(),
+                                        true,
+                                        true
+                                )
+                        );
+                        runIfOnline(() -> dbHandler.updateList(list));
+                    }
 
-                        if (sections != null)
-                        {
-                            for (String section : sections)
-                            {
-                                chosenSupermarkets.add(new Supermarket(supermarketName, section));
-                            }
-                        }
+                    @Override
+                    public void onApplySupermarket(Supermarket sm)
+                    {
+                        list.setSupermarketFromStringsMap(sm, allItems);
+                        tvTotal.setText(
+                                Baskit.getTotalDisplayString(
+                                        list.getTotal(),
+                                        list.allPricesKnown(),
+                                        true,
+                                        true
+                                )
+                        );
+                        runIfOnline(() -> dbHandler.updateList(list));
                     }
                 }
-            }
-            catch (Exception e)
-            {
-                Log.e("ListActivity", "Failed to fetch chosen supermarkets", e);
-            }
-
-            for (Category category : list.getCategories().values())
-            {
-                if (category == null || category.getItems() == null) continue;
-
-                for (Item item : category.getItems().values())
-                {
-                    if (item == null || item.isChecked()) continue;
-
-                    String absId = item.getAbsoluteId();
-                    Map<String, Map<String, Double>> currItemPrices = (absId == null) ? null : allItems.get(absId);
-
-                    double lowest = 0.0;
-                    Supermarket lowestSupermarket = Baskit.UNASSIGNED_SUPERMARKET;
-
-                    if (currItemPrices == null || currItemPrices.isEmpty())
-                    {
-                        Supermarket currentSm = item.getSupermarket();
-
-                        if (currentSm != null)
-                        {
-                            continue;
-                        }
-
-                        lowest = 0.0;
-                        lowestSupermarket = Baskit.UNASSIGNED_SUPERMARKET;
-                        item.setPrice(lowest);
-                        item.setSupermarket(lowestSupermarket);
-                        continue;
-                    }
-
-                    if (currItemPrices != null && !currItemPrices.isEmpty())
-                    {
-                        double chosenLowest = Double.MAX_VALUE;
-                        Supermarket chosenLowestSupermarket = null;
-
-                        for (Map.Entry<String, Map<String, Double>> supermarketEntry : currItemPrices.entrySet())
-                        {
-                            String supermarketName = supermarketEntry.getKey();
-                            Map<String, Double> sectionMap = supermarketEntry.getValue();
-                            if (sectionMap == null) continue;
-
-                            for (Map.Entry<String, Double> sectionEntry : sectionMap.entrySet())
-                            {
-                                String section = sectionEntry.getKey();
-                                Double price = sectionEntry.getValue();
-
-                                boolean isChosen = false;
-                                for (Supermarket sm : chosenSupermarkets)
-                                {
-                                    if (sm.getSupermarket().equals(supermarketName)
-                                            && sm.getSection().equals(section))
-                                    {
-                                        isChosen = true;
-                                        break;
-                                    }
-                                }
-
-                                if (!isChosen) continue;
-
-                                if (price < chosenLowest)
-                                {
-                                    chosenLowest = price;
-                                    chosenLowestSupermarket = new Supermarket(supermarketName, section);
-                                }
-                            }
-                        }
-
-                        if (chosenLowestSupermarket != null)
-                        {
-                            lowest = chosenLowest;
-                            lowestSupermarket = chosenLowestSupermarket;
-                        }
-                        else
-                        {
-                            Supermarket currentSm = item.getSupermarket();
-
-                            if (currentSm != null)
-                            {
-                                lowest = item.getPrice();
-                                lowestSupermarket = currentSm;
-                                continue;
-                            }
-
-                            double absoluteLowest = Double.MAX_VALUE;
-                            Supermarket absoluteLowestSm = null;
-
-                            for (Map.Entry<String, Map<String, Double>> entry : currItemPrices.entrySet())
-                            {
-                                String supermarketName = entry.getKey();
-                                Map<String, Double> sectionMap = entry.getValue();
-                                if (sectionMap == null) continue;
-
-                                for (Map.Entry<String, Double> sectionEntry : sectionMap.entrySet())
-                                {
-                                    if (sectionEntry.getValue() < absoluteLowest)
-                                    {
-                                        absoluteLowest = sectionEntry.getValue();
-                                        absoluteLowestSm = new Supermarket(supermarketName, sectionEntry.getKey());
-                                    }
-                                }
-                            }
-
-                            if (absoluteLowestSm != null)
-                            {
-                                lowest = absoluteLowest;
-                                lowestSupermarket = absoluteLowestSm;
-                            }
-                            else
-                            {
-                                lowest = 0.0;
-                                lowestSupermarket = Baskit.UNASSIGNED_SUPERMARKET;
-                            }
-                        }
-                    }
-
-                    item.setPrice(lowest);
-                    item.setSupermarket(lowestSupermarket);
-                }
-            }
-
-            runOnUiThread(() ->
-            {
-                runIfOnline(() -> dbHandler.updateList(list));
-            });
-        });
+        );
     }
 }

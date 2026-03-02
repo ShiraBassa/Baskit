@@ -15,7 +15,7 @@
     android:foreground="?attr/selectableItemBackground">
 
     <TextView
-        android:id="@+id/tv_section_name"
+        android:id="@+id/tv_supermarket"
         android:textColor="?attr/colorSecondary"
         android:textSize="20sp"
         android:textStyle="bold"

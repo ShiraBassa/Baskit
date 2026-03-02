@@ -10,7 +10,6 @@
     android:gravity="center"
     android:paddingHorizontal="10dp">
 
-    <!-- Top Floating Header -->
     <LinearLayout
         android:id="@+id/layout_top_bar"
         android:layout_width="match_parent"
@@ -65,22 +64,20 @@
     </LinearLayout>
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_arrange_cheapest"
+        android:id="@+id/btn_sort_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="סדר לפי הזול ביותר"
-        android:textColor="?attr/colorTertiary"
-        app:strokeColor="?attr/colorTertiary"
+        android:text="סדר ▼"
+        android:layout_margin="10dp"
+        android:textColor="?attr/colorSecondary"
+        app:strokeColor="?attr/colorSecondary"
         android:backgroundTint="?attr/colorSurface"
         app:rippleColor="?attr/colorSecondaryContainer"
-        android:layout_margin="10dp"
         android:elevation="3dp"
         app:strokeWidth="2dp"
         android:textStyle="bold"
         style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
 
-
-    <!-- Items List -->
     <LinearLayout
         android:id="@+id/layout_items"
         android:layout_width="match_parent"
@@ -89,7 +86,6 @@
         android:gravity="center"
         android:orientation="vertical">
 
-        <!-- Category RecyclerView -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycler_supermarket_items"
             android:layout_width="match_parent"
@@ -110,7 +106,6 @@
 
     </LinearLayout>
 
-    <!-- Bottom Bar -->
     <include
         android:id="@+id/bottom_bar"
         layout="@layout/bottom_bar_plan"

@@ -590,7 +590,7 @@ public class APIHandler
         return branchesMap;
     }
 
-    public Map<String, ArrayList<String>> getChoices() throws IOException, JSONException
+    private Map<String, ArrayList<String>> getChoices() throws IOException, JSONException
     {
         String branchesRaw = getRaw("/choices");
         JSONObject branchesJson = new JSONObject(branchesRaw);
@@ -632,21 +632,8 @@ public class APIHandler
 
     public void updateSupermarkets() throws JSONException, IOException
     {
-        ArrayList<Supermarket> supermarketsNew = new ArrayList<>();
         Map<String, ArrayList<String>> branches = getChoices();
-
-        for (Map.Entry<String, ArrayList<String>> supermarketEntry : branches.entrySet())
-        {
-            String supermarketName = supermarketEntry.getKey();
-
-            for (String section : supermarketEntry.getValue())
-            {
-                Supermarket supermarket = new Supermarket(supermarketName, section);
-                supermarketsNew.add(supermarket);
-            }
-        }
-
-        this.supermarkets = supermarketsNew;
+        this.supermarkets = Supermarket.getSupermarketsFromStrings(branches);
     }
 
     public void updateSupermarkets(ArrayList<Supermarket> supermarketsNew)

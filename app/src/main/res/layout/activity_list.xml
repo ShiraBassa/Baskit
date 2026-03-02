@@ -10,7 +10,6 @@
     android:gravity="center"
     tools:context=".List.ListActivity">
 
-    <!-- Top Floating Header -->
     <LinearLayout
         android:id="@+id/layout_top_header"
         android:layout_width="match_parent"
@@ -71,22 +70,20 @@
     </LinearLayout>
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_arrange_cheapest"
+        android:id="@+id/btn_sort_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="סדר לפי הזול ביותר"
-        android:textColor="?attr/colorTertiary"
-        app:strokeColor="?attr/colorTertiary"
+        android:text="סדר ▼"
+        android:layout_margin="10dp"
+        android:textColor="?attr/colorSecondary"
+        app:strokeColor="?attr/colorSecondary"
         android:backgroundTint="?attr/colorSurface"
         app:rippleColor="?attr/colorSecondaryContainer"
-        android:layout_margin="10dp"
         android:elevation="3dp"
         app:strokeWidth="2dp"
         android:textStyle="bold"
         style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
 
-
-    <!-- Scrollable Categories List -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"

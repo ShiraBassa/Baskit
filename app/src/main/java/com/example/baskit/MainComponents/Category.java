@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @IgnoreExtraProperties
-public class Category
+public class Category implements SortableEntity
 {
     private String name = "";
     private boolean finished = false;
@@ -235,5 +235,71 @@ public class Category
             this.items.remove(item.getId());
             updateFinished();
         }
+    }
+
+    public void setCheapestFromSmMap(Map<String, Map<Supermarket, Double>> pricesAllItems)
+    {
+        if (pricesAllItems == null) return;
+
+        for (Item item : this.items.values())
+        {
+            String absID = item.getAbsoluteId();
+
+            Map<Supermarket, Double> prices = pricesAllItems.get(absID);
+            if (prices == null) continue;
+
+            item.setCheapestSupermarketFromSmMap(prices);
+        }
+    }
+
+    public void setCheapestFromStringsMap(Map<String, Map<String, Map<String, Double>>> pricesAllItems)
+    {
+        if (pricesAllItems == null) return;
+
+        for (Item item : this.items.values())
+        {
+            String absID = item.getAbsoluteId();
+
+            Map<String, Map<String, Double>> prices = pricesAllItems.get(absID);
+            if (prices == null) continue;
+
+            item.setCheapestSupermarketFromStringsMap(prices);
+        }
+    }
+
+    public void setSupermarketFromSmMap(Supermarket supermarket, Map<String, Map<Supermarket, Double>> pricesAllItems)
+    {
+        if (pricesAllItems == null) return;
+
+        for (Item item : this.items.values())
+        {
+            String absID = item.getAbsoluteId();
+
+            Map<Supermarket, Double> prices = pricesAllItems.get(absID);
+            if (prices == null) continue;
+
+            item.setSupermarketFromSmMap(supermarket, prices);
+        }
+    }
+
+    public void setSupermarketFromStringsMap(Supermarket supermarket, Map<String, Map<String, Map<String, Double>>> pricesAllItems)
+    {
+        if (pricesAllItems == null) return;
+
+        for (Item item : this.items.values())
+        {
+            String absID = item.getAbsoluteId();
+
+            Map<String, Map<String, Double>> prices = pricesAllItems.get(absID);
+            if (prices == null) continue;
+
+            item.setSupermarketFromStringsMap(supermarket, prices);
+        }
+    }
+
+    @Override
+    public SortableEntity copy()
+    {
+        return new Category(this);
     }
 }

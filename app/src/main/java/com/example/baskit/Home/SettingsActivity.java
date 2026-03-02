@@ -101,7 +101,7 @@ public class SettingsActivity extends MasterActivity
         {
             try
             {
-                choices = apiHandler.getChoices();
+                choices = Supermarket.getStringsFromSupermarkets(apiHandler.getUpdatedSupermarkets());
                 cities = apiHandler.getCities();
                 all_cities = apiHandler.getAllCities();
 
@@ -226,7 +226,7 @@ public class SettingsActivity extends MasterActivity
                                         {
                                             apiHandler.reset();
 
-                                            choices = apiHandler.getChoices();
+                                            choices = Supermarket.getStringsFromSupermarkets(apiHandler.getUpdatedSupermarkets());
                                             cities = apiHandler.getCities();
 
                                             SettingsActivity.this.runOnUiThread(() ->
@@ -301,7 +301,7 @@ public class SettingsActivity extends MasterActivity
                                     {
                                         apiHandler.reset();
 
-                                        choices = apiHandler.getChoices();
+                                        choices = Supermarket.getStringsFromSupermarkets(apiHandler.getUpdatedSupermarkets());
                                         cities = apiHandler.getCities();
 
                                         runOnUiThread(() ->

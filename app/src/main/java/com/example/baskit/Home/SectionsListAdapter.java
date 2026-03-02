@@ -53,7 +53,7 @@ public class SectionsListAdapter extends RecyclerView.Adapter<SectionsListAdapte
         {
             super(itemView);
 
-            tvSectionName = itemView.findViewById(R.id.tv_section_name);
+            tvSectionName = itemView.findViewById(R.id.tv_supermarket);
         }
     }
 

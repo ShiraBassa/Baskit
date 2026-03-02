@@ -11,7 +11,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.baskit.API.APIHandler;
 import com.example.baskit.Baskit;
-import com.example.baskit.MainComponents.Item;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;
 
@@ -112,7 +111,7 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
             super(itemView);
 
             tvSupermarketName = itemView.findViewById(R.id.tv_supermarket_name);
-            tvSectionName = itemView.findViewById(R.id.tv_section_name);
+            tvSectionName = itemView.findViewById(R.id.tv_supermarket);
             tvPrice = itemView.findViewById(R.id.tv_price);
         }
     }

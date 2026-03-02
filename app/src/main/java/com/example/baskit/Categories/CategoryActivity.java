@@ -1,11 +1,18 @@
 package com.example.baskit.Categories;
 
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.os.Bundle;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.StyleSpan;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -17,7 +24,9 @@ import com.example.baskit.API.APIHandler;
 import com.example.baskit.Baskit;
 import com.example.baskit.Firebase.FirebaseDBHandler;
 import com.example.baskit.List.AddItemFragment;
+import com.example.baskit.List.ListActivity;
 import com.example.baskit.List.PlanListActivity;
+import com.example.baskit.List.SortListBottomSheetBuilder;
 import com.example.baskit.MainComponents.Category;
 import com.example.baskit.MainComponents.Item;
 import com.example.baskit.MainComponents.List;
@@ -30,6 +39,7 @@ import org.json.JSONException;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 
 public class CategoryActivity extends MasterActivity
@@ -40,7 +50,7 @@ public class CategoryActivity extends MasterActivity
 
     TextView tvListName, tvCategoryName, tvTotal;
     ImageButton btnFinished, btnBack;
-    Button btnCheapest;
+    Button btnSortList;
     ImageButton btnAddItem, btnPlan;
     FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
     AddItemFragment addItemFragment;
@@ -107,7 +117,7 @@ public class CategoryActivity extends MasterActivity
         tvCategoryName = findViewById(R.id.tv_category_name);
         btnAddItem = findViewById(R.id.btn_add_item);
         tvTotal = findViewById(R.id.tv_total);
-        btnCheapest = findViewById(R.id.btn_arrange_cheapest);
+        btnSortList = findViewById(R.id.btn_sort_list);
         btnPlan = findViewById(R.id.btn_plan);
 
         final String listId = getIntent().getStringExtra("listId");
@@ -347,14 +357,25 @@ public class CategoryActivity extends MasterActivity
             }
         });
 
-        btnCheapest.setOnClickListener(new View.OnClickListener()
+        btnSortList.setOnClickListener(new View.OnClickListener()
         {
             @Override
             public void onClick(View view)
             {
-                if (itemsAdapter != null)
+                if (!category.getRemainedItems().isEmpty())
                 {
-                    itemsAdapter.arrangeByCheapest();
+                    try
+                    {
+                        showSortBottomSheet();
+                    }
+                    catch (JSONException e)
+                    {
+                        throw new RuntimeException(e);
+                    }
+                    catch (IOException e)
+                    {
+                        throw new RuntimeException(e);
+                    }
                 }
             }
         });
@@ -483,5 +504,51 @@ public class CategoryActivity extends MasterActivity
             }
         }
         return null;
+    }
+
+    private void showSortBottomSheet() throws JSONException, IOException
+    {
+        SortListBottomSheetBuilder.show(
+                this,
+                category,
+                allItems,
+                apiHandler.getSupermarkets(),
+                new SortListBottomSheetBuilder.ApplyListener()
+                {
+                    @Override
+                    public void onApplyCheapest()
+                    {
+                        category.setCheapestFromStringsMap(allItems);
+                        tvTotal.setText(
+                                Baskit.getTotalDisplayString(
+                                        category.getTotal(),
+                                        category.allPricesKnown(),
+                                        true,
+                                        true
+                                )
+                        );
+
+                        runIfOnline(() -> dbHandler.updateCategory(list, category));
+                        itemsAdapter.updateItems(new ArrayList<>(category.getItems().values()));
+                    }
+
+                    @Override
+                    public void onApplySupermarket(Supermarket sm)
+                    {
+                        category.setSupermarketFromStringsMap(sm, allItems);
+                        tvTotal.setText(
+                                Baskit.getTotalDisplayString(
+                                        category.getTotal(),
+                                        category.allPricesKnown(),
+                                        true,
+                                        true
+                                )
+                        );
+
+                        runIfOnline(() -> dbHandler.updateCategory(list, category));
+                        itemsAdapter.updateItems(new ArrayList<>(category.getItems().values()));
+                    }
+                }
+        );
     }
 }

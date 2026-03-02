@@ -459,7 +459,7 @@ public class FirebaseAuthHandler
     {
         try
         {
-            Map<String, ArrayList<String>> branches = apiHandler.getChoices();
+            Map<String, ArrayList<String>> branches = Supermarket.getStringsFromSupermarkets(apiHandler.getUpdatedSupermarkets());
             String supermarketName = supermarket.getSupermarket();
             String sectionName = supermarket.getSection();
 
@@ -487,7 +487,7 @@ public class FirebaseAuthHandler
     {
         try
         {
-            Map<String, ArrayList<String>> branches = apiHandler.getChoices();
+            Map<String, ArrayList<String>> branches = Supermarket.getStringsFromSupermarkets(apiHandler.getUpdatedSupermarkets());
             String supermarketName = supermarket.getSupermarket();
             Objects.requireNonNull(branches.get(supermarketName)).remove(supermarket.getSection());
 

@@ -6,6 +6,9 @@ import com.example.baskit.Baskit;
 import com.google.firebase.database.Exclude;
 import com.google.firebase.database.IgnoreExtraProperties;
 
+import java.util.ArrayList;
+import java.util.Map;
+
 @IgnoreExtraProperties
 public class Item implements Cloneable
 {
@@ -153,6 +156,29 @@ public class Item implements Cloneable
         this.supermarket = supermarket;
     }
 
+    public void setSupermarket(Supermarket supermarket, Double price)
+    {
+        this.supermarket = supermarket;
+        this.price = price;
+    }
+
+    public void setSupermarketFromSmMap(Supermarket supermarket, Map<Supermarket, Double> prices)
+    {
+        if (prices == null || !prices.containsKey(supermarket))
+        {
+            return;
+        }
+
+        this.supermarket = supermarket;
+        this.price = prices.get(supermarket);
+    }
+
+    public void setSupermarketFromStringsMap(Supermarket supermarket, Map<String, Map<String, Double>> prices)
+    {
+        Map<Supermarket, Double> pricesSm = Supermarket.getSupermarketsPricesFromStrings(prices);
+        setSupermarketFromSmMap(supermarket, pricesSm);
+    }
+
     @Override
     public String toString()
     {
@@ -204,5 +230,54 @@ public class Item implements Cloneable
         }
 
         return false;
+    }
+
+    public Supermarket getCheapestSupermarket(Map<Supermarket, Double> prices)
+    {
+        double cheapestPrice = this.price;
+        Supermarket cheapestSupermarket = this.supermarket;
+
+        if (prices == null || prices.isEmpty())
+        {
+            return this.supermarket;
+        }
+
+        if (this.supermarket == Baskit.UNASSIGNED_SUPERMARKET || this.price == 0.0)
+        {
+            cheapestPrice = Double.MAX_VALUE;
+        }
+
+        for (Supermarket supermarket : prices.keySet())
+        {
+            double price = prices.get(supermarket);
+
+            if (price < cheapestPrice)
+            {
+                cheapestPrice = price;
+                cheapestSupermarket = supermarket;
+            }
+        }
+
+        return cheapestSupermarket;
+    }
+
+    public void setCheapestSupermarketFromSmMap(Map<Supermarket, Double> prices)
+    {
+        Supermarket cheapest = getCheapestSupermarket(prices);
+        this.supermarket = cheapest;
+
+        if (prices != null)
+        {
+            Double newPrice = prices.get(cheapest);
+            if (newPrice != null)
+            {
+                this.price = newPrice;
+            }
+        }
+    }
+
+    public void setCheapestSupermarketFromStringsMap(Map<String, Map<String, Double>> prices)
+    {
+        setCheapestSupermarketFromSmMap(Supermarket.getSupermarketsPricesFromStrings(prices));
     }
 }
