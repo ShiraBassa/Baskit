@@ -48,6 +48,15 @@
                 android:visibility="invisible"
                 android:gravity="center_vertical" />
 
+            <ImageButton
+                android:id="@+id/btn_more"
+                android:layout_width="45dp"
+                android:layout_height="45dp"
+                android:scaleType="fitCenter"
+                android:background="@null"
+                android:src="@drawable/ic_more"
+                app:tint="?attr/colorSecondary" />
+
         </LinearLayout>
 
         <TextView

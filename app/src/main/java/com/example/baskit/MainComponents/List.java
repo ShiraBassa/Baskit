@@ -1,7 +1,5 @@
 package com.example.baskit.MainComponents;
 
-import android.text.style.AlignmentSpan;
-
 import com.google.firebase.database.Exclude;
 import com.google.firebase.database.IgnoreExtraProperties;
 
@@ -114,6 +112,11 @@ public class List implements SortableEntity
     public void removeCategory(String categoryName)
     {
         categories.remove(categoryName);
+    }
+
+    public void removeCategory(Category category)
+    {
+        removeCategory(category.getName());
     }
 
     public ArrayList<Item> getItems()
@@ -305,7 +308,7 @@ public class List implements SortableEntity
         return new List(this);
     }
 
-    public void deleteAllItems()
+    public void removeAllItems()
     {
         this.categories = new HashMap<>();
     }

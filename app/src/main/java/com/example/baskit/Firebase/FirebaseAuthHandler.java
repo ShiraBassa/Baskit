@@ -587,7 +587,7 @@ public class FirebaseAuthHandler
 
     public void duplicateList(List list, CreateListCallback callback)
     {
-        List listNew = new List(dbHandler.getUniqueId(), list.getName() + " 2");
+        List listNew = new List(dbHandler.getUniqueId(), list.getName() + " חדש");
         listNew.addUser(user.getId());
         listNew.setItemSuggestions(list.getItemSuggestions());
         listNew.setCategories(list.getCategories());

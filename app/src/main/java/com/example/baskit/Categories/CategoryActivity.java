@@ -3,9 +3,11 @@ package com.example.baskit.Categories;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,7 +42,7 @@ public class CategoryActivity extends MasterActivity
     Category category;
 
     TextView tvListName, tvCategoryName, tvTotal;
-    ImageButton btnFinished, btnBack;
+    ImageButton btnFinished, btnBack, btnMore;
     Button btnSortList;
     ImageButton btnAddItem, btnPlan;
     FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
@@ -110,6 +112,7 @@ public class CategoryActivity extends MasterActivity
         tvTotal = findViewById(R.id.tv_total);
         btnSortList = findViewById(R.id.btn_sort_list);
         btnPlan = findViewById(R.id.btn_plan);
+        btnMore = findViewById(R.id.btn_more);
 
         final String listId = getIntent().getStringExtra("listId");
         final String categoryName = getIntent().getStringExtra("categoryName");
@@ -380,6 +383,37 @@ public class CategoryActivity extends MasterActivity
                 intent.putExtra("listId", list.getId());
                 intent.putExtra("category", category.getName());
                 startActivity(intent);
+            }
+        });
+
+        btnMore.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                PopupMenu popup = new PopupMenu(CategoryActivity.this, v);
+                popup.getMenuInflater().inflate(R.menu.category_options_menu, popup.getMenu());
+
+                popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener()
+                {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem item)
+                    {
+                        int id = item.getItemId();
+
+                        if (id == R.id.action_delete_items)
+                        {
+                            list.removeCategory(category);
+                            runIfOnline(() -> dbHandler.removeCategory(list, category));
+                            finish();
+                            return true;
+                        }
+
+                        return false;
+                    }
+                });
+
+                popup.show();
             }
         });
     }

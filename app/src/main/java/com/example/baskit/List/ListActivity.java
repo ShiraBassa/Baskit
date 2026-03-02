@@ -399,33 +399,41 @@ public class ListActivity extends MasterActivity
 
                         if (id == R.id.action_rename)
                         {
-                            final android.widget.EditText input = new android.widget.EditText(ListActivity.this);
-                            input.setText(list.getName());
-                            input.setSelection(input.getText().length());
+                            View dialogView = getLayoutInflater().inflate(R.layout.alert_dialog_rename_list, null);
 
-                            new androidx.appcompat.app.AlertDialog.Builder(ListActivity.this)
-                                    .setTitle("שנה שם")
-                                    .setMessage("הכנס שם חדש לרשימה")
-                                    .setView(input)
-                                    .setPositiveButton("שמור", (dialog, which) ->
-                                    {
-                                        String newName = input.getText().toString().trim();
+                            androidx.appcompat.app.AlertDialog dialog =
+                                    new androidx.appcompat.app.AlertDialog.Builder(ListActivity.this)
+                                            .setView(dialogView)
+                                            .create();
 
-                                        if (!newName.isEmpty())
-                                        {
-                                            list.setName(newName);
-                                            runIfOnline(() -> dbHandler.renameList(list, newName));
-                                        }
-                                        else
-                                        {
-                                            Toast.makeText(ListActivity.this,
-                                                    "נא להזין שם",
-                                                    Toast.LENGTH_SHORT).show();
-                                        }
-                                    })
-                                    .setNegativeButton("בטל", null)
-                                    .show();
+                            android.widget.EditText etName = dialogView.findViewById(R.id.et_name);
+                            android.widget.ImageButton btnCancel = dialogView.findViewById(R.id.btn_cancel);
+                            com.google.android.material.button.MaterialButton btnSave = dialogView.findViewById(R.id.btn_save_name);
 
+                            etName.setText(list.getName());
+                            etName.setSelection(etName.getText().length());
+
+                            btnCancel.setOnClickListener(v1 -> dialog.dismiss());
+
+                            btnSave.setOnClickListener(v12 ->
+                            {
+                                String newName = etName.getText().toString().trim();
+
+                                if (!newName.isEmpty())
+                                {
+                                    list.setName(newName);
+                                    runIfOnline(() -> dbHandler.renameList(list, newName));
+                                    dialog.dismiss();
+                                }
+                                else
+                                {
+                                    Toast.makeText(ListActivity.this,
+                                            "נא להזין שם",
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            });
+
+                            dialog.show();
                             return true;
                         }
                         else if (id == R.id.action_duplicate)
@@ -456,7 +464,7 @@ public class ListActivity extends MasterActivity
                         }
                         else if (id == R.id.action_delete_items)
                         {
-                            list.deleteAllItems();
+                            list.removeAllItems();
                             runIfOnline(() -> dbHandler.removeItems(list));
                             return true;
                         }

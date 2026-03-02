@@ -2,7 +2,6 @@ package com.example.baskit.Home;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.media.tv.AitInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Base64;
@@ -332,7 +331,7 @@ public class HomeActivity extends MasterActivity
     {
         adLayout = (LinearLayout) getLayoutInflater().inflate(R.layout.alert_dialog_create_list, null);
         adBtnCancel = adLayout.findViewById(R.id.btn_cancel);
-        adBtnCreate = adLayout.findViewById(R.id.btn_create);
+        adBtnCreate = adLayout.findViewById(R.id.btn_save_name);
         adEtName = adLayout.findViewById(R.id.et_name);
 
         adb = new AlertDialog.Builder(this);
