@@ -11,6 +11,7 @@ import android.view.View;
 import androidx.annotation.NonNull;
 
 import com.example.baskit.Baskit;
+import com.example.baskit.Categories.ItemViewPricesAdapter;
 import com.example.baskit.Categories.ItemsAdapter;
 import com.example.baskit.Categories.SupermarketItemsAdapter;
 import com.example.baskit.MainComponents.Item;
@@ -22,7 +23,9 @@ import java.util.Map;
 
 public class SupermarketItemsAdapterPlan extends ItemsAdapter
 {
-    private final Map<String, Map<String, Map<String, Double>>> itemPrices;
+private final Map<String, Map<String, Map<String, Double>>> itemPrices;
+private final com.example.baskit.MainComponents.List originalList;
+private final Map<String, ArrayList<String>> groups;
     private final Supermarket supermarket, selectedSupermarketParent;
     private final SupermarketItemsAdapter.OnItemMovedListener onItemMovedListener;
     private final int colorBase;
@@ -32,18 +35,22 @@ public class SupermarketItemsAdapterPlan extends ItemsAdapter
 
     @SuppressLint("PrivateResource")
     public SupermarketItemsAdapterPlan(ArrayList<Item> items,
+                                       com.example.baskit.MainComponents.List originalList,
                                        Activity activity, Context context,
                                        UpperClassFunctions upperClassFns,
                                        Supermarket supermarket,
                                        Supermarket selectedSupermarketParent,
                                        Map<String, Map<String, Map<String, Double>>> itemPrices,
+                                       Map<String, ArrayList<String>> groups,
                                        SupermarketItemsAdapter.OnItemMovedListener onItemMovedListener)
     {
         super(items, item -> {}, upperClassFns, activity, context);
 
+        this.originalList = originalList;
         this.supermarket = supermarket;
         this.selectedSupermarketParent = selectedSupermarketParent;
         this.itemPrices = itemPrices;
+        this.groups = groups;
         this.onItemMovedListener = onItemMovedListener;
 
         colorBase = Baskit.getAppColor(context, com.google.android.material.R.attr.colorOnBackground);
@@ -79,12 +86,24 @@ public class SupermarketItemsAdapterPlan extends ItemsAdapter
             holder.tvQuantity.setTextColor(colorChosen);
             holder.spacer.setBackgroundColor(colorChosen);
         }
-        else if (selectedSupermarketParent != null && itemHasSelectedSupermarket(item))
+        else if (selectedSupermarketParent != null)
         {
-            holder.dragHandle.setColorFilter(colorChosen);
-            holder.dragHandle.setVisibility(View.VISIBLE);
+            double newPrice = getPrice(item, selectedSupermarketParent);
 
-            showItemPriceDif(holder, item);
+            if (newPrice > 0)
+            {
+                holder.dragHandle.setColorFilter(colorChosen);
+                holder.dragHandle.setVisibility(View.VISIBLE);
+
+                showItemPriceDif(holder, item, newPrice);
+            }
+            else
+            {
+                holder.tvName.setTextColor(colorUnavailable);
+                holder.tvQuantity.setTextColor(colorUnavailable);
+                holder.tvPrice.setTextColor(colorUnavailable);
+                holder.spacer.setBackgroundColor(colorUnavailable);
+            }
         }
         else
         {
@@ -97,12 +116,11 @@ public class SupermarketItemsAdapterPlan extends ItemsAdapter
         setItemButtons(holder, item);
     }
 
-    private void showItemPriceDif(ViewHolder holder, Item item)
+    private void showItemPriceDif(ViewHolder holder, Item item, double newPrice)
     {
-        double priceOther = getPrice(item, selectedSupermarketParent);
-        double priceDif = priceOther - item.getTotal();
+        double priceDif = newPrice - item.getTotal();
 
-        String priceStr = Baskit.getTotalDisplayString(priceOther, true, false, false);
+        String priceStr = Baskit.getTotalDisplayString(newPrice, true, false, false);
         String difStr = Baskit.getTotalDisplayString(priceDif, true, false, false);
 
         SpannableStringBuilder builder = new SpannableStringBuilder();
@@ -165,29 +183,50 @@ public class SupermarketItemsAdapterPlan extends ItemsAdapter
         });
     }
 
-    private boolean itemHasSelectedSupermarket(Item item)
-    {
-        String absoluteId = item.getAbsoluteId();
-
-        if (!itemPrices.containsKey(absoluteId)) return false;
-        Map<String, Map<String, Double>> currItemPrices = itemPrices.get(absoluteId);
-
-        if (!currItemPrices.containsKey(selectedSupermarketParent.getSupermarket()))
-        {
-            return false;
-        }
-
-        return currItemPrices.get(selectedSupermarketParent.getSupermarket()).containsKey(selectedSupermarketParent.getSection());
-    }
 
     private double getPrice(Item item, Supermarket otherSupermarket)
     {
-        String absoluteId = item.getAbsoluteId();
+        if (item == null || otherSupermarket == null) return 0.0;
 
-        if (!itemPrices.containsKey(absoluteId)) return 0;
-        Map<String, Map<String, Double>> currItemPrices = itemPrices.get(absoluteId);
+        ArrayList<Item> single = new ArrayList<>();
+        single.add(item);
 
-        if (!currItemPrices.get(otherSupermarket.getSupermarket()).containsKey(otherSupermarket.getSection())) return 0;
-        return item.getTotal(currItemPrices.get(otherSupermarket.getSupermarket()).get(otherSupermarket.getSection()));
+        Map<String, ArrayList<ItemViewPricesAdapter.PriceRow>> rowsMap =
+                com.example.baskit.API.APIHandler.getInstance().buildRows(single);
+
+        ArrayList<ItemViewPricesAdapter.PriceRow> rows =
+                rowsMap.get(item.getBaseName());
+
+        if (rows != null)
+        {
+            ItemViewPricesAdapter.PriceRow row = item.getSupermarketRow(otherSupermarket, rows);
+
+            if (row != null)
+            {
+                return row.getPrice();
+            }
+        }
+
+        return 0.0;
+    }
+
+    private boolean hasPrice(String code, Supermarket sm)
+    {
+        return getPriceFromCode(code, sm) != null;
+    }
+
+    private Double getPriceFromCode(String code, Supermarket sm)
+    {
+        if (!itemPrices.containsKey(code)) return null;
+
+        Map<String, Map<String, Double>> prices = itemPrices.get(code);
+
+        if (!prices.containsKey(sm.getSupermarket())) return null;
+
+        Map<String, Double> sections = prices.get(sm.getSupermarket());
+
+        if (!sections.containsKey(sm.getSection())) return null;
+
+        return sections.get(sm.getSection());
     }
 }

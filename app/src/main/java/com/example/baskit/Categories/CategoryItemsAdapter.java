@@ -173,7 +173,7 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
 
     private void sortByExisting()
     {
-        for (Item item : category.getItems().values())
+        for (Item item : category.getItems())
         {
             Supermarket supermarket = item.getSupermarket();
             ArrayList<Item> targetList;

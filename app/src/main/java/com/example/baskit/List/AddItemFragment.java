@@ -1,6 +1,5 @@
 package com.example.baskit.List;
 import android.view.WindowManager;
-import android.util.Log;
 
 import com.example.baskit.Categories.ItemViewPricesAdapter;
 
@@ -15,6 +14,10 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
+
+import com.example.baskit.MainComponents.ItemInfo;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -34,12 +37,8 @@ import com.example.baskit.MainComponents.Item;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;
 
-import org.json.JSONException;
-
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.LinkedHashMap;
 import java.util.Locale;
@@ -62,11 +61,19 @@ public class AddItemFragment extends DialogFragment
     private Context context;
 
     private ArrayList<String> allItemNames;
+    // Decoded caches for fast search
+    private ArrayList<String> decodedItemNames = new ArrayList<>();
+    private ArrayList<String> decodedItemNamesLower = new ArrayList<>();
     private AddItemInterface addItemInterface;
 
     private APIHandler apiHandler = APIHandler.getInstance();
     private ArrayList<String> listItemNames;
     private ArrayList<String> itemSuggestions;
+    private Map<String, ArrayList<String>> groups;
+
+    private ChipGroup chipGroupWeights;
+    private ChipGroup chipGroupCompanies;
+    private ArrayList<com.example.baskit.MainComponents.ItemInfo> currentVariations = new ArrayList<>();
 
     private String decodeSanitizedKey(String s)
     {
@@ -87,18 +94,24 @@ public class AddItemFragment extends DialogFragment
         void addItem(Item item) throws IOException;
     }
 
-    public AddItemFragment(Activity activity, Context context,
-                           ArrayList<String> allItemNames,
-                           ArrayList<String> listItemNames,
-                           AddItemInterface addItemInterface,
-                           ArrayList<String> itemSuggestions)
+    public AddItemFragment(
+            Activity activity,
+            Context context,
+            Map<String, ArrayList<String>> groups,
+            ArrayList<String> listItemNames,
+            AddItemInterface addItemInterface,
+            ArrayList<String> itemSuggestions)
     {
         this.activity = activity;
         this.context = context;
-        this.allItemNames = allItemNames;
+        this.groups = groups;
         this.listItemNames = listItemNames;
         this.addItemInterface = addItemInterface;
         this.itemSuggestions = itemSuggestions;
+
+        this.allItemNames = groups != null
+                ? new ArrayList<>(groups.keySet())
+                : new ArrayList<>();
 
         init();
     }
@@ -140,6 +153,20 @@ public class AddItemFragment extends DialogFragment
         }
 
         this.allItemNames = new ArrayList<>(unique.values());
+
+        // build decoded caches for fast search
+        decodedItemNames.clear();
+        decodedItemNamesLower.clear();
+
+        for (String name : this.allItemNames)
+        {
+            String decoded = decodeSanitizedKey(name);
+            if (decoded == null) decoded = name;
+            decoded = decoded.trim();
+
+            decodedItemNames.add(decoded);
+            decodedItemNamesLower.add(decoded.toLowerCase(Locale.ROOT));
+        }
     }
 
     private boolean isBadItemName(String s)
@@ -179,6 +206,9 @@ public class AddItemFragment extends DialogFragment
         progressBar = fragmentView.findViewById(R.id.progressBar);
         recyclerSupermarkets = fragmentView.findViewById(R.id.recycler_supermarket);
         recyclerSupermarkets.setLayoutManager(new LinearLayoutManager(context));
+
+        chipGroupWeights = fragmentView.findViewById(R.id.chip_group_weights);
+        chipGroupCompanies = fragmentView.findViewById(R.id.chip_group_units);
 
         setupAutocomplete();
         setupButtons();
@@ -397,15 +427,19 @@ public class AddItemFragment extends DialogFragment
             int searchBottom = searchItem.getBottom();
             int maxHeightInsideFragment = fragmentHeight - searchBottom;
 
+            int itemHeightPx = (int)(48 * fragmentView.getResources().getDisplayMetrics().density);
+            int itemCount = Math.max(1, filteredResults.size());
+            int desiredHeight = itemHeightPx * itemCount;
+
             if (maxHeightInsideFragment > 0)
             {
-                searchItem.setDropDownHeight(maxHeightInsideFragment);
+                searchItem.setDropDownHeight(Math.min(desiredHeight, maxHeightInsideFragment));
             }
         });
 
         searchItem.addTextChangedListener(new android.text.TextWatcher()
         {
-            private final long FILTER_DEBOUNCE_DELAY = 120;
+            private final long FILTER_DEBOUNCE_DELAY = 60;
             private Runnable filterRunnable = null;
 
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -447,24 +481,19 @@ public class AddItemFragment extends DialogFragment
                         ArrayList<ScoredItem> nonsuggestions = new ArrayList<>();
 
                         java.util.function.BiPredicate<String, String> containsFullWord = (text, word) ->
-                        {
-                            String regex = "\\b" + java.util.regex.Pattern.quote(word) + "\\b";
-                            return java.util.regex.Pattern.compile(regex, java.util.regex.Pattern.CASE_INSENSITIVE | java.util.regex.Pattern.UNICODE_CASE)
-                                    .matcher(text).find();
-                        };
+                                (" " + text + " ").contains(" " + word + " ");
+
                         java.util.function.BiPredicate<String, String> startsWithFullWord = (text, word) ->
-                        {
-                            String regex = "^" + java.util.regex.Pattern.quote(word) + "\\b";
-                            return java.util.regex.Pattern.compile(regex, java.util.regex.Pattern.CASE_INSENSITIVE | java.util.regex.Pattern.UNICODE_CASE)
-                                    .matcher(text).find();
-                        };
+                                text.startsWith(word + " ") || text.equals(word);
 
                         if (inputWords.isEmpty())
                         {
-                            for (String s : allItemNames)
+                            // Show only suggested items when nothing is typed
+                            for (int idx = 0; idx < allItemNames.size(); idx++)
                             {
-                                String decoded = decodeSanitizedKey(s);
-                                String low = decoded.trim().toLowerCase(Locale.ROOT);
+                                String s = allItemNames.get(idx);
+                                String low = decodedItemNamesLower.get(idx);
+
                                 boolean isSuggestion = false;
 
                                 for (String keyword : suggestionKeywords)
@@ -475,17 +504,20 @@ public class AddItemFragment extends DialogFragment
                                         break;
                                     }
                                 }
-                                ScoredItem item = new ScoredItem(s, 0, isSuggestion);
-                                if (isSuggestion) suggestions.add(item);
-                                else nonsuggestions.add(item);
+
+                                if (isSuggestion)
+                                {
+                                    suggestions.add(new ScoredItem(s, 0, true));
+                                }
                             }
                         }
                         else
                         {
-                            for (String s : allItemNames)
+                            for (int idx = 0; idx < allItemNames.size(); idx++)
                             {
-                                String decoded = decodeSanitizedKey(s);
-                                String low = decoded.trim().toLowerCase(Locale.ROOT);
+                                String s = allItemNames.get(idx);
+                                String decoded = decodedItemNames.get(idx);
+                                String low = decodedItemNamesLower.get(idx);
                                 boolean allPresent = true;
 
                                 for (int i = 0; i < inputWords.size(); ++i)
@@ -527,15 +559,15 @@ public class AddItemFragment extends DialogFragment
 
                                 for (String w : inputWords)
                                 {
-                                    int idx = low.indexOf(w, lastIdx + 1);
+                                    int idx2 = low.indexOf(w, lastIdx + 1);
 
-                                    if (idx == -1 || (lastIdx >= 0 && idx < lastIdx))
+                                    if (idx2 == -1 || (lastIdx >= 0 && idx2 < lastIdx))
                                     {
                                         inOrder = false;
                                         break;
                                     }
 
-                                    lastIdx = idx;
+                                    lastIdx = idx2;
                                 }
 
                                 if (inOrder && inputWords.size() > 1) score += 2;
@@ -574,14 +606,45 @@ public class AddItemFragment extends DialogFragment
                             java.util.Collections.sort(nonsuggestions, comp);
                         }
 
-                        for (ScoredItem si : suggestions)
+                        // Sort suggestions by keyword priority (לחם before חלב etc.)
+                        java.util.Collections.sort(suggestions, (a, b) ->
                         {
+                            String aLow = decodeSanitizedKey(a.item).toLowerCase(Locale.ROOT);
+                            String bLow = decodeSanitizedKey(b.item).toLowerCase(Locale.ROOT);
+
+                            int aKey = Integer.MAX_VALUE;
+                            int bKey = Integer.MAX_VALUE;
+
+                            for (int i = 0; i < suggestionKeywords.size(); i++)
+                            {
+                                String k = suggestionKeywords.get(i);
+
+                                if (aKey == Integer.MAX_VALUE && (aLow.startsWith(k + " ") || aLow.equals(k)))
+                                {
+                                    aKey = i;
+                                }
+
+                                if (bKey == Integer.MAX_VALUE && (bLow.startsWith(k + " ") || bLow.equals(k)))
+                                {
+                                    bKey = i;
+                                }
+                            }
+
+                            int cmp = Integer.compare(aKey, bKey);
+                            if (cmp != 0) return cmp;
+
+                            return aLow.compareTo(bLow);
+                        });
+                        for (int i = 0; i < suggestions.size(); i++)
+                        {
+                            ScoredItem si = suggestions.get(i);
                             filteredResults.add(si.item);
                             filteredIsSuggestion.add(true);
                         }
 
-                        for (ScoredItem si : nonsuggestions)
+                        for (int i = 0; i < nonsuggestions.size(); i++)
                         {
+                            ScoredItem si = nonsuggestions.get(i);
                             filteredResults.add(si.item);
                             filteredIsSuggestion.add(false);
                         }
@@ -598,35 +661,28 @@ public class AddItemFragment extends DialogFragment
                             {
                                 if (searchItem.hasFocus()) {
                                     int itemCount = filteredResults.size();
-                                    int itemHeightPx = 0;
-
-                                    if (itemCount > 0)
-                                    {
-                                        View tempView = adapter.getView(0, null, (ViewGroup) fragmentView);
-                                        tempView.measure(
-                                                View.MeasureSpec.makeMeasureSpec(searchItem.getWidth(), View.MeasureSpec.AT_MOST),
-                                                View.MeasureSpec.UNSPECIFIED
-                                        );
-                                        itemHeightPx = tempView.getMeasuredHeight();
-                                    }
-
+                                    int itemHeightPx = (int)(48 * fragmentView.getResources().getDisplayMetrics().density);
                                     int desiredDropdownHeight = itemCount > 0 ? itemHeightPx * itemCount : ViewGroup.LayoutParams.WRAP_CONTENT;
-                                    int[] location = new int[2];
 
+                                    android.graphics.Rect visibleFrame = new android.graphics.Rect();
+                                    fragmentView.getWindowVisibleDisplayFrame(visibleFrame);
+
+                                    int[] location = new int[2];
                                     searchItem.getLocationOnScreen(location);
 
-                                    int y = location[1];
-                                    int screenHeight = fragmentView.getResources().getDisplayMetrics().heightPixels;
-                                    int availableBelow = screenHeight - (y + searchItem.getHeight());
-                                    int finalDropdownHeight = Math.min(desiredDropdownHeight, availableBelow);
+                                    int viewBottom = location[1] + searchItem.getHeight();
+                                    int availableBelow = visibleFrame.bottom - viewBottom;
 
-                                    if (finalDropdownHeight > 0)
+                                    if (desiredDropdownHeight > 0 && desiredDropdownHeight < availableBelow)
                                     {
-                                        searchItem.setDropDownHeight(finalDropdownHeight);
+                                        // Few items → let the dropdown size itself exactly
+                                        searchItem.setDropDownHeight(ViewGroup.LayoutParams.WRAP_CONTENT);
                                     }
                                     else
                                     {
-                                        searchItem.setDropDownHeight(availableBelow);
+                                        // Many items → limit by available screen space
+                                        int finalDropdownHeight = Math.max(itemHeightPx, availableBelow);
+                                        searchItem.setDropDownHeight(finalDropdownHeight);
                                     }
 
                                     searchItem.showDropDown();
@@ -678,9 +734,9 @@ public class AddItemFragment extends DialogFragment
             selectedItem = new Item(clickedName);
             selectedItem.setQuantity(1);
             tvQuantity.setText("1");
-            btnDown.setBackgroundColor(Baskit.getAppColor(context, com.google.android.material.R.attr.colorOnSecondaryContainer));
+            btnDown.setVisibility(View.INVISIBLE);
             recyclerSupermarkets.setAdapter(null);
-            loadSupermarketPricesImmediate();
+
             infoLayout.setVisibility(View.VISIBLE);
             searchItem.clearFocus();
             hideKeyboard();
@@ -693,8 +749,248 @@ public class AddItemFragment extends DialogFragment
             {
                 searchItem.post(() -> searchItem.dismissDropDown());
             }
+
+            loadItemVariations(clickedName);
         });
     }
+
+    private void loadItemVariations(String baseName)
+    {
+        if (groups == null || baseName == null) return;
+
+        ArrayList<String> codes = groups.get(baseName);
+        if (codes == null || codes.isEmpty()) return;
+
+        Baskit.notActivityRunWhenServerActive(() ->
+        {
+            ArrayList<com.example.baskit.MainComponents.ItemInfo> variations = new ArrayList<>();
+
+            for (String code : codes)
+            {
+                try
+                {
+                    com.example.baskit.MainComponents.ItemInfo info = apiHandler.getItemInfo(code);
+
+                    if (info != null && !variations.contains(info))
+                    {
+                        variations.add(info);
+                    }
+                }
+                catch (Exception ignored) {}
+            }
+
+            if (activity == null) return;
+
+            activity.runOnUiThread(() ->
+            {
+                currentVariations.clear();
+                currentVariations.addAll(variations);
+                setupVariationFilters();
+            });
+
+        }, activity);
+    }
+
+    private void setupVariationFilters()
+    {
+        if (currentVariations == null || currentVariations.isEmpty()) return;
+
+        chipGroupWeights.removeAllViews();
+        chipGroupCompanies.removeAllViews();
+
+        chipGroupWeights.setSingleSelection(false);
+        chipGroupCompanies.setSingleSelection(false);
+
+        java.util.LinkedHashSet<String> weights = new java.util.LinkedHashSet<>();
+        java.util.LinkedHashSet<String> companies = new java.util.LinkedHashSet<>();
+
+        for (com.example.baskit.MainComponents.ItemInfo info : currentVariations)
+        {
+            if (info.getWeight() > 0)
+            {
+                weights.add(info.getFullMeasureStr());
+            }
+
+            if (info.getCompany() != null && !info.getCompany().isEmpty())
+            {
+                companies.add(info.getCompany());
+            }
+        }
+
+        if (weights.size() > 1)
+        {
+            for (String w : weights)
+            {
+                Chip chip = new Chip(context);
+                chip.setText(w);
+                chip.setCheckable(true);
+                chip.setClickable(true);
+                chip.setChipStrokeWidth(2f);
+                chip.setOnCheckedChangeListener((buttonView, isChecked) -> applyVariationFilter());
+                chipGroupWeights.addView(chip);
+            }
+            chipGroupWeights.setVisibility(View.VISIBLE);
+        }
+        else
+        {
+            chipGroupWeights.setVisibility(View.GONE);
+        }
+
+        if (companies.size() > 1)
+        {
+            for (String c : companies)
+            {
+                Chip chip = new Chip(context);
+                chip.setText(c);
+                chip.setCheckable(true);
+                chip.setClickable(true);
+                chip.setChipStrokeWidth(2f);
+                chip.setOnCheckedChangeListener((buttonView, isChecked) -> applyVariationFilter());
+                chipGroupCompanies.addView(chip);
+            }
+            chipGroupCompanies.setVisibility(View.VISIBLE);
+        }
+        else
+        {
+            chipGroupCompanies.setVisibility(View.GONE);
+        }
+
+        // Initially show all variations
+        applyVariationFilter();
+    }
+
+    private void applyVariationFilter()
+    {
+        java.util.Set<String> selectedWeights = new java.util.HashSet<>();
+        java.util.Set<String> selectedCompanies = new java.util.HashSet<>();
+
+        for (int i = 0; i < chipGroupWeights.getChildCount(); i++)
+        {
+            Chip chip = (Chip) chipGroupWeights.getChildAt(i);
+            if (chip.isChecked()) selectedWeights.add(chip.getText().toString());
+        }
+
+        for (int i = 0; i < chipGroupCompanies.getChildCount(); i++)
+        {
+            Chip chip = (Chip) chipGroupCompanies.getChildAt(i);
+            if (chip.isChecked()) selectedCompanies.add(chip.getText().toString());
+        }
+
+        // =============================
+        // 1) FULL MATCH (for prices)
+        // =============================
+        ArrayList<com.example.baskit.MainComponents.ItemInfo> matching = new ArrayList<>();
+
+        for (com.example.baskit.MainComponents.ItemInfo info : currentVariations)
+        {
+            boolean weightMatch = selectedWeights.isEmpty() ||
+                    selectedWeights.contains(info.getFullMeasureStr());
+
+            boolean companyMatch = selectedCompanies.isEmpty() ||
+                    (info.getCompany() != null && selectedCompanies.contains(info.getCompany()));
+
+            if (weightMatch && companyMatch)
+            {
+                matching.add(info);
+            }
+        }
+
+        // =============================
+        // UPDATE CURRENT SELECTION
+        // =============================
+        if (selectedItem != null && selectedItem.getSupermarket() != null)
+        {
+            boolean stillValid = false;
+
+            for (com.example.baskit.MainComponents.ItemInfo info : matching)
+            {
+                boolean sameWeight =
+                        selectedItem.getInfo().getFullMeasureStr() != null &&
+                        selectedItem.getInfo().getFullMeasureStr().equals(info.getFullMeasureStr());
+
+                boolean sameCompany =
+                        selectedItem.getCompany() != null &&
+                        selectedItem.getCompany().equals(info.getCompany());
+
+                if (sameWeight && sameCompany)
+                {
+                    stillValid = true;
+                    break;
+                }
+            }
+
+            // If the selected variation no longer exists after filtering → clear selection
+            if (!stillValid)
+            {
+                selectedItem.setSupermarket(null);
+                selectedItem.setPrice(0);
+            }
+        }
+
+        // =============================
+        // 2) AVAILABLE WEIGHTS (respect companies only)
+        // =============================
+        java.util.Set<String> availableWeights = new java.util.HashSet<>();
+
+        for (com.example.baskit.MainComponents.ItemInfo info : currentVariations)
+        {
+            boolean companyMatch = selectedCompanies.isEmpty() ||
+                    (info.getCompany() != null && selectedCompanies.contains(info.getCompany()));
+
+            if (companyMatch && info.getWeight() > 0)
+            {
+                availableWeights.add(info.getFullMeasureStr());
+            }
+        }
+
+        // =============================
+        // 3) AVAILABLE COMPANIES (respect weights only)
+        // =============================
+        java.util.Set<String> availableCompanies = new java.util.HashSet<>();
+
+        for (com.example.baskit.MainComponents.ItemInfo info : currentVariations)
+        {
+            boolean weightMatch = selectedWeights.isEmpty() ||
+                    selectedWeights.contains(info.getFullMeasureStr());
+
+            if (weightMatch && info.getCompany() != null && !info.getCompany().isEmpty())
+            {
+                availableCompanies.add(info.getCompany());
+            }
+        }
+
+        // =============================
+        // 4) UPDATE WEIGHT CHIPS
+        // =============================
+        for (int i = 0; i < chipGroupWeights.getChildCount(); i++)
+        {
+            Chip chip = (Chip) chipGroupWeights.getChildAt(i);
+            String text = chip.getText().toString();
+
+            boolean enabled = availableWeights.contains(text);
+            chip.setEnabled(enabled);
+            chip.setAlpha(enabled ? 1f : 0.3f);
+        }
+
+        // =============================
+        // 5) UPDATE COMPANY CHIPS
+        // =============================
+        for (int i = 0; i < chipGroupCompanies.getChildCount(); i++)
+        {
+            Chip chip = (Chip) chipGroupCompanies.getChildAt(i);
+            String text = chip.getText().toString();
+
+            boolean enabled = availableCompanies.contains(text);
+            chip.setEnabled(enabled);
+            chip.setAlpha(enabled ? 1f : 0.3f);
+        }
+
+        // =============================
+        // 6) LOAD FILTERED PRICES
+        // =============================
+        loadSupermarketPricesForVariations(matching);
+    }
+
 
     private void hideKeyboard()
     {
@@ -747,7 +1043,7 @@ public class AddItemFragment extends DialogFragment
             if (selectedItem != null)
             {
                 tvQuantity.setText(Integer.toString(selectedItem.raiseQuantity()));
-                btnDown.setBackgroundColor(Color.TRANSPARENT);
+                btnDown.setVisibility(View.VISIBLE);
             }
         });
 
@@ -759,81 +1055,108 @@ public class AddItemFragment extends DialogFragment
 
                 int quantity = selectedItem.lowerQuantity();
 
-                if (quantity == 1) btnDown.setBackgroundColor(Baskit.getAppColor(context, com.google.android.material.R.attr.colorSecondaryContainer));
+                if (quantity == 1) btnDown.setVisibility(View.INVISIBLE);
 
                 tvQuantity.setText(Integer.toString(quantity));
             }
         });
     }
 
-    private void loadSupermarketPricesImmediate()
+    private void loadSupermarketPricesForVariations(
+            ArrayList<com.example.baskit.MainComponents.ItemInfo> variations)
     {
-        if (selectedItem == null || isBadItemName(selectedItem.getName())) return;
-        if (activity == null) return;
-
-        final String itemName = selectedItem.getName();
-        final Item itemForAdapter = selectedItem;
+        if (variations == null || variations.isEmpty())
+        {
+            recyclerSupermarkets.setAdapter(null);
+            return;
+        }
 
         Baskit.notActivityRunWhenServerActive(() ->
         {
-            Map<String, Map<String, Double>> data = null;
-            try
+            ArrayList<ItemViewPricesAdapter.PriceRow> rows = new ArrayList<>();
+
+            for (com.example.baskit.MainComponents.ItemInfo info : variations)
             {
-                data = apiHandler.getItemPricesByName(itemName);
+                try
+                {
+                    Map<String, Map<String, Double>> data =
+                            apiHandler.getItemPricesByCode(info.getCode());
+
+                    if (data == null) continue;
+
+                    for (Map.Entry<String, Map<String, Double>> entry : data.entrySet())
+                    {
+                        String supermarketName = entry.getKey();
+                        Map<String, Double> sections = entry.getValue();
+                        if (sections == null) continue;
+
+                        for (Map.Entry<String, Double> sectionEntry : sections.entrySet())
+                        {
+                            String sectionName = sectionEntry.getKey();
+                            Double priceObj = sectionEntry.getValue();
+                            if (priceObj == null) continue;
+
+                            Supermarket sm =
+                                    new Supermarket(supermarketName, sectionName);
+
+                            rows.add(
+                                    new ItemViewPricesAdapter.PriceRow(
+                                            sm,
+                                            priceObj,
+                                            info
+                                    )
+                            );
+                        }
+                    }
+                }
+                catch (Exception ignored) {}
             }
-            catch (IOException | JSONException e)
-            {
-                Log.e("AddItemFragment", "Failed to load item prices", e);
-            }
-            Map<String, Map<String, Double>> finalData = data;
+
             if (activity == null) return;
+
             activity.runOnUiThread(() ->
             {
-                // Fragment might be detached by the time we return
-                if (!isAdded() || fragmentView == null) return;
-
-                // Pass selectedItem to the adapter so it can highlight the correct supermarket and update price in real time
-                pricesAdapter = new ItemViewPricesAdapter(context, finalData, itemForAdapter.getSupermarket(),
-                        new ItemViewPricesAdapter.OnSupermarketClickListener()
+                pricesAdapter = new ItemViewPricesAdapter(
+                        context,
+                        rows,
+                        (supermarket, variation) ->
                         {
-                            @Override
-                            public void onSupermarketClick(Supermarket supermarket)
+                            if (selectedItem == null) return;
+
+                            if (supermarket == null)
                             {
-                                if (selectedItem == null) return;
-
-                                if (supermarket == null || supermarket.getSupermarket() == null)
-                                {
-                                    selectedItem.setSupermarket(null);
-                                    selectedItem.setPrice(0);
-                                    pricesAdapter.notifyDataSetChanged();
-                                    return;
-                                }
-
-                                selectedItem.setSupermarket(supermarket);
-
-                                if (finalData == null) {
-                                    selectedItem.setPrice(0);
-                                    pricesAdapter.notifyDataSetChanged();
-                                    return;
-                                }
-
-                                Map<String, Double> sectionPrices = finalData.get(supermarket.getSupermarket());
-
-                                if (sectionPrices != null)
-                                {
-                                    Double price = sectionPrices.get(supermarket.getSection());
-                                    selectedItem.setPrice(price != null ? price : 0);
-                                }
-                                else
-                                {
-                                    selectedItem.setPrice(0);
-                                }
+                                selectedItem.setSupermarket(null);
+                                selectedItem.setPrice(0);
                                 pricesAdapter.notifyDataSetChanged();
+                                return;
                             }
+
+                            selectedItem.setSupermarket(supermarket);
+
+                            // Find matching row by supermarket + section + variation code
+                            for (ItemViewPricesAdapter.PriceRow row : rows)
+                            {
+                                if (row.getSupermarket().getSupermarket().equals(supermarket.getSupermarket()) &&
+                                        row.getSupermarket().getSection().equals(supermarket.getSection()) &&
+                                        row.getInfo() != null &&
+                                        variation != null &&
+                                        row.getInfo().getCode() != null &&
+                                        row.getInfo().getCode().equals(variation.getCode()))
+                                {
+                                    selectedItem.setPrice(row.getPrice());
+                                    break;
+                                }
+                            }
+
+                            // Set selected variation info AFTER price is resolved
+                            selectedItem.fillInfo(variation);
+                            pricesAdapter.notifyDataSetChanged();
                         }
                 );
+
                 recyclerSupermarkets.setAdapter(pricesAdapter);
             });
+
         }, activity);
     }
 

@@ -2,28 +2,26 @@ package com.example.baskit.Categories;
 
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.Color;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.baskit.API.APIHandler;
-import com.example.baskit.Baskit;
 import com.example.baskit.MainComponents.Item;
+import com.example.baskit.MainComponents.ItemInfo;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
 
-import org.json.JSONException;
-
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Map;
 
 public class ItemViewAlertDialog
@@ -36,12 +34,17 @@ public class ItemViewAlertDialog
     AlertDialog adItemView;
     private RecyclerView recyclerSupermarkets;
     private ItemViewPricesAdapter pricesAdapter;
+    private ArrayList<ItemViewPricesAdapter.PriceRow> rows = new ArrayList<>();
+    private ArrayList<ItemViewPricesAdapter.PriceRow> allRows = new ArrayList<>();
     protected ItemsAdapter.UpperClassFunctions upperClassFns;
     Activity activity;
     Context context;
     APIHandler apiHandler = APIHandler.getInstance();
     Item item;
     boolean showQuantity;
+    private ChipGroup chipGroupWeights;
+    private ChipGroup chipGroupCompanies;
+    private ArrayList<ItemInfo> currentVariations = new ArrayList<>();
 
     public ItemViewAlertDialog(Activity activity, Context context, ItemsAdapter.UpperClassFunctions upperClassFns, Item _item, boolean showQuantity)
     {
@@ -62,85 +65,136 @@ public class ItemViewAlertDialog
         adLoutQuantityWhole = adLayout.findViewById(R.id.lout_quantity_whole);
         recyclerSupermarkets = adLayout.findViewById(R.id.recycler_supermarket);
         adTvItemName = adLayout.findViewById(R.id.tv_item_name);
+        chipGroupWeights = adLayout.findViewById(R.id.chip_group_weights);
+        chipGroupCompanies = adLayout.findViewById(R.id.chip_group_units);
 
         new Thread(() ->
         {
-            Map<String, Map<String, Double>> data = null;
-
+            ArrayList<ItemInfo> variations = new ArrayList<>();
             try
             {
-                String absId = item.getAbsoluteId();
-
-                if (absId != null)
+                String baseName = item.getBaseName();
+                if (baseName != null && !baseName.isEmpty())
                 {
-                    data = apiHandler.getItemPricesByCode(absId);
+                    ArrayList<String> codes = apiHandler.getGroup(baseName);
+                    if (codes != null)
+                    {
+                        for (String code : codes)
+                        {
+                            ItemInfo info = apiHandler.getItemInfo(code);
+                            if (info != null && !variations.contains(info))
+                            {
+                                variations.add(info);
+                            }
+                        }
+                    }
                 }
             }
-            catch (IOException | JSONException e)
+            catch (Exception e)
             {
-                Log.e("ItemViewAlertDialog", "Failed to load item prices", e);
+                Log.e("ItemViewAlertDialog", "Failed to load variations", e);
             }
 
-            Map<String, Map<String, Double>> finalData = data;
+            // --- BEGIN: Populate rows ---
+            // Clear both lists before populating
+            rows.clear();
+            allRows.clear();
+
+            for (ItemInfo info : variations)
+            {
+                try
+                {
+                    Map<String, Map<String, Double>> data = apiHandler.getItemPricesByCode(info.getCode());
+                    if (data == null) continue;
+                    for (Map.Entry<String, Map<String, Double>> entry : data.entrySet())
+                    {
+                        String supermarketName = entry.getKey();
+                        Map<String, Double> sections = entry.getValue();
+                        if (sections == null) continue;
+                        for (Map.Entry<String, Double> sectionEntry : sections.entrySet())
+                        {
+                            String sectionName = sectionEntry.getKey();
+                            Double priceObj = sectionEntry.getValue();
+                            if (priceObj == null) continue;
+                            Supermarket sm = new Supermarket(supermarketName, sectionName);
+                            ItemViewPricesAdapter.PriceRow newRow =
+                                    new ItemViewPricesAdapter.PriceRow(
+                                            sm,
+                                            priceObj,
+                                            info
+                                    );
+                            rows.add(newRow);
+                            allRows.add(newRow);
+                        }
+                    }
+                }
+                catch (Exception ignored) {}
+            }
+            // --- END: Populate rows ---
 
             activity.runOnUiThread(() ->
             {
-                if (activity.isFinishing() || activity.isDestroyed()) return;
+                currentVariations.clear();
+                currentVariations.addAll(variations);
+                setupVariationFilters();
 
-                Supermarket initialSupermarket = item.getSupermarket();
-
-                if (initialSupermarket != null && finalData != null)
-                {
-                    Map<String, Double> sections = finalData.get(initialSupermarket.getSupermarket());
-
-                    if (sections == null || !sections.containsKey(initialSupermarket.getSection()))
-                    {
-                        initialSupermarket = null;
-                        item.setSupermarket(null);
-                        item.setPrice(0);
-                    }
-                }
-
-                pricesAdapter = new ItemViewPricesAdapter(context, finalData, initialSupermarket, new ItemViewPricesAdapter.OnSupermarketClickListener()
-                {
-                    @Override
-                    public void onSupermarketClick(Supermarket supermarket)
-                    {
-                        if (supermarket == null || supermarket.getSupermarket() == null)
+                pricesAdapter = new ItemViewPricesAdapter(
+                        context,
+                        rows,
+                        (supermarket, variation) ->
                         {
-                            item.setSupermarket(null);
-                            item.setPrice(0);
-                            return;
-                        }
+                            if (supermarket == null)
+                            {
+                                item.setUnchosen();
+                                if (pricesAdapter != null) pricesAdapter.notifyDataSetChanged();
+                                return;
+                            }
 
-                        item.setSupermarket(supermarket);
+                            item.setSupermarket(supermarket);
 
-                        if (finalData == null)
-                        {
-                            item.setPrice(0);
-                            return;
-                        }
+                            // Find matching row exactly like AddItemFragment
+                            for (ItemViewPricesAdapter.PriceRow row : rows)
+                            {
+                                if (row.getSupermarket().getSupermarket().equals(supermarket.getSupermarket()) &&
+                                    row.getSupermarket().getSection().equals(supermarket.getSection()) &&
+                                    row.getInfo() != null &&
+                                    variation != null &&
+                                    row.getInfo().getCode() != null &&
+                                    row.getInfo().getCode().equals(variation.getCode()))
+                                {
+                                    item.setPrice(row.getPrice());
+                                    break;
+                                }
+                            }
 
-                        Map<String, Double> sectionPrices = finalData.get(supermarket.getSupermarket());
+                            // Set selected variation AFTER resolving price
+                            item.fillInfo(variation);
 
-                        if (sectionPrices != null)
-                        {
-                            Double price = sectionPrices.get(supermarket.getSection());
-                            item.setPrice(price != null ? price : 0);
+                            if (pricesAdapter != null)
+                            {
+                                pricesAdapter.notifyDataSetChanged();
+                            }
                         }
-                        else
-                        {
-                            item.setPrice(0);
-                        }
-                    }
-                });
+                );
 
                 recyclerSupermarkets.setLayoutManager(new LinearLayoutManager(context));
                 recyclerSupermarkets.setAdapter(pricesAdapter);
 
-                if (finalData == null)
+                // Auto-select current variant + supermarket
+                if (item.getAbsoluteId() != null && item.getSupermarket() != null)
                 {
-                    Toast.makeText(context, "No prices found", Toast.LENGTH_SHORT).show();
+                    for (int i = 0; i < rows.size(); i++)
+                    {
+                        ItemViewPricesAdapter.PriceRow row = rows.get(i);
+
+                        if (item.isVariantOf(row))
+                        {
+                            pricesAdapter.setSelectedPosition(i);
+                            item.setPrice(row.getPrice());
+                            item.fillInfo(row.getInfo());
+                            break;
+                        }
+                    }
                 }
             });
         }).start();
@@ -163,7 +217,6 @@ public class ItemViewAlertDialog
             {
                 adTvQuantity.setText(Integer.toString(item.raiseQuantity()));
                 adBtnDown.setVisibility(View.VISIBLE);
-                adBtnDown.setActivated(true);
             }
         });
 
@@ -182,7 +235,6 @@ public class ItemViewAlertDialog
                 if (quantity == 1)
                 {
                     adBtnDown.setVisibility(View.INVISIBLE);
-                    adBtnDown.setActivated(false);
                 }
 
                 adTvQuantity.setText(Integer.toString(quantity));
@@ -194,44 +246,26 @@ public class ItemViewAlertDialog
     {
         this.item = _item.clone();
 
-        if (pricesAdapter != null && pricesAdapter.getData() != null)
-        {
-            Supermarket currentSm = item.getSupermarket();
-
-            if (currentSm != null)
-            {
-                Map<String, Double> sections = pricesAdapter.getData().get(currentSm.getSupermarket());
-
-                if (sections == null || !sections.containsKey(currentSm.getSection()))
-                {
-                    item.setSupermarket(null);
-                    item.setPrice(0);
-                }
-            }
-        }
-
-        if (pricesAdapter != null)
-        {
-            if (item.getSupermarket() != null)
-            {
-                pricesAdapter.resetSelection(
-                        item.getSupermarket().getSupermarket(),
-                        item.getSupermarket().getSection()
-                );
-            }
-            else
-            {
-                pricesAdapter.resetSelection(null, null);
-            }
-        }
-
         adBtnSave.setClickable(true);
         adBtnCancel.setClickable(true);
         adBtnUp.setClickable(true);
         adBtnDown.setClickable(true);
         adBtnDown.setVisibility(View.VISIBLE);
 
-        adTvItemName.setText(item.getDecodedName());
+        String title = item.getDecodedName();
+
+        if (item.getWeight() != null && item.getUnit() != null
+                && !item.getUnit().isEmpty())
+        {
+            title += " • " + item.getWeight() + " " + item.getUnit();
+        }
+
+        if (item.getCompany() != null && !item.getCompany().isEmpty())
+        {
+            title += " • " + item.getCompany();
+        }
+
+        adTvItemName.setText(title);
 
         if (showQuantity)
         {
@@ -245,7 +279,25 @@ public class ItemViewAlertDialog
         if (item.getQuantity() == 1)
         {
             adBtnDown.setVisibility(View.INVISIBLE);
-            adBtnDown.setClickable(false);
+        }
+
+        // Re-apply selection when reopening dialog
+        if (pricesAdapter != null && rows != null)
+        {
+            pricesAdapter.setSelectedPosition(-1); // clear previous adapter state
+
+            for (int i = 0; i < rows.size(); i++)
+            {
+                ItemViewPricesAdapter.PriceRow row = rows.get(i);
+
+                if (item.isVariantOf(row))
+                {
+                    pricesAdapter.setSelectedPosition(i);
+                    item.setPrice(row.getPrice());
+                    item.fillInfo(row.getInfo());
+                    break;
+                }
+            }
         }
 
         adItemView.show();
@@ -254,5 +306,146 @@ public class ItemViewAlertDialog
     public void setUpperClassFns(ItemsAdapter.UpperClassFunctions upperClassFns)
     {
         this.upperClassFns = upperClassFns;
+    }
+
+    // Dual-chip filtering logic (weights + companies), cross-filtering, as in AddItemFragment
+    private void setupVariationFilters()
+    {
+        if (currentVariations == null || currentVariations.isEmpty()) return;
+
+        // Layout safety check (some layouts may not contain the chip groups)
+        if (chipGroupWeights == null || chipGroupCompanies == null)
+        {
+            return;
+        }
+
+        chipGroupWeights.removeAllViews();
+        chipGroupCompanies.removeAllViews();
+
+        chipGroupWeights.setSingleSelection(false);
+        chipGroupCompanies.setSingleSelection(false);
+
+        java.util.LinkedHashSet<String> weights = new java.util.LinkedHashSet<>();
+        java.util.LinkedHashSet<String> companies = new java.util.LinkedHashSet<>();
+
+        for (ItemInfo info : currentVariations)
+        {
+            if (info.getWeight() != null && info.getWeight() > 0)
+            {
+                weights.add(info.getFullMeasureStr());
+            }
+
+            if (info.getCompany() != null && !info.getCompany().isEmpty())
+            {
+                companies.add(info.getCompany());
+            }
+        }
+
+        if (weights.size() > 1)
+        {
+            for (String w : weights)
+            {
+                Chip chip = new Chip(context);
+                chip.setText(w);
+                chip.setCheckable(true);
+                chip.setClickable(true);
+                chip.setChipStrokeWidth(2f);
+                chip.setOnCheckedChangeListener((buttonView, isChecked) -> applyVariationFilter());
+                chipGroupWeights.addView(chip);
+            }
+            chipGroupWeights.setVisibility(View.VISIBLE);
+        }
+        else
+        {
+            chipGroupWeights.setVisibility(View.GONE);
+        }
+
+        if (companies.size() > 1)
+        {
+            for (String c : companies)
+            {
+                Chip chip = new Chip(context);
+                chip.setText(c);
+                chip.setCheckable(true);
+                chip.setClickable(true);
+                chip.setChipStrokeWidth(2f);
+                chip.setOnCheckedChangeListener((buttonView, isChecked) -> applyVariationFilter());
+                chipGroupCompanies.addView(chip);
+            }
+            chipGroupCompanies.setVisibility(View.VISIBLE);
+        }
+        else
+        {
+            chipGroupCompanies.setVisibility(View.GONE);
+        }
+
+        applyVariationFilter();
+    }
+
+    private void applyVariationFilter()
+    {
+        java.util.Set<String> selectedWeights = new java.util.HashSet<>();
+        java.util.Set<String> selectedCompanies = new java.util.HashSet<>();
+
+        for (int i = 0; i < chipGroupWeights.getChildCount(); i++)
+        {
+            Chip chip = (Chip) chipGroupWeights.getChildAt(i);
+            if (chip.isChecked()) selectedWeights.add(chip.getText().toString());
+        }
+
+        for (int i = 0; i < chipGroupCompanies.getChildCount(); i++)
+        {
+            Chip chip = (Chip) chipGroupCompanies.getChildAt(i);
+            if (chip.isChecked()) selectedCompanies.add(chip.getText().toString());
+        }
+
+        rows.clear();
+
+        for (ItemViewPricesAdapter.PriceRow r : allRows)
+        {
+            if (r.getInfo() == null) continue;
+
+            ItemInfo info = r.getInfo();
+
+            boolean weightMatch = selectedWeights.isEmpty() ||
+                    selectedWeights.contains(info.getFullMeasureStr());
+
+            boolean companyMatch = selectedCompanies.isEmpty() ||
+                    (info.getCompany() != null && selectedCompanies.contains(info.getCompany()));
+
+            if (weightMatch && companyMatch)
+            {
+                rows.add(r);
+            }
+        }
+
+        // =============================
+        // UPDATE CURRENT SELECTION
+        // =============================
+        if (pricesAdapter != null)
+        {
+            pricesAdapter.setSelectedPosition(-1);
+
+            if (item != null && item.getAbsoluteId() != null && item.getSupermarket() != null)
+            {
+                for (int i = 0; i < rows.size(); i++)
+                {
+                    ItemViewPricesAdapter.PriceRow row = rows.get(i);
+
+                    if (item.isVariantOf(row))
+                    {
+                        pricesAdapter.setSelectedPosition(i);
+                        item.setPrice(row.getPrice());
+                        item.fillInfo(row.getInfo());
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (pricesAdapter != null)
+        {
+            pricesAdapter.notifyDataSetChanged();
+        }
     }
 }

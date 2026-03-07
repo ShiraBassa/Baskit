@@ -8,6 +8,7 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.baskit.Baskit;
+import com.example.baskit.Categories.ItemViewPricesAdapter;
 import com.example.baskit.MainComponents.SortableEntity;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;
@@ -28,7 +29,7 @@ public class SortListBottomSheetBuilder
     public static void show(
             AppCompatActivity activity,
             SortableEntity entity,
-            Map<String, Map<String, Map<String, Double>>> allItems,
+            Map<String, ArrayList<ItemViewPricesAdapter.PriceRow>> rows,
             ArrayList<Supermarket> supermarkets,
             ApplyListener listener)
     {
@@ -48,12 +49,12 @@ public class SortListBottomSheetBuilder
             Map<Supermarket, Boolean> allKnown = new HashMap<>();
 
             SortableEntity cheapestPreview = entity.copy();
-            cheapestPreview.setCheapestFromStringsMap(allItems);
+            cheapestPreview.setCheapestRows(rows);
 
             for (Supermarket sm : supermarkets)
             {
                 SortableEntity preview = entity.copy();
-                preview.setSupermarketFromStringsMap(sm, allItems);
+                preview.setSupermarketsRows(sm, rows);
 
                 totals.put(sm, preview.getTotal());
                 allKnown.put(sm, preview.allPricesKnown());

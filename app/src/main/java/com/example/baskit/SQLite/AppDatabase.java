@@ -3,17 +3,16 @@ package com.example.baskit.SQLite;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
-import androidx.room.migration.Migration;
-import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import android.content.Context;
 
-@Database(entities = {ItemEntity.class, ItemCodeName.class, ItemCategory.class}, version = 3, exportSchema = false)
+@Database(entities = {ItemPricesEntity.class, ItemCategory.class, GroupsEntity.class, ItemInfoEntity.class}, version = 4, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase
 {
-    public abstract ItemDao itemDao();
-    public abstract ItemCodeNamesDao itemCodesDao();
+    public abstract ItemPricesDao itemPricesDao();
     public abstract ItemCategoryDao itemCategoryDao();
+    public abstract ItemInfoDao itemInfoDao();
+    public abstract GroupsDao groupDao();
 
     private static volatile AppDatabase INSTANCE;
 

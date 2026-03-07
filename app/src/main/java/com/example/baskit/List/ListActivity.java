@@ -21,10 +21,12 @@ import android.widget.Toast;
 import com.example.baskit.API.APIHandler;
 import com.example.baskit.Baskit;
 import com.example.baskit.Categories.CategoryActivity;
+import com.example.baskit.Categories.ItemViewPricesAdapter;
 import com.example.baskit.Firebase.FirebaseAuthHandler;
 import com.example.baskit.Firebase.FirebaseDBHandler;
 import com.example.baskit.MainComponents.Category;
 import com.example.baskit.MainComponents.Item;
+import com.example.baskit.MainComponents.ItemInfo;
 import com.example.baskit.MainComponents.List;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.MasterActivity;
@@ -56,9 +58,10 @@ public class ListActivity extends MasterActivity
     ImageButton btnAddItem, btnPlan, btnShare;
     APIHandler apiHandler = APIHandler.getInstance();
 
-    Map<String, Map<String, Map<String, Double>>> allItems;
+    Map<String, Map<String, Map<String, Double>>> allItemPrices;
     FirebaseAuthHandler authHandler = FirebaseAuthHandler.getInstance();
-    Map<String, String> itemsCodeNames;
+    Map<String, ArrayList<String>> groups;
+    Map<String, ItemInfo> infos;
     private boolean itemsLoaded = false;
     private boolean initialized = true;
     private boolean listListenerAttached = false;
@@ -78,8 +81,9 @@ public class ListActivity extends MasterActivity
         {
             try
             {
-                allItems = apiHandler.getItems();
-                itemsCodeNames = apiHandler.getItemsCodeName();
+                allItemPrices = apiHandler.getItemPrices();
+                groups = apiHandler.getGroups();
+                infos = apiHandler.getItemInfos();
                 itemsLoaded = true;
             }
             catch (Exception e)
@@ -90,7 +94,7 @@ public class ListActivity extends MasterActivity
 
             runOnUiThread(() ->
             {
-                if (itemsCodeNames != null && itemsCodeNames.values() != null)
+                if (groups != null && !groups.isEmpty())
                 {
                     btnAddItem.setEnabled(true);
                 }
@@ -186,14 +190,16 @@ public class ListActivity extends MasterActivity
                     btnAddItem.setEnabled(true);
                     btnAddItem.setAlpha(1f);
 
-                    if (itemsCodeNames != null && itemsCodeNames.values() != null & !itemsCodeNames.isEmpty())
+                    if (groups != null && !groups.isEmpty())
                     {
-                        addItemFragment = new AddItemFragment(ListActivity.this,
+                        addItemFragment = new AddItemFragment(
                                 ListActivity.this,
-                                new ArrayList<>(itemsCodeNames.values()),
+                                ListActivity.this,
+                                groups,
                                 list.toItemNames(),
                                 ListActivity.this::addItem,
-                                list.getItemSuggestions());
+                                list.getItemSuggestions()
+                        );
                     }
                     else
                     {
@@ -316,7 +322,7 @@ public class ListActivity extends MasterActivity
             @Override
             public void onClick(View view)
             {
-                if (itemsCodeNames.isEmpty())
+                if (groups == null || groups.isEmpty())
                 {
                     Toast.makeText(ListActivity.this, "נא לבחור סופרים בהגדרות", Toast.LENGTH_SHORT).show();
                     return;
@@ -606,14 +612,12 @@ public class ListActivity extends MasterActivity
 
     public void addItem(Item item)
     {
-        if (itemsCodeNames == null)
+        if (groups == null)
         {
             if (addItemFragment != null) addItemFragment.endProgressBar();
             Toast.makeText(this, "Items are still loading…", Toast.LENGTH_SHORT).show();
             return;
         }
-
-        item.updateId(getKeyByValue(itemsCodeNames, item.getName()));
 
         new Thread(() ->
         {
@@ -662,7 +666,7 @@ public class ListActivity extends MasterActivity
                                 addItemFragment = new AddItemFragment(
                                         ListActivity.this,
                                         ListActivity.this,
-                                        new ArrayList<>(itemsCodeNames.values()),
+                                        groups,
                                         list.toItemNames(),
                                         ListActivity.this::addItem,
                                         list.getItemSuggestions()
@@ -690,31 +694,23 @@ public class ListActivity extends MasterActivity
         }).start();
     }
 
-    private String getKeyByValue(Map<String, String> map, String value)
-    {
-        for (Map.Entry<String, String> entry : map.entrySet())
-        {
-            if (entry.getValue().equals(value))
-            {
-                return entry.getKey();
-            }
-        }
-        return null;
-    }
 
     private void showSortBottomSheet() throws JSONException, IOException
     {
+        Map<String, ArrayList<com.example.baskit.Categories.ItemViewPricesAdapter.PriceRow>> rows = apiHandler.buildRows(list.getRemainedItems());
+
         SortListBottomSheetBuilder.show(
                 this,
                 list,
-                allItems,
+                rows,
                 apiHandler.getSupermarkets(),
                 new SortListBottomSheetBuilder.ApplyListener()
                 {
                     @Override
                     public void onApplyCheapest()
                     {
-                        list.setCheapestFromStringsMap(allItems);
+                        Map<String, ArrayList<com.example.baskit.Categories.ItemViewPricesAdapter.PriceRow>> rows = apiHandler.buildRows(list.getRemainedItems());
+                        list.setCheapestRows(rows);
                         tvTotal.setText(
                                 Baskit.getTotalDisplayString(
                                         list.getTotal(),
@@ -729,7 +725,8 @@ public class ListActivity extends MasterActivity
                     @Override
                     public void onApplySupermarket(Supermarket sm)
                     {
-                        list.setSupermarketFromStringsMap(sm, allItems);
+                        Map<String, ArrayList<com.example.baskit.Categories.ItemViewPricesAdapter.PriceRow>> rows = apiHandler.buildRows(list.getRemainedItems());
+                        list.setSupermarketsRows(sm, rows);
                         tvTotal.setText(
                                 Baskit.getTotalDisplayString(
                                         list.getTotal(),

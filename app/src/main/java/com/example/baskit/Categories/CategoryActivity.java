@@ -14,7 +14,6 @@ import android.widget.Toast;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.baskit.AI.AIHandler;
 import com.example.baskit.API.APIHandler;
 import com.example.baskit.Baskit;
 import com.example.baskit.Firebase.FirebaseDBHandler;
@@ -23,6 +22,7 @@ import com.example.baskit.List.PlanListActivity;
 import com.example.baskit.List.SortListBottomSheetBuilder;
 import com.example.baskit.MainComponents.Category;
 import com.example.baskit.MainComponents.Item;
+import com.example.baskit.MainComponents.ItemInfo;
 import com.example.baskit.MainComponents.List;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.MasterActivity;
@@ -47,11 +47,11 @@ public class CategoryActivity extends MasterActivity
     ImageButton btnAddItem, btnPlan;
     FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
     AddItemFragment addItemFragment;
-    AIHandler aiHandler = AIHandler.getInstance();
     APIHandler apiHandler = APIHandler.getInstance();
 
-    Map<String, Map<String, Map<String, Double>>> allItems;
-    Map<String, String> itemsCodeNames;
+    Map<String, Map<String, Map<String, Double>>> allItemPrices;
+    Map<String, ArrayList<String>> groups;
+    Map<String, ItemInfo> infos;
     boolean initialized = true;
     private RecyclerView recyclerItems;
     private CategoryItemsAdapter itemsAdapter;
@@ -77,14 +77,15 @@ public class CategoryActivity extends MasterActivity
         {
             try
             {
-                allItems = apiHandler.getItems();
-                itemsCodeNames = apiHandler.getItemsCodeName();
+                allItemPrices = apiHandler.getItemPrices();
+                groups = apiHandler.getGroups();
+                infos = apiHandler.getItemInfos();
             }
             catch (Exception e)
             {
                 Log.e("CategoryActivity", "Failed to load catalogs", e);
-                allItems = null;
-                itemsCodeNames = null;
+                allItemPrices = null;
+                groups = null;
             }
 
             runOnUiThread(this::init);
@@ -150,14 +151,16 @@ public class CategoryActivity extends MasterActivity
 
                     setButtons();
 
-                    if (itemsCodeNames != null && itemsCodeNames.values() != null)
+                    if (groups != null && !groups.isEmpty())
                     {
-                        addItemFragment = new AddItemFragment(CategoryActivity.this,
+                        addItemFragment = new AddItemFragment(
                                 CategoryActivity.this,
-                                new ArrayList<>(itemsCodeNames.values()),
+                                CategoryActivity.this,
+                                groups,
                                 list.toItemNames(),
                                 CategoryActivity.this::addItem,
-                                list.getItemSuggestions());
+                                list.getItemSuggestions()
+                        );
                         btnAddItem.setEnabled(true);
                     }
                     else
@@ -184,7 +187,7 @@ public class CategoryActivity extends MasterActivity
                             supermarkets = new ArrayList<>();
                         }
 
-                        itemsCatalog = allItems;
+                        itemsCatalog = allItemPrices;
 
                         ArrayList<Supermarket> finalSupermarkets = supermarkets;
                         Map<String, Map<String, Map<String, Double>>> finalItemsCatalog = itemsCatalog;
@@ -200,8 +203,12 @@ public class CategoryActivity extends MasterActivity
                                         @Override
                                         public void updateItemCategory(Item item)
                                         {
-                                            if (category == null) return;
-                                            runIfOnline(() -> dbHandler.updateItem(list, category, item));
+                                            runIfOnline(() ->
+                                            {
+                                                category.removeVariants(item.getBaseName());
+                                                category.addItem(item);
+                                                dbHandler.updateCategory(list, category);
+                                            });
                                         }
 
                                         @Override
@@ -215,7 +222,7 @@ public class CategoryActivity extends MasterActivity
                                         public void updateCategory()
                                         {
                                             if (category == null) return;
-                                            runIfOnline(() -> dbHandler.updateItemsIndividuals(list, new ArrayList<>(category.getItems().values())));
+                                            runIfOnline(() -> dbHandler.updateItemsIndividuals(list, new ArrayList<>(category.getItems())));
                                         }
 
                                         @Override
@@ -277,7 +284,7 @@ public class CategoryActivity extends MasterActivity
                                     {
                                         if (itemsAdapter != null)
                                         {
-                                            itemsAdapter.updateItems(new ArrayList<>(category.getItems().values()));
+                                            itemsAdapter.updateItems(new ArrayList<>(category.getItems()));
                                         }
                                     });
 
@@ -425,14 +432,12 @@ public class CategoryActivity extends MasterActivity
             addItemFragment.startProgressBar();
         }
 
-        if (itemsCodeNames == null)
+        if (groups == null)
         {
             Toast.makeText(this, "Items are still loading…", Toast.LENGTH_SHORT).show();
             if (addItemFragment != null) addItemFragment.endProgressBar();
             return;
         }
-
-        item.updateId(getKeyByValue(itemsCodeNames, item.getName()));
 
         new Thread(() ->
         {
@@ -519,31 +524,24 @@ public class CategoryActivity extends MasterActivity
         }).start();
     }
 
-    private String getKeyByValue(Map<String, String> map, String value)
-    {
-        for (Map.Entry<String, String> entry : map.entrySet())
-        {
-            if (entry.getValue().equals(value))
-            {
-                return entry.getKey();
-            }
-        }
-        return null;
-    }
 
     private void showSortBottomSheet() throws JSONException, IOException
     {
+        Map<String, ArrayList<ItemViewPricesAdapter.PriceRow>> rows = apiHandler.buildRows(category.getRemainedItems());
+
         SortListBottomSheetBuilder.show(
                 this,
                 category,
-                allItems,
+                rows,
                 apiHandler.getSupermarkets(),
                 new SortListBottomSheetBuilder.ApplyListener()
                 {
                     @Override
                     public void onApplyCheapest()
                     {
-                        category.setCheapestFromStringsMap(allItems);
+                        Map<String, ArrayList<ItemViewPricesAdapter.PriceRow>> rows = apiHandler.buildRows(category.getRemainedItems());
+                        category.setCheapestRows(rows);
+
                         tvTotal.setText(
                                 Baskit.getTotalDisplayString(
                                         category.getTotal(),
@@ -554,13 +552,15 @@ public class CategoryActivity extends MasterActivity
                         );
 
                         runIfOnline(() -> dbHandler.updateCategory(list, category));
-                        itemsAdapter.updateItems(new ArrayList<>(category.getItems().values()));
+                        itemsAdapter.updateItems(new ArrayList<>(category.getItems()));
                     }
 
                     @Override
                     public void onApplySupermarket(Supermarket sm)
                     {
-                        category.setSupermarketFromStringsMap(sm, allItems);
+                        Map<String, ArrayList<ItemViewPricesAdapter.PriceRow>> rows = apiHandler.buildRows(category.getRemainedItems());
+                        category.setSupermarketsRows(sm, rows);
+
                         tvTotal.setText(
                                 Baskit.getTotalDisplayString(
                                         category.getTotal(),
@@ -571,7 +571,7 @@ public class CategoryActivity extends MasterActivity
                         );
 
                         runIfOnline(() -> dbHandler.updateCategory(list, category));
-                        itemsAdapter.updateItems(new ArrayList<>(category.getItems().values()));
+                        itemsAdapter.updateItems(new ArrayList<>(category.getItems()));
                     }
                 }
         );

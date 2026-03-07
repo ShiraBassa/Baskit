@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.MotionEvent;
 
 import java.util.concurrent.ExecutorService;
@@ -202,7 +203,10 @@ public abstract class MasterActivity extends AppCompatActivity
                                     {
                                         toRun.run();
                                     }
-                                    catch (Exception ignored) {}
+                                    catch (Exception e)
+                                    {
+                                        Log.e("API", e.getMessage());
+                                    }
                                 });
                             }
                         }

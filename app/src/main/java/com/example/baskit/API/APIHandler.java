@@ -3,12 +3,14 @@ package com.example.baskit.API;
 import android.util.Log;
 
 import com.example.baskit.Baskit;
+import com.example.baskit.Categories.ItemViewPricesAdapter;
 import com.example.baskit.MainComponents.Item;
+import com.example.baskit.MainComponents.ItemInfo;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.SQLite.AppDatabase;
-import com.example.baskit.SQLite.ItemCodeName;
 import com.example.baskit.SQLite.ItemCategory;
-import com.example.baskit.SQLite.ItemEntity;
+import com.example.baskit.SQLite.ItemInfoEntity;
+import com.example.baskit.SQLite.ItemPricesEntity;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -36,9 +38,10 @@ public class APIHandler
             .writeTimeout(0, TimeUnit.SECONDS)
             .callTimeout(0, TimeUnit.SECONDS)
             .build();
-    private Map<String, Map<String, Map<String, Double>>> cachedItems = null;
-    private Map<String, String> cachedCodeNames = null;
+    private Map<String, Map<String, Map<String, Double>>> cachedItemPrices = null;
     private Map<String, String> cachedItemCategories = new HashMap<>();
+    private Map<String, ArrayList<String>> cachedGroups = new HashMap<>();
+    private Map<String, ItemInfo> cachedItemInfos = new HashMap<>();
     private ArrayList<Supermarket> supermarkets = null;
 
     // Shared executors
@@ -80,9 +83,10 @@ public class APIHandler
 
     public void reset() throws JSONException, IOException
     {
-        cachedItems = null;
-        cachedCodeNames = null;
+        cachedItemPrices = null;
         cachedItemCategories = null;
+        cachedGroups = null;
+        cachedItemInfos = null;
 
         preload();
     }
@@ -90,22 +94,16 @@ public class APIHandler
     public void preload() throws JSONException, IOException
     {
         supermarkets = getUpdatedSupermarkets();
-        cachedItems = loadItemsFromDB();
-        cachedCodeNames = loadCodeNamesFromDB();
+        cachedItemPrices = loadItemPricesFromDB();
         cachedItemCategories = loadCategoriesFromDB();
+        cachedGroups = loadGroupsFromDB();
+        cachedItemInfos = loadItemInfosFromDB();
 
-        if (cachedItems.isEmpty() || cachedCodeNames.isEmpty() || cachedItemCategories.isEmpty())
+        if (cachedItemPrices.isEmpty() || cachedItemCategories.isEmpty() || cachedGroups.isEmpty() || cachedItemInfos.isEmpty())
         {
             try
             {
-                Map<String, Map<String, Map<String, Double>>> freshItems = getItemsFromAPI();
-                Map<String, String> freshCodeNames = getItemsCodeNameFromAPI(new ArrayList<>(freshItems.keySet()));
-                Map<String, String> freshCategories = getCategories();
-
-                updateCache(freshItems, freshCodeNames, freshCategories);
-                saveItemsToDB(freshItems);
-                saveCodeNamesToDB(freshCodeNames);
-                saveCategoriesToDB(freshCategories);
+                updateAllCache();
             }
             catch (Exception e)
             {
@@ -120,14 +118,7 @@ public class APIHandler
                 {
                     try
                     {
-                        Map<String, Map<String, Map<String, Double>>> freshItems = getItemsFromAPI();
-                        Map<String, String> freshCodeNames = getItemsCodeNameFromAPI(new ArrayList<>(freshItems.keySet()));
-                        Map<String, String> freshCategories = getCategories();
-
-                        updateCache(freshItems, freshCodeNames, freshCategories);
-                        saveItemsToDB(freshItems);
-                        saveCodeNamesToDB(freshCodeNames);
-                        saveCategoriesToDB(freshCategories);
+                        updateAllCache();
                     }
                     catch (Exception e)
                     {
@@ -142,15 +133,29 @@ public class APIHandler
         }
     }
 
-    private Map<String, Map<String, Map<String, Double>>> loadItemsFromDB()
+    private void updateAllCache() throws JSONException, IOException
     {
-        List<ItemEntity> dbItems = AppDatabase.getDatabase(Baskit.getContext())
-                .itemDao()
+        Map<String, Map<String, Map<String, Double>>> freshItemPrices = getItemPricesFromAPI();
+        Map<String, String> freshCategories = getCategories();
+        Map<String, ArrayList<String>> freshGroups = getGroupsFromAPI();
+        Map<String, ItemInfo> freshItemInfos = getItemInfosFromAPI();
+
+        updateCache(freshItemPrices, freshCategories, freshGroups, freshItemInfos);
+        saveItemPricesToDB(freshItemPrices);
+        saveCategoriesToDB(freshCategories);
+        saveGroupsToDB(freshGroups);
+        saveItemInfosToDB(freshItemInfos);
+    }
+
+    private Map<String, Map<String, Map<String, Double>>> loadItemPricesFromDB()
+    {
+        List<ItemPricesEntity> dbItems = AppDatabase.getDatabase(Baskit.getContext())
+                .itemPricesDao()
                 .getAll();
 
         Map<String, Map<String, Map<String, Double>>> result = new HashMap<>();
 
-        for (ItemEntity entity : dbItems)
+        for (ItemPricesEntity entity : dbItems)
         {
             result.computeIfAbsent(entity.itemCode, k -> new HashMap<>())
                     .computeIfAbsent(entity.store, k -> new HashMap<>())
@@ -160,44 +165,26 @@ public class APIHandler
         return result;
     }
 
-    private Map<String, String> loadCodeNamesFromDB()
+
+    private void updateCache(Map<String, Map<String, Map<String, Double>>> prices,
+                             Map<String, String> categories,
+                             Map<String, ArrayList<String>> groups,
+                             Map<String, ItemInfo> infos)
     {
-        List<ItemCodeName> dbCodes = AppDatabase.getDatabase(Baskit.getContext())
-                .itemCodesDao()
-                .getAll();
-
-        Map<String, String> codeNames = new HashMap<>();
-
-        for (ItemCodeName code : dbCodes)
-        {
-            codeNames.put(code.getItemCode(), code.getItemName());
-        }
-
-        return codeNames;
+        cachedItemPrices = new HashMap<>(prices);
+        cachedItemCategories = new HashMap<>(categories);
+        cachedGroups = new HashMap<>(groups);
+        cachedItemInfos = new HashMap<>(infos);
     }
 
-    private void updateCache(Map<String, Map<String, Map<String, Double>>> freshItems,
-                             Map<String, String> freshCodeNames,
-                             Map<String, String> categories)
-    {
-        cachedItems.clear();
-        cachedItems.putAll(freshItems);
-
-        cachedCodeNames.clear();
-        cachedCodeNames.putAll(freshCodeNames);
-
-        cachedItemCategories.clear();
-        cachedItemCategories.putAll(categories);
-    }
-
-    private void saveItemsToDB(Map<String, Map<String, Map<String, Double>>> freshItems)
+    private void saveItemPricesToDB(Map<String, Map<String, Map<String, Double>>> freshItems)
     {
         dbExecutor.execute(() ->
         {
             AppDatabase db = AppDatabase.getDatabase(Baskit.getContext());
-            db.itemDao().clearAll();
+            db.itemPricesDao().clearAll();
 
-            List<ItemEntity> itemsToInsert = new ArrayList<>();
+            List<ItemPricesEntity> itemsToInsert = new ArrayList<>();
 
             for (String itemCode : freshItems.keySet())
             {
@@ -210,7 +197,7 @@ public class APIHandler
                     for (String branch : freshBranches.keySet())
                     {
                         double freshPrice = freshBranches.get(branch);
-                        ItemEntity entity = new ItemEntity();
+                        ItemPricesEntity entity = new ItemPricesEntity();
                         entity.itemCode = itemCode;
                         entity.store = store;
                         entity.branch = branch;
@@ -222,41 +209,108 @@ public class APIHandler
 
             if (!itemsToInsert.isEmpty())
             {
-                db.itemDao().insertAll(itemsToInsert);
+                db.itemPricesDao().insertAll(itemsToInsert);
             }
         });
     }
 
-    private void saveCodeNamesToDB(Map<String, String> freshCodeNames)
+    private Map<String, ItemInfo> loadItemInfosFromDB()
+    {
+        List<ItemInfoEntity> dbInfos = AppDatabase.getDatabase(Baskit.getContext())
+                .itemInfoDao()
+                .getAll();
+
+        Map<String, ItemInfo> result = new HashMap<>();
+
+        for (ItemInfoEntity entity : dbInfos)
+        {
+            result.put(
+                    entity.itemCode,
+                    new ItemInfo(entity.itemCode, entity.baseName, entity.company, entity.weight, entity.unit)
+            );
+        }
+
+        return result;
+    }
+
+    private void saveItemInfosToDB(Map<String, ItemInfo> infos)
     {
         dbExecutor.execute(() ->
         {
             AppDatabase db = AppDatabase.getDatabase(Baskit.getContext());
-            db.itemCodesDao().clearAll();
+            db.itemInfoDao().clearAll();
 
-            List<ItemCodeName> codesToInsert = new ArrayList<>();
-            for (Map.Entry<String, String> entry : freshCodeNames.entrySet())
+            List<ItemInfoEntity> list = new ArrayList<>();
+
+            for (Map.Entry<String, ItemInfo> entry : infos.entrySet())
             {
-                String code = entry.getKey();
-                String name = entry.getValue();
-                codesToInsert.add(new ItemCodeName(code, name));
+                ItemInfo info = entry.getValue();
+
+                ItemInfoEntity entity = new ItemInfoEntity();
+                entity.itemCode = info.getCode();
+                entity.baseName = info.getBaseName();
+                entity.company = info.getCompany();
+                entity.weight = info.getWeight();
+                entity.unit = info.getUnit();
+
+                list.add(entity);
             }
 
-            if (!codesToInsert.isEmpty())
+            if (!list.isEmpty())
             {
-                db.itemCodesDao().insertAll(codesToInsert);
+                db.itemInfoDao().insertAll(list);
             }
         });
     }
 
-    public Map<String, Map<String, Map<String, Double>>> getItems()
+    private Map<String, ItemInfo> getItemInfosFromAPI()
     {
-        return cachedItems;
+        Map<String, ItemInfo> infos = new HashMap<>();
+
+        try
+        {
+            String raw = getRaw("/item_infos");
+            JSONObject json = new JSONObject(raw);
+
+            for (Iterator<String> it = json.keys(); it.hasNext();)
+            {
+                String itemCode = it.next();
+                JSONObject obj = json.getJSONObject(itemCode);
+
+                String baseName = obj.optString("name", "");
+                String company = obj.optString("company", "");
+                String unit = obj.optString("unit", "");
+
+                double weight = 0;
+
+                if (obj.has("weight"))
+                {
+                    try
+                    {
+                        weight = obj.getDouble("weight");
+                    }
+                    catch (Exception ignored) {}
+                }
+
+                infos.put(itemCode, new ItemInfo(itemCode, baseName, company, weight, unit));
+            }
+        }
+        catch (Exception e)
+        {
+            Log.e("API", "Failed to fetch item infos", e);
+        }
+
+        return infos;
     }
 
-    public Map<String, String> getItemsCodeName()
+    public Map<String, Map<String, Map<String, Double>>> getItemPrices()
     {
-        return cachedCodeNames;
+        return cachedItemPrices;
+    }
+
+    public Map<String, ItemInfo> getItemInfos()
+    {
+        return cachedItemInfos;
     }
 
     public String getItemCategory(Item item) throws IOException, JSONException
@@ -264,19 +318,40 @@ public class APIHandler
         if (item == null) return null;
 
         String itemCode = item.getAbsoluteId();
-        if (itemCode == null) return null;
+        String itemName = item.getDecodedName();
+        if ((itemCode == null  || itemCode.isEmpty()) &&
+                (itemName == null || itemName.isEmpty())) return null;
 
-        String cached = cachedItemCategories.get(itemCode);
-        if (cached != null && !cached.isEmpty())
+        String endpoint, itemCategory;
+
+        if (itemCode != null && !itemCode.isEmpty())
         {
-            return cached;
+            itemCategory = cachedItemCategories.get(itemCode);
+
+            if (itemCategory != null && !itemCategory.isEmpty())
+            {
+                return itemCategory;
+            }
+
+            endpoint = "/item_category?"
+                    + "item_code=" + URLEncoder.encode(itemCode, "UTF-8");
+        }
+        else
+        {
+            itemCategory = getItemCategoryByName(itemName);
+
+            if (itemCategory != null && !itemCategory.isEmpty())
+            {
+                return itemCategory;
+            }
+
+            endpoint = "/item_category?"
+                    + "item_name=" + URLEncoder.encode(itemName, "UTF-8");
         }
 
-        String endpoint = "/item_category?"
-                + "item_code=" + URLEncoder.encode(itemCode, "UTF-8");
-
         String raw = getRaw(endpoint);
-        String itemCategory = (String) new org.json.JSONTokener(raw).nextValue();
+        JSONObject obj = new JSONObject(raw);
+        itemCategory = obj.optString("category", null);
 
         if (itemCategory == null || itemCategory.isEmpty())
         {
@@ -285,14 +360,42 @@ public class APIHandler
 
         cachedItemCategories.put(itemCode, itemCategory);
 
+        String finalItemCategory = itemCategory;
         dbExecutor.execute(() ->
         {
             AppDatabase db = AppDatabase.getDatabase(Baskit.getContext());
-            ItemCategory entity = new ItemCategory(itemCode, itemCategory);
+            ItemCategory entity = new ItemCategory(itemCode, finalItemCategory);
             db.itemCategoryDao().insert(entity);
         });
 
         return itemCategory;
+    }
+
+    private String getItemCategoryByName(String name)
+    {
+        if (name == null || name.isEmpty() || cachedGroups == null || cachedGroups.isEmpty())
+        {
+            return null;
+        }
+
+        ArrayList<String> group = cachedGroups.get(name);
+
+        if (group == null || group.isEmpty())
+        {
+            return null;
+        }
+
+        for (String code : group)
+        {
+            String category = cachedItemCategories.get(code);
+
+            if (category != null && !category.isEmpty())
+            {
+                return category;
+            }
+        }
+
+        return null;
     }
 
     public void putItemCategoryIfAbsent(String itemCode, String category)
@@ -334,6 +437,7 @@ public class APIHandler
         dbExecutor.execute(() ->
         {
             AppDatabase db = AppDatabase.getDatabase(Baskit.getContext());
+            db.itemCategoryDao().clearAll();
 
             List<ItemCategory> list = new ArrayList<>();
 
@@ -368,13 +472,13 @@ public class APIHandler
         return categories;
     }
 
-    private Map<String, Map<String, Map<String, Double>>> getItemsFromAPI()
+    private Map<String, Map<String, Map<String, Double>>> getItemPricesFromAPI()
     {
         Map<String, Map<String, Map<String, Double>>> items = new HashMap<>();
 
         try
         {
-            String itemsRaw = getRaw("/items");
+            String itemsRaw = getRaw("/items_prices");
             JSONObject itemsJson = new JSONObject(itemsRaw);
 
             for (Iterator<String> itemIter = itemsJson.keys(); itemIter.hasNext();)
@@ -394,46 +498,6 @@ public class APIHandler
         return items;
     }
 
-    private Map<String, String> getItemsCodeNameFromAPI(List<String> keys)
-    {
-        Map<String, String> codeNames = new HashMap<>();
-        List<String> missing = new ArrayList<>();
-
-        for (String key : keys)
-        {
-            if (!codeNames.containsKey(key))
-            {
-                missing.add(key);
-            }
-        }
-
-        if (missing.isEmpty())
-        {
-            return codeNames;
-        }
-
-        try
-        {
-            JSONObject body = new JSONObject();
-            body.put("item_codes", new JSONArray(missing));
-
-            String responseRaw = postRawWithResponse("/items_code_name", body.toString());
-            JSONObject jsonResponse = new JSONObject(responseRaw);
-
-            for (Iterator<String> it = jsonResponse.keys(); it.hasNext();)
-            {
-                String code = it.next();
-                String name = jsonResponse.getString(code);
-                codeNames.put(code, name);
-            }
-        }
-        catch (Exception e)
-        {
-            Log.e("API", e.getMessage());
-        }
-
-        return codeNames;
-    }
 
     public void resetInstance()
     {
@@ -661,19 +725,6 @@ public class APIHandler
     }
 
     // Items
-    public String getItemName(String itemCode) throws IOException
-    {
-        String endpoint = "/item_name?"
-                + "item_code=" + URLEncoder.encode(itemCode, "UTF-8");
-        return getRaw(endpoint);
-    }
-
-    public String getItemCode(String itemName) throws IOException
-    {
-        String endpoint = "/item_code?"
-                + "item_name=" + URLEncoder.encode(itemName, "UTF-8");
-        return getRaw(endpoint);
-    }
 
     public Map<String, Map<String, Double>> getItemPricesByCode(String itemCode) throws IOException, JSONException
     {
@@ -682,12 +733,40 @@ public class APIHandler
         return parsePriceResponse(getRaw(endpoint));
     }
 
-    public Map<String, Map<String, Double>> getItemPricesByName(String itemName) throws IOException, JSONException
+    public ItemInfo getItemInfo(String itemCode)
     {
-        String endpoint = "/item_prices?"
-                + "item_name=" + URLEncoder.encode(itemName, "UTF-8");
-        return parsePriceResponse(getRaw(endpoint));
+        if (itemCode == null || itemCode.isEmpty() || cachedItemInfos == null || cachedItemInfos.isEmpty()) return null;
+        return cachedItemInfos.get(itemCode);
     }
+
+    public ItemInfo getItemInfoFromAPI(String itemCode) throws IOException, JSONException
+    {
+        if (itemCode == null || itemCode.isEmpty()) return null;
+
+        String endpoint = "/item_info?"
+                + "item_code=" + URLEncoder.encode(itemCode, "UTF-8");
+
+        String raw = getRaw(endpoint);
+        JSONObject json = new JSONObject(raw);
+
+        String baseName = json.optString("name", "");
+        String company = json.optString("company", "");
+        String unit = json.optString("unit", "");
+
+        double weight = 0;
+
+        if (json.has("weight"))
+        {
+            try
+            {
+                weight = json.getDouble("weight");
+            }
+            catch (Exception ignored) {}
+        }
+
+        return new ItemInfo(itemCode, baseName, company, weight, unit);
+    }
+
 
     private Map<String, Map<String, Double>> parsePriceResponse(String response) throws JSONException
     {
@@ -820,5 +899,217 @@ public class APIHandler
             throws IOException, JSONException
     {
         return getAllBranchesBulk(null);
+    }
+
+    private Map<String, ArrayList<String>> loadGroupsFromDB()
+    {
+        List<com.example.baskit.SQLite.GroupsEntity> dbGroups =
+                AppDatabase.getDatabase(Baskit.getContext())
+                        .groupDao()
+                        .getAll();
+
+        Map<String, ArrayList<String>> groups = new HashMap<>();
+
+        for (com.example.baskit.SQLite.GroupsEntity group : dbGroups)
+        {
+            ArrayList<String> codes = new ArrayList<>();
+            try
+            {
+                JSONArray arr = new JSONArray(group.getStructureJson());
+                for (int i = 0; i < arr.length(); i++)
+                {
+                    codes.add(arr.getString(i));
+                }
+            }
+            catch (Exception ignored) {}
+
+            groups.put(group.getBaseName(), codes);
+        }
+
+        return groups;
+    }
+
+    private void saveGroupsToDB(Map<String, ArrayList<String>> groups)
+    {
+        dbExecutor.execute(() ->
+        {
+            AppDatabase db = AppDatabase.getDatabase(Baskit.getContext());
+            db.groupDao().clearAll();
+
+            List<com.example.baskit.SQLite.GroupsEntity> list = new ArrayList<>();
+
+            for (Map.Entry<String, ArrayList<String>> entry : groups.entrySet())
+            {
+                JSONArray arr = new JSONArray(entry.getValue());
+
+                list.add(new com.example.baskit.SQLite.GroupsEntity(
+                        entry.getKey(),
+                        arr.toString()
+                ));
+            }
+
+            if (!list.isEmpty())
+            {
+                db.groupDao().insertAll(list);
+            }
+        });
+    }
+
+    private Map<String, ArrayList<String>> getGroupsFromAPI()
+    {
+        Map<String, ArrayList<String>> groups = new HashMap<>();
+
+        try
+        {
+            String raw = getRaw("/groups");
+            JSONObject json = new JSONObject(raw);
+
+            for (Iterator<String> it = json.keys(); it.hasNext();)
+            {
+                String base = it.next();
+                JSONArray arr = json.getJSONArray(base);
+
+                ArrayList<String> codes = new ArrayList<>();
+                for (int i = 0; i < arr.length(); i++)
+                {
+                    codes.add(arr.getString(i));
+                }
+
+                groups.put(base, codes);
+            }
+        }
+        catch (Exception e)
+        {
+            Log.e("API", "Failed to fetch groups", e);
+        }
+
+        return groups;
+    }
+
+    public Map<String, ArrayList<String>> getGroups()
+    {
+        return cachedGroups;
+    }
+
+    public ArrayList<String> getGroup(String base) throws IOException, JSONException
+    {
+        if (base == null || base.isEmpty() || cachedGroups == null || cachedGroups.isEmpty()) return new ArrayList<>();
+
+        ArrayList<String> cached = cachedGroups.get(base);
+        return cached;
+    }
+
+    public String getItemGroupName(String id) throws IOException, JSONException
+    {
+        if (id == null || id.isEmpty()) return null;
+
+        for (String baseName : cachedGroups.keySet())
+        {
+            ArrayList<String> itemCodes = cachedGroups.get(baseName);
+            if (itemCodes == null || itemCodes.isEmpty()) continue;
+
+            if (itemCodes.contains(id))
+            {
+                return baseName;
+            }
+        }
+
+        return null;
+    }
+
+    public ArrayList<String> getItemVariants(String id) throws IOException, JSONException
+    {
+        if (id == null || id.isEmpty()) return new ArrayList<>();
+        return cachedGroups.get(getItemGroupName(id));
+    }
+
+    public ArrayList<String> getGroupFromAPI(String base) throws IOException, JSONException
+    {
+        if (base == null || base.isEmpty()) return new ArrayList<>();
+
+        ArrayList<String> cached = cachedGroups != null ? cachedGroups.get(base) : null;
+        if (cached != null)
+        {
+            return cached;
+        }
+
+        String endpoint = "/group?"
+                + "base=" + URLEncoder.encode(base, "UTF-8");
+
+        String raw = getRaw(endpoint);
+        JSONArray arr = new JSONArray(raw);
+
+        ArrayList<String> codes = new ArrayList<>();
+        for (int i = 0; i < arr.length(); i++)
+        {
+            codes.add(arr.getString(i));
+        }
+
+        // Update cache
+        if (cachedGroups != null)
+        {
+            cachedGroups.put(base, codes);
+        }
+
+        return codes;
+    }
+
+    public Map<String, ArrayList<ItemViewPricesAdapter.PriceRow>> buildRows(ArrayList<Item> items)
+    {
+        Map<String, ArrayList<ItemViewPricesAdapter.PriceRow>> rows = new java.util.HashMap<>();
+
+        if (items == null)
+        {
+            return rows;
+        }
+
+        for (Item item : items)
+        {
+            String itemName = item.getBaseName();
+            if (itemName == null || itemName.isEmpty()) continue;
+
+            ArrayList<String> groupCodes = cachedGroups.get(itemName);
+
+            if (groupCodes == null || groupCodes.isEmpty()) continue;
+
+            ArrayList<ItemViewPricesAdapter.PriceRow> itemRows = new ArrayList<>();
+
+            for (String code : groupCodes)
+            {
+                Map<String, Map<String, Double>> supermarkets = cachedItemPrices.get(code);
+                if (supermarkets == null) continue;
+
+                for (Map.Entry<String, Map<String, Double>> smEntry : supermarkets.entrySet())
+                {
+                    String supermarketName = smEntry.getKey();
+                    Map<String, Double> sections = smEntry.getValue();
+
+                    if (supermarketName == null || sections == null) continue;
+
+                    for (Map.Entry<String, Double> sectionEntry : sections.entrySet())
+                    {
+                        String section = sectionEntry.getKey();
+                        Double price = sectionEntry.getValue();
+
+                        if (section == null || price == null) continue;
+
+                        Supermarket sm = new Supermarket(supermarketName, section);
+
+                        itemRows.add(
+                                new ItemViewPricesAdapter.PriceRow(
+                                        sm,
+                                        price,
+                                        cachedItemInfos.get(code)
+
+                                )
+                        );
+                    }
+                }
+            }
+
+            rows.put(itemName, itemRows);
+        }
+
+        return rows;
     }
 }

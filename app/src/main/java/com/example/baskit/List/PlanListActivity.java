@@ -35,13 +35,14 @@ public class PlanListActivity extends MasterActivity
 {
     ImageButton btnCancel;
     Button btnSave;
+    List originalList;
     List list;
     TextView tvListName, tvTotal;
     FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
     APIHandler apiHandler = APIHandler.getInstance();
 
     Map<String, Map<String, Map<String, Double>>> allItems;
-    Map<String, String> itemsCodeNames;
+    Map<String, ArrayList<String>> groups;
     boolean initialized = true;
     private RecyclerView recyclerItems;
     private PlanListItemsAdapter itemsAdapter;
@@ -87,8 +88,8 @@ public class PlanListActivity extends MasterActivity
         {
             try
             {
-                allItems = apiHandler.getItems();
-                itemsCodeNames = apiHandler.getItemsCodeName();
+                allItems = apiHandler.getItemPrices();
+                groups = apiHandler.getGroups();
                 itemsLoaded = true;
             }
             catch (Exception e)
@@ -146,6 +147,7 @@ public class PlanListActivity extends MasterActivity
                 @Override
                 public void onListFetched(List newList)
                 {
+                    originalList = newList;
                     PlanListActivity.this.list = new List(newList);
 
                     oldTotal = list.getTotal();
@@ -196,6 +198,7 @@ public class PlanListActivity extends MasterActivity
                         {
                             itemsAdapter = new PlanListItemsAdapter(
                                     list,
+                                    originalList,
                                     PlanListActivity.this,
                                     PlanListActivity.this,
                                     new ItemsAdapter.UpperClassFunctions()
@@ -217,6 +220,7 @@ public class PlanListActivity extends MasterActivity
                                     },
                                     finalSupermarkets,
                                     finalItemsCatalog,
+                                    groups,
                                     categoryName
                             );
 

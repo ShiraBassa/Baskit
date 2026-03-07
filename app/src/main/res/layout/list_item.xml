@@ -6,14 +6,13 @@
     android:layout_height="wrap_content"
     android:layout_marginBottom="8dp"
     android:elevation="3dp"
-    android:gravity="center_vertical"
+    android:gravity="center_horizontal|top"
     android:paddingHorizontal="6dp"
     android:paddingVertical="8dp"
     android:clipToPadding="false"
     android:clipChildren="false"
     android:foreground="?attr/selectableItemBackground">
 
-    <!-- Quantity Section -->
     <LinearLayout
         android:id="@+id/layout_quantity"
         android:layout_width="wrap_content"
@@ -58,7 +57,6 @@
         android:layout_marginHorizontal="6dp"
         android:background="?attr/colorOnBackground"/>
 
-    <!-- Price Section -->
     <TextView
         android:id="@+id/tv_price"
         android:layout_width="wrap_content"
@@ -69,7 +67,6 @@
         android:layout_marginEnd="2dp"
         android:visibility="gone"/>
 
-    <!-- Item Name and Checkbox -->
     <LinearLayout
         android:layout_width="0dp"
         android:layout_weight="1"

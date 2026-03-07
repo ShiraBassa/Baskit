@@ -3,8 +3,8 @@ package com.example.baskit.SQLite;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
-@Entity(tableName = "items")
-public class ItemEntity
+@Entity(tableName = "item_prices")
+public class ItemPricesEntity
 {
     @PrimaryKey(autoGenerate = true)
     public int id;

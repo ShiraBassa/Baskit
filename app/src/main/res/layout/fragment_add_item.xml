@@ -51,7 +51,7 @@
         android:layout_weight="1"
         android:gravity="center_horizontal|top"
         android:orientation="vertical"
-        android:layout_marginBottom="30dp">
+        android:layout_marginBottom="15dp">
 
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
@@ -101,7 +101,7 @@
             <androidx.cardview.widget.CardView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="25dp"
+                android:layout_marginBottom="8dp"
                 android:elevation="6dp"
                 app:cardCornerRadius="16dp"
                 android:layout_gravity="center">
@@ -167,6 +167,50 @@
                 android:orientation="vertical"
                 android:paddingHorizontal="10dp">
 
+                <!-- Variation Filter (Weight / Unit Chips) -->
+                <LinearLayout
+                    android:id="@+id/layout_variation_filter"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginBottom="10dp">
+
+                    <!-- Weights -->
+                    <HorizontalScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:scrollbars="none">
+
+                        <com.google.android.material.chip.ChipGroup
+                            android:id="@+id/chip_group_weights"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            app:singleLine="true"
+                            app:singleSelection="false"
+                            app:selectionRequired="false"
+                            app:chipSpacingHorizontal="8dp" />
+
+                    </HorizontalScrollView>
+
+                    <!-- Units -->
+                    <HorizontalScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:scrollbars="none">
+
+                        <com.google.android.material.chip.ChipGroup
+                            android:id="@+id/chip_group_units"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            app:singleLine="true"
+                            app:singleSelection="false"
+                            app:selectionRequired="false"
+                            app:chipSpacingHorizontal="8dp" />
+
+                    </HorizontalScrollView>
+
+                </LinearLayout>
+
                 <TextView
                     android:textColor="?attr/colorPrimaryVariant"
                     android:textSize="32sp"
@@ -196,15 +240,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:paddingVertical="10dp"
         android:orientation="vertical">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_add_item"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="15dp"
-            android:layout_marginVertical="10dp"
             android:textColor="?attr/colorOnPrimary"
             android:textSize="40sp"
             android:backgroundTint="?attr/colorPrimaryVariant"

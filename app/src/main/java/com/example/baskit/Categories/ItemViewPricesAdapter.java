@@ -1,5 +1,6 @@
 package com.example.baskit.Categories;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,32 +12,86 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.baskit.API.APIHandler;
 import com.example.baskit.Baskit;
+import com.example.baskit.MainComponents.ItemInfo;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;
 
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Map;
 
 public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAdapter.ViewHolder>
 {
-    private ArrayList<Map.Entry<Supermarket, Double>> pricesBySupermarket;
+    public static class PriceRow
+    {
+        private Supermarket supermarket;
+        private double price;
+        private ItemInfo info;
+
+        public PriceRow(Supermarket supermarket, double price, ItemInfo info)
+        {
+            this.supermarket = supermarket;
+            this.price = price;
+            this.info = info;
+        }
+
+        public Supermarket getSupermarket() {
+            return supermarket;
+        }
+
+        public void setSupermarket(Supermarket supermarket) {
+            this.supermarket = supermarket;
+        }
+
+        public double getPrice() {
+            return price;
+        }
+
+        public void setPrice(double price) {
+            this.price = price;
+        }
+
+        public ItemInfo getInfo() {
+            return info;
+        }
+
+        public void setInfo(ItemInfo info) {
+            this.info = info;
+        }
+    }
+
+    private ArrayList<PriceRow> priceRows;
     private OnSupermarketClickListener listener;
     private String selectedSupermarket, selectedSection;
+    private int selectedPosition = -1;
     private final APIHandler apiHandler = APIHandler.getInstance();
     private Context context;
     private Map<String, Map<String, Double>> originalPricesMap;
 
+    private ArrayList<ItemInfo> variations;
+
     public interface OnSupermarketClickListener
     {
-        void onSupermarketClick(Supermarket supermarket);
+        void onSupermarketClick(Supermarket supermarket, ItemInfo variation);
     }
 
-    public ItemViewPricesAdapter(Context context, Map<String, Map<String, Double>> pricesMap, Supermarket preselected_supermarket, OnSupermarketClickListener onSupermarketClickListener)
+    public ItemViewPricesAdapter(
+            Context context,
+            Map<String, Map<String, Double>> pricesMap,
+            Supermarket preselected_supermarket,
+            ArrayList<ItemInfo> variations,
+            OnSupermarketClickListener onSupermarketClickListener)
     {
         this.originalPricesMap = pricesMap;
+        if (pricesMap == null)
+        {
+            this.priceRows = new ArrayList<>();
+            this.selectedSupermarket = null;
+            this.selectedSection = null;
+            return;
+        }
         this.context = context;
         this.listener = onSupermarketClickListener;
+        this.variations = variations;
 
         if (pricesMap != null && preselected_supermarket != null &&
                 preselected_supermarket != Baskit.UNASSIGNED_SUPERMARKET &&
@@ -54,16 +109,74 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
             this.selectedSection = null;
         }
 
-        pricesBySupermarket = new ArrayList<>();
+        priceRows = new ArrayList<>();
 
         for (String supermarketName : pricesMap.keySet())
         {
-            for (String sectionName : pricesMap.get(supermarketName).keySet())
+            Map<String, Double> sections = pricesMap.get(supermarketName);
+            if (sections == null) continue;
+
+            for (String sectionName : sections.keySet())
             {
-                pricesBySupermarket.add(new AbstractMap.SimpleEntry<>(new Supermarket(supermarketName, sectionName),
-                        pricesMap.get(supermarketName).get(sectionName)));
+                Double priceObj = sections.get(sectionName);
+                if (priceObj == null) continue;
+                double price = priceObj;
+                Supermarket sm = new Supermarket(supermarketName, sectionName);
+
+                ItemInfo matchedVariation = null;
+
+                if (variations != null && !variations.isEmpty())
+                {
+                    // If there is only one variation, assign it directly
+                    if (variations.size() == 1)
+                    {
+                        matchedVariation = variations.get(0);
+                    }
+                    else
+                    {
+                        // Try matching by code if section still contains it
+                        for (ItemInfo info : variations)
+                        {
+                            if (sectionName != null && info.getCode() != null && sectionName.contains(info.getCode()))
+                            {
+                                matchedVariation = info;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                priceRows.add(new PriceRow(sm, price, matchedVariation));
             }
         }
+    }
+
+    public ItemViewPricesAdapter(
+            Context context,
+            ArrayList<PriceRow> rows,
+            OnSupermarketClickListener onSupermarketClickListener)
+    {
+        this.context = context;
+        this.listener = onSupermarketClickListener;
+        this.priceRows = (rows != null) ? rows : new ArrayList<>();
+        this.originalPricesMap = null;
+        this.variations = null;
+        this.selectedSupermarket = null;
+        this.selectedSection = null;
+    }
+
+    public void setSelectedPosition(int position)
+    {
+        if (position >= 0 && position < priceRows.size())
+        {
+            this.selectedPosition = position;
+        }
+        else
+        {
+            this.selectedPosition = -1;
+        }
+
+        notifyDataSetChanged();
     }
 
     public Map<String, Map<String, Double>> getData()
@@ -75,8 +188,9 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
     {
         boolean exists = false;
 
-        for (Map.Entry<Supermarket, Double> entry : pricesBySupermarket) {
-            Supermarket sm = entry.getKey();
+        for (PriceRow row : priceRows)
+        {
+            Supermarket sm = row.supermarket;
 
             if (sm.getSupermarket().equals(supermarketName) &&
                     sm.getSection().equals(sectionName)) {
@@ -105,6 +219,7 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
     public static class ViewHolder extends RecyclerView.ViewHolder
     {
         protected TextView tvSupermarketName, tvSectionName, tvPrice;
+        protected TextView tvVariation;
 
         public ViewHolder(View itemView)
         {
@@ -113,6 +228,7 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
             tvSupermarketName = itemView.findViewById(R.id.tv_supermarket_name);
             tvSectionName = itemView.findViewById(R.id.tv_supermarket);
             tvPrice = itemView.findViewById(R.id.tv_price);
+            tvVariation = itemView.findViewById(R.id.tv_variation);
         }
     }
 
@@ -127,11 +243,45 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position)
+    public void onBindViewHolder(@NonNull ViewHolder holder, @SuppressLint("RecyclerView") int position)
     {
-        Map.Entry<Supermarket, Double> entry = pricesBySupermarket.get(position);
-        Supermarket supermarket = entry.getKey();
-        Double price = entry.getValue();
+        PriceRow row = priceRows.get(position);
+        Supermarket supermarket = row.getSupermarket();
+        double price = row.getPrice();
+        ItemInfo matchedInfo = row.getInfo();
+
+        if (matchedInfo != null)
+        {
+            String company = matchedInfo.getCompany();
+            String measure = matchedInfo.getFullMeasureStr();
+
+            String variationText = "";
+
+            if (company != null && !company.isEmpty())
+            {
+                variationText += company;
+            }
+
+            if (measure != null && !measure.isEmpty())
+            {
+                if (!variationText.isEmpty()) variationText += " | ";
+                variationText += measure;
+            }
+
+            if (!variationText.isEmpty())
+            {
+                holder.tvVariation.setText(variationText);
+                holder.tvVariation.setVisibility(View.VISIBLE);
+            }
+            else
+            {
+                holder.tvVariation.setVisibility(View.GONE);
+            }
+        }
+        else
+        {
+            holder.tvVariation.setVisibility(View.GONE);
+        }
 
         holder.tvSupermarketName.setText(supermarket.getDecodedSupermarket());
 
@@ -146,46 +296,39 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
 
         holder.tvPrice.setText(Baskit.getTotalDisplayString(price, true, false, false));
 
-        if (supermarket.getSupermarket().equals(selectedSupermarket) &&
-                supermarket.getSection().equals(selectedSection))
+        if (position == selectedPosition)
         {
-            holder.itemView.setBackgroundColor(Baskit.getAppColor(context, com.google.android.material.R.attr.colorSecondaryContainer));
+            holder.itemView.setBackgroundColor(
+                    Baskit.getAppColor(context, com.google.android.material.R.attr.colorSecondaryContainer)
+            );
         }
         else
         {
-            holder.itemView.setBackgroundColor(Baskit.getAppColor(context, com.google.android.material.R.attr.colorSurface));
+            holder.itemView.setBackgroundColor(
+                    Baskit.getAppColor(context, com.google.android.material.R.attr.colorSurface)
+            );
         }
 
         holder.itemView.setOnClickListener(v ->
         {
-            boolean isSelected =
-                    supermarket.getSupermarket().equals(selectedSupermarket) &&
-                            supermarket.getSection().equals(selectedSection);
-
-            if (isSelected)
+            if (position == selectedPosition)
             {
-                // Deselect -> unassigned
-                selectedSupermarket = null;
-                selectedSection = null;
-
+                selectedPosition = -1;
                 notifyDataSetChanged();
 
                 if (listener != null)
                 {
-                    listener.onSupermarketClick(null);
+                    listener.onSupermarketClick(null, null);
                 }
-
                 return;
             }
 
-            selectedSupermarket = supermarket.getSupermarket();
-            selectedSection = supermarket.getSection();
-
+            selectedPosition = position;
             notifyDataSetChanged();
 
             if (listener != null)
             {
-                listener.onSupermarketClick(new Supermarket(selectedSupermarket, selectedSection));
+                listener.onSupermarketClick(supermarket, matchedInfo);
             }
         });
     }
@@ -193,9 +336,9 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
     @Override
     public int getItemCount()
     {
-        if (pricesBySupermarket != null)
+        if (priceRows != null)
         {
-            return pricesBySupermarket.size();
+            return priceRows.size();
         }
 
         return 0;

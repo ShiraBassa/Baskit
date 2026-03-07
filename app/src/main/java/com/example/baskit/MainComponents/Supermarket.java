@@ -1,6 +1,7 @@
 package com.example.baskit.MainComponents;
 
 import com.example.baskit.Baskit;
+import com.google.firebase.database.Exclude;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,6 +30,7 @@ public class Supermarket implements Cloneable
         return supermarket;
     }
 
+    @Exclude
     public String getDecodedSupermarket()
     {
         return Baskit.decodeKey(supermarket);
@@ -44,6 +46,7 @@ public class Supermarket implements Cloneable
         return section;
     }
 
+    @Exclude
     public String getDecodedSection()
     {
         return Baskit.decodeKey(section);
@@ -109,6 +112,7 @@ public class Supermarket implements Cloneable
         return supermarkets;
     }
 
+    @Exclude
     public static Map<String, ArrayList<String>> getStringsFromSupermarkets(ArrayList<Supermarket> supermarkets)
     {
         Map<String, ArrayList<String>> supermarketsStrings = new HashMap<>();
@@ -129,6 +133,7 @@ public class Supermarket implements Cloneable
         return supermarketsStrings;
     }
 
+    @Exclude
     public static Map<Supermarket, Double> getSupermarketsPricesFromStrings(Map<String, Map<String, Double>> supermarketStrings)
     {
         Map<Supermarket, Double> supermarketsPrices = new HashMap<>();
@@ -157,6 +162,7 @@ public class Supermarket implements Cloneable
         return supermarketsPrices;
     }
 
+    @Exclude
     public static Map<String, Map<String, Double>> getStringsPricesFromSupermarkets(Map<Supermarket, Double> supermarketsPrices)
     {
         Map<String, Map<String, Double>> supermarketStrings = new HashMap<>();

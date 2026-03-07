@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.baskit.Baskit;
+import com.example.baskit.Categories.ItemViewPricesAdapter;
 import com.example.baskit.Categories.ItemsAdapter;
 import com.example.baskit.Categories.SupermarketItemsAdapter;
 import com.example.baskit.MainComponents.Item;
@@ -29,11 +30,13 @@ import java.util.Map;
 public class PlanListItemsAdapter extends RecyclerView.Adapter<PlanListItemsAdapter.ViewHolder>
 {
     com.example.baskit.MainComponents.List list;
+    com.example.baskit.MainComponents.List originalList;
     private final ArrayList<Supermarket> baseSupermarkets;
     ArrayList<Supermarket> supermarkets;
     protected Map<Supermarket, ArrayList<Item>> itemsBySupermarket;
     private Map<Supermarket, Boolean> expandedStates;
     private Map<String, Map<String, Map<String, Double>>> itemPrices;
+    private Map<String, ArrayList<String>> groups;
     private Map<String, Integer> supermarketSectionCounts;
 
     Activity activity;
@@ -80,11 +83,16 @@ public class PlanListItemsAdapter extends RecyclerView.Adapter<PlanListItemsAdap
     };
 
     @SuppressLint("PrivateResource")
-    public PlanListItemsAdapter(com.example.baskit.MainComponents.List list, Activity activity, Context context,
+    public PlanListItemsAdapter(com.example.baskit.MainComponents.List list,
+                                com.example.baskit.MainComponents.List originalList,
+                                Activity activity, Context context,
                                 ItemsAdapter.UpperClassFunctions upperClassFns, ArrayList<Supermarket> supermarkets,
-                                Map<String, Map<String, Map<String, Double>>> itemPrices, String categoryName)
+                                Map<String, Map<String, Map<String, Double>>> itemPrices,
+                                Map<String, ArrayList<String>> groups,
+                                String categoryName)
     {
         this.list = list;
+        this.originalList = originalList;
         this.activity = activity;
         this.context = context;
         this.categoryName = categoryName;
@@ -141,10 +149,13 @@ public class PlanListItemsAdapter extends RecyclerView.Adapter<PlanListItemsAdap
         this.baseSupermarkets = supermarkets != null ? new ArrayList<>(supermarkets) : new ArrayList<>();
         this.supermarkets = new ArrayList<>(this.baseSupermarkets);
         this.itemPrices = itemPrices;
+        this.groups = groups;
 
         colorBase = Baskit.getAppColor(context, com.google.android.material.R.attr.colorOnBackground);
         colorUnavailable = Baskit.getAppColor(context, com.google.android.material.R.attr.colorOnContainerUnchecked);
         colorChosen = Baskit.getAppColor(context, com.google.android.material.R.attr.colorPrimaryVariant);
+
+        if (list == null && list.isEmpty()) return;
 
         restart();
         sortByExisting();
@@ -170,9 +181,7 @@ public class PlanListItemsAdapter extends RecyclerView.Adapter<PlanListItemsAdap
 
     private void rebuildDisplaySupermarkets()
     {
-        ArrayList<Supermarket> nonEmpty = new ArrayList<>();
-        ArrayList<Supermarket> empty = new ArrayList<>();
-
+        ArrayList<Supermarket> result = new ArrayList<>();
         supermarketSectionCounts.clear();
 
         for (Supermarket sm : itemsBySupermarket.keySet())
@@ -190,27 +199,14 @@ public class PlanListItemsAdapter extends RecyclerView.Adapter<PlanListItemsAdap
                     supermarketSectionCounts.getOrDefault(name, 0) + 1
             );
 
-            if (list != null && !list.isEmpty())
-            {
-                nonEmpty.add(sm);
-            }
-            else
-            {
-                empty.add(sm);
-            }
+            result.add(sm);
         }
-
-        ArrayList<Supermarket> result = new ArrayList<>();
-        result.addAll(nonEmpty);
-        result.addAll(empty);
 
         this.supermarkets = result;
     }
 
     private void sortByExisting()
     {
-        if (list == null || list.getCategories() == null) return;
-
         ArrayList<Item> sourceItems = new ArrayList<>();
 
         if (categoryName != null)
@@ -221,7 +217,6 @@ public class PlanListItemsAdapter extends RecyclerView.Adapter<PlanListItemsAdap
                         list.getCategories()
                                 .get(categoryName)
                                 .getItems()
-                                .values()
                 );
             }
         }
@@ -264,20 +259,22 @@ public class PlanListItemsAdapter extends RecyclerView.Adapter<PlanListItemsAdap
     {
         if (item == null || supermarket == null) return;
 
-        Map<String, Map<String, Double>> itemPriceData = itemPrices.get(item.getAbsoluteId());
+        ArrayList<Item> single = new ArrayList<>();
+        single.add(item);
 
-        if (itemPriceData != null)
+        Map<String, ArrayList<ItemViewPricesAdapter.PriceRow>> rowsMap =
+                com.example.baskit.API.APIHandler.getInstance().buildRows(single);
+
+        ArrayList<ItemViewPricesAdapter.PriceRow> rows =
+                rowsMap.get(item.getBaseName());
+
+        if (rows != null)
         {
-            Map<String, Double> sections = itemPriceData.get(supermarket.getSupermarket());
-
-            if (sections != null && sections.containsKey(supermarket.getSection()))
-            {
-                item.setPrice(sections.get(supermarket.getSection()));
-            }
-            else if (sections != null && !sections.isEmpty())
-            {
-                item.setPrice(sections.values().iterator().next());
-            }
+            item.setSupermarketRow(supermarket, rows);
+        }
+        else
+        {
+            item.setPrice(0.0);
         }
     }
 
@@ -357,7 +354,7 @@ public class PlanListItemsAdapter extends RecyclerView.Adapter<PlanListItemsAdap
         ArrayList<Item> items = itemsBySupermarket.get(supermarket);
 
         SupermarketItemsAdapterPlan supermarketsAdapter =
-                new SupermarketItemsAdapterPlan(items, activity, context, upperClassFns, supermarket, selectedSupermarket, itemPrices, listener);
+                new SupermarketItemsAdapterPlan(items, originalList, activity, context, upperClassFns, supermarket, selectedSupermarket, itemPrices, groups, listener);
 
         holder.recyclerItems.setLayoutManager(new LinearLayoutManager(holder.itemView.getContext()));
         holder.recyclerItems.setAdapter(supermarketsAdapter);

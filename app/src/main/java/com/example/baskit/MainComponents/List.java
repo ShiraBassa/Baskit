@@ -1,5 +1,6 @@
 package com.example.baskit.MainComponents;
 
+import com.example.baskit.Categories.ItemViewPricesAdapter;
 import com.google.firebase.database.Exclude;
 import com.google.firebase.database.IgnoreExtraProperties;
 
@@ -125,7 +126,7 @@ public class List implements SortableEntity
 
         for (Category category : categories.values())
         {
-            items.addAll(category.getItems().values());
+            items.addAll(category.getItems());
         }
 
         return items;
@@ -242,15 +243,42 @@ public class List implements SortableEntity
         this.itemSuggestions = itemSuggestions;
     }
 
+    public void setCheapestRows(Map<String, ArrayList<ItemViewPricesAdapter.PriceRow>> rowsAllItems)
+    {
+        if (rowsAllItems == null) return;
+        ArrayList<Item> items = getItems();
+
+        for (Item item : items)
+        {
+            ArrayList<ItemViewPricesAdapter.PriceRow> rows = rowsAllItems.get(item.baseName);
+            if (rows == null) continue;
+
+            item.setCheapestRow(rows);
+        }
+    }
+
+    public void setSupermarketsRows(Supermarket supermarket, Map<String, ArrayList<ItemViewPricesAdapter.PriceRow>> rowsAllItems)
+    {
+        if (rowsAllItems == null) return;
+
+        ArrayList<Item> items = getItems();
+
+        for (Item item : items)
+        {
+            ArrayList<ItemViewPricesAdapter.PriceRow> rows = rowsAllItems.get(item.baseName);
+            if (rows == null) continue;
+
+            item.setSupermarketRow(supermarket, rows);
+        }
+    }
+
     public void setCheapestFromSmMap(Map<String, Map<Supermarket, Double>> pricesAllItems)
     {
         if (pricesAllItems == null) return;
 
         for (Item item : getItems())
         {
-            String absID = item.getAbsoluteId();
-
-            Map<Supermarket, Double> prices = pricesAllItems.get(absID);
+            Map<Supermarket, Double> prices = pricesAllItems.get(item.baseName);
             if (prices == null) continue;
 
             item.setCheapestSupermarketFromSmMap(prices);
@@ -263,9 +291,7 @@ public class List implements SortableEntity
 
         for (Item item : getItems())
         {
-            String absID = item.getAbsoluteId();
-
-            Map<String, Map<String, Double>> prices = pricesAllItems.get(absID);
+            Map<String, Map<String, Double>> prices = pricesAllItems.get(item.baseName);
             if (prices == null) continue;
 
             item.setCheapestSupermarketFromStringsMap(prices);
@@ -278,9 +304,7 @@ public class List implements SortableEntity
 
         for (Item item : getItems())
         {
-            String absID = item.getAbsoluteId();
-
-            Map<Supermarket, Double> prices = pricesAllItems.get(absID);
+            Map<Supermarket, Double> prices = pricesAllItems.get(item.baseName);
             if (prices == null) continue;
 
             item.setSupermarketFromSmMap(supermarket, prices);
@@ -293,9 +317,7 @@ public class List implements SortableEntity
 
         for (Item item : getItems())
         {
-            String absID = item.getAbsoluteId();
-
-            Map<String, Map<String, Double>> prices = pricesAllItems.get(absID);
+            Map<String, Map<String, Double>> prices = pricesAllItems.get(item.baseName);
             if (prices == null) continue;
 
             item.setSupermarketFromStringsMap(supermarket, prices);

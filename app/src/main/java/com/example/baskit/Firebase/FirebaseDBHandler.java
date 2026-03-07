@@ -12,6 +12,7 @@ import com.example.baskit.MainComponents.Request;
 import com.example.baskit.MainComponents.User;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseException;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.ValueEventListener;
@@ -80,6 +81,69 @@ public class FirebaseDBHandler
         return instance;
     }
 
+    private List parseListSnapshot(String listId, DataSnapshot snapshot)
+    {
+        List list = new List();
+        list.setId(listId);
+        list.setName(snapshot.child("name").getValue(String.class));
+
+        // userIDs
+        ArrayList<String> userIDs = new ArrayList<>();
+        for (DataSnapshot child : snapshot.child("userIDs").getChildren())
+        {
+            String uid = child.getValue(String.class);
+            if (uid != null) userIDs.add(uid);
+        }
+        list.setUserIDs(userIDs);
+
+        // requests
+        ArrayList<Request> requests = new ArrayList<>();
+        for (DataSnapshot reqSnap : snapshot.child("requests").getChildren())
+        {
+            Request req = reqSnap.getValue(Request.class);
+            if (req != null) requests.add(req);
+        }
+        list.setRequests(requests);
+
+        // itemSuggestions
+        ArrayList<String> suggestions = new ArrayList<>();
+        for (DataSnapshot sugSnap : snapshot.child("itemSuggestions").getChildren())
+        {
+            String s = sugSnap.getValue(String.class);
+            if (s != null) suggestions.add(s);
+        }
+        list.setItemSuggestions(suggestions);
+
+        // categories
+        for (DataSnapshot catSnap : snapshot.child("categories").getChildren())
+        {
+            String catName = catSnap.getKey();
+            Category cat = new Category(catName);
+
+            Boolean finished = catSnap.child("finished").getValue(Boolean.class);
+            if (finished != null) {
+                cat.setFinished(finished);
+            }
+
+            ArrayList<Item> items = new ArrayList<>();
+            DataSnapshot itemsSnap = catSnap.child("items");
+
+            for (DataSnapshot itemSnap : itemsSnap.getChildren())
+            {
+                Item item = itemSnap.getValue(Item.class);
+                if (item != null)
+                {
+                    items.add(item);
+                }
+            }
+
+            cat.setItems(items);
+            list.addCategory(cat);
+        }
+
+        return list;
+    }
+
     public void getList(String listId, GetListCallback callback)
     {
         refLists.child(listId).get().addOnCompleteListener(task ->
@@ -90,7 +154,7 @@ public class FirebaseDBHandler
 
                 if (snapshot.exists())
                 {
-                    List list = snapshot.getValue(List.class);
+                    List list = parseListSnapshot(listId, snapshot);
                     try {
                         callback.onListFetched(list);
                     } catch (JSONException e) {
@@ -114,7 +178,7 @@ public class FirebaseDBHandler
 
     public void getUser(String userID, GetUserCallback callback)
     {
-        refLists.child(userID).get().addOnCompleteListener(task ->
+        refUsers.child(userID).get().addOnCompleteListener(task ->
         {
             if (task.isSuccessful())
             {
@@ -151,12 +215,23 @@ public class FirebaseDBHandler
 
                 if (task.isSuccessful() && task.getResult().exists())
                 {
-                    List list = task.getResult().getValue(List.class);
+                    DataSnapshot snap = task.getResult();
 
-                    if (list != null && list.getUserIDs().contains(user.getId()))
+                    String name = snap.child("name").getValue(String.class);
+
+                    ArrayList<String> userIDs = new ArrayList<>();
+                    DataSnapshot usersSnap = snap.child("userIDs");
+
+                    for (DataSnapshot child : usersSnap.getChildren())
+                    {
+                        String uid = child.getValue(String.class);
+                        if (uid != null) userIDs.add(uid);
+                    }
+
+                    if (name != null && userIDs.contains(user.getId()))
                     {
                         validListIDs.add(listID);
-                        finalListNames.add(list.getName());
+                        finalListNames.add(name);
                     }
                 }
 
@@ -213,7 +288,17 @@ public class FirebaseDBHandler
         {
             if (task.isSuccessful() && task.getResult().exists())
             {
-                List list = task.getResult().getValue(List.class);
+                DataSnapshot snap = task.getResult();
+                List list = new List();
+                list.setId(listId);
+
+                ArrayList<String> userIDs = new ArrayList<>();
+                for (DataSnapshot child : snap.child("userIDs").getChildren())
+                {
+                    String uid = child.getValue(String.class);
+                    if (uid != null) userIDs.add(uid);
+                }
+                list.setUserIDs(userIDs);
 
                 if (list != null)
                 {
@@ -233,7 +318,12 @@ public class FirebaseDBHandler
             {
                 if (task.isSuccessful())
                 {
-                    ArrayList<String> listIDs = task.getResult().getValue(new GenericTypeIndicator<ArrayList<String>>() {});
+                    ArrayList<String> listIDs;
+                    try {
+                        listIDs = task.getResult().getValue(new GenericTypeIndicator<ArrayList<String>>() {});
+                    } catch (DatabaseException e) {
+                        listIDs = new ArrayList<>();
+                    }
 
                     if (listIDs != null && listIDs.contains(list.getId()))
                     {
@@ -292,8 +382,7 @@ public class FirebaseDBHandler
                 .child("categories")
                 .child(category.getName())
                 .child("items")
-                .child(item.getId())
-                .setValue(item);
+                .setValue(category.getItems());
     }
 
     public void addItem(List list, String category_name, Item item, DBCallback callback)
@@ -304,8 +393,7 @@ public class FirebaseDBHandler
                 .child("categories")
                 .child(category_name)
                 .child("items")
-                .child(item.getId())
-                .setValue(item)
+                .setValue(list.getCategory(category_name).getItems())
                 .addOnSuccessListener(aVoid ->
                 {
                     if (callback != null) callback.onComplete();
@@ -324,7 +412,7 @@ public class FirebaseDBHandler
             {
                 if (snapshot.exists())
                 {
-                    List list = snapshot.getValue(List.class);
+                    List list = parseListSnapshot(listId, snapshot);
                     try {
                         callback.onListFetched(list);
                     } catch (JSONException e) {
@@ -349,12 +437,20 @@ public class FirebaseDBHandler
             {
                 if (snapshot.exists())
                 {
-                    Category newCategory = snapshot.getValue(Category.class);
+                    String catName = snapshot.getKey();
+                    Category newCategory = new Category(catName);
 
-                    if (newCategory != null)
+                    ArrayList<Item> items = new ArrayList<>();
+                    DataSnapshot itemsSnap = snapshot.child("items");
+
+                    for (DataSnapshot itemSnap : itemsSnap.getChildren())
                     {
-                        callback.onCategoryFetched(newCategory);
+                        Item item = itemSnap.getValue(Item.class);
+                        if (item != null) items.add(item);
                     }
+
+                    newCategory.setItems(items);
+                    callback.onCategoryFetched(newCategory);
                 }
             }
 
@@ -370,7 +466,12 @@ public class FirebaseDBHandler
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot)
             {
-                ArrayList<String> listIDs = snapshot.getValue(new GenericTypeIndicator<ArrayList<String>>() {});
+                ArrayList<String> listIDs;
+                try {
+                    listIDs = snapshot.getValue(new GenericTypeIndicator<ArrayList<String>>() {});
+                } catch (DatabaseException e) {
+                    listIDs = new ArrayList<>();
+                }
                 ArrayList<String> listNames;
 
                 user.setListIDs(listIDs);
@@ -407,8 +508,7 @@ public class FirebaseDBHandler
                 .child("categories")
                 .child(category.getName())
                 .child("items")
-                .child(item.getId())
-                .setValue(item);
+                .setValue(category.getItems());
     }
 
     public void updateItem(List list, Item item)
@@ -420,7 +520,7 @@ public class FirebaseDBHandler
     {
         for (Category category : list.getCategories().values())
         {
-            if (category.getItems().containsValue(item))
+            if (category.getItems().contains(item))
             {
                 return category;
             }
@@ -437,10 +537,13 @@ public class FirebaseDBHandler
         {
             for (Category category : list.getCategories().values())
             {
-                if (category.getItems().containsKey(item.getId()))
+                for (Item existing : category.getItems())
                 {
-                    updateItem(list, category, item);
-                    break;
+                    if (existing.getId().equals(item.getId()))
+                    {
+                        updateItem(list, category, item);
+                        break;
+                    }
                 }
             }
         }
@@ -448,14 +551,19 @@ public class FirebaseDBHandler
 
     public void removeItem(List list, Category category, Item item)
     {
+        removeItem(list, category, item.getFullId());
+    }
+
+    public void removeItem(List list, Category category, String itemID)
+    {
+        String fullId = Item.getFullId(itemID);
+
+        category.removeItem(fullId);
         refLists.child(list.getId())
                 .child("categories")
                 .child(category.getName())
                 .child("items")
-                .child(item.getId())
-                .removeValue();
-
-        category.removeItem(item);
+                .setValue(category.getItems());
 
         if (category.isEmpty())
         {
@@ -506,8 +614,13 @@ public class FirebaseDBHandler
                 {
                     if (task.isSuccessful())
                     {
-                        ArrayList<String> listIDs = task.getResult().getValue(
-                                new GenericTypeIndicator<ArrayList<String>>() {});
+                        ArrayList<String> listIDs;
+                        try {
+                            listIDs = task.getResult().getValue(
+                                    new GenericTypeIndicator<ArrayList<String>>() {});
+                        } catch (DatabaseException e) {
+                            listIDs = new ArrayList<>();
+                        }
 
                         if (listIDs == null)
                         {
@@ -569,8 +682,13 @@ public class FirebaseDBHandler
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot)
                 {
-                    ArrayList<Request> updatedRequests = snapshot.getValue(
-                            new GenericTypeIndicator<ArrayList<Request>>() {});
+                    ArrayList<Request> updatedRequests;
+                    try {
+                        updatedRequests = snapshot.getValue(
+                                new GenericTypeIndicator<ArrayList<Request>>() {});
+                    } catch (DatabaseException e) {
+                        updatedRequests = new ArrayList<>();
+                    }
 
                     if (updatedRequests == null)
                     {
@@ -608,11 +726,18 @@ public class FirebaseDBHandler
             }
 
             DataSnapshot snapshot = task.getResult();
-            final ArrayList<Request> requests = snapshot.getValue(
-                    new GenericTypeIndicator<ArrayList<Request>>() {}
-            );
+            ArrayList<Request> safeRequests;
+            try {
+                safeRequests = snapshot.getValue(
+                        new GenericTypeIndicator<ArrayList<Request>>() {}
+                );
+            } catch (DatabaseException e) {
+                safeRequests = new ArrayList<>();
+            }
 
-            final ArrayList<Request> safeRequests = (requests != null) ? requests : new ArrayList<>();
+            if (safeRequests == null) {
+                safeRequests = new ArrayList<>();
+            }
 
             String userID = user.getId();
 
@@ -624,6 +749,7 @@ public class FirebaseDBHandler
                 }
             }
 
+            ArrayList<Request> finalSafeRequests = safeRequests;
             refLists.child(listID).child("userIDs").get().addOnCompleteListener(taskTwo ->
             {
                 if (!taskTwo.isSuccessful())
@@ -631,24 +757,31 @@ public class FirebaseDBHandler
                     return;
                 }
 
-                ArrayList<String> userIDs = taskTwo.getResult().getValue(
-                        new GenericTypeIndicator<ArrayList<String>>() {}
-                );
+                ArrayList<String> userIDs;
+                try {
+                    userIDs = taskTwo.getResult().getValue(
+                            new GenericTypeIndicator<ArrayList<String>>() {}
+                    );
+                } catch (DatabaseException e) {
+                    userIDs = new ArrayList<>();
+                }
 
-                if (userIDs != null && userIDs.contains(userID))
+                if (userIDs == null) userIDs = new ArrayList<>();
+
+                if (userIDs.contains(userID))
                 {
                     return;
                 }
 
-                safeRequests.add(new Request(user));
-                refLists.child(listID).child("requests").setValue(safeRequests);
+                finalSafeRequests.add(new Request(user));
+                refLists.child(listID).child("requests").setValue(finalSafeRequests);
             });
         });
     }
 
     public boolean finishCategory(List list, Category category)
     {
-        for (Item item : new ArrayList<>(category.getItems().values()))
+        for (Item item : new ArrayList<>(category.getItems()))
         {
             if (item.isChecked())
             {
@@ -675,7 +808,9 @@ public class FirebaseDBHandler
 
     public void updateCategory(List list, Category category)
     {
-        updateItemsIndividuals(list, new ArrayList<>(category.getItems().values()));
+        if (category == null || list == null) return;
+
+        refLists.child(list.getId()).child("categories").child(category.getName()).setValue(category);
     }
 
     public void updateList(List list)
@@ -708,5 +843,15 @@ public class FirebaseDBHandler
     public void removeItems(List list)
     {
         removeItems(list.getId());
+    }
+
+    public void removeAllItems(List list, Category category, ArrayList<String> itemIDs)
+    {
+        if (list == null || category == null || itemIDs == null) return;
+
+        for (String id : itemIDs)
+        {
+            removeItem(list, category, id);
+        }
     }
 }

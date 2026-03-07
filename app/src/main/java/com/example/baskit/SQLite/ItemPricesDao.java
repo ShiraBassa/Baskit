@@ -8,15 +8,15 @@ import androidx.room.Query;
 import java.util.List;
 
 @Dao
-public interface ItemDao
+public interface ItemPricesDao
 {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void insertAll(List<ItemEntity> items);
+    void insertAll(List<ItemPricesEntity> items);
 
-    @Query("SELECT * FROM items")
-    List<ItemEntity> getAll();
+    @Query("SELECT * FROM item_prices")
+    List<ItemPricesEntity> getAll();
 
-    @Query("DELETE FROM items")
+    @Query("DELETE FROM item_prices")
     void clearAll();
 }
