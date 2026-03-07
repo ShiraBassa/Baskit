@@ -61,6 +61,7 @@ public class AddItemFragment extends DialogFragment
     private Context context;
 
     private ArrayList<String> allItemNames;
+    private ArrayList<String> masterItemNames;
     // Decoded caches for fast search
     private ArrayList<String> decodedItemNames = new ArrayList<>();
     private ArrayList<String> decodedItemNamesLower = new ArrayList<>();
@@ -109,15 +110,23 @@ public class AddItemFragment extends DialogFragment
         this.addItemInterface = addItemInterface;
         this.itemSuggestions = itemSuggestions;
 
-        this.allItemNames = groups != null
+        this.masterItemNames = groups != null
                 ? new ArrayList<>(groups.keySet())
                 : new ArrayList<>();
+
+        this.allItemNames = new ArrayList<>(masterItemNames);
 
         init();
     }
 
     private void init()
     {
+        // Rebuild full item list from master copy before filtering
+        if (masterItemNames != null)
+        {
+            allItemNames = new ArrayList<>(masterItemNames);
+        }
+
         LinkedHashMap<String, String> unique = new LinkedHashMap<>();
 
         if (listItemNames != null)
@@ -242,6 +251,29 @@ public class AddItemFragment extends DialogFragment
         searchItem.setFocusableInTouchMode(true);
         searchItem.requestFocus();
 
+        // Reset filter chips when reopening dialog
+        if (chipGroupWeights != null)
+        {
+            for (int i = 0; i < chipGroupWeights.getChildCount(); i++)
+            {
+                Chip chip = (Chip) chipGroupWeights.getChildAt(i);
+                chip.setChecked(false);
+            }
+        }
+
+        if (chipGroupCompanies != null)
+        {
+            for (int i = 0; i < chipGroupCompanies.getChildCount(); i++)
+            {
+                Chip chip = (Chip) chipGroupCompanies.getChildAt(i);
+                chip.setChecked(false);
+            }
+        }
+
+        if (currentVariations != null && !currentVariations.isEmpty())
+        {
+            applyVariationFilter();
+        }
     }
 
     private void setupAutocomplete()
@@ -1112,6 +1144,9 @@ public class AddItemFragment extends DialogFragment
                 catch (Exception ignored) {}
             }
 
+            // Sort rows by price (cheapest first)
+            rows.sort((a, b) -> Double.compare(a.getPrice(), b.getPrice()));
+
             if (activity == null) return;
 
             activity.runOnUiThread(() ->
@@ -1183,6 +1218,13 @@ public class AddItemFragment extends DialogFragment
     public void updateData(ArrayList<String> newListItemNames)
     {
         listItemNames = newListItemNames;
+
+        // Rebuild available item names based on the updated list
+        if (masterItemNames != null)
+        {
+            allItemNames = new ArrayList<>(masterItemNames);
+        }
+
         init();
     }
 

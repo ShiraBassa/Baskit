@@ -272,58 +272,6 @@ public class List implements SortableEntity
         }
     }
 
-    public void setCheapestFromSmMap(Map<String, Map<Supermarket, Double>> pricesAllItems)
-    {
-        if (pricesAllItems == null) return;
-
-        for (Item item : getItems())
-        {
-            Map<Supermarket, Double> prices = pricesAllItems.get(item.baseName);
-            if (prices == null) continue;
-
-            item.setCheapestSupermarketFromSmMap(prices);
-        }
-    }
-
-    public void setCheapestFromStringsMap(Map<String, Map<String, Map<String, Double>>> pricesAllItems)
-    {
-        if (pricesAllItems == null) return;
-
-        for (Item item : getItems())
-        {
-            Map<String, Map<String, Double>> prices = pricesAllItems.get(item.baseName);
-            if (prices == null) continue;
-
-            item.setCheapestSupermarketFromStringsMap(prices);
-        }
-    }
-
-    public void setSupermarketFromSmMap(Supermarket supermarket, Map<String, Map<Supermarket, Double>> pricesAllItems)
-    {
-        if (pricesAllItems == null) return;
-
-        for (Item item : getItems())
-        {
-            Map<Supermarket, Double> prices = pricesAllItems.get(item.baseName);
-            if (prices == null) continue;
-
-            item.setSupermarketFromSmMap(supermarket, prices);
-        }
-    }
-
-    public void setSupermarketFromStringsMap(Supermarket supermarket, Map<String, Map<String, Map<String, Double>>> pricesAllItems)
-    {
-        if (pricesAllItems == null) return;
-
-        for (Item item : getItems())
-        {
-            Map<String, Map<String, Double>> prices = pricesAllItems.get(item.baseName);
-            if (prices == null) continue;
-
-            item.setSupermarketFromStringsMap(supermarket, prices);
-        }
-    }
-
     @Override
     public SortableEntity copy()
     {

@@ -309,47 +309,18 @@ public class Item implements Cloneable
             return null;
         }
 
-        ItemViewPricesAdapter.PriceRow ogRow = null;
+        ItemViewPricesAdapter.PriceRow ogRow = getRow();
         double cheapestPrice = Double.MAX_VALUE;
         ItemViewPricesAdapter.PriceRow cheapestRow = null;
 
         for (ItemViewPricesAdapter.PriceRow row : priceRows)
         {
-            if (row == null) continue;
+            if (!isVariantOf(row)) continue;
 
             ItemInfo info = row.getInfo();
-            if (info == null) continue;
 
-            if (info.getCode().equals(this.getAbsoluteId()))
-            {
-                ogRow = row;
-            }
-
-            Double currWeight = info.getWeight();
-            String currUnit = info.getUnit();
             double currPrice = row.getPrice();
             if (currPrice == 0.0) continue;
-
-            // determine if this item actually defines a variant
-            boolean hasWeightUnit = this.weight != null && this.unit != null && !this.unit.isEmpty();
-
-            // compare variant safely
-            boolean sameWeight =
-                    (this.weight == null && currWeight == null) ||
-                    (this.weight != null && currWeight != null && Double.compare(this.weight, currWeight) == 0);
-
-            boolean sameUnit =
-                    (this.unit == null && currUnit == null) ||
-                    (this.unit != null && this.unit.equals(currUnit));
-
-            boolean sameWeightAndUnit = sameWeight && sameUnit;
-
-            // If the item defines a variant (weight+unit), restrict only by the variant itself.
-            // Do NOT restrict by supermarket — we still want to allow switching supermarkets.
-            if (hasWeightUnit && !sameWeightAndUnit)
-            {
-                continue;
-            }
 
             if (cheapestRow == null)
             {
@@ -396,12 +367,12 @@ public class Item implements Cloneable
             }
         }
 
-        if (cheapestPrice < price || ogRow == null)
+        if (cheapestRow.getPrice() == price)
         {
-            return cheapestRow;
+            return ogRow;
         }
 
-        return ogRow;
+        return cheapestRow;
     }
 
     @Exclude
@@ -425,60 +396,15 @@ public class Item implements Cloneable
             return null;
         }
 
-        ItemViewPricesAdapter.PriceRow ogRow = null;
-        Double weight = this.getWeight();
-        String unit = this.getUnit();
-
+        ItemViewPricesAdapter.PriceRow ogRow = getRow();
         ItemViewPricesAdapter.PriceRow cheapestRow = null;
         double cheapestPrice = Double.MAX_VALUE;
 
         for (ItemViewPricesAdapter.PriceRow row : rows)
         {
-            if (row == null || row.getInfo() == null)
-            {
-                continue;
-            }
-
-            // If this item already has a supermarket, rows without supermarket are invalid.
-            // But if the item itself has no supermarket, we allow rows without supermarket.
-            if (row.getSupermarket() == null && this.supermarket != null)
-            {
-                continue;
-            }
-
-            if (supermarket != null && row.getSupermarket() != null && !row.getSupermarket().equals(supermarket))
-            {
-                continue;
-            }
+            if (!isVariantOf(row, supermarket)) continue;
 
             ItemInfo info = row.getInfo();
-
-            if (info.getCode().equals(this.getAbsoluteId()))
-            {
-                ogRow = row;
-            }
-
-            Double vWeight = info.getWeight();
-            String vUnit = info.getUnit();
-
-            boolean sameWeight =
-                    (weight == null && vWeight == null) ||
-                            (weight != null && vWeight != null && Double.compare(weight, vWeight) == 0);
-
-            boolean sameUnit =
-                    (unit == null && vUnit == null) ||
-                            (unit != null && unit.equals(vUnit));
-
-            boolean sameWeightAndUnit = sameWeight && sameUnit;
-            boolean hasWeightUnit = weight != null && unit != null && !unit.isEmpty();
-
-            // If supermarket is selected AND we actually know the weight+unit,
-            // restrict to the same variant. Otherwise consider all variants.
-            if (this.supermarket != null && hasWeightUnit && !sameWeightAndUnit)
-            {
-                continue;
-            }
-
             double currPrice = row.getPrice();
 
             if (cheapestRow == null)
@@ -515,12 +441,12 @@ public class Item implements Cloneable
             }
         }
 
-        if (cheapestPrice < price || ogRow == null)
+        if (this.supermarket == supermarket && cheapestRow.getPrice() == price)
         {
-            return cheapestRow;
+            return ogRow;
         }
 
-        return ogRow;
+        return cheapestRow;
     }
 
     @Exclude
@@ -552,58 +478,6 @@ public class Item implements Cloneable
     }
 
     @Exclude
-    public Supermarket getCheapestSupermarket(Map<Supermarket, Double> prices)
-    {
-        double cheapestPrice = this.price;
-        Supermarket cheapestSupermarket = this.supermarket;
-
-        if (prices == null || prices.isEmpty())
-        {
-            return this.supermarket;
-        }
-
-        if (this.supermarket == Baskit.UNASSIGNED_SUPERMARKET || this.price == 0.0)
-        {
-            cheapestPrice = Double.MAX_VALUE;
-        }
-
-        for (Supermarket supermarket : prices.keySet())
-        {
-            double price = prices.get(supermarket);
-
-            if (price < cheapestPrice)
-            {
-                cheapestPrice = price;
-                cheapestSupermarket = supermarket;
-            }
-        }
-
-        return cheapestSupermarket;
-    }
-
-    @Exclude
-    public void setCheapestSupermarketFromSmMap(Map<Supermarket, Double> prices)
-    {
-        Supermarket cheapest = getCheapestSupermarket(prices);
-        this.supermarket = cheapest;
-
-        if (prices != null)
-        {
-            Double newPrice = prices.get(cheapest);
-            if (newPrice != null)
-            {
-                this.price = newPrice;
-            }
-        }
-    }
-
-    @Exclude
-    public void setCheapestSupermarketFromStringsMap(Map<String, Map<String, Double>> prices)
-    {
-        setCheapestSupermarketFromSmMap(Supermarket.getSupermarketsPricesFromStrings(prices));
-    }
-
-    @Exclude
     public void fillInfo(ItemInfo info)
     {
         this.company = info.getCompany();
@@ -631,37 +505,82 @@ public class Item implements Cloneable
     }
 
     @Exclude
+    public ItemViewPricesAdapter.PriceRow getRow()
+    {
+        return new ItemViewPricesAdapter.PriceRow(supermarket, price, getInfo());
+    }
+
+    @Exclude
     public boolean isVariantOf(ItemViewPricesAdapter.PriceRow row)
     {
-        ItemInfo info = row.getInfo();
-
-        boolean sameCompany = java.util.Objects.equals(company, info.getCompany());
-
-        Double thisWeight = this.getWeight();
-        Double infoWeight = info.getWeight();
-        boolean sameWeight =
-                (thisWeight == null && infoWeight == null) ||
-                (thisWeight != null && infoWeight != null && Double.compare(thisWeight, infoWeight) == 0);
-
-        String infoUnit = info.getUnit();
-        boolean sameUnit =
-                (unit == null && infoUnit == null) ||
-                (unit != null && unit.equals(infoUnit));
-
-        boolean sameBaseName = java.util.Objects.equals(this.baseName, info.getBaseName());
-        boolean sameSupermarket =
-                row.getSupermarket() != null &&
-                        this.supermarket != null &&
-                        row.getSupermarket().getSupermarket().equals(this.supermarket.getSupermarket()) &&
-                        row.getSupermarket().getSection().equals(this.supermarket.getSection());
-        boolean samePrice = Double.compare(row.getPrice(), this.price) == 0;
-
-        if (!sameBaseName || !sameSupermarket || !samePrice)
+        if (row == null || row.getInfo() == null)
         {
             return false;
         }
 
-        return sameCompany && sameWeight && sameUnit && sameSupermarket;
+        if (supermarket == null)
+        {
+            return true;
+        }
+
+        if (row.getSupermarket() == null)
+        {
+            return false;
+        }
+
+        ItemInfo info = row.getInfo();
+        Double vWeight = info.getWeight();
+        String vUnit = info.getUnit();
+
+        boolean sameWeight =
+                (weight == null && vWeight == null) ||
+                        (weight != null && vWeight != null && Double.compare(weight, vWeight) == 0);
+
+        boolean sameUnit =
+                (unit == null && vUnit == null) ||
+                        (unit != null && unit.equals(vUnit));
+
+        return sameWeight && sameUnit;
+    }
+
+    @Exclude
+    public boolean isVariantOf(ItemViewPricesAdapter.PriceRow row, Supermarket newSupermarket)
+    {
+        if (row == null || row.getInfo() == null)
+        {
+            return false;
+        }
+
+        if (row.getSupermarket() == null || !row.getSupermarket().equals(newSupermarket))
+        {
+            return false;
+        }
+
+        if (supermarket == null)
+        {
+            return true;
+        }
+
+        ItemInfo info = row.getInfo();
+        Double vWeight = info.getWeight();
+        String vUnit = info.getUnit();
+
+        boolean sameWeight =
+                (weight == null && vWeight == null) ||
+                        (weight != null && vWeight != null && Double.compare(weight, vWeight) == 0);
+
+        boolean sameUnit =
+                (unit == null && vUnit == null) ||
+                        (unit != null && unit.equals(vUnit));
+
+        return sameWeight && sameUnit;
+    }
+
+    @Exclude
+    public boolean isIdenticalVariantOf(ItemViewPricesAdapter.PriceRow row)
+    {
+        return row.getInfo().equals(getInfo()) &&
+                row.getSupermarket().equals(supermarket);
     }
 
     @Exclude
@@ -686,5 +605,26 @@ public class Item implements Cloneable
     public boolean isVariant()
     {
         return hasCompany() || (hasWeight() && hasUnit()) && hasSupermarket();
+    }
+
+    @Exclude
+    public boolean hasSupermarketVariant(
+            Supermarket supermarket,
+            ArrayList<ItemViewPricesAdapter.PriceRow> rows)
+    {
+        if (rows == null || rows.isEmpty())
+        {
+            return false;
+        }
+
+        for (ItemViewPricesAdapter.PriceRow row : rows)
+        {
+            if (isVariantOf(row))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

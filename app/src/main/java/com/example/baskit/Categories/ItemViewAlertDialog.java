@@ -179,6 +179,7 @@ public class ItemViewAlertDialog
 
                 recyclerSupermarkets.setLayoutManager(new LinearLayoutManager(context));
                 recyclerSupermarkets.setAdapter(pricesAdapter);
+                applyVariationFilter();
 
                 // Auto-select current variant + supermarket
                 if (item.getAbsoluteId() != null && item.getSupermarket() != null)
@@ -187,7 +188,7 @@ public class ItemViewAlertDialog
                     {
                         ItemViewPricesAdapter.PriceRow row = rows.get(i);
 
-                        if (item.isVariantOf(row))
+                        if (item.isIdenticalVariantOf(row))
                         {
                             pricesAdapter.setSelectedPosition(i);
                             item.setPrice(row.getPrice());
@@ -246,6 +247,35 @@ public class ItemViewAlertDialog
     {
         this.item = _item.clone();
 
+        if (pricesAdapter != null)
+        {
+            pricesAdapter.setSelectedPosition(-1);
+        }
+
+        if (chipGroupWeights != null)
+        {
+            for (int i = 0; i < chipGroupWeights.getChildCount(); i++)
+            {
+                Chip chip = (Chip) chipGroupWeights.getChildAt(i);
+                chip.setChecked(false);
+            }
+        }
+
+        if (chipGroupCompanies != null)
+        {
+            for (int i = 0; i < chipGroupCompanies.getChildCount(); i++)
+            {
+                Chip chip = (Chip) chipGroupCompanies.getChildAt(i);
+                chip.setChecked(false);
+            }
+        }
+
+        rows.clear();
+        rows.addAll(allRows);
+        rows.sort((a, b) -> Double.compare(a.getPrice(), b.getPrice()));
+
+        applyVariationFilter();
+
         adBtnSave.setClickable(true);
         adBtnCancel.setClickable(true);
         adBtnUp.setClickable(true);
@@ -281,7 +311,6 @@ public class ItemViewAlertDialog
             adBtnDown.setVisibility(View.INVISIBLE);
         }
 
-        // Re-apply selection when reopening dialog
         if (pricesAdapter != null && rows != null)
         {
             pricesAdapter.setSelectedPosition(-1); // clear previous adapter state
@@ -290,7 +319,7 @@ public class ItemViewAlertDialog
             {
                 ItemViewPricesAdapter.PriceRow row = rows.get(i);
 
-                if (item.isVariantOf(row))
+                if (item.isIdenticalVariantOf(row))
                 {
                     pricesAdapter.setSelectedPosition(i);
                     item.setPrice(row.getPrice());
@@ -378,8 +407,6 @@ public class ItemViewAlertDialog
         {
             chipGroupCompanies.setVisibility(View.GONE);
         }
-
-        applyVariationFilter();
     }
 
     private void applyVariationFilter()
@@ -420,32 +447,63 @@ public class ItemViewAlertDialog
         }
 
         // =============================
-        // UPDATE CURRENT SELECTION
+        // AVAILABLE WEIGHTS (respect companies only)
         // =============================
-        if (pricesAdapter != null)
+        java.util.Set<String> availableWeights = new java.util.HashSet<>();
+
+        for (ItemViewPricesAdapter.PriceRow r : allRows)
         {
-            pricesAdapter.setSelectedPosition(-1);
+            if (r.getInfo() == null) continue;
 
-            if (item != null && item.getAbsoluteId() != null && item.getSupermarket() != null)
+            ItemInfo info = r.getInfo();
+
+            boolean companyMatch =
+                    selectedCompanies.isEmpty() ||
+                    (info.getCompany() != null && selectedCompanies.contains(info.getCompany()));
+
+            if (companyMatch && info.getWeight() != null && info.getWeight() > 0)
             {
-                for (int i = 0; i < rows.size(); i++)
-                {
-                    ItemViewPricesAdapter.PriceRow row = rows.get(i);
-
-                    if (item.isVariantOf(row))
-                    {
-                        pricesAdapter.setSelectedPosition(i);
-                        item.setPrice(row.getPrice());
-                        item.fillInfo(row.getInfo());
-                        break;
-                    }
-                }
+                availableWeights.add(info.getFullMeasureStr());
             }
         }
 
-        if (pricesAdapter != null)
+        // =============================
+        // AVAILABLE COMPANIES (respect weights only)
+        // =============================
+        java.util.Set<String> availableCompanies = new java.util.HashSet<>();
+
+        for (ItemViewPricesAdapter.PriceRow r : allRows)
         {
-            pricesAdapter.notifyDataSetChanged();
+            if (r.getInfo() == null) continue;
+
+            ItemInfo info = r.getInfo();
+
+            boolean weightMatch =
+                    selectedWeights.isEmpty() ||
+                    selectedWeights.contains(info.getFullMeasureStr());
+
+            if (weightMatch && info.getCompany() != null && !info.getCompany().isEmpty())
+            {
+                availableCompanies.add(info.getCompany());
+            }
         }
+
+        for (int i = 0; i < chipGroupWeights.getChildCount(); i++)
+        {
+            Chip chip = (Chip) chipGroupWeights.getChildAt(i);
+            boolean enabled = availableWeights.contains(chip.getText().toString());
+            chip.setEnabled(enabled);
+            chip.setAlpha(enabled ? 1f : 0.3f);
+        }
+
+        for (int i = 0; i < chipGroupCompanies.getChildCount(); i++)
+        {
+            Chip chip = (Chip) chipGroupCompanies.getChildAt(i);
+            boolean enabled = availableCompanies.contains(chip.getText().toString());
+            chip.setEnabled(enabled);
+            chip.setAlpha(enabled ? 1f : 0.3f);
+        }
+
+        rows.sort((a, b) -> Double.compare(a.getPrice(), b.getPrice()));
     }
 }

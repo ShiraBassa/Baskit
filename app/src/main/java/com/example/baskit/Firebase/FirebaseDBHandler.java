@@ -551,14 +551,12 @@ public class FirebaseDBHandler
 
     public void removeItem(List list, Category category, Item item)
     {
-        removeItem(list, category, item.getFullId());
+        removeItem(list, category, item.getBaseName());
     }
 
-    public void removeItem(List list, Category category, String itemID)
+    public void removeItem(List list, Category category, String itemName)
     {
-        String fullId = Item.getFullId(itemID);
-
-        category.removeItem(fullId);
+        category.removeItem(itemName);
         refLists.child(list.getId())
                 .child("categories")
                 .child(category.getName())
@@ -843,15 +841,5 @@ public class FirebaseDBHandler
     public void removeItems(List list)
     {
         removeItems(list.getId());
-    }
-
-    public void removeAllItems(List list, Category category, ArrayList<String> itemIDs)
-    {
-        if (list == null || category == null || itemIDs == null) return;
-
-        for (String id : itemIDs)
-        {
-            removeItem(list, category, id);
-        }
     }
 }

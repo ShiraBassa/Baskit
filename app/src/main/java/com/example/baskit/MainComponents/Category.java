@@ -138,7 +138,7 @@ public class Category implements SortableEntity
         {
             for (Item item : items)
             {
-                newItems.put(item.getId(), item);
+                newItems.put(item.getBaseName(), item);
             }
         }
 
@@ -235,7 +235,7 @@ public class Category implements SortableEntity
     {
         for (Item i : items)
         {
-            if (i.getId().equals(item.getId())) return true;
+            if (i.getBaseName().equals(item.getBaseName())) return true;
         }
         return false;
     }
@@ -264,16 +264,16 @@ public class Category implements SortableEntity
     {
         if (item != null)
         {
-            removeItem(item.getId());
+            removeItem(item.getBaseName());
         }
     }
 
     @Exclude
-    public void removeItem(String id)
+    public void removeItem(String name)
     {
-        if (id != null)
+        if (name != null)
         {
-            this.items.removeIf(i -> id.equals(i.getId()));
+            this.items.removeIf(i -> name.equals(i.getBaseName()));
             updateFinished();
         }
     }
@@ -326,62 +326,6 @@ public class Category implements SortableEntity
             if (rows == null) continue;
 
             item.setSupermarketRow(supermarket, rows);
-        }
-    }
-
-    @Exclude
-    public void setCheapestFromSmMap(Map<String, Map<Supermarket, Double>> pricesAllItems)
-    {
-        if (pricesAllItems == null) return;
-
-        for (Item item : this.items)
-        {
-            Map<Supermarket, Double> prices = pricesAllItems.get(item.baseName);
-            if (prices == null) continue;
-
-            item.setCheapestSupermarketFromSmMap(prices);
-        }
-    }
-
-    @Exclude
-    public void setCheapestFromStringsMap(Map<String, Map<String, Map<String, Double>>> pricesAllItems)
-    {
-        if (pricesAllItems == null) return;
-
-        for (Item item : this.items)
-        {
-            Map<String, Map<String, Double>> prices = pricesAllItems.get(item.baseName);
-            if (prices == null) continue;
-
-            item.setCheapestSupermarketFromStringsMap(prices);
-        }
-    }
-
-    @Exclude
-    public void setSupermarketFromSmMap(Supermarket supermarket, Map<String, Map<Supermarket, Double>> pricesAllItems)
-    {
-        if (pricesAllItems == null) return;
-
-        for (Item item : this.items)
-        {
-            Map<Supermarket, Double> prices = pricesAllItems.get(item.baseName);
-            if (prices == null) continue;
-
-            item.setSupermarketFromSmMap(supermarket, prices);
-        }
-    }
-
-    @Exclude
-    public void setSupermarketFromStringsMap(Supermarket supermarket, Map<String, Map<String, Map<String, Double>>> pricesAllItems)
-    {
-        if (pricesAllItems == null) return;
-
-        for (Item item : this.items)
-        {
-            Map<String, Map<String, Double>> prices = pricesAllItems.get(item.baseName);
-            if (prices == null) continue;
-
-            item.setSupermarketFromStringsMap(supermarket, prices);
         }
     }
 

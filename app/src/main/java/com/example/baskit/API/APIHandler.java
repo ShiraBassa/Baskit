@@ -1068,46 +1068,60 @@ public class APIHandler
             String itemName = item.getBaseName();
             if (itemName == null || itemName.isEmpty()) continue;
 
-            ArrayList<String> groupCodes = cachedGroups.get(itemName);
+            ArrayList<ItemViewPricesAdapter.PriceRow> itemRows = buildRow(item);
+            rows.put(itemName, itemRows);
+        }
 
-            if (groupCodes == null || groupCodes.isEmpty()) continue;
+        return rows;
+    }
 
-            ArrayList<ItemViewPricesAdapter.PriceRow> itemRows = new ArrayList<>();
+    public ArrayList<ItemViewPricesAdapter.PriceRow> buildRow(Item item)
+    {
+        ArrayList<ItemViewPricesAdapter.PriceRow> rows = new ArrayList<>();
 
-            for (String code : groupCodes)
+        if (item == null)
+        {
+            return rows;
+        }
+
+        String itemName = item.getBaseName();
+        if (itemName == null || itemName.isEmpty()) return rows;
+
+        ArrayList<String> groupCodes = cachedGroups.get(itemName);
+
+        if (groupCodes == null || groupCodes.isEmpty()) return rows;
+
+        for (String code : groupCodes)
+        {
+            Map<String, Map<String, Double>> supermarkets = cachedItemPrices.get(code);
+            if (supermarkets == null) continue;
+
+            for (Map.Entry<String, Map<String, Double>> smEntry : supermarkets.entrySet())
             {
-                Map<String, Map<String, Double>> supermarkets = cachedItemPrices.get(code);
-                if (supermarkets == null) continue;
+                String supermarketName = smEntry.getKey();
+                Map<String, Double> sections = smEntry.getValue();
 
-                for (Map.Entry<String, Map<String, Double>> smEntry : supermarkets.entrySet())
+                if (supermarketName == null || sections == null) continue;
+
+                for (Map.Entry<String, Double> sectionEntry : sections.entrySet())
                 {
-                    String supermarketName = smEntry.getKey();
-                    Map<String, Double> sections = smEntry.getValue();
+                    String section = sectionEntry.getKey();
+                    Double price = sectionEntry.getValue();
 
-                    if (supermarketName == null || sections == null) continue;
+                    if (section == null || price == null) continue;
 
-                    for (Map.Entry<String, Double> sectionEntry : sections.entrySet())
-                    {
-                        String section = sectionEntry.getKey();
-                        Double price = sectionEntry.getValue();
+                    Supermarket sm = new Supermarket(supermarketName, section);
 
-                        if (section == null || price == null) continue;
+                    rows.add(
+                            new ItemViewPricesAdapter.PriceRow(
+                                    sm,
+                                    price,
+                                    cachedItemInfos.get(code)
 
-                        Supermarket sm = new Supermarket(supermarketName, section);
-
-                        itemRows.add(
-                                new ItemViewPricesAdapter.PriceRow(
-                                        sm,
-                                        price,
-                                        cachedItemInfos.get(code)
-
-                                )
-                        );
-                    }
+                            )
+                    );
                 }
             }
-
-            rows.put(itemName, itemRows);
         }
 
         return rows;

@@ -1,5 +1,7 @@
 package com.example.baskit.MainComponents;
 
+import java.util.Objects;
+
 public class ItemInfo
 {
     private String code;
@@ -112,7 +114,7 @@ public class ItemInfo
         {
             str += getWeightStr();
 
-            if (unit != null && !unit.isEmpty() && unit != "יחידות")
+            if (unit != null && !unit.isEmpty() && !unit.equals("יחידות"))
             {
                 str += " " + unit;
             }
@@ -129,10 +131,10 @@ public class ItemInfo
 
         ItemInfo other = (ItemInfo) obj;
 
-        return java.util.Objects.equals(baseName, other.baseName) &&
-               java.util.Objects.equals(company, other.company) &&
-               Double.compare(other.weight, weight) == 0 &&
-               java.util.Objects.equals(unit, other.unit);
+        return Objects.equals(baseName, other.baseName) &&
+                Objects.equals(company, other.company) &&
+                Objects.equals(weight, other.weight) &&
+                Objects.equals(unit, other.unit);
     }
 
     @Override

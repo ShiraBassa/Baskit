@@ -269,11 +269,6 @@ public class ListActivity extends MasterActivity
                                 {
                                     updateCategoriesInflater(newCategories);
                                 }
-
-                                if (addItemFragment != null)
-                                {
-                                    addItemFragment.updateData(newList.toItemNames());
-                                }
                             }
 
                             @Override
@@ -334,6 +329,7 @@ public class ListActivity extends MasterActivity
                     return;
                 }
 
+                addItemFragment.updateData(list.toItemNames());
                 addItemFragment.show(getSupportFragmentManager(), "AddItemFragment");
             }
         });

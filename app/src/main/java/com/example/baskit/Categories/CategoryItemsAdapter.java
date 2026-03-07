@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.baskit.API.APIHandler;
 import com.example.baskit.Baskit;
 import com.example.baskit.MainComponents.Category;
 import com.example.baskit.MainComponents.Item;
@@ -201,27 +202,6 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
 
         rebuildDisplaySupermarkets();
         notifyDataSetChanged();
-    }
-
-    private void updateItemPriceForSupermarket(Item item, Supermarket supermarket)
-    {
-        if (item == null || supermarket == null) return;
-
-        Map<String, Map<String, Double>> itemPriceData = itemPrices.get(item.getAbsoluteId());
-
-        if (itemPriceData != null)
-        {
-            Map<String, Double> sections = itemPriceData.get(supermarket.getSupermarket());
-
-            if (sections != null && sections.containsKey(supermarket.getSection()))
-            {
-                item.setPrice(sections.get(supermarket.getSection()));
-            }
-            else if (sections != null && !sections.isEmpty())
-            {
-                item.setPrice(sections.values().iterator().next());
-            }
-        }
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder
@@ -474,15 +454,15 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
             return true;
         }
 
-        String id = item.getAbsoluteId();
-        String supermarketName = supermarket.getSupermarket();
-        String sectionName = supermarket.getSection();
+        ArrayList<ItemViewPricesAdapter.PriceRow> rows = APIHandler.getInstance().buildRow(item);
+        if (rows == null) return false;
 
-        if (itemPrices.containsKey(id) &&
-                itemPrices.get(id).containsKey(supermarketName) &&
-                itemPrices.get(id).get(supermarketName).containsKey(sectionName))
+        for (ItemViewPricesAdapter.PriceRow row : rows)
         {
-            return true;
+            if (item.isVariantOf(row, supermarket))
+            {
+                return true;
+            }
         }
 
         return false;
@@ -503,13 +483,11 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
 
         if (to == unassigned_supermarket)
         {
-            draggedItem.setSupermarket(null);
-            draggedItem.setPrice(0.0);
+            draggedItem.setUnchosen();
         }
         else
         {
-            draggedItem.setSupermarket(to);
-            updateItemPriceForSupermarket(draggedItem, to);
+            draggedItem.setSupermarketRow(to, APIHandler.getInstance().buildRow(draggedItem));
         }
 
         if (itemsBySupermarket.get(to) == null)

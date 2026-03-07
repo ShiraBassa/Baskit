@@ -149,6 +149,8 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
                 priceRows.add(new PriceRow(sm, price, matchedVariation));
             }
         }
+
+        sortRows();
     }
 
     public ItemViewPricesAdapter(
@@ -163,6 +165,29 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
         this.variations = null;
         this.selectedSupermarket = null;
         this.selectedSection = null;
+
+        sortRows();
+    }
+
+    private void sortRows()
+    {
+        if (priceRows != null)
+        {
+            priceRows.sort((a, b) -> Double.compare(a.getPrice(), b.getPrice()));
+        }
+    }
+
+    public void resort()
+    {
+        this.selectedPosition = -1;
+        sortRows();
+        notifyDataSetChanged();
+    }
+
+    public void setRows(ArrayList<PriceRow> rows)
+    {
+        this.priceRows = (rows != null) ? rows : new ArrayList<>();
+        resort();
     }
 
     public void setSelectedPosition(int position)

@@ -287,11 +287,6 @@ public class CategoryActivity extends MasterActivity
                                             itemsAdapter.updateItems(new ArrayList<>(category.getItems()));
                                         }
                                     });
-
-                                    if (addItemFragment != null)
-                                    {
-                                        addItemFragment.updateData(list.toItemNames());
-                                    }
                                 }
 
                                 @Override
@@ -349,6 +344,7 @@ public class CategoryActivity extends MasterActivity
             {
                 if (addItemFragment != null)
                 {
+                    addItemFragment.updateData(list.toItemNames());
                     addItemFragment.show(getSupportFragmentManager(), "AddItemFragment");
                 }
                 else
