@@ -24,6 +24,10 @@ import java.util.ArrayList;
 
 public class FirebaseDBHandler
 {
+    private ArrayList<String> lastListNames = new ArrayList<>();
+
+    private static FirebaseDBHandler instance;
+
     private FirebaseDBHandler() {}
 
     public interface GetListCallback
@@ -32,7 +36,8 @@ public class FirebaseDBHandler
         void onError(String error);
     }
 
-    public interface DBCallback {
+    public interface DBCallback
+    {
         void onComplete();
         void onFailure(Exception e);
     }
@@ -68,9 +73,6 @@ public class FirebaseDBHandler
         void onUserFetched(User newUser);
     }
 
-    private static FirebaseDBHandler instance;
-    private ArrayList<String> lastListNames = new ArrayList<>();
-
     public static FirebaseDBHandler getInstance()
     {
         if (instance == null)
@@ -79,101 +81,6 @@ public class FirebaseDBHandler
         }
 
         return instance;
-    }
-
-    private List parseListSnapshot(String listId, DataSnapshot snapshot)
-    {
-        List list = new List();
-        list.setId(listId);
-        list.setName(snapshot.child("name").getValue(String.class));
-
-        // userIDs
-        ArrayList<String> userIDs = new ArrayList<>();
-        for (DataSnapshot child : snapshot.child("userIDs").getChildren())
-        {
-            String uid = child.getValue(String.class);
-            if (uid != null) userIDs.add(uid);
-        }
-        list.setUserIDs(userIDs);
-
-        // requests
-        ArrayList<Request> requests = new ArrayList<>();
-        for (DataSnapshot reqSnap : snapshot.child("requests").getChildren())
-        {
-            Request req = reqSnap.getValue(Request.class);
-            if (req != null) requests.add(req);
-        }
-        list.setRequests(requests);
-
-        // itemSuggestions
-        ArrayList<String> suggestions = new ArrayList<>();
-        for (DataSnapshot sugSnap : snapshot.child("itemSuggestions").getChildren())
-        {
-            String s = sugSnap.getValue(String.class);
-            if (s != null) suggestions.add(s);
-        }
-        list.setItemSuggestions(suggestions);
-
-        // categories
-        for (DataSnapshot catSnap : snapshot.child("categories").getChildren())
-        {
-            String catName = catSnap.getKey();
-            Category cat = new Category(catName);
-
-            Boolean finished = catSnap.child("finished").getValue(Boolean.class);
-            if (finished != null) {
-                cat.setFinished(finished);
-            }
-
-            ArrayList<Item> items = new ArrayList<>();
-            DataSnapshot itemsSnap = catSnap.child("items");
-
-            for (DataSnapshot itemSnap : itemsSnap.getChildren())
-            {
-                Item item = itemSnap.getValue(Item.class);
-                if (item != null)
-                {
-                    items.add(item);
-                }
-            }
-
-            cat.setItems(items);
-            list.addCategory(cat);
-        }
-
-        return list;
-    }
-
-    public void getList(String listId, GetListCallback callback)
-    {
-        refLists.child(listId).get().addOnCompleteListener(task ->
-        {
-            if (task.isSuccessful())
-            {
-                DataSnapshot snapshot = task.getResult();
-
-                if (snapshot.exists())
-                {
-                    List list = parseListSnapshot(listId, snapshot);
-                    try {
-                        callback.onListFetched(list);
-                    } catch (JSONException e) {
-                        throw new RuntimeException(e);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-                else
-                {
-                    removeList(listId);
-                    callback.onError("List not found");
-                }
-            }
-            else
-            {
-                callback.onError(task.getException().getMessage());
-            }
-        });
     }
 
     public void getUser(String userID, GetUserCallback callback)
@@ -190,6 +97,56 @@ public class FirebaseDBHandler
                     callback.onUserFetched(user);
                 }
             }
+        });
+    }
+
+    public void changeUserName(User user, String username)
+    {
+        if (user.getName().equals(username))
+        {
+            return;
+        }
+
+        refUsers.child(user.getId()).child("name").setValue(username);
+    }
+
+    public void getUserName(String userID, GetUserNameCallback callback)
+    {
+        refUsers.child(userID).child("name").get().addOnCompleteListener(task ->
+        {
+            if (task.isSuccessful() && task.getResult().exists())
+            {
+                String username = task.getResult().getValue(String.class);
+                callback.onUserNameFetched(username);
+            }
+        });
+    }
+
+    public void listenToUserName(User user, GetUserNameCallback callback)
+    {
+        refUsers.child(user.getId()).child("name").addValueEventListener(new ValueEventListener()
+        {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot)
+            {
+                if (snapshot.exists())
+                {
+                    String new_name = snapshot.getValue(String.class);
+
+                    if (new_name == null)
+                    {
+                        return;
+                    }
+
+                    if (!new_name.equals(user.getName()))
+                    {
+                        callback.onUserNameFetched(new_name);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {}
         });
     }
 
@@ -254,32 +211,142 @@ public class FirebaseDBHandler
         }
     }
 
-    public void listenToUserName(User user, GetUserNameCallback callback)
+    public void listenToListNames(User user, GetListNamesListenerCallback callback)
     {
-        refUsers.child(user.getId()).child("name").addValueEventListener(new ValueEventListener()
+        refUsers.child(user.getId()).child("listIDs").addValueEventListener(new ValueEventListener()
         {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot)
             {
-                if (snapshot.exists())
-                {
-                    String new_name = snapshot.getValue(String.class);
-
-                    if (new_name == null)
-                    {
-                        return;
-                    }
-
-                    if (!new_name.equals(user.getName()))
-                    {
-                        callback.onUserNameFetched(new_name);
-                    }
+                ArrayList<String> listIDs;
+                try {
+                    listIDs = snapshot.getValue(new GenericTypeIndicator<ArrayList<String>>() {});
+                } catch (DatabaseException e) {
+                    listIDs = new ArrayList<>();
                 }
+                ArrayList<String> listNames;
+
+                user.setListIDs(listIDs);
+
+                if (listIDs == null)
+                {
+                    listNames = new ArrayList<>();
+                    callback.onInfoFetched(listNames);
+                    return;
+                }
+
+                getListNames(user, new GetListNamesCallback()
+                {
+                    @Override
+                    public void onNamesFetched(ArrayList<String> listNames)
+                    {
+                        if (!listNames.equals(lastListNames))
+                        {
+                            lastListNames = listNames;
+                            callback.onInfoFetched(listNames);
+                        }
+                    }
+                });
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {}
         });
+    }
+
+    public void getList(String listId, GetListCallback callback)
+    {
+        refLists.child(listId).get().addOnCompleteListener(task ->
+        {
+            if (task.isSuccessful())
+            {
+                DataSnapshot snapshot = task.getResult();
+
+                if (snapshot.exists())
+                {
+                    List list = parseListSnapshot(listId, snapshot);
+                    try {
+                        callback.onListFetched(list);
+                    } catch (JSONException e) {
+                        throw new RuntimeException(e);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                else
+                {
+                    removeList(listId);
+                    callback.onError("List not found");
+                }
+            }
+            else
+            {
+                callback.onError(task.getException().getMessage());
+            }
+        });
+    }
+
+    private List parseListSnapshot(String listId, DataSnapshot snapshot)
+    {
+        List list = new List();
+        list.setId(listId);
+        list.setName(snapshot.child("name").getValue(String.class));
+
+        // userIDs
+        ArrayList<String> userIDs = new ArrayList<>();
+        for (DataSnapshot child : snapshot.child("userIDs").getChildren())
+        {
+            String uid = child.getValue(String.class);
+            if (uid != null) userIDs.add(uid);
+        }
+        list.setUserIDs(userIDs);
+
+        // requests
+        ArrayList<Request> requests = new ArrayList<>();
+        for (DataSnapshot reqSnap : snapshot.child("requests").getChildren())
+        {
+            Request req = reqSnap.getValue(Request.class);
+            if (req != null) requests.add(req);
+        }
+        list.setRequests(requests);
+
+        // itemSuggestions
+        ArrayList<String> suggestions = new ArrayList<>();
+        for (DataSnapshot sugSnap : snapshot.child("itemSuggestions").getChildren())
+        {
+            String s = sugSnap.getValue(String.class);
+            if (s != null) suggestions.add(s);
+        }
+        list.setItemSuggestions(suggestions);
+
+        // categories
+        for (DataSnapshot catSnap : snapshot.child("categories").getChildren())
+        {
+            String catName = catSnap.getKey();
+            Category cat = new Category(catName);
+
+            Boolean finished = catSnap.child("finished").getValue(Boolean.class);
+            if (finished != null) {
+                cat.setFinished(finished);
+            }
+
+            ArrayList<Item> items = new ArrayList<>();
+            DataSnapshot itemsSnap = catSnap.child("items");
+
+            for (DataSnapshot itemSnap : itemsSnap.getChildren())
+            {
+                Item item = itemSnap.getValue(Item.class);
+                if (item != null)
+                {
+                    items.add(item);
+                }
+            }
+
+            cat.setItems(items);
+            list.addCategory(cat);
+        }
+
+        return list;
     }
 
     public void removeList(String listId)
@@ -353,21 +420,44 @@ public class FirebaseDBHandler
         refUsers.child(user.getId()).child("listIDs").setValue(user.getListIDs());
     }
 
-    public DatabaseReference getListRef(String listId)
+    public void updateList(List list)
     {
-        return refLists.child(listId);
+        for (Category category : list.getCategories().values())
+        {
+            updateCategory(list, category);
+        }
     }
 
-    public void addCategory(List list, Category category)
+    public void finishList(List list)
     {
-        list.addCategory(category);
+        for (Category category : list.getCategories().values())
+        {
+            finishCategory(list, category);
+        }
+    }
 
-        DatabaseReference categoryRef = refLists
-                .child(list.getId())
+    public void removeItems(String listID)
+    {
+        refLists.child(listID)
                 .child("categories")
-                .child(category.getName());
+                .removeValue();
+    }
 
-        categoryRef.setValue(category);
+    public void removeItems(List list)
+    {
+        removeItems(list.getId());
+    }
+
+    public void renameList(String listID, String newName)
+    {
+        refLists.child(listID)
+                .child("name")
+                .setValue(newName);
+    }
+
+    public void renameList(List list, String newName)
+    {
+        renameList(list.getId(), newName);
     }
 
     public String getUniqueId()
@@ -375,34 +465,6 @@ public class FirebaseDBHandler
         return refLists.push().getKey();
     }
 
-    public void addItem(List list, Category category, Item item)
-    {
-        category.addItem(item);
-        refLists.child(list.getId())
-                .child("categories")
-                .child(category.getName())
-                .child("items")
-                .setValue(category.getItems());
-    }
-
-    public void addItem(List list, String category_name, Item item, DBCallback callback)
-    {
-        list.getCategory(category_name).addItem(item);
-
-        refLists.child(list.getId())
-                .child("categories")
-                .child(category_name)
-                .child("items")
-                .setValue(list.getCategory(category_name).getItems())
-                .addOnSuccessListener(aVoid ->
-                {
-                    if (callback != null) callback.onComplete();
-                })
-                .addOnFailureListener(e ->
-                {
-                    if (callback != null) callback.onFailure(e);
-                });
-    }
     public void listenToList(String listId, GetListCallback callback)
     {
         refLists.child(listId).addValueEventListener(new ValueEventListener()
@@ -426,6 +488,71 @@ public class FirebaseDBHandler
             @Override
             public void onCancelled(@NonNull DatabaseError error) {}
         });
+    }
+
+    public void addCategory(List list, Category category)
+    {
+        list.addCategory(category);
+
+        DatabaseReference categoryRef = refLists
+                .child(list.getId())
+                .child("categories")
+                .child(category.getName());
+
+        categoryRef.setValue(category);
+    }
+
+    public void removeCategory(List list, Category category)
+    {
+        refLists.child(list.getId())
+                .child("categories")
+                .child(category.getName())
+                .removeValue();
+    }
+
+    public void removeCategory(List list, String categoryName)
+    {
+        refLists.child(list.getId())
+                .child("categories")
+                .child(categoryName)
+                .removeValue();
+    }
+
+    public Category getCategory(List list, Item item)
+    {
+        for (Category category : list.getCategories().values())
+        {
+            if (category.getItems().contains(item))
+            {
+                return category;
+            }
+        }
+
+        return null;
+    }
+
+    public void updateCategory(List list, Category category)
+    {
+        if (category == null || list == null) return;
+
+        refLists.child(list.getId()).child("categories").child(category.getName()).setValue(category);
+    }
+
+    public void finishCategory(List list, Category category)
+    {
+        for (Item item : new ArrayList<>(category.getItems()))
+        {
+            if (item.isChecked())
+            {
+                removeItem(list, category, item);
+            }
+        }
+
+        if (category.isFinished())
+        {
+            removeCategory(list, category);
+        }
+
     }
 
     public void listenToCategory(List list, Category category, GetCategoryCallback callback)
@@ -459,47 +586,33 @@ public class FirebaseDBHandler
         });
     }
 
-    public void listenToListNames(User user, GetListNamesListenerCallback callback)
+    public void addItem(List list, Category category, Item item)
     {
-        refUsers.child(user.getId()).child("listIDs").addValueEventListener(new ValueEventListener()
-        {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot)
-            {
-                ArrayList<String> listIDs;
-                try {
-                    listIDs = snapshot.getValue(new GenericTypeIndicator<ArrayList<String>>() {});
-                } catch (DatabaseException e) {
-                    listIDs = new ArrayList<>();
-                }
-                ArrayList<String> listNames;
+        category.addItem(item);
+        refLists.child(list.getId())
+                .child("categories")
+                .child(category.getName())
+                .child("items")
+                .setValue(category.getItems());
+    }
 
-                user.setListIDs(listIDs);
+    public void addItem(List list, String category_name, Item item, DBCallback callback)
+    {
+        list.getCategory(category_name).addItem(item);
 
-                if (listIDs == null)
+        refLists.child(list.getId())
+                .child("categories")
+                .child(category_name)
+                .child("items")
+                .setValue(list.getCategory(category_name).getItems())
+                .addOnSuccessListener(aVoid ->
                 {
-                    listNames = new ArrayList<>();
-                    callback.onInfoFetched(listNames);
-                    return;
-                }
-
-                getListNames(user, new GetListNamesCallback()
+                    if (callback != null) callback.onComplete();
+                })
+                .addOnFailureListener(e ->
                 {
-                    @Override
-                    public void onNamesFetched(ArrayList<String> listNames)
-                    {
-                        if (!listNames.equals(lastListNames))
-                        {
-                            lastListNames = listNames;
-                            callback.onInfoFetched(listNames);
-                        }
-                    }
+                    if (callback != null) callback.onFailure(e);
                 });
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {}
-        });
     }
 
     public void updateItem(List list, Category category, Item item)
@@ -514,19 +627,6 @@ public class FirebaseDBHandler
     public void updateItem(List list, Item item)
     {
         updateItem(list, getCategory(list, item), item);
-    }
-
-    public Category getCategory(List list, Item item)
-    {
-        for (Category category : list.getCategories().values())
-        {
-            if (category.getItems().contains(item))
-            {
-                return category;
-            }
-        }
-
-        return null;
     }
 
     public void updateItemsIndividuals(List list, ArrayList<Item> items)
@@ -581,76 +681,6 @@ public class FirebaseDBHandler
         removeItem(list, category, item);
     }
 
-    public void removeCategory(List list, Category category)
-    {
-        refLists.child(list.getId())
-                .child("categories")
-                .child(category.getName())
-                .removeValue();
-    }
-
-    public void removeCategory(List list, String categoryName)
-    {
-        refLists.child(list.getId())
-                .child("categories")
-                .child(categoryName)
-                .removeValue();
-    }
-
-    public void acceptRequest(List list, Request request)
-    {
-        removeRequest(list, request);
-
-        list.addUser(request.getUserID());
-        refLists.child(list.getId())
-                .child("userIDs")
-                .setValue(list.getUserIDs());
-
-        refUsers.child(request.getUserID())
-                .child("listIDs")
-                .get().addOnCompleteListener(task ->
-                {
-                    if (task.isSuccessful())
-                    {
-                        ArrayList<String> listIDs;
-                        try {
-                            listIDs = task.getResult().getValue(
-                                    new GenericTypeIndicator<ArrayList<String>>() {});
-                        } catch (DatabaseException e) {
-                            listIDs = new ArrayList<>();
-                        }
-
-                        if (listIDs == null)
-                        {
-                            listIDs = new ArrayList<>();
-                        }
-
-                        if (!listIDs.contains(list.getId()))
-                        {
-                            listIDs.add(list.getId());
-                        }
-
-                        refUsers.child(request.getUserID())
-                                .child("listIDs")
-                                .setValue(listIDs);
-                    }
-                });
-    }
-
-    public void declineRequest(List list, Request request)
-    {
-        removeRequest(list, request);
-    }
-
-    private void removeRequest(List list, Request request)
-    {
-        list.removeRequest(request);
-
-        refLists.child(list.getId())
-                .child("requests")
-                .setValue(list.getRequests());
-    }
-
     public void addRequest(List list, Request request)
     {
         list.addRequest(request);
@@ -658,60 +688,6 @@ public class FirebaseDBHandler
         refLists.child(list.getId())
                 .child("requests")
                 .setValue(list.getRequests());
-    }
-
-    public void getUsername(String userID, GetUserNameCallback callback)
-    {
-        refUsers.child(userID).child("name").get().addOnCompleteListener(task ->
-        {
-            if (task.isSuccessful() && task.getResult().exists())
-            {
-                String username = task.getResult().getValue(String.class);
-                callback.onUserNameFetched(username);
-            }
-        });
-    }
-
-    public void listenForRequests(List list, GetRequestsCallback callback)
-    {
-        refLists.child(list.getId()).child("requests")
-            .addValueEventListener(new ValueEventListener()
-            {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot snapshot)
-                {
-                    ArrayList<Request> updatedRequests;
-                    try {
-                        updatedRequests = snapshot.getValue(
-                                new GenericTypeIndicator<ArrayList<Request>>() {});
-                    } catch (DatabaseException e) {
-                        updatedRequests = new ArrayList<>();
-                    }
-
-                    if (updatedRequests == null)
-                    {
-                        updatedRequests = new ArrayList<>();
-                        callback.onRequestsFetched(updatedRequests);
-                        return;
-                    }
-
-                    list.setRequests(updatedRequests);
-                    callback.onRequestsFetched(updatedRequests);
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError error) {}
-            });
-    }
-
-    public void changeUserName(User user, String username)
-    {
-        if (user.getName().equals(username))
-        {
-            return;
-        }
-
-        refUsers.child(user.getId()).child("name").setValue(username);
     }
 
     public void sendJoinRequest(String listID, User user)
@@ -777,69 +753,89 @@ public class FirebaseDBHandler
         });
     }
 
-    public boolean finishCategory(List list, Category category)
+    private void removeRequest(List list, Request request)
     {
-        for (Item item : new ArrayList<>(category.getItems()))
-        {
-            if (item.isChecked())
+        list.removeRequest(request);
+
+        refLists.child(list.getId())
+                .child("requests")
+                .setValue(list.getRequests());
+    }
+
+    public void acceptRequest(List list, Request request)
+    {
+        removeRequest(list, request);
+
+        list.addUser(request.getUserID());
+        refLists.child(list.getId())
+                .child("userIDs")
+                .setValue(list.getUserIDs());
+
+        refUsers.child(request.getUserID())
+                .child("listIDs")
+                .get().addOnCompleteListener(task ->
+                {
+                    if (task.isSuccessful())
+                    {
+                        ArrayList<String> listIDs;
+                        try {
+                            listIDs = task.getResult().getValue(
+                                    new GenericTypeIndicator<ArrayList<String>>() {});
+                        } catch (DatabaseException e) {
+                            listIDs = new ArrayList<>();
+                        }
+
+                        if (listIDs == null)
+                        {
+                            listIDs = new ArrayList<>();
+                        }
+
+                        if (!listIDs.contains(list.getId()))
+                        {
+                            listIDs.add(list.getId());
+                        }
+
+                        refUsers.child(request.getUserID())
+                                .child("listIDs")
+                                .setValue(listIDs);
+                    }
+                });
+    }
+
+    public void declineRequest(List list, Request request)
+    {
+        removeRequest(list, request);
+    }
+
+    public void listenForRequests(List list, GetRequestsCallback callback)
+    {
+        refLists.child(list.getId()).child("requests")
+            .addValueEventListener(new ValueEventListener()
             {
-                removeItem(list, category, item);
-            }
-        }
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot)
+                {
+                    ArrayList<Request> updatedRequests;
+                    try {
+                        updatedRequests = snapshot.getValue(
+                                new GenericTypeIndicator<ArrayList<Request>>() {});
+                    } catch (DatabaseException e) {
+                        updatedRequests = new ArrayList<>();
+                    }
 
-        if (category.isFinished())
-        {
-            removeCategory(list, category);
-            return true;
-        }
+                    if (updatedRequests == null)
+                    {
+                        updatedRequests = new ArrayList<>();
+                        callback.onRequestsFetched(updatedRequests);
+                        return;
+                    }
 
-        return false;
-    }
+                    list.setRequests(updatedRequests);
+                    callback.onRequestsFetched(updatedRequests);
+                }
 
-    public void finishList(List list)
-    {
-        for (Category category : list.getCategories().values())
-        {
-            finishCategory(list, category);
-        }
-    }
-
-    public void updateCategory(List list, Category category)
-    {
-        if (category == null || list == null) return;
-
-        refLists.child(list.getId()).child("categories").child(category.getName()).setValue(category);
-    }
-
-    public void updateList(List list)
-    {
-        for (Category category : list.getCategories().values())
-        {
-            updateCategory(list, category);
-        }
-    }
-
-    public void renameList(String listID, String newName)
-    {
-        refLists.child(listID)
-                .child("name")
-                .setValue(newName);
-    }
-
-    public void renameList(List list, String newName)
-    {
-        renameList(list.getId(), newName);
-    }
-
-    public void removeItems(String listID)
-    {
-        refLists.child(listID)
-                .child("categories")
-                .removeValue();
-    }
-
-    public void removeItems(List list)
-    {
-        removeItems(list.getId());
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {}
+            });
     }
 }

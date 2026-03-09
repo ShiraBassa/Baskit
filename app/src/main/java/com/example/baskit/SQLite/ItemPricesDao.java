@@ -10,7 +10,6 @@ import java.util.List;
 @Dao
 public interface ItemPricesDao
 {
-
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(List<ItemPricesEntity> items);
 

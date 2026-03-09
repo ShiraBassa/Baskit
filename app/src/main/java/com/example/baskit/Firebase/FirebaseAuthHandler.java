@@ -36,11 +36,13 @@ import java.util.Objects;
 
 public class FirebaseAuthHandler
 {
-    private static FirebaseAuthHandler instance;
     private static User user;
+
     private final APIHandler apiHandler = APIHandler.getInstance();
     private final FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
     private final AIHandler aiHandler = AIHandler.getInstance();
+
+    private static FirebaseAuthHandler instance;
 
     public interface AuthCallback
     {
@@ -585,22 +587,6 @@ public class FirebaseAuthHandler
         user.setName(username);
     }
 
-    public void duplicateList(List list, CreateListCallback callback)
-    {
-        List listNew = new List(dbHandler.getUniqueId(), list.getName() + " חדש");
-        listNew.addUser(user.getId());
-        listNew.setItemSuggestions(list.getItemSuggestions());
-        listNew.setCategories(list.getCategories());
-
-        dbHandler.addList(listNew, user);
-
-        if (callback != null)
-        {
-            new Handler(Looper.getMainLooper()).post(() ->
-                    callback.onSuccess(listNew));
-        }
-    }
-
     public void createList(String name, Activity activity, CreateListCallback callback)
     {
         List list = new List(dbHandler.getUniqueId(), name);
@@ -621,5 +607,21 @@ public class FirebaseAuthHandler
                 }
             }
         });
+    }
+
+    public void duplicateList(List list, CreateListCallback callback)
+    {
+        List listNew = new List(dbHandler.getUniqueId(), list.getName() + " חדש");
+        listNew.addUser(user.getId());
+        listNew.setItemSuggestions(list.getItemSuggestions());
+        listNew.setCategories(list.getCategories());
+
+        dbHandler.addList(listNew, user);
+
+        if (callback != null)
+        {
+            new Handler(Looper.getMainLooper()).post(() ->
+                    callback.onSuccess(listNew));
+        }
     }
 }

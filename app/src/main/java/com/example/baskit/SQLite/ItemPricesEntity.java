@@ -8,7 +8,6 @@ public class ItemPricesEntity
 {
     @PrimaryKey(autoGenerate = true)
     public int id;
-
     public String itemCode;
     public String store;
     public String branch;

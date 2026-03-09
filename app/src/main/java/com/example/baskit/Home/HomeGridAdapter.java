@@ -23,8 +23,9 @@ import java.util.ArrayList;
 public class HomeGridAdapter extends RecyclerView.Adapter<HomeGridAdapter.GridViewHolder>
 {
     private ArrayList<String> listNames;
-    private OnItemClickListener listener;
+
     private Context context;
+    private OnItemClickListener listener;
 
     public interface OnItemClickListener
     {
@@ -37,46 +38,6 @@ public class HomeGridAdapter extends RecyclerView.Adapter<HomeGridAdapter.GridVi
         this.context = context;
         this.listNames = listNames;
         this.listener = listener;
-    }
-
-    public void remove(int position, boolean notifyItemRemoved)
-    {
-        listNames.remove(position);
-
-        if (notifyItemRemoved)
-        {
-            this.notifyItemRemoved(position);
-        }
-    }
-
-    public void remove(int position)
-    {
-        this.remove(position, true);
-    }
-
-    public void add(List list, boolean notifyItemInserted)
-    {
-        listNames.add(list.getName());
-
-        if (notifyItemInserted)
-        {
-            this.notifyItemInserted(listNames.size()-1);
-        }
-    }
-
-    public void add(List list)
-    {
-        this.add(list, true);
-    }
-
-    public static class GridViewHolder extends RecyclerView.ViewHolder
-    {
-        public Button button;
-
-        public GridViewHolder(Button button) {
-            super(button);
-            this.button = button;
-        }
     }
 
     @SuppressLint("ResourceType")
@@ -133,14 +94,28 @@ public class HomeGridAdapter extends RecyclerView.Adapter<HomeGridAdapter.GridVi
         return new GridViewHolder(button);
     }
 
+    public static class GridViewHolder extends RecyclerView.ViewHolder
+    {
+        public Button button;
+
+        public GridViewHolder(Button button)
+        {
+            super(button);
+            this.button = button;
+        }
+    }
+
     @Override
     public void onBindViewHolder(@NonNull GridViewHolder holder, int position)
     {
         holder.button.setText(listNames.get(position));
 
-        holder.button.setOnClickListener(v -> {
+        holder.button.setOnClickListener(v ->
+        {
             int newPosition = holder.getAdapterPosition();
-            if (newPosition != RecyclerView.NO_POSITION) {
+
+            if (newPosition != RecyclerView.NO_POSITION)
+            {
                 listener.onItemClick(newPosition);
             }
         });
@@ -158,6 +133,37 @@ public class HomeGridAdapter extends RecyclerView.Adapter<HomeGridAdapter.GridVi
     public int getItemCount()
     {
         return listNames.size();
+    }
+
+
+    public void add(List list, boolean notifyItemInserted)
+    {
+        listNames.add(list.getName());
+
+        if (notifyItemInserted)
+        {
+            this.notifyItemInserted(listNames.size()-1);
+        }
+    }
+
+    public void add(List list)
+    {
+        this.add(list, true);
+    }
+
+    public void remove(int position, boolean notifyItemRemoved)
+    {
+        listNames.remove(position);
+
+        if (notifyItemRemoved)
+        {
+            this.notifyItemRemoved(position);
+        }
+    }
+
+    public void remove(int position)
+    {
+        this.remove(position, true);
     }
 
     public void updateList(ArrayList<String> newList)

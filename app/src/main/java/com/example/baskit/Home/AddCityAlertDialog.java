@@ -26,17 +26,19 @@ import java.util.ArrayList;
 
 public class AddCityAlertDialog
 {
-    Activity activity;
-    Context context;
-    LinearLayout adLayout;
+    ArrayList<String> all_cities, city_choices, unchosen_cities;
+
     AlertDialog.Builder adb;
+    CitiesListAdapter citiesListAdapter;
     AlertDialog ad;
+
     Button btnAdd;
     Spinner spinnerCities;
-    ArrayList<String> all_cities, city_choices, unchosen_cities;
-    private final APIHandler apiHandler = APIHandler.getInstance();
-    CitiesListAdapter citiesListAdapter;
-    private OnSubmit onSubmit;
+    LinearLayout adLayout;
+
+    Activity activity;
+    Context context;
+    OnSubmit onSubmit;
 
     public interface OnSubmit
     {

@@ -5,8 +5,6 @@ import com.example.baskit.Categories.ItemViewPricesAdapter;
 
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.Color;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,7 +13,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 
-import com.example.baskit.MainComponents.ItemInfo;
+import com.example.baskit.MainComponents.PriceRow;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import android.widget.Button;
@@ -45,36 +43,35 @@ import java.util.Locale;
 
 public class AddItemFragment extends DialogFragment
 {
-    private View fragmentView;
-    private TextView tvQuantity;
-    private ImageButton btnCancel, btnUp, btnDown;
-    private Button btnAddItem;
-    private LinearLayout infoLayout;
-    private ProgressBar progressBar;
-    private AutoCompleteTextView searchItem;
+    Item selectedItem;
 
-    private RecyclerView recyclerSupermarkets;
-    private ItemViewPricesAdapter pricesAdapter;
+    ArrayList<String> allItemNames;
+    ArrayList<String> masterItemNames;
+    ArrayList<String> decodedItemNames = new ArrayList<>();
+    ArrayList<String> decodedItemNamesLower = new ArrayList<>();
+    ChipGroup chipGroupWeights;
+    ChipGroup chipGroupCompanies;
+    ArrayList<com.example.baskit.MainComponents.ItemInfo> currentVariations = new ArrayList<>();
+    ArrayList<String> listItemNames;
+    ArrayList<String> itemSuggestions;
+    Map<String, ArrayList<String>> groups;
 
-    private Item selectedItem;
-    private Activity activity;
-    private Context context;
+    APIHandler apiHandler = APIHandler.getInstance();
 
-    private ArrayList<String> allItemNames;
-    private ArrayList<String> masterItemNames;
-    // Decoded caches for fast search
-    private ArrayList<String> decodedItemNames = new ArrayList<>();
-    private ArrayList<String> decodedItemNamesLower = new ArrayList<>();
-    private AddItemInterface addItemInterface;
+    ItemViewPricesAdapter pricesAdapter;
 
-    private APIHandler apiHandler = APIHandler.getInstance();
-    private ArrayList<String> listItemNames;
-    private ArrayList<String> itemSuggestions;
-    private Map<String, ArrayList<String>> groups;
+    View fragmentView;
+    TextView tvQuantity;
+    ImageButton btnCancel, btnUp, btnDown;
+    Button btnAddItem;
+    LinearLayout infoLayout;
+    ProgressBar progressBar;
+    AutoCompleteTextView searchItem;
+    RecyclerView recyclerSupermarkets;
 
-    private ChipGroup chipGroupWeights;
-    private ChipGroup chipGroupCompanies;
-    private ArrayList<com.example.baskit.MainComponents.ItemInfo> currentVariations = new ArrayList<>();
+    Activity activity;
+    Context context;
+    AddItemInterface addItemInterface;
 
     private String decodeSanitizedKey(String s)
     {
@@ -117,72 +114,6 @@ public class AddItemFragment extends DialogFragment
         this.allItemNames = new ArrayList<>(masterItemNames);
 
         init();
-    }
-
-    private void init()
-    {
-        // Rebuild full item list from master copy before filtering
-        if (masterItemNames != null)
-        {
-            allItemNames = new ArrayList<>(masterItemNames);
-        }
-
-        LinkedHashMap<String, String> unique = new LinkedHashMap<>();
-
-        if (listItemNames != null)
-        {
-            ArrayList<String> decodedList = new ArrayList<>();
-
-            for (String n : listItemNames)
-            {
-                String d = decodeSanitizedKey(n);
-                if (!isBadItemName(d)) decodedList.add(d.trim());
-            }
-
-            listItemNames = decodedList;
-        }
-
-        if (allItemNames != null)
-        {
-            for (String name : allItemNames)
-            {
-                String decoded = decodeSanitizedKey(name);
-                if (isBadItemName(decoded) || (listItemNames != null && listItemNames.contains(decoded))) continue;
-
-                String trimmed = decoded.trim();
-                String key = trimmed.toLowerCase(Locale.ROOT);
-
-                if (key.isEmpty() || key.equals("null")) continue;
-
-                if (!unique.containsKey(key))
-                {
-                    unique.put(key, trimmed);
-                }
-            }
-        }
-
-        this.allItemNames = new ArrayList<>(unique.values());
-
-        // build decoded caches for fast search
-        decodedItemNames.clear();
-        decodedItemNamesLower.clear();
-
-        for (String name : this.allItemNames)
-        {
-            String decoded = decodeSanitizedKey(name);
-            if (decoded == null) decoded = name;
-            decoded = decoded.trim();
-
-            decodedItemNames.add(decoded);
-            decodedItemNamesLower.add(decoded.toLowerCase(Locale.ROOT));
-        }
-    }
-
-    private boolean isBadItemName(String s)
-    {
-        if (s == null) return true;
-        String t = s.trim();
-        return t.isEmpty() || t.equalsIgnoreCase("null");
     }
 
     @Nullable
@@ -265,6 +196,72 @@ public class AddItemFragment extends DialogFragment
         }
     }
 
+    @Override
+    public void onDestroyView()
+    {
+        super.onDestroyView();
+        fragmentView = null;
+        recyclerSupermarkets = null;
+        pricesAdapter = null;
+    }
+
+    private void init()
+    {
+        if (masterItemNames != null)
+        {
+            allItemNames = new ArrayList<>(masterItemNames);
+        }
+
+        LinkedHashMap<String, String> unique = new LinkedHashMap<>();
+
+        if (listItemNames != null)
+        {
+            ArrayList<String> decodedList = new ArrayList<>();
+
+            for (String n : listItemNames)
+            {
+                String d = decodeSanitizedKey(n);
+                if (!isBadItemName(d)) decodedList.add(d.trim());
+            }
+
+            listItemNames = decodedList;
+        }
+
+        if (allItemNames != null)
+        {
+            for (String name : allItemNames)
+            {
+                String decoded = decodeSanitizedKey(name);
+                if (isBadItemName(decoded) || (listItemNames != null && listItemNames.contains(decoded))) continue;
+
+                String trimmed = decoded.trim();
+                String key = trimmed.toLowerCase(Locale.ROOT);
+
+                if (key.isEmpty() || key.equals("null")) continue;
+
+                if (!unique.containsKey(key))
+                {
+                    unique.put(key, trimmed);
+                }
+            }
+        }
+
+        this.allItemNames = new ArrayList<>(unique.values());
+
+        decodedItemNames.clear();
+        decodedItemNamesLower.clear();
+
+        for (String name : this.allItemNames)
+        {
+            String decoded = decodeSanitizedKey(name);
+            if (decoded == null) decoded = name;
+            decoded = decoded.trim();
+
+            decodedItemNames.add(decoded);
+            decodedItemNamesLower.add(decoded.toLowerCase(Locale.ROOT));
+        }
+    }
+
     private void setupAutocomplete()
     {
         final ArrayList<String> filteredResults = new ArrayList<>();
@@ -285,10 +282,12 @@ public class AddItemFragment extends DialogFragment
             }
         }
 
-        final ArrayAdapter<String> adapter = new ArrayAdapter<String>(context, R.layout.add_item_dropdown_item, filteredResults) {
+        final ArrayAdapter<String> adapter = new ArrayAdapter<String>(context, R.layout.add_item_dropdown_item, filteredResults)
+        {
             @NonNull
             @Override
-            public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+            public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent)
+            {
                 if (convertView == null)
                 {
                     convertView = activity.getLayoutInflater()
@@ -537,7 +536,6 @@ public class AddItemFragment extends DialogFragment
                             for (int idx = 0; idx < allItemNames.size(); idx++)
                             {
                                 String s = allItemNames.get(idx);
-                                String decoded = decodedItemNames.get(idx);
                                 String low = decodedItemNamesLower.get(idx);
                                 boolean allPresent = true;
 
@@ -627,7 +625,7 @@ public class AddItemFragment extends DialogFragment
                             java.util.Collections.sort(nonsuggestions, comp);
                         }
 
-                        // Sort suggestions by keyword priority (לחם before חלב etc.)
+                        // Sort suggestions by keyword priority
                         java.util.Collections.sort(suggestions, (a, b) ->
                         {
                             String aLow = decodeSanitizedKey(a.item).toLowerCase(Locale.ROOT);
@@ -876,7 +874,6 @@ public class AddItemFragment extends DialogFragment
             chipGroupCompanies.setVisibility(View.GONE);
         }
 
-        // Initially show all variations
         applyVariationFilter();
     }
 
@@ -897,9 +894,6 @@ public class AddItemFragment extends DialogFragment
             if (chip.isChecked()) selectedCompanies.add(chip.getText().toString());
         }
 
-        // =============================
-        // 1) FULL MATCH (for prices)
-        // =============================
         ArrayList<com.example.baskit.MainComponents.ItemInfo> matching = new ArrayList<>();
 
         for (com.example.baskit.MainComponents.ItemInfo info : currentVariations)
@@ -916,9 +910,6 @@ public class AddItemFragment extends DialogFragment
             }
         }
 
-        // =============================
-        // UPDATE CURRENT SELECTION
-        // =============================
         if (selectedItem != null && selectedItem.getSupermarket() != null)
         {
             boolean stillValid = false;
@@ -948,9 +939,6 @@ public class AddItemFragment extends DialogFragment
             }
         }
 
-        // =============================
-        // 2) AVAILABLE WEIGHTS (respect companies only)
-        // =============================
         java.util.Set<String> availableWeights = new java.util.HashSet<>();
 
         for (com.example.baskit.MainComponents.ItemInfo info : currentVariations)
@@ -964,9 +952,6 @@ public class AddItemFragment extends DialogFragment
             }
         }
 
-        // =============================
-        // 3) AVAILABLE COMPANIES (respect weights only)
-        // =============================
         java.util.Set<String> availableCompanies = new java.util.HashSet<>();
 
         for (com.example.baskit.MainComponents.ItemInfo info : currentVariations)
@@ -980,9 +965,6 @@ public class AddItemFragment extends DialogFragment
             }
         }
 
-        // =============================
-        // 4) UPDATE WEIGHT CHIPS
-        // =============================
         for (int i = 0; i < chipGroupWeights.getChildCount(); i++)
         {
             Chip chip = (Chip) chipGroupWeights.getChildAt(i);
@@ -993,9 +975,6 @@ public class AddItemFragment extends DialogFragment
             chip.setAlpha(enabled ? 1f : 0.3f);
         }
 
-        // =============================
-        // 5) UPDATE COMPANY CHIPS
-        // =============================
         for (int i = 0; i < chipGroupCompanies.getChildCount(); i++)
         {
             Chip chip = (Chip) chipGroupCompanies.getChildAt(i);
@@ -1006,9 +985,6 @@ public class AddItemFragment extends DialogFragment
             chip.setAlpha(enabled ? 1f : 0.3f);
         }
 
-        // =============================
-        // 6) LOAD FILTERED PRICES
-        // =============================
         loadSupermarketPricesForVariations(matching);
     }
 
@@ -1094,7 +1070,7 @@ public class AddItemFragment extends DialogFragment
 
         Baskit.notActivityRunWhenServerActive(() ->
         {
-            ArrayList<ItemViewPricesAdapter.PriceRow> rows = new ArrayList<>();
+            ArrayList<PriceRow> rows = new ArrayList<>();
 
             for (com.example.baskit.MainComponents.ItemInfo info : variations)
             {
@@ -1121,7 +1097,7 @@ public class AddItemFragment extends DialogFragment
                                     new Supermarket(supermarketName, sectionName);
 
                             rows.add(
-                                    new ItemViewPricesAdapter.PriceRow(
+                                    new PriceRow(
                                             sm,
                                             priceObj,
                                             info
@@ -1157,8 +1133,8 @@ public class AddItemFragment extends DialogFragment
 
                             selectedItem.setSupermarket(supermarket);
 
-                            // Find matching row by supermarket + section + variation code
-                            for (ItemViewPricesAdapter.PriceRow row : rows)
+                            // Find matching row
+                            for (PriceRow row : rows)
                             {
                                 if (row.getSupermarket().getSupermarket().equals(supermarket.getSupermarket()) &&
                                         row.getSupermarket().getSection().equals(supermarket.getSection()) &&
@@ -1172,7 +1148,7 @@ public class AddItemFragment extends DialogFragment
                                 }
                             }
 
-                            // Set selected variation info AFTER price is resolved
+                            // Set selected variation
                             selectedItem.fillInfo(variation);
                             pricesAdapter.notifyDataSetChanged();
                         }
@@ -1208,7 +1184,6 @@ public class AddItemFragment extends DialogFragment
     {
         listItemNames = newListItemNames;
 
-        // Rebuild available item names based on the updated list
         if (masterItemNames != null)
         {
             allItemNames = new ArrayList<>(masterItemNames);
@@ -1217,12 +1192,10 @@ public class AddItemFragment extends DialogFragment
         init();
     }
 
-    @Override
-    public void onDestroyView()
+    private boolean isBadItemName(String s)
     {
-        super.onDestroyView();
-        fragmentView = null;
-        recyclerSupermarkets = null;
-        pricesAdapter = null;
+        if (s == null) return true;
+        String t = s.trim();
+        return t.isEmpty() || t.equalsIgnoreCase("null");
     }
 }

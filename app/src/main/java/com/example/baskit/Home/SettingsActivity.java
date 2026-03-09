@@ -33,21 +33,21 @@ import java.util.Map;
 
 public class SettingsActivity extends MasterActivity
 {
-    FirebaseAuthHandler authHandler;
-
-    private RecyclerView recyclerSupermarkets, recyclerCities;
-    private SupermarketsListAdapter supermarketsAdapter;
-    CitiesListAdapter citiesAdapter;
-    APIHandler apiHandler = APIHandler.getInstance();
-
-    ImageButton btnHome, btnLogOut;
-    Button btnAddSupermarket, btnRemoveSupermarket, btnAddCity, btnRemoveCity;
     Map<String, ArrayList<String>> choices;
     ArrayList<String> cities, all_cities;
+
+    FirebaseAuthHandler authHandler;
+    APIHandler apiHandler = APIHandler.getInstance();
+
+    SupermarketsListAdapter supermarketsAdapter;
+    CitiesListAdapter citiesAdapter;
+
     Button btnChangeUsername;
     EditText etUsername;
-
-    private View loadingOverlay;
+    ImageButton btnHome, btnLogOut;
+    Button btnAddSupermarket, btnRemoveSupermarket, btnAddCity, btnRemoveCity;
+    RecyclerView recyclerSupermarkets, recyclerCities;
+    View loadingOverlay;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -132,28 +132,6 @@ public class SettingsActivity extends MasterActivity
         });
 
         setButtons();
-    }
-
-    private void setLoading(boolean loading)
-    {
-        runOnUiThread(() ->
-        {
-            btnAddSupermarket.setEnabled(!loading);
-            btnRemoveSupermarket.setEnabled(!loading);
-            btnAddCity.setEnabled(!loading);
-            btnRemoveCity.setEnabled(!loading);
-
-            recyclerSupermarkets.setEnabled(!loading);
-            recyclerCities.setEnabled(!loading);
-
-            etUsername.setEnabled(!loading);
-            btnChangeUsername.setEnabled(!loading);
-
-            if (loadingOverlay != null)
-            {
-                loadingOverlay.setVisibility(loading ? View.VISIBLE : View.GONE);
-            }
-        });
     }
 
     private void setButtons()
@@ -415,6 +393,28 @@ public class SettingsActivity extends MasterActivity
                         }
                     });
                 });
+            }
+        });
+    }
+
+    private void setLoading(boolean loading)
+    {
+        runOnUiThread(() ->
+        {
+            btnAddSupermarket.setEnabled(!loading);
+            btnRemoveSupermarket.setEnabled(!loading);
+            btnAddCity.setEnabled(!loading);
+            btnRemoveCity.setEnabled(!loading);
+
+            recyclerSupermarkets.setEnabled(!loading);
+            recyclerCities.setEnabled(!loading);
+
+            etUsername.setEnabled(!loading);
+            btnChangeUsername.setEnabled(!loading);
+
+            if (loadingOverlay != null)
+            {
+                loadingOverlay.setVisibility(loading ? View.VISIBLE : View.GONE);
             }
         });
     }

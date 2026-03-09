@@ -20,11 +20,13 @@ import java.util.Map;
 
 public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsListAdapter.ViewHolder>
 {
-    private Map<String, ArrayList<String>> supermarkets;
-    private OnSupermarketClickListener listener = null;
     private String selectedSupermarketName, selectedSectionName;
+
     private ArrayList<SectionsListAdapter> allSectionAdapters = new ArrayList<>();
+    private Map<String, ArrayList<String>> supermarkets;
+
     private Context context;
+    private OnSupermarketClickListener listener = null;
 
     public interface OnSupermarketClickListener
     {
@@ -118,7 +120,8 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
         }
     }
 
-    public void updateData(Map<String, ArrayList<String>> newSupermarkets) {
+    public void updateData(Map<String, ArrayList<String>> newSupermarkets)
+    {
         this.supermarkets = newSupermarkets;
     }
 

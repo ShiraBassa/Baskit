@@ -20,6 +20,13 @@ import java.util.Collections;
 
 public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
 {
+    protected ArrayList<Item> items;
+
+    protected Activity activity;
+    protected Context context;
+    protected UpperClassFunctions upperClassFns;
+    protected OnItemClickListener listener;
+
     public interface OnItemClickListener
     {
         void notifyCheckBox(Item item);
@@ -34,12 +41,6 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
         default void collapseAllSupermarkets() {}
         default void expandAllSupermarkets() {}
     }
-
-    protected ArrayList<Item> items;
-    protected OnItemClickListener listener;
-    protected UpperClassFunctions upperClassFns;
-    protected Activity activity;
-    protected Context context;
 
     public ItemsAdapter(ArrayList<Item> items,
                         OnItemClickListener listener,
@@ -142,6 +143,12 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
         }
 
         setItemButtons(holder, item, position);
+    }
+
+    @Override
+    public int getItemCount()
+    {
+        return items.size();
     }
 
     private void setItemButtons(ViewHolder holder, Item item, int position)
@@ -257,12 +264,6 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
             items.clear();
             notifyDataSetChanged();
         }
-    }
-
-    @Override
-    public int getItemCount()
-    {
-        return items.size();
     }
 
     public void updateItems(ArrayList<Item> newItems)

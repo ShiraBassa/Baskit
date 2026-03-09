@@ -1,6 +1,5 @@
 package com.example.baskit.MainComponents;
 
-import com.example.baskit.Categories.ItemViewPricesAdapter;
 import com.google.firebase.database.Exclude;
 import com.google.firebase.database.IgnoreExtraProperties;
 
@@ -77,11 +76,6 @@ public class List implements SortableEntity
         this.userIDs = userIDs;
     }
 
-    public void addUser(String userID)
-    {
-        this.userIDs.add(userID);
-    }
-
     public Map<String, Category> getCategories() {
         return categories;
     }
@@ -90,36 +84,69 @@ public class List implements SortableEntity
         this.categories = categories;
     }
 
+    public ArrayList<Request> getRequests()
+    {
+        return requests;
+    }
+
+    public void setRequests(ArrayList<Request> requests)
+    {
+        this.requests = requests;
+    }
+
+    public ArrayList<String> getItemSuggestions()
+    {
+        return itemSuggestions;
+    }
+
+    public void setItemSuggestions(ArrayList<String> itemSuggestions)
+    {
+        this.itemSuggestions = itemSuggestions;
+    }
+
+    @Exclude
+    public void addUser(String userID)
+    {
+        this.userIDs.add(userID);
+    }
+
+    @Exclude
     public void addCategory(Category category)
     {
         this.categories.put(category.getName(), category);
     }
 
+    @Exclude
     public void updateCategory(Category category)
     {
         addCategory(category);
     }
 
+    @Exclude
     public Category getCategory(String categoryName)
     {
         return categories.get(categoryName);
     }
 
+    @Exclude
     public boolean hasCategory(String categoryName)
     {
         return categories.containsKey(categoryName);
     }
 
+    @Exclude
     public void removeCategory(String categoryName)
     {
         categories.remove(categoryName);
     }
 
+    @Exclude
     public void removeCategory(Category category)
     {
         removeCategory(category.getName());
     }
 
+    @Exclude
     public ArrayList<Item> getItems()
     {
         ArrayList<Item> items = new ArrayList<>();
@@ -132,6 +159,7 @@ public class List implements SortableEntity
         return items;
     }
 
+    @Exclude
     public ArrayList<Item> getRemainedItems()
     {
         ArrayList<Item> items = new ArrayList<>();
@@ -157,39 +185,19 @@ public class List implements SortableEntity
         return Math.round(sum * 100.0) / 100.0;
     }
 
-    public ArrayList<Request> getRequests()
-    {
-        return requests;
-    }
-
-    public void setRequests(ArrayList<Request> requests)
-    {
-        this.requests = requests;
-    }
-
+    @Exclude
     public void addRequest(Request request)
     {
         this.requests.add(request);
     }
 
+    @Exclude
     public void removeRequest(Request request)
     {
         this.requests.remove(request);
     }
 
-    public boolean doesExists(Item item)
-    {
-        for (Category category : categories.values())
-        {
-            if (category.doesExists(item))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
+    @Exclude
     public ArrayList<String> toItemNames()
     {
         ArrayList<String> itemNames = new ArrayList<>();
@@ -202,6 +210,7 @@ public class List implements SortableEntity
         return itemNames;
     }
 
+    @Exclude
     public boolean allPricesKnown()
     {
         for (Category category : categories.values())
@@ -215,6 +224,7 @@ public class List implements SortableEntity
         return true;
     }
 
+    @Exclude
     public boolean isEmpty()
     {
         if (categories.isEmpty())
@@ -233,31 +243,23 @@ public class List implements SortableEntity
         return true;
     }
 
-    public ArrayList<String> getItemSuggestions()
-    {
-        return itemSuggestions;
-    }
-
-    public void setItemSuggestions(ArrayList<String> itemSuggestions)
-    {
-        this.itemSuggestions = itemSuggestions;
-    }
-
-    public void setCheapestRows(Map<String, ArrayList<ItemViewPricesAdapter.PriceRow>> rowsAllItems)
+    @Exclude
+    public void setCheapestRows(Map<String, ArrayList<PriceRow>> rowsAllItems)
     {
         if (rowsAllItems == null) return;
         ArrayList<Item> items = getItems();
 
         for (Item item : items)
         {
-            ArrayList<ItemViewPricesAdapter.PriceRow> rows = rowsAllItems.get(item.baseName);
+            ArrayList<PriceRow> rows = rowsAllItems.get(item.baseName);
             if (rows == null) continue;
 
             item.setCheapestRow(rows);
         }
     }
 
-    public void setSupermarketsRows(Supermarket supermarket, Map<String, ArrayList<ItemViewPricesAdapter.PriceRow>> rowsAllItems)
+    @Exclude
+    public void setSupermarketsRows(Supermarket supermarket, Map<String, ArrayList<PriceRow>> rowsAllItems)
     {
         if (rowsAllItems == null) return;
 
@@ -265,19 +267,21 @@ public class List implements SortableEntity
 
         for (Item item : items)
         {
-            ArrayList<ItemViewPricesAdapter.PriceRow> rows = rowsAllItems.get(item.baseName);
+            ArrayList<PriceRow> rows = rowsAllItems.get(item.baseName);
             if (rows == null) continue;
 
             item.setSupermarketRow(supermarket, rows);
         }
     }
 
+    @Exclude
     @Override
     public SortableEntity copy()
     {
         return new List(this);
     }
 
+    @Exclude
     public void removeAllItems()
     {
         this.categories = new HashMap<>();

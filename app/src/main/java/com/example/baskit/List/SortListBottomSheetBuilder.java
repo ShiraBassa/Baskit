@@ -8,7 +8,7 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.baskit.Baskit;
-import com.example.baskit.Categories.ItemViewPricesAdapter;
+import com.example.baskit.MainComponents.PriceRow;
 import com.example.baskit.MainComponents.SortableEntity;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;
@@ -29,7 +29,7 @@ public class SortListBottomSheetBuilder
     public static void show(
             AppCompatActivity activity,
             SortableEntity entity,
-            Map<String, ArrayList<ItemViewPricesAdapter.PriceRow>> rows,
+            Map<String, ArrayList<PriceRow>> rows,
             ArrayList<Supermarket> supermarkets,
             ApplyListener listener)
     {

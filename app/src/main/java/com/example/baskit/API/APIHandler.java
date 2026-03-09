@@ -6,6 +6,7 @@ import com.example.baskit.Baskit;
 import com.example.baskit.Categories.ItemViewPricesAdapter;
 import com.example.baskit.MainComponents.Item;
 import com.example.baskit.MainComponents.ItemInfo;
+import com.example.baskit.MainComponents.PriceRow;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.SQLite.AppDatabase;
 import com.example.baskit.SQLite.ItemCategory;
@@ -30,24 +31,24 @@ import java.util.concurrent.Executors;
 
 public class APIHandler
 {
-    private static APIHandler instance;
-    private static String firebaseToken;
+    private Map<String, Map<String, Map<String, Double>>> cachedItemPrices = null;
+    private Map<String, String> cachedItemCategories = new HashMap<>();
+    private Map<String, ArrayList<String>> cachedGroups = new HashMap<>();
+    private Map<String, ItemInfo> cachedItemInfos = new HashMap<>();
+
+    private ArrayList<Supermarket> supermarkets = null;
+
     private final OkHttpClient client = new OkHttpClient.Builder()
             .connectTimeout(0, TimeUnit.SECONDS)
             .readTimeout(0, TimeUnit.SECONDS)
             .writeTimeout(0, TimeUnit.SECONDS)
             .callTimeout(0, TimeUnit.SECONDS)
             .build();
-    private Map<String, Map<String, Map<String, Double>>> cachedItemPrices = null;
-    private Map<String, String> cachedItemCategories = new HashMap<>();
-    private Map<String, ArrayList<String>> cachedGroups = new HashMap<>();
-    private Map<String, ItemInfo> cachedItemInfos = new HashMap<>();
-    private ArrayList<Supermarket> supermarkets = null;
-
-    // Shared executors
     private final ExecutorService dbExecutor = Executors.newSingleThreadExecutor();
     private final ExecutorService networkExecutor = Executors.newFixedThreadPool(3);
-    private final ExecutorService geminiExecutor = Executors.newFixedThreadPool(3);
+
+    private static String firebaseToken;
+    private static APIHandler instance;
 
     private APIHandler() {}
 
@@ -61,6 +62,13 @@ public class APIHandler
         return instance;
     }
 
+    public void resetInstance()
+    {
+        firebaseToken = null;
+        instance = null;
+        instance = new APIHandler();
+    }
+
     public boolean isServerActive()
     {
         try
@@ -70,7 +78,11 @@ public class APIHandler
                     .get()
                     .build();
 
-            try (Response response = client.newCall(request).execute())
+            OkHttpClient timeoutClient = client.newBuilder()
+                    .callTimeout(5, TimeUnit.SECONDS)
+                    .build();
+
+            try (Response response = timeoutClient.newCall(request).execute())
             {
                 return response.isSuccessful();
             }
@@ -91,9 +103,108 @@ public class APIHandler
         preload();
     }
 
+    private String getRaw(String endpoint) throws IOException
+    {
+        Request request = new Request.Builder()
+                .url(Baskit.SERVER_URL + endpoint)
+                .addHeader("FirebaseToken", firebaseToken)
+                .build();
+
+        try (Response response = client.newCall(request).execute())
+        {
+            if (!response.isSuccessful()) {
+                throw new IOException("GET failed: " + response.code() + " " + response.message());
+            }
+
+            ResponseBody responseBody = response.body();
+            if (responseBody == null) {
+                throw new IOException("Empty response body for GET " + endpoint);
+            }
+
+            return responseBody.string();
+        }
+    }
+
+    private void postRaw(String endpoint, String body) throws IOException
+    {
+        Request request = new Request.Builder()
+                .url(Baskit.SERVER_URL + endpoint)
+                .addHeader("FirebaseToken", firebaseToken)
+                .post(RequestBody.create(body, MediaType.parse("application/json")))
+                .build();
+
+        try (Response response = client.newCall(request).execute())
+        {
+            if (!response.isSuccessful()) throw new IOException("POST failed: " + response);
+        }
+    }
+
+    private String getBody(String name, ArrayList<String> arr) throws JSONException
+    {
+        JSONArray jsonArray = new JSONArray(arr);  // convert ArrayList<String> to JSONArray
+        JSONObject body = new JSONObject().put(name, jsonArray);
+
+        return body.toString();
+    }
+
+    private Map<String, Map<String, Double>> parsePriceResponse(String response) throws JSONException
+    {
+        JSONObject json = new JSONObject(response);
+        Map<String, Map<String, Double>> result = new HashMap<>();
+
+        for (Iterator<String> it = json.keys(); it.hasNext();)
+        {
+            String store = it.next();
+            JSONObject branches = json.getJSONObject(store);
+            Map<String, Double> branchMap = new HashMap<>();
+
+            for (Iterator<String> iter = branches.keys(); iter.hasNext();)
+            {
+                String branch = iter.next();
+                branchMap.put(branch, branches.getDouble(branch));
+            }
+
+            result.put(store, branchMap);
+        }
+
+        return result;
+    }
+
+    public boolean login(String firebaseToken)
+    {
+        this.firebaseToken = firebaseToken;
+
+        try
+        {
+            JSONObject body = new JSONObject();
+            Request request = new Request.Builder()
+                    .url(Baskit.SERVER_URL + "/user")
+                    .addHeader("FirebaseToken", firebaseToken)
+                    .post(RequestBody.create(body.toString(), MediaType.parse("application/json")))
+                    .build();
+
+            try (Response response = client.newCall(request).execute())
+            {
+                if (!response.isSuccessful())
+                {
+                    Log.e("LOGIN", "Login failed: " + response.code() + " " + response.message());
+                    return false;
+                }
+
+                return true;
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public void preload() throws JSONException, IOException
     {
         supermarkets = getUpdatedSupermarkets();
+
         cachedItemPrices = loadItemPricesFromDB();
         cachedItemCategories = loadCategoriesFromDB();
         cachedGroups = loadGroupsFromDB();
@@ -136,11 +247,15 @@ public class APIHandler
     private void updateAllCache() throws JSONException, IOException
     {
         Map<String, Map<String, Map<String, Double>>> freshItemPrices = getItemPricesFromAPI();
-        Map<String, String> freshCategories = getCategories();
+        Map<String, String> freshCategories = getCategoriesFromAPI();
         Map<String, ArrayList<String>> freshGroups = getGroupsFromAPI();
         Map<String, ItemInfo> freshItemInfos = getItemInfosFromAPI();
 
-        updateCache(freshItemPrices, freshCategories, freshGroups, freshItemInfos);
+        cachedItemPrices = new HashMap<>(freshItemPrices);
+        cachedItemCategories = new HashMap<>(freshCategories);
+        cachedGroups = new HashMap<>(freshGroups);
+        cachedItemInfos = new HashMap<>(freshItemInfos);
+
         saveItemPricesToDB(freshItemPrices);
         saveCategoriesToDB(freshCategories);
         saveGroupsToDB(freshGroups);
@@ -165,16 +280,67 @@ public class APIHandler
         return result;
     }
 
-
-    private void updateCache(Map<String, Map<String, Map<String, Double>>> prices,
-                             Map<String, String> categories,
-                             Map<String, ArrayList<String>> groups,
-                             Map<String, ItemInfo> infos)
+    private Map<String, String> loadCategoriesFromDB()
     {
-        cachedItemPrices = new HashMap<>(prices);
-        cachedItemCategories = new HashMap<>(categories);
-        cachedGroups = new HashMap<>(groups);
-        cachedItemInfos = new HashMap<>(infos);
+        List<ItemCategory> dbCategories = AppDatabase.getDatabase(Baskit.getContext())
+                .itemCategoryDao()
+                .getAll();
+
+        Map<String, String> categories = new HashMap<>();
+
+        for (ItemCategory category : dbCategories)
+        {
+            categories.put(category.getItemCode(), category.getCategory());
+        }
+
+        return categories;
+    }
+
+    private Map<String, ArrayList<String>> loadGroupsFromDB()
+    {
+        List<com.example.baskit.SQLite.GroupsEntity> dbGroups =
+                AppDatabase.getDatabase(Baskit.getContext())
+                        .groupDao()
+                        .getAll();
+
+        Map<String, ArrayList<String>> groups = new HashMap<>();
+
+        for (com.example.baskit.SQLite.GroupsEntity group : dbGroups)
+        {
+            ArrayList<String> codes = new ArrayList<>();
+            try
+            {
+                JSONArray arr = new JSONArray(group.getStructureJson());
+                for (int i = 0; i < arr.length(); i++)
+                {
+                    codes.add(arr.getString(i));
+                }
+            }
+            catch (Exception ignored) {}
+
+            groups.put(group.getBaseName(), codes);
+        }
+
+        return groups;
+    }
+
+    private Map<String, ItemInfo> loadItemInfosFromDB()
+    {
+        List<ItemInfoEntity> dbInfos = AppDatabase.getDatabase(Baskit.getContext())
+                .itemInfoDao()
+                .getAll();
+
+        Map<String, ItemInfo> result = new HashMap<>();
+
+        for (ItemInfoEntity entity : dbInfos)
+        {
+            result.put(
+                    entity.itemCode,
+                    new ItemInfo(entity.itemCode, entity.baseName, entity.company, entity.weight, entity.unit)
+            );
+        }
+
+        return result;
     }
 
     private void saveItemPricesToDB(Map<String, Map<String, Map<String, Double>>> freshItems)
@@ -214,23 +380,51 @@ public class APIHandler
         });
     }
 
-    private Map<String, ItemInfo> loadItemInfosFromDB()
+    private void saveCategoriesToDB(Map<String, String> categories)
     {
-        List<ItemInfoEntity> dbInfos = AppDatabase.getDatabase(Baskit.getContext())
-                .itemInfoDao()
-                .getAll();
-
-        Map<String, ItemInfo> result = new HashMap<>();
-
-        for (ItemInfoEntity entity : dbInfos)
+        dbExecutor.execute(() ->
         {
-            result.put(
-                    entity.itemCode,
-                    new ItemInfo(entity.itemCode, entity.baseName, entity.company, entity.weight, entity.unit)
-            );
-        }
+            AppDatabase db = AppDatabase.getDatabase(Baskit.getContext());
+            db.itemCategoryDao().clearAll();
 
-        return result;
+            List<ItemCategory> list = new ArrayList<>();
+
+            for (Map.Entry<String, String> entry : categories.entrySet())
+            {
+                list.add(new ItemCategory(entry.getKey(), entry.getValue()));
+            }
+
+            if (!list.isEmpty())
+            {
+                db.itemCategoryDao().insertAll(list);
+            }
+        });
+    }
+
+    private void saveGroupsToDB(Map<String, ArrayList<String>> groups)
+    {
+        dbExecutor.execute(() ->
+        {
+            AppDatabase db = AppDatabase.getDatabase(Baskit.getContext());
+            db.groupDao().clearAll();
+
+            List<com.example.baskit.SQLite.GroupsEntity> list = new ArrayList<>();
+
+            for (Map.Entry<String, ArrayList<String>> entry : groups.entrySet())
+            {
+                JSONArray arr = new JSONArray(entry.getValue());
+
+                list.add(new com.example.baskit.SQLite.GroupsEntity(
+                        entry.getKey(),
+                        arr.toString()
+                ));
+            }
+
+            if (!list.isEmpty())
+            {
+                db.groupDao().insertAll(list);
+            }
+        });
     }
 
     private void saveItemInfosToDB(Map<String, ItemInfo> infos)
@@ -261,6 +455,82 @@ public class APIHandler
                 db.itemInfoDao().insertAll(list);
             }
         });
+    }
+
+    private Map<String, Map<String, Map<String, Double>>> getItemPricesFromAPI()
+    {
+        Map<String, Map<String, Map<String, Double>>> items = new HashMap<>();
+
+        try
+        {
+            String itemsRaw = getRaw("/items_prices");
+            JSONObject itemsJson = new JSONObject(itemsRaw);
+
+            for (Iterator<String> itemIter = itemsJson.keys(); itemIter.hasNext();)
+            {
+                String itemCode = itemIter.next();
+                JSONObject storesJson = itemsJson.getJSONObject(itemCode);
+                Map<String, Map<String, Double>> storeMap = parsePriceResponse(storesJson.toString());
+
+                items.put(itemCode, storeMap);
+            }
+        }
+        catch (Exception e)
+        {
+            Log.e("API", "Failed to fetch items", e);
+        }
+
+        return items;
+    }
+
+    public Map<String, String> getCategoriesFromAPI() throws IOException, JSONException
+    {
+        String raw = getRaw("/categories");
+
+        JSONObject categoriesJson = new JSONObject(raw);
+        Map<String, String> categories = new HashMap<>();
+
+        Iterator<String> keys = categoriesJson.keys();
+
+        while (keys.hasNext())
+        {
+            String code = keys.next();
+            String category = categoriesJson.getString(code);
+            categories.put(code, category);
+        }
+
+        return categories;
+    }
+
+    private Map<String, ArrayList<String>> getGroupsFromAPI()
+    {
+        Map<String, ArrayList<String>> groups = new HashMap<>();
+
+        try
+        {
+            String raw = getRaw("/groups");
+            JSONObject json = new JSONObject(raw);
+
+            for (Iterator<String> it = json.keys(); it.hasNext();)
+            {
+                String base = it.next();
+                JSONArray arr = json.getJSONArray(base);
+
+                ArrayList<String> codes = new ArrayList<>();
+                for (int i = 0; i < arr.length(); i++)
+                {
+                    codes.add(arr.getString(i));
+                }
+
+                groups.put(base, codes);
+            }
+        }
+        catch (Exception e)
+        {
+            Log.e("API", "Failed to fetch groups", e);
+        }
+
+        return groups;
     }
 
     private Map<String, ItemInfo> getItemInfosFromAPI()
@@ -308,6 +578,16 @@ public class APIHandler
         return cachedItemPrices;
     }
 
+    public Map<String, String> getCategories()
+    {
+        return cachedItemCategories;
+    }
+
+    public Map<String, ArrayList<String>> getGroups()
+    {
+        return cachedGroups;
+    }
+
     public Map<String, ItemInfo> getItemInfos()
     {
         return cachedItemInfos;
@@ -326,7 +606,7 @@ public class APIHandler
 
         if (itemCode != null && !itemCode.isEmpty())
         {
-            itemCategory = cachedItemCategories.get(itemCode);
+            itemCategory = cachedItemCategories.get(itemCode); // Try cache first
 
             if (itemCategory != null && !itemCategory.isEmpty())
             {
@@ -349,6 +629,7 @@ public class APIHandler
                     + "item_name=" + URLEncoder.encode(itemName, "UTF-8");
         }
 
+        // If not in cache -> try the server
         String raw = getRaw(endpoint);
         JSONObject obj = new JSONObject(raw);
         itemCategory = obj.optString("category", null);
@@ -358,6 +639,7 @@ public class APIHandler
             return null;
         }
 
+        // Update the cache
         cachedItemCategories.put(itemCode, itemCategory);
 
         String finalItemCategory = itemCategory;
@@ -398,190 +680,12 @@ public class APIHandler
         return null;
     }
 
-    public void putItemCategoryIfAbsent(String itemCode, String category)
-    {
-        if (itemCode == null || category == null) return;
-
-        String normalized = itemCode.trim().toLowerCase();
-
-        if (!cachedItemCategories.containsKey(normalized))
-        {
-            cachedItemCategories.put(normalized, category);
-        }
-    }
-
     public boolean hasCategory(String itemCode)
     {
         if (itemCode == null) return false;
         return cachedItemCategories.containsKey(itemCode.trim().toLowerCase());
     }
 
-    private Map<String, String> loadCategoriesFromDB()
-    {
-        List<ItemCategory> dbCategories = AppDatabase.getDatabase(Baskit.getContext())
-                .itemCategoryDao()
-                .getAll();
-
-        Map<String, String> categories = new HashMap<>();
-
-        for (ItemCategory category : dbCategories)
-        {
-            categories.put(category.getItemCode(), category.getCategory());
-        }
-
-        return categories;
-    }
-
-    private void saveCategoriesToDB(Map<String, String> categories)
-    {
-        dbExecutor.execute(() ->
-        {
-            AppDatabase db = AppDatabase.getDatabase(Baskit.getContext());
-            db.itemCategoryDao().clearAll();
-
-            List<ItemCategory> list = new ArrayList<>();
-
-            for (Map.Entry<String, String> entry : categories.entrySet())
-            {
-                list.add(new ItemCategory(entry.getKey(), entry.getValue()));
-            }
-
-            if (!list.isEmpty())
-            {
-                db.itemCategoryDao().insertAll(list);
-            }
-        });
-    }
-
-    public Map<String, String> getCategories() throws IOException, JSONException
-    {
-        String raw = getRaw("/categories");
-
-        JSONObject categoriesJson = new JSONObject(raw);
-        Map<String, String> categories = new HashMap<>();
-
-        Iterator<String> keys = categoriesJson.keys();
-
-        while (keys.hasNext())
-        {
-            String code = keys.next();
-            String category = categoriesJson.getString(code);
-            categories.put(code, category);
-        }
-
-        return categories;
-    }
-
-    private Map<String, Map<String, Map<String, Double>>> getItemPricesFromAPI()
-    {
-        Map<String, Map<String, Map<String, Double>>> items = new HashMap<>();
-
-        try
-        {
-            String itemsRaw = getRaw("/items_prices");
-            JSONObject itemsJson = new JSONObject(itemsRaw);
-
-            for (Iterator<String> itemIter = itemsJson.keys(); itemIter.hasNext();)
-            {
-                String itemCode = itemIter.next();
-                JSONObject storesJson = itemsJson.getJSONObject(itemCode);
-                Map<String, Map<String, Double>> storeMap = parsePriceResponse(storesJson.toString());
-
-                items.put(itemCode, storeMap);
-            }
-        }
-        catch (Exception e)
-        {
-            Log.e("API", "Failed to fetch items", e);
-        }
-
-        return items;
-    }
-
-
-    public void resetInstance()
-    {
-        firebaseToken = null;
-        instance = null;
-        instance = new APIHandler();
-    }
-
-    public boolean login(String firebaseToken)
-    {
-        this.firebaseToken = firebaseToken;
-
-        try
-        {
-            JSONObject body = new JSONObject();
-            Request request = new Request.Builder()
-                    .url(Baskit.SERVER_URL + "/user")
-                    .addHeader("FirebaseToken", firebaseToken)
-                    .post(RequestBody.create(body.toString(), MediaType.parse("application/json")))
-                    .build();
-
-            try (Response response = client.newCall(request).execute())
-            {
-                if (!response.isSuccessful())
-                {
-                    Log.e("LOGIN", "Login failed: " + response.code() + " " + response.message());
-                    return false;
-                }
-
-                return true;
-            }
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-
-    private String getRaw(String endpoint) throws IOException
-    {
-        Request request = new Request.Builder()
-                .url(Baskit.SERVER_URL + endpoint)
-                .addHeader("FirebaseToken", firebaseToken)
-                .build();
-
-        try (Response response = client.newCall(request).execute())
-        {
-            if (!response.isSuccessful()) {
-                throw new IOException("GET failed: " + response.code() + " " + response.message());
-            }
-
-            ResponseBody responseBody = response.body();
-            if (responseBody == null) {
-                throw new IOException("Empty response body for GET " + endpoint);
-            }
-
-            return responseBody.string();
-        }
-    }
-
-    private void postRaw(String endpoint, String body) throws IOException {
-        Request request = new Request.Builder()
-                .url(Baskit.SERVER_URL + endpoint)
-                .addHeader("FirebaseToken", firebaseToken)
-                .post(RequestBody.create(body, MediaType.parse("application/json")))
-                .build();
-
-        try (Response response = client.newCall(request).execute())
-        {
-            if (!response.isSuccessful()) throw new IOException("POST failed: " + response);
-        }
-    }
-
-    private String getBody(String name, ArrayList<String> arr) throws JSONException
-    {
-        JSONArray jsonArray = new JSONArray(arr);  // convert ArrayList<String> to JSONArray
-        JSONObject body = new JSONObject().put(name, jsonArray);
-
-        return body.toString();
-    }
-
-    // Cities
     public ArrayList<String> getAllCities() throws IOException, JSONException
     {
         String citiesRaw = getRaw("/all_cities");
@@ -618,7 +722,6 @@ public class APIHandler
         postRaw("/cities", getBody("cities", cities));
     }
 
-    // Stores
     public ArrayList<String> getStores() throws IOException, JSONException
     {
         String storesRaw = getRaw("/stores");
@@ -631,7 +734,6 @@ public class APIHandler
         return stores;
     }
 
-    // Branches
     public Map<String, ArrayList<String>> getBranches() throws IOException, JSONException
     {
         String branchesRaw = getRaw("/branches");
@@ -652,6 +754,19 @@ public class APIHandler
         }
 
         return branchesMap;
+    }
+
+    public void setBranches(Map<String, ArrayList<String>> branches) throws IOException, JSONException
+    {
+        JSONObject body = new JSONObject();
+
+        for (Map.Entry<String, ArrayList<String>> entry : branches.entrySet())
+        {
+            JSONArray arr = new JSONArray(entry.getValue()); // convert ArrayList to JSONArray
+            body.put(entry.getKey(), arr); // now it will serialize as ["a","b","c"]
+        }
+
+        postRaw("/branches", body.toString());
     }
 
     private Map<String, ArrayList<String>> getChoices() throws IOException, JSONException
@@ -711,32 +826,11 @@ public class APIHandler
         return getSupermarkets();
     }
 
-    public void setBranches(Map<String, ArrayList<String>> branches) throws IOException, JSONException
-    {
-        JSONObject body = new JSONObject();
-
-        for (Map.Entry<String, ArrayList<String>> entry : branches.entrySet())
-        {
-            JSONArray arr = new JSONArray(entry.getValue()); // convert ArrayList to JSONArray
-            body.put(entry.getKey(), arr); // now it will serialize as ["a","b","c"]
-        }
-
-        postRaw("/branches", body.toString());
-    }
-
-    // Items
-
     public Map<String, Map<String, Double>> getItemPricesByCode(String itemCode) throws IOException, JSONException
     {
         String endpoint = "/item_prices?"
                 + "item_code=" + URLEncoder.encode(itemCode, "UTF-8");
         return parsePriceResponse(getRaw(endpoint));
-    }
-
-    public ItemInfo getItemInfo(String itemCode)
-    {
-        if (itemCode == null || itemCode.isEmpty() || cachedItemInfos == null || cachedItemInfos.isEmpty()) return null;
-        return cachedItemInfos.get(itemCode);
     }
 
     public ItemInfo getItemInfoFromAPI(String itemCode) throws IOException, JSONException
@@ -767,47 +861,10 @@ public class APIHandler
         return new ItemInfo(itemCode, baseName, company, weight, unit);
     }
 
-
-    private Map<String, Map<String, Double>> parsePriceResponse(String response) throws JSONException
+    public ItemInfo getItemInfo(String itemCode)
     {
-        JSONObject json = new JSONObject(response);
-        Map<String, Map<String, Double>> result = new HashMap<>();
-
-        for (Iterator<String> it = json.keys(); it.hasNext();)
-        {
-            String store = it.next();
-            JSONObject branches = json.getJSONObject(store);
-            Map<String, Double> branchMap = new HashMap<>();
-
-            for (Iterator<String> iter = branches.keys(); iter.hasNext();)
-            {
-                String branch = iter.next();
-                branchMap.put(branch, branches.getDouble(branch));
-            }
-
-            result.put(store, branchMap);
-        }
-
-        return result;
-    }
-
-    private String postRawWithResponse(String endpoint, String body) throws IOException
-    {
-        Request request = new Request.Builder()
-                .url(Baskit.SERVER_URL + endpoint)
-                .addHeader("FirebaseToken", firebaseToken)
-                .post(RequestBody.create(body, MediaType.parse("application/json")))
-                .build();
-
-        try (Response response = client.newCall(request).execute())
-        {
-            if (!response.isSuccessful()) throw new IOException("POST failed: " + response);
-
-            ResponseBody rb = response.body();
-            if (rb == null) throw new IOException("Empty response body");
-
-            return rb.string();
-        }
+        if (itemCode == null || itemCode.isEmpty() || cachedItemInfos == null || cachedItemInfos.isEmpty()) return null;
+        return cachedItemInfos.get(itemCode);
     }
 
     public Map<String, Map<String, Map<String, Double>>> previewItems(String store, String branch)
@@ -901,94 +958,35 @@ public class APIHandler
         return getAllBranchesBulk(null);
     }
 
-    private Map<String, ArrayList<String>> loadGroupsFromDB()
+    public ArrayList<String> getGroupFromAPI(String base) throws IOException, JSONException
     {
-        List<com.example.baskit.SQLite.GroupsEntity> dbGroups =
-                AppDatabase.getDatabase(Baskit.getContext())
-                        .groupDao()
-                        .getAll();
+        if (base == null || base.isEmpty()) return new ArrayList<>();
 
-        Map<String, ArrayList<String>> groups = new HashMap<>();
-
-        for (com.example.baskit.SQLite.GroupsEntity group : dbGroups)
+        ArrayList<String> cached = cachedGroups != null ? cachedGroups.get(base) : null;
+        if (cached != null)
         {
-            ArrayList<String> codes = new ArrayList<>();
-            try
-            {
-                JSONArray arr = new JSONArray(group.getStructureJson());
-                for (int i = 0; i < arr.length(); i++)
-                {
-                    codes.add(arr.getString(i));
-                }
-            }
-            catch (Exception ignored) {}
-
-            groups.put(group.getBaseName(), codes);
+            return cached;
         }
 
-        return groups;
-    }
+        String endpoint = "/group?"
+                + "base=" + URLEncoder.encode(base, "UTF-8");
 
-    private void saveGroupsToDB(Map<String, ArrayList<String>> groups)
-    {
-        dbExecutor.execute(() ->
+        String raw = getRaw(endpoint);
+        JSONArray arr = new JSONArray(raw);
+
+        ArrayList<String> codes = new ArrayList<>();
+        for (int i = 0; i < arr.length(); i++)
         {
-            AppDatabase db = AppDatabase.getDatabase(Baskit.getContext());
-            db.groupDao().clearAll();
-
-            List<com.example.baskit.SQLite.GroupsEntity> list = new ArrayList<>();
-
-            for (Map.Entry<String, ArrayList<String>> entry : groups.entrySet())
-            {
-                JSONArray arr = new JSONArray(entry.getValue());
-
-                list.add(new com.example.baskit.SQLite.GroupsEntity(
-                        entry.getKey(),
-                        arr.toString()
-                ));
-            }
-
-            if (!list.isEmpty())
-            {
-                db.groupDao().insertAll(list);
-            }
-        });
-    }
-
-    private Map<String, ArrayList<String>> getGroupsFromAPI()
-    {
-        Map<String, ArrayList<String>> groups = new HashMap<>();
-
-        try
-        {
-            String raw = getRaw("/groups");
-            JSONObject json = new JSONObject(raw);
-
-            for (Iterator<String> it = json.keys(); it.hasNext();)
-            {
-                String base = it.next();
-                JSONArray arr = json.getJSONArray(base);
-
-                ArrayList<String> codes = new ArrayList<>();
-                for (int i = 0; i < arr.length(); i++)
-                {
-                    codes.add(arr.getString(i));
-                }
-
-                groups.put(base, codes);
-            }
-        }
-        catch (Exception e)
-        {
-            Log.e("API", "Failed to fetch groups", e);
+            codes.add(arr.getString(i));
         }
 
-        return groups;
-    }
+        // Update cache
+        if (cachedGroups != null)
+        {
+            cachedGroups.put(base, codes);
+        }
 
-    public Map<String, ArrayList<String>> getGroups()
-    {
-        return cachedGroups;
+        return codes;
     }
 
     public ArrayList<String> getGroup(String base) throws IOException, JSONException
@@ -1023,40 +1021,9 @@ public class APIHandler
         return cachedGroups.get(getItemGroupName(id));
     }
 
-    public ArrayList<String> getGroupFromAPI(String base) throws IOException, JSONException
+    public Map<String, ArrayList<PriceRow>> buildRows(ArrayList<Item> items)
     {
-        if (base == null || base.isEmpty()) return new ArrayList<>();
-
-        ArrayList<String> cached = cachedGroups != null ? cachedGroups.get(base) : null;
-        if (cached != null)
-        {
-            return cached;
-        }
-
-        String endpoint = "/group?"
-                + "base=" + URLEncoder.encode(base, "UTF-8");
-
-        String raw = getRaw(endpoint);
-        JSONArray arr = new JSONArray(raw);
-
-        ArrayList<String> codes = new ArrayList<>();
-        for (int i = 0; i < arr.length(); i++)
-        {
-            codes.add(arr.getString(i));
-        }
-
-        // Update cache
-        if (cachedGroups != null)
-        {
-            cachedGroups.put(base, codes);
-        }
-
-        return codes;
-    }
-
-    public Map<String, ArrayList<ItemViewPricesAdapter.PriceRow>> buildRows(ArrayList<Item> items)
-    {
-        Map<String, ArrayList<ItemViewPricesAdapter.PriceRow>> rows = new java.util.HashMap<>();
+        Map<String, ArrayList<PriceRow>> rows = new java.util.HashMap<>();
 
         if (items == null)
         {
@@ -1068,16 +1035,16 @@ public class APIHandler
             String itemName = item.getBaseName();
             if (itemName == null || itemName.isEmpty()) continue;
 
-            ArrayList<ItemViewPricesAdapter.PriceRow> itemRows = buildRow(item);
+            ArrayList<PriceRow> itemRows = buildRow(item);
             rows.put(itemName, itemRows);
         }
 
         return rows;
     }
 
-    public ArrayList<ItemViewPricesAdapter.PriceRow> buildRow(Item item)
+    public ArrayList<PriceRow> buildRow(Item item)
     {
-        ArrayList<ItemViewPricesAdapter.PriceRow> rows = new ArrayList<>();
+        ArrayList<PriceRow> rows = new ArrayList<>();
 
         if (item == null)
         {
@@ -1113,7 +1080,7 @@ public class APIHandler
                     Supermarket sm = new Supermarket(supermarketName, section);
 
                     rows.add(
-                            new ItemViewPricesAdapter.PriceRow(
+                            new PriceRow(
                                     sm,
                                     price,
                                     cachedItemInfos.get(code)

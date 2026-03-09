@@ -15,8 +15,8 @@ import kotlin.coroutines.EmptyCoroutineContext;
 
 public class GeminiManager
 {
-    private static GeminiManager instance;
     private GenerativeModel gemini;
+    private static GeminiManager instance;
 
     private GeminiManager()
     {

@@ -1,5 +1,7 @@
 package com.example.baskit.MainComponents;
 
+import com.google.firebase.database.Exclude;
+
 import java.util.ArrayList;
 
 public class User
@@ -69,10 +71,20 @@ public class User
         return supermarkets;
     }
 
-    public void setSupermarkets(ArrayList<Supermarket> supermarkets) {
+    public void setSupermarkets(ArrayList<Supermarket> supermarkets)
+    {
         this.supermarkets = supermarkets;
     }
 
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    @Exclude
     public void addList(String listId)
     {
         if (listIDs == null)
@@ -83,16 +95,9 @@ public class User
         listIDs.add(listId);
     }
 
+    @Exclude
     public void removeList(String listId)
     {
         listIDs.remove(listId);
-    }
-
-    public String getToken() {
-        return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
     }
 }

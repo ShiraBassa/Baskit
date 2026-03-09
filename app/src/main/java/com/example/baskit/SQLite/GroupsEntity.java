@@ -9,9 +9,8 @@ public class GroupsEntity
 {
     @PrimaryKey
     @NonNull
-    public String baseName;   // group base name
+    public String baseName;
 
-    // JSON representation of weight -> company -> codes structure
     public String structureJson;
 
     public GroupsEntity(@NonNull String baseName, String structureJson)

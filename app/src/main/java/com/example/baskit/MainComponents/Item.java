@@ -1,7 +1,5 @@
 package com.example.baskit.MainComponents;
 
-import com.example.baskit.Categories.ItemViewPricesAdapter;
-
 import androidx.annotation.NonNull;
 
 import com.example.baskit.Baskit;
@@ -9,7 +7,6 @@ import com.google.firebase.database.Exclude;
 import com.google.firebase.database.IgnoreExtraProperties;
 
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.Objects;
 
 @IgnoreExtraProperties
@@ -28,7 +25,7 @@ public class Item implements Cloneable
     protected Double weight;
     protected String unit;
 
-    public Item(){}
+    public Item() {}
 
     public Item(String baseName)
     {
@@ -102,12 +99,6 @@ public class Item implements Cloneable
         return baseName;
     }
 
-    @Exclude
-    public String getDecodedName()
-    {
-        return Baskit.decodeKey(this.baseName);
-    }
-
     public void setBaseName(String baseName)
     {
         this.baseName = Baskit.encodeKey(baseName);
@@ -115,24 +106,6 @@ public class Item implements Cloneable
 
     public double getPrice() {
         return price;
-    }
-
-    @Exclude
-    public double getTotal()
-    {
-        return Math.round(this.price * this.quantity * 100.0) / 100.0;
-    }
-
-    @Exclude
-    public double getTotal(double otherPrice)
-    {
-        return Math.round(otherPrice * this.quantity * 100.0) / 100.0;
-    }
-
-    @Exclude
-    public static double getTotal(double otherPrice, int otherQuantity)
-    {
-        return Math.round(otherPrice * otherQuantity * 100.0) / 100.0;
     }
 
     public void setPrice(double price) {
@@ -160,6 +133,34 @@ public class Item implements Cloneable
         return id;
     }
 
+    public void setId(String id)
+    {
+        if (id.isEmpty()) return;
+        this.id = isFullId(id) ? id : getFullId(id);
+    }
+
+    public Supermarket getSupermarket()
+    {
+        return supermarket;
+    }
+
+    public void setSupermarket(Supermarket supermarket)
+    {
+        this.supermarket = supermarket;
+    }
+
+    @Exclude
+    public String getDecodedName()
+    {
+        return Baskit.decodeKey(this.baseName);
+    }
+
+    @Exclude
+    public double getTotal()
+    {
+        return Math.round(this.price * this.quantity * 100.0) / 100.0;
+    }
+
     @Exclude
     public String getAbsoluteId()
     {
@@ -170,18 +171,6 @@ public class Item implements Cloneable
     public static String getAbsoluteId(String id)
     {
         return isFullId(id) ? id.substring(ID_PREFIX.length()) : id;
-    }
-
-    public void setId(String id)
-    {
-        if (id.isEmpty()) return;
-        this.id = isFullId(id) ? id : getFullId(id);
-    }
-
-    @Exclude
-    public String getFullId()
-    {
-        return id.isEmpty() ? "" : getFullId(id);
     }
 
     @Exclude
@@ -196,55 +185,19 @@ public class Item implements Cloneable
         return id.startsWith(ID_PREFIX);
     }
 
+    @Exclude
     public int raiseQuantity()
     {
         return ++quantity;
     }
 
+    @Exclude
     public int lowerQuantity()
     {
         return --quantity;
     }
 
-    public boolean hasSupermarket()
-    {
-        return this.supermarket != null;
-    }
-
-    public Supermarket getSupermarket() {
-        return supermarket;
-    }
-
-    public void setSupermarket(Supermarket supermarket)
-    {
-        this.supermarket = supermarket;
-    }
-
-    public void setSupermarket(Supermarket supermarket, Double price)
-    {
-        this.supermarket = supermarket;
-        this.price = price;
-    }
-
-    @Exclude
-    public void setSupermarketFromSmMap(Supermarket supermarket, Map<Supermarket, Double> prices)
-    {
-        if (prices == null || !prices.containsKey(supermarket))
-        {
-            return;
-        }
-
-        this.supermarket = supermarket;
-        this.price = prices.get(supermarket);
-    }
-
-    @Exclude
-    public void setSupermarketFromStringsMap(Supermarket supermarket, Map<String, Map<String, Double>> prices)
-    {
-        Map<Supermarket, Double> pricesSm = Supermarket.getSupermarketsPricesFromStrings(prices);
-        setSupermarketFromSmMap(supermarket, pricesSm);
-    }
-
+    @NonNull
     @Override
     public String toString()
     {
@@ -302,18 +255,18 @@ public class Item implements Cloneable
     }
 
     @Exclude
-    public ItemViewPricesAdapter.PriceRow getCheapestRow(ArrayList<ItemViewPricesAdapter.PriceRow> priceRows)
+    public PriceRow getCheapestRow(ArrayList<PriceRow> priceRows)
     {
         if (priceRows == null || priceRows.isEmpty())
         {
             return null;
         }
 
-        ItemViewPricesAdapter.PriceRow ogRow = getRow();
+        PriceRow ogRow = getRow();
         double cheapestPrice = Double.MAX_VALUE;
-        ItemViewPricesAdapter.PriceRow cheapestRow = null;
+        PriceRow cheapestRow = null;
 
-        for (ItemViewPricesAdapter.PriceRow row : priceRows)
+        for (PriceRow row : priceRows)
         {
             if (!isVariantOf(row)) continue;
 
@@ -376,9 +329,9 @@ public class Item implements Cloneable
     }
 
     @Exclude
-    public void setCheapestRow(ArrayList<ItemViewPricesAdapter.PriceRow> priceRows)
+    public void setCheapestRow(ArrayList<PriceRow> priceRows)
     {
-        ItemViewPricesAdapter.PriceRow row = getCheapestRow(priceRows);
+        PriceRow row = getCheapestRow(priceRows);
 
         if (row != null)
         {
@@ -387,20 +340,20 @@ public class Item implements Cloneable
     }
 
     @Exclude
-    public ItemViewPricesAdapter.PriceRow getSupermarketRow(
+    public PriceRow getSupermarketRow(
             Supermarket supermarket,
-            ArrayList<ItemViewPricesAdapter.PriceRow> rows)
+            ArrayList<PriceRow> rows)
     {
         if (rows == null || rows.isEmpty())
         {
             return null;
         }
 
-        ItemViewPricesAdapter.PriceRow ogRow = getRow();
-        ItemViewPricesAdapter.PriceRow cheapestRow = null;
+        PriceRow ogRow = getRow();
+        PriceRow cheapestRow = null;
         double cheapestPrice = Double.MAX_VALUE;
 
-        for (ItemViewPricesAdapter.PriceRow row : rows)
+        for (PriceRow row : rows)
         {
             if (!isVariantOf(row, supermarket)) continue;
 
@@ -452,9 +405,9 @@ public class Item implements Cloneable
     @Exclude
     public void setSupermarketRow(
             Supermarket supermarket,
-            ArrayList<ItemViewPricesAdapter.PriceRow> rows)
+            ArrayList<PriceRow> rows)
     {
-        ItemViewPricesAdapter.PriceRow row = getSupermarketRow(supermarket, rows);
+        PriceRow row = getSupermarketRow(supermarket, rows);
 
         if (row != null)
         {
@@ -487,7 +440,7 @@ public class Item implements Cloneable
     }
 
     @Exclude
-    public void fillRow(ItemViewPricesAdapter.PriceRow row)
+    public void fillRow(PriceRow row)
     {
         fillInfo(row.getInfo());
         this.price = row.getPrice();
@@ -505,13 +458,13 @@ public class Item implements Cloneable
     }
 
     @Exclude
-    public ItemViewPricesAdapter.PriceRow getRow()
+    public PriceRow getRow()
     {
-        return new ItemViewPricesAdapter.PriceRow(supermarket, price, getInfo());
+        return new PriceRow(supermarket, price, getInfo());
     }
 
     @Exclude
-    public boolean isVariantOf(ItemViewPricesAdapter.PriceRow row)
+    public boolean isVariantOf(PriceRow row)
     {
         if (row == null || row.getInfo() == null)
         {
@@ -544,7 +497,7 @@ public class Item implements Cloneable
     }
 
     @Exclude
-    public boolean isVariantOf(ItemViewPricesAdapter.PriceRow row, Supermarket newSupermarket)
+    public boolean isVariantOf(PriceRow row, Supermarket newSupermarket)
     {
         if (row == null || row.getInfo() == null)
         {
@@ -577,54 +530,9 @@ public class Item implements Cloneable
     }
 
     @Exclude
-    public boolean isIdenticalVariantOf(ItemViewPricesAdapter.PriceRow row)
+    public boolean isIdenticalVariantOf(PriceRow row)
     {
         return row.getInfo().equals(getInfo()) &&
                 row.getSupermarket().equals(supermarket);
-    }
-
-    @Exclude
-    public boolean hasCompany()
-    {
-        return company != null && !company.isEmpty() && !company.equals("unknown");
-    }
-
-    @Exclude
-    public boolean hasWeight()
-    {
-        return weight != null && weight > 0;
-    }
-
-    @Exclude
-    public boolean hasUnit()
-    {
-        return unit != null && !unit.isEmpty() && !unit.equals("unknown");
-    }
-
-    @Exclude
-    public boolean isVariant()
-    {
-        return hasCompany() || (hasWeight() && hasUnit()) && hasSupermarket();
-    }
-
-    @Exclude
-    public boolean hasSupermarketVariant(
-            Supermarket supermarket,
-            ArrayList<ItemViewPricesAdapter.PriceRow> rows)
-    {
-        if (rows == null || rows.isEmpty())
-        {
-            return false;
-        }
-
-        for (ItemViewPricesAdapter.PriceRow row : rows)
-        {
-            if (isVariantOf(row))
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

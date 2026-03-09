@@ -1,7 +1,5 @@
 package com.example.baskit.List;
 
-import android.app.Activity;
-import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,9 +8,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.example.baskit.Firebase.FirebaseDBHandler;
-import com.example.baskit.MainComponents.Item;
 import com.example.baskit.MainComponents.List;
 import com.example.baskit.MainComponents.Request;
 import com.example.baskit.R;
@@ -21,12 +16,9 @@ import java.util.ArrayList;
 
 public class ShareListRequestsAdapter extends RecyclerView.Adapter<ShareListRequestsAdapter.ViewHolder>
 {
-    ArrayList<Request> requests;
-    ArrayList<String> usernames;
-    com.example.baskit.MainComponents.List list;
-    Activity activity;
-    Context context;
-    UpperClassFunctions upperClassFns;
+    private ArrayList<Request> requests;
+
+    private UpperClassFunctions upperClassFns;
 
     public interface UpperClassFunctions
     {
@@ -34,13 +26,9 @@ public class ShareListRequestsAdapter extends RecyclerView.Adapter<ShareListRequ
         void declineRequest(Request request);
     }
 
-    public ShareListRequestsAdapter(List list,
-                                    Activity activity, Context context, UpperClassFunctions upperClassFns)
+    public ShareListRequestsAdapter(List list, UpperClassFunctions upperClassFns)
     {
-        this.list = list;
         this.requests = list.getRequests();
-        this.activity = activity;
-        this.context = context;
         this.upperClassFns = upperClassFns;
     }
 

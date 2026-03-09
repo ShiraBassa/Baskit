@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.baskit.API.APIHandler;
 import com.example.baskit.MainComponents.Item;
 import com.example.baskit.MainComponents.ItemInfo;
+import com.example.baskit.MainComponents.PriceRow;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;
 import com.google.android.material.chip.Chip;
@@ -26,25 +27,32 @@ import java.util.Map;
 
 public class ItemViewAlertDialog
 {
+    Item item;
+
+    ArrayList<PriceRow> rows = new ArrayList<>();
+    ArrayList<PriceRow> allRows = new ArrayList<>();
+    ArrayList<ItemInfo> currentVariations = new ArrayList<>();
+
+    boolean showQuantity;
+
+    APIHandler apiHandler = APIHandler.getInstance();
+
+    ChipGroup chipGroupWeights;
+    ChipGroup chipGroupCompanies;
+
+    AlertDialog.Builder adb;
+    AlertDialog adItemView;
+    RecyclerView recyclerSupermarkets;
+    ItemViewPricesAdapter pricesAdapter;
+
     TextView adTvQuantity, adTvItemName;
     Button adBtnSave;
     ImageButton adBtnCancel, adBtnUp, adBtnDown;
     LinearLayout adLayout, adLoutQuantity, adLoutQuantityWhole;
-    AlertDialog.Builder adb;
-    AlertDialog adItemView;
-    private RecyclerView recyclerSupermarkets;
-    private ItemViewPricesAdapter pricesAdapter;
-    private ArrayList<ItemViewPricesAdapter.PriceRow> rows = new ArrayList<>();
-    private ArrayList<ItemViewPricesAdapter.PriceRow> allRows = new ArrayList<>();
-    protected ItemsAdapter.UpperClassFunctions upperClassFns;
+
     Activity activity;
     Context context;
-    APIHandler apiHandler = APIHandler.getInstance();
-    Item item;
-    boolean showQuantity;
-    private ChipGroup chipGroupWeights;
-    private ChipGroup chipGroupCompanies;
-    private ArrayList<ItemInfo> currentVariations = new ArrayList<>();
+    ItemsAdapter.UpperClassFunctions upperClassFns;
 
     public ItemViewAlertDialog(Activity activity, Context context, ItemsAdapter.UpperClassFunctions upperClassFns, Item _item, boolean showQuantity)
     {
@@ -94,8 +102,6 @@ public class ItemViewAlertDialog
                 Log.e("ItemViewAlertDialog", "Failed to load variations", e);
             }
 
-            // --- BEGIN: Populate rows ---
-            // Clear both lists before populating
             rows.clear();
             allRows.clear();
 
@@ -116,8 +122,8 @@ public class ItemViewAlertDialog
                             Double priceObj = sectionEntry.getValue();
                             if (priceObj == null) continue;
                             Supermarket sm = new Supermarket(supermarketName, sectionName);
-                            ItemViewPricesAdapter.PriceRow newRow =
-                                    new ItemViewPricesAdapter.PriceRow(
+                            PriceRow newRow =
+                                    new PriceRow(
                                             sm,
                                             priceObj,
                                             info
@@ -129,7 +135,6 @@ public class ItemViewAlertDialog
                 }
                 catch (Exception ignored) {}
             }
-            // --- END: Populate rows ---
 
             activity.runOnUiThread(() ->
             {
@@ -151,8 +156,7 @@ public class ItemViewAlertDialog
 
                             item.setSupermarket(supermarket);
 
-                            // Find matching row exactly like AddItemFragment
-                            for (ItemViewPricesAdapter.PriceRow row : rows)
+                            for (PriceRow row : rows)
                             {
                                 if (row.getSupermarket().getSupermarket().equals(supermarket.getSupermarket()) &&
                                     row.getSupermarket().getSection().equals(supermarket.getSection()) &&
@@ -166,7 +170,6 @@ public class ItemViewAlertDialog
                                 }
                             }
 
-                            // Set selected variation AFTER resolving price
                             item.fillInfo(variation);
 
                             if (pricesAdapter != null)
@@ -180,12 +183,12 @@ public class ItemViewAlertDialog
                 recyclerSupermarkets.setAdapter(pricesAdapter);
                 applyVariationFilter();
 
-                // Auto-select current variant + supermarket
+                // Auto-select current variant
                 if (item.getAbsoluteId() != null && item.getSupermarket() != null)
                 {
                     for (int i = 0; i < rows.size(); i++)
                     {
-                        ItemViewPricesAdapter.PriceRow row = rows.get(i);
+                        PriceRow row = rows.get(i);
 
                         if (item.isIdenticalVariantOf(row))
                         {
@@ -240,6 +243,11 @@ public class ItemViewAlertDialog
                 adTvQuantity.setText(Integer.toString(quantity));
             }
         });
+    }
+
+    public void setUpperClassFns(ItemsAdapter.UpperClassFunctions upperClassFns)
+    {
+        this.upperClassFns = upperClassFns;
     }
 
     public void show(Item _item)
@@ -316,7 +324,7 @@ public class ItemViewAlertDialog
 
             for (int i = 0; i < rows.size(); i++)
             {
-                ItemViewPricesAdapter.PriceRow row = rows.get(i);
+                PriceRow row = rows.get(i);
 
                 if (item.isIdenticalVariantOf(row))
                 {
@@ -331,17 +339,10 @@ public class ItemViewAlertDialog
         adItemView.show();
     }
 
-    public void setUpperClassFns(ItemsAdapter.UpperClassFunctions upperClassFns)
-    {
-        this.upperClassFns = upperClassFns;
-    }
-
-    // Dual-chip filtering logic (weights + companies), cross-filtering, as in AddItemFragment
     private void setupVariationFilters()
     {
         if (currentVariations == null || currentVariations.isEmpty()) return;
 
-        // Layout safety check (some layouts may not contain the chip groups)
         if (chipGroupWeights == null || chipGroupCompanies == null)
         {
             return;
@@ -427,7 +428,7 @@ public class ItemViewAlertDialog
 
         rows.clear();
 
-        for (ItemViewPricesAdapter.PriceRow r : allRows)
+        for (PriceRow r : allRows)
         {
             if (r.getInfo() == null) continue;
 
@@ -445,12 +446,9 @@ public class ItemViewAlertDialog
             }
         }
 
-        // =============================
-        // AVAILABLE WEIGHTS (respect companies only)
-        // =============================
         java.util.Set<String> availableWeights = new java.util.HashSet<>();
 
-        for (ItemViewPricesAdapter.PriceRow r : allRows)
+        for (PriceRow r : allRows)
         {
             if (r.getInfo() == null) continue;
 
@@ -466,12 +464,9 @@ public class ItemViewAlertDialog
             }
         }
 
-        // =============================
-        // AVAILABLE COMPANIES (respect weights only)
-        // =============================
         java.util.Set<String> availableCompanies = new java.util.HashSet<>();
 
-        for (ItemViewPricesAdapter.PriceRow r : allRows)
+        for (PriceRow r : allRows)
         {
             if (r.getInfo() == null) continue;
 

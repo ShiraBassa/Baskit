@@ -11,10 +11,10 @@ import android.view.View;
 import androidx.annotation.NonNull;
 
 import com.example.baskit.Baskit;
-import com.example.baskit.Categories.ItemViewPricesAdapter;
 import com.example.baskit.Categories.ItemsAdapter;
 import com.example.baskit.Categories.SupermarketItemsAdapter;
 import com.example.baskit.MainComponents.Item;
+import com.example.baskit.MainComponents.PriceRow;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;
 
@@ -23,34 +23,31 @@ import java.util.Map;
 
 public class SupermarketItemsAdapterPlan extends ItemsAdapter
 {
-private final Map<String, Map<String, Map<String, Double>>> itemPrices;
-private final com.example.baskit.MainComponents.List originalList;
-private final Map<String, ArrayList<String>> groups;
     private final Supermarket supermarket, selectedSupermarketParent;
-    private final SupermarketItemsAdapter.OnItemMovedListener onItemMovedListener;
+
+    private final Map<String, Map<String, Map<String, Double>>> itemPrices;
+
     private final int colorBase;
     @SuppressLint("PrivateResource")
     private final int colorUnavailable;
     private final int colorChosen;
 
+    private final SupermarketItemsAdapter.OnItemMovedListener onItemMovedListener;
+
     @SuppressLint("PrivateResource")
     public SupermarketItemsAdapterPlan(ArrayList<Item> items,
-                                       com.example.baskit.MainComponents.List originalList,
                                        Activity activity, Context context,
                                        UpperClassFunctions upperClassFns,
                                        Supermarket supermarket,
                                        Supermarket selectedSupermarketParent,
                                        Map<String, Map<String, Map<String, Double>>> itemPrices,
-                                       Map<String, ArrayList<String>> groups,
                                        SupermarketItemsAdapter.OnItemMovedListener onItemMovedListener)
     {
         super(items, item -> {}, upperClassFns, activity, context);
 
-        this.originalList = originalList;
         this.supermarket = supermarket;
         this.selectedSupermarketParent = selectedSupermarketParent;
         this.itemPrices = itemPrices;
-        this.groups = groups;
         this.onItemMovedListener = onItemMovedListener;
 
         colorBase = Baskit.getAppColor(context, com.google.android.material.R.attr.colorOnBackground);
@@ -116,6 +113,30 @@ private final Map<String, ArrayList<String>> groups;
         setItemButtons(holder, item);
     }
 
+    private void setItemButtons(ViewHolder holder, Item item)
+    {
+        holder.btnUp.setOnClickListener(null);
+        holder.btnUp.setActivated(false);
+
+        holder.btnDown.setOnClickListener(null);
+        holder.btnDown.setActivated(false);
+
+        holder.btnCheckBox.setOnClickListener(null);
+        holder.btnCheckBox.setActivated(false);
+
+        holder.tvName.setOnClickListener(null);
+        holder.tvName.setActivated(false);
+
+        holder.dragHandle.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                onItemMovedListener.onItemMoved(item, supermarket, selectedSupermarketParent);
+            }
+        });
+    }
+
     private void showItemPriceDif(ViewHolder holder, Item item, double newPrice)
     {
         double priceDif = newPrice - item.getTotal();
@@ -159,31 +180,6 @@ private final Map<String, ArrayList<String>> groups;
         holder.tvPrice.setText(builder);
     }
 
-    private void setItemButtons(ViewHolder holder, Item item)
-    {
-        holder.btnUp.setOnClickListener(null);
-        holder.btnUp.setActivated(false);
-
-        holder.btnDown.setOnClickListener(null);
-        holder.btnDown.setActivated(false);
-
-        holder.btnCheckBox.setOnClickListener(null);
-        holder.btnCheckBox.setActivated(false);
-
-        holder.tvName.setOnClickListener(null);
-        holder.tvName.setActivated(false);
-
-        holder.dragHandle.setOnClickListener(new View.OnClickListener()
-        {
-            @Override
-            public void onClick(View v)
-            {
-                onItemMovedListener.onItemMoved(item, supermarket, selectedSupermarketParent);
-            }
-        });
-    }
-
-
     private double getPrice(Item item, Supermarket otherSupermarket)
     {
         if (item == null || otherSupermarket == null) return 0.0;
@@ -191,15 +187,15 @@ private final Map<String, ArrayList<String>> groups;
         ArrayList<Item> single = new ArrayList<>();
         single.add(item);
 
-        Map<String, ArrayList<ItemViewPricesAdapter.PriceRow>> rowsMap =
+        Map<String, ArrayList<PriceRow>> rowsMap =
                 com.example.baskit.API.APIHandler.getInstance().buildRows(single);
 
-        ArrayList<ItemViewPricesAdapter.PriceRow> rows =
+        ArrayList<PriceRow> rows =
                 rowsMap.get(item.getBaseName());
 
         if (rows != null)
         {
-            ItemViewPricesAdapter.PriceRow row = item.getSupermarketRow(otherSupermarket, rows);
+            PriceRow row = item.getSupermarketRow(otherSupermarket, rows);
 
             if (row != null)
             {
@@ -208,25 +204,5 @@ private final Map<String, ArrayList<String>> groups;
         }
 
         return 0.0;
-    }
-
-    private boolean hasPrice(String code, Supermarket sm)
-    {
-        return getPriceFromCode(code, sm) != null;
-    }
-
-    private Double getPriceFromCode(String code, Supermarket sm)
-    {
-        if (!itemPrices.containsKey(code)) return null;
-
-        Map<String, Map<String, Double>> prices = itemPrices.get(code);
-
-        if (!prices.containsKey(sm.getSupermarket())) return null;
-
-        Map<String, Double> sections = prices.get(sm.getSupermarket());
-
-        if (!sections.containsKey(sm.getSection())) return null;
-
-        return sections.get(sm.getSection());
     }
 }

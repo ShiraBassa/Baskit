@@ -1,7 +1,6 @@
 package com.example.baskit.List;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,21 +8,19 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.baskit.Baskit;
-import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;
 
 import java.util.ArrayList;
-import java.util.Map;
 
 public class CitiesListAdapter extends RecyclerView.Adapter<CitiesListAdapter.ViewHolder>
 {
+    private int selectedPosition = RecyclerView.NO_POSITION;
 
     private ArrayList<String> cities;
-    private int selectedPosition = RecyclerView.NO_POSITION;
+
     private final Context context;
 
     public CitiesListAdapter(Context context, ArrayList<String> cities)
@@ -86,12 +83,14 @@ public class CitiesListAdapter extends RecyclerView.Adapter<CitiesListAdapter.Vi
         return cities == null ? 0 : cities.size();
     }
 
-    public String getSelectedCity() {
+    public String getSelectedCity()
+    {
         if (selectedPosition == RecyclerView.NO_POSITION) return null;
         return cities.get(selectedPosition);
     }
 
-    public void updateData(ArrayList<String> newCities) {
+    public void updateData(ArrayList<String> newCities)
+    {
         this.cities = newCities;
         notifyDataSetChanged();
     }

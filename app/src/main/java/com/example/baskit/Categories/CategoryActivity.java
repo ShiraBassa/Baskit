@@ -24,6 +24,7 @@ import com.example.baskit.MainComponents.Category;
 import com.example.baskit.MainComponents.Item;
 import com.example.baskit.MainComponents.ItemInfo;
 import com.example.baskit.MainComponents.List;
+import com.example.baskit.MainComponents.PriceRow;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.MasterActivity;
 import com.example.baskit.R;
@@ -38,24 +39,25 @@ import java.util.Map;
 public class CategoryActivity extends MasterActivity
 {
     List list;
-    Map<String, Category> categories;
     Category category;
-
-    TextView tvListName, tvCategoryName, tvTotal;
-    ImageButton btnFinished, btnBack, btnMore;
-    Button btnSortList;
-    ImageButton btnAddItem, btnPlan;
-    FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
-    AddItemFragment addItemFragment;
-    APIHandler apiHandler = APIHandler.getInstance();
 
     Map<String, Map<String, Map<String, Double>>> allItemPrices;
     Map<String, ArrayList<String>> groups;
     Map<String, ItemInfo> infos;
+
+    FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
+    APIHandler apiHandler = APIHandler.getInstance();
+
     boolean initialized = true;
-    private RecyclerView recyclerItems;
-    private CategoryItemsAdapter itemsAdapter;
     private boolean categoryListenerAttached = false;
+
+    AddItemFragment addItemFragment;
+    RecyclerView recyclerItems;
+    CategoryItemsAdapter itemsAdapter;
+
+    TextView tvListName, tvCategoryName, tvTotal;
+    ImageButton btnFinished, btnBack, btnMore, btnAddItem, btnPlan;
+    Button btnSortList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -134,7 +136,6 @@ public class CategoryActivity extends MasterActivity
                         return;
                     }
 
-                    categories = newList.getCategories();
                     category = newList.getCategory(categoryName);
 
                     if (category == null)
@@ -175,7 +176,6 @@ public class CategoryActivity extends MasterActivity
                     runWhenServerActive(() ->
                     {
                         ArrayList<Supermarket> supermarkets;
-                        Map<String, Map<String, Map<String, Double>>> itemsCatalog;
 
                         try
                         {
@@ -187,10 +187,7 @@ public class CategoryActivity extends MasterActivity
                             supermarkets = new ArrayList<>();
                         }
 
-                        itemsCatalog = allItemPrices;
-
                         ArrayList<Supermarket> finalSupermarkets = supermarkets;
-                        Map<String, Map<String, Map<String, Double>>> finalItemsCatalog = itemsCatalog;
 
                         runOnUiThread(() ->
                         {
@@ -235,8 +232,7 @@ public class CategoryActivity extends MasterActivity
                                             });
                                         }
                                     },
-                                    finalSupermarkets,
-                                    finalItemsCatalog
+                                    finalSupermarkets
                             );
 
                             recyclerItems.setAdapter(itemsAdapter);
@@ -306,15 +302,6 @@ public class CategoryActivity extends MasterActivity
                 }
             });
         });
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(android.view.MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            finish();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     private void setButtons()
@@ -421,6 +408,17 @@ public class CategoryActivity extends MasterActivity
         });
     }
 
+    @Override
+    public boolean onOptionsItemSelected(android.view.MenuItem item)
+    {
+        if (item.getItemId() == android.R.id.home)
+        {
+            finish();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
     public void addItem(Item item)
     {
         if (addItemFragment != null)
@@ -443,11 +441,7 @@ public class CategoryActivity extends MasterActivity
             {
                 categoryName = apiHandler.getItemCategory(item);
             }
-            catch (IOException e)
-            {
-                throw new RuntimeException(e);
-            }
-            catch (JSONException e)
+            catch (IOException | JSONException e)
             {
                 throw new RuntimeException(e);
             }
@@ -523,7 +517,7 @@ public class CategoryActivity extends MasterActivity
 
     private void showSortBottomSheet() throws JSONException, IOException
     {
-        Map<String, ArrayList<ItemViewPricesAdapter.PriceRow>> rows = apiHandler.buildRows(category.getRemainedItems());
+        Map<String, ArrayList<PriceRow>> rows = apiHandler.buildRows(category.getRemainedItems());
 
         SortListBottomSheetBuilder.show(
                 this,
@@ -535,7 +529,7 @@ public class CategoryActivity extends MasterActivity
                     @Override
                     public void onApplyCheapest()
                     {
-                        Map<String, ArrayList<ItemViewPricesAdapter.PriceRow>> rows = apiHandler.buildRows(category.getRemainedItems());
+                        Map<String, ArrayList<PriceRow>> rows = apiHandler.buildRows(category.getRemainedItems());
                         category.setCheapestRows(rows);
 
                         tvTotal.setText(
@@ -554,7 +548,7 @@ public class CategoryActivity extends MasterActivity
                     @Override
                     public void onApplySupermarket(Supermarket sm)
                     {
-                        Map<String, ArrayList<ItemViewPricesAdapter.PriceRow>> rows = apiHandler.buildRows(category.getRemainedItems());
+                        Map<String, ArrayList<PriceRow>> rows = apiHandler.buildRows(category.getRemainedItems());
                         category.setSupermarketsRows(sm, rows);
 
                         tvTotal.setText(

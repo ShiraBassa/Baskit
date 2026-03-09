@@ -21,11 +21,15 @@ import com.example.baskit.R;
 
 public class LoginActivity extends MasterActivity implements FirebaseAuthHandler.AuthCallback
 {
+    boolean homeStarted = false;
+
+    ActivityResultLauncher<Intent> signUpLauncher;
+
+    FirebaseAuthHandler authHandler;
+
     Button btnSubmit;
     EditText etEmail, etPassword;
-    FirebaseAuthHandler authHandler;
-    private boolean homeStarted = false;
-    private ActivityResultLauncher<Intent> signUpLauncher;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -82,10 +86,10 @@ public class LoginActivity extends MasterActivity implements FirebaseAuthHandler
         etEmail = findViewById(R.id.et_email);
         etPassword = findViewById(R.id.et_password);
 
-        set_btn();
+        setBtn();
     }
 
-    private void set_btn()
+    private void setBtn()
     {
         btnSubmit.setOnClickListener(new View.OnClickListener()
         {
@@ -157,6 +161,33 @@ public class LoginActivity extends MasterActivity implements FirebaseAuthHandler
         btnSubmit.setEnabled(true);
     }
 
+    private void startLogin()
+    {
+        setContentView(R.layout.activity_login);
+        init();
+    }
+
+    private void finishLogin()
+    {
+        if (!homeStarted)
+        {
+            homeStarted = true;
+            boolean fromLink = getIntent().getBooleanExtra("fromLink", false);
+
+            if (fromLink)
+            {
+                Intent intent = new Intent();
+                setResult(Activity.RESULT_OK, intent);
+            }
+            else
+            {
+                startActivity(new Intent(LoginActivity.this, HomeActivity.class));
+            }
+
+            finish();
+        }
+    }
+
     @Override
     public void onAuthSuccess()
     {
@@ -194,32 +225,5 @@ public class LoginActivity extends MasterActivity implements FirebaseAuthHandler
         }
 
         enableButtons();
-    }
-
-    private void startLogin()
-    {
-        setContentView(R.layout.activity_login);
-        init();
-    }
-
-    private void finishLogin()
-    {
-        if (!homeStarted)
-        {
-            homeStarted = true;
-            boolean fromLink = getIntent().getBooleanExtra("fromLink", false);
-
-            if (fromLink)
-            {
-                Intent intent = new Intent();
-                setResult(Activity.RESULT_OK, intent);
-            }
-            else
-            {
-                startActivity(new Intent(LoginActivity.this, HomeActivity.class));
-            }
-
-            finish();
-        }
     }
 }

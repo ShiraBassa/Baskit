@@ -1,6 +1,5 @@
 package com.example.baskit.List;
 
-import android.annotation.SuppressLint;
 import android.os.Bundle;
 
 import android.text.SpannableStringBuilder;
@@ -33,42 +32,39 @@ import java.util.Map;
 
 public class PlanListActivity extends MasterActivity
 {
-    ImageButton btnCancel;
-    Button btnSave;
     List originalList;
     List list;
-    TextView tvListName, tvTotal;
-    FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
-    APIHandler apiHandler = APIHandler.getInstance();
+    String listId;
+    double oldTotal;
+    String categoryName;
+
+    boolean initialized = true;
+    boolean itemsLoaded = false;
+    boolean listListenerAttached = false;
+    boolean uiInitialized = false;
+
+    int colorChosen;
 
     Map<String, Map<String, Map<String, Double>>> allItems;
     Map<String, ArrayList<String>> groups;
-    boolean initialized = true;
-    private RecyclerView recyclerItems;
-    private PlanListItemsAdapter itemsAdapter;
-    String listId;
-    LinearLayout categoriesListContainer;
+
+    FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
+    APIHandler apiHandler = APIHandler.getInstance();
+
+    PlanListItemsAdapter itemsAdapter;
     LayoutInflater categoriesListInflater;
-    private boolean itemsLoaded = false;
-    private boolean listListenerAttached = false;
-    private boolean uiInitialized = false;
-    private double oldTotal;
-    private String categoryName;
-    private int colorBase;
-    @SuppressLint("PrivateResource")
-    private int colorUnavailable;
-    private int colorChosen;
 
+    ImageButton btnCancel;
+    Button btnSave;
+    TextView tvListName, tvTotal;
+    RecyclerView recyclerItems;
+    LinearLayout categoriesListContainer;
 
-    @SuppressLint("PrivateResource")
-    @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_plan_list);
 
-        colorBase = Baskit.getAppColor(this, com.google.android.material.R.attr.colorOnBackground);
-        colorUnavailable = Baskit.getAppColor(this, com.google.android.material.R.attr.colorOnContainerUnchecked);
         colorChosen = Baskit.getAppColor(this, com.google.android.material.R.attr.colorPrimaryVariant);
 
         listId = getIntent().getStringExtra("listId");
@@ -121,6 +117,17 @@ public class PlanListActivity extends MasterActivity
             tvTotal.setText(Baskit.getTotalDisplayString(list.getTotal(), list.allPricesKnown(), true, true));
             tvTotal.setVisibility(View.VISIBLE);
         }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(android.view.MenuItem item)
+    {
+        if (item.getItemId() == android.R.id.home)
+        {
+            finish();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void createInit()
@@ -284,17 +291,6 @@ public class PlanListActivity extends MasterActivity
         }
 
         finish();
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(android.view.MenuItem item)
-    {
-        if (item.getItemId() == android.R.id.home)
-        {
-            finish();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     private void setButtons()

@@ -11,8 +11,8 @@ public abstract class AppDatabase extends RoomDatabase
 {
     public abstract ItemPricesDao itemPricesDao();
     public abstract ItemCategoryDao itemCategoryDao();
-    public abstract ItemInfoDao itemInfoDao();
     public abstract GroupsDao groupDao();
+    public abstract ItemInfoDao itemInfoDao();
 
     private static volatile AppDatabase INSTANCE;
 

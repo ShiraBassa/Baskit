@@ -21,13 +21,13 @@ import android.widget.Toast;
 import com.example.baskit.API.APIHandler;
 import com.example.baskit.Baskit;
 import com.example.baskit.Categories.CategoryActivity;
-import com.example.baskit.Categories.ItemViewPricesAdapter;
 import com.example.baskit.Firebase.FirebaseAuthHandler;
 import com.example.baskit.Firebase.FirebaseDBHandler;
 import com.example.baskit.MainComponents.Category;
 import com.example.baskit.MainComponents.Item;
 import com.example.baskit.MainComponents.ItemInfo;
 import com.example.baskit.MainComponents.List;
+import com.example.baskit.MainComponents.PriceRow;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.MasterActivity;
 import com.example.baskit.R;
@@ -41,32 +41,34 @@ import java.util.Map;
 
 public class ListActivity extends MasterActivity
 {
+    List list;
+    String listId;
+
+    boolean itemsLoaded = false;
+    boolean initialized = true;
+    boolean listListenerAttached = false;
+    boolean uiInitialized = false;
+
+    Map<String, Map<String, Map<String, Double>>> allItemPrices;
+    Map<String, ArrayList<String>> groups;
+    Map<String, ItemInfo> infos;
+    Map<String, Category> categories;
+    Map<String, View> categoriesViews;
+
+    FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
+    APIHandler apiHandler = APIHandler.getInstance();
+    FirebaseAuthHandler authHandler = FirebaseAuthHandler.getInstance();
+
+    LayoutInflater categoriesListInflater;
+    AddItemFragment addItemFragment;
+    ShareListAlertDialog shareAlertDialog;
+
     TextView tvListName, tvTotal;
     ImageButton btnBack, btnFinished, btnMore;
     View shareListDot;
-
-    List list;
-    String listId;
-    Map<String, Category> categories;
-
     LinearLayout categoriesListContainer;
-    LayoutInflater categoriesListInflater;
-    FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
-    Map<String, View> categoriesViews;
-    AddItemFragment addItemFragment;
     Button btnSortList;
     ImageButton btnAddItem, btnPlan, btnShare;
-    APIHandler apiHandler = APIHandler.getInstance();
-
-    Map<String, Map<String, Map<String, Double>>> allItemPrices;
-    FirebaseAuthHandler authHandler = FirebaseAuthHandler.getInstance();
-    Map<String, ArrayList<String>> groups;
-    Map<String, ItemInfo> infos;
-    private boolean itemsLoaded = false;
-    private boolean initialized = true;
-    private boolean listListenerAttached = false;
-    private boolean uiInitialized = false;
-    ShareListAlertDialog shareAlertDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -113,7 +115,7 @@ public class ListActivity extends MasterActivity
     {
         super.onResume();
 
-        // Only attach if we never attached before.
+        // Only attach if we never attached before
         if (itemsLoaded && uiInitialized && !listListenerAttached)
         {
             resumeInit();
@@ -693,7 +695,7 @@ public class ListActivity extends MasterActivity
 
     private void showSortBottomSheet() throws JSONException, IOException
     {
-        Map<String, ArrayList<com.example.baskit.Categories.ItemViewPricesAdapter.PriceRow>> rows = apiHandler.buildRows(list.getRemainedItems());
+        Map<String, ArrayList<PriceRow>> rows = apiHandler.buildRows(list.getRemainedItems());
 
         SortListBottomSheetBuilder.show(
                 this,
@@ -705,7 +707,7 @@ public class ListActivity extends MasterActivity
                     @Override
                     public void onApplyCheapest()
                     {
-                        Map<String, ArrayList<com.example.baskit.Categories.ItemViewPricesAdapter.PriceRow>> rows = apiHandler.buildRows(list.getRemainedItems());
+                        Map<String, ArrayList<PriceRow>> rows = apiHandler.buildRows(list.getRemainedItems());
                         list.setCheapestRows(rows);
                         tvTotal.setText(
                                 Baskit.getTotalDisplayString(
@@ -721,7 +723,7 @@ public class ListActivity extends MasterActivity
                     @Override
                     public void onApplySupermarket(Supermarket sm)
                     {
-                        Map<String, ArrayList<com.example.baskit.Categories.ItemViewPricesAdapter.PriceRow>> rows = apiHandler.buildRows(list.getRemainedItems());
+                        Map<String, ArrayList<PriceRow>> rows = apiHandler.buildRows(list.getRemainedItems());
                         list.setSupermarketsRows(sm, rows);
                         tvTotal.setText(
                                 Baskit.getTotalDisplayString(

@@ -10,10 +10,9 @@ public class ItemInfo
     private Double weight;
     private String unit;
 
-    public ItemInfo() {}
-
     public ItemInfo(String code, String baseName,
-                    String company, Double weight, String unit) {
+                    String company, Double weight, String unit)
+    {
         this.code = code;
         this.baseName = baseName;
         this.company = company;
@@ -79,50 +78,6 @@ public class ItemInfo
         this.unit = unit;
     }
 
-    public String getDisplayText()
-    {
-        StringBuilder sb = new StringBuilder();
-
-        if (company != null && !company.isEmpty())
-        {
-            sb.append(company);
-        }
-
-        if (weight != null && weight > 0) {
-            if (sb.length() > 0) sb.append(" • ");
-
-            // remove trailing .0
-            String weightText = (weight.doubleValue() == weight.longValue())
-                    ? String.valueOf(weight.longValue())
-                    : String.valueOf(weight);
-
-            sb.append(weightText);
-
-            if (unit != null && !unit.isEmpty()) {
-                sb.append(" ").append(unit);
-            }
-        }
-
-        return sb.toString();
-    }
-
-    public String getFullMeasureStr()
-    {
-        String str = "";
-
-        if (weight != null && weight != 0.0)
-        {
-            str += getWeightStr();
-
-            if (unit != null && !unit.isEmpty() && !unit.equals("יחידות"))
-            {
-                str += " " + unit;
-            }
-        }
-
-        return str;
-    }
-
     @Override
     public boolean equals(Object obj)
     {
@@ -141,5 +96,22 @@ public class ItemInfo
     public int hashCode()
     {
         return java.util.Objects.hash(baseName, company, weight, unit);
+    }
+
+    public String getFullMeasureStr()
+    {
+        String str = "";
+
+        if (weight != null && weight != 0.0)
+        {
+            str += getWeightStr();
+
+            if (unit != null && !unit.isEmpty() && !unit.equals("יחידות"))
+            {
+                str += " " + unit;
+            }
+        }
+
+        return str;
     }
 }

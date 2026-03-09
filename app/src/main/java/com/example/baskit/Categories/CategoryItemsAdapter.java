@@ -23,6 +23,7 @@ import com.example.baskit.API.APIHandler;
 import com.example.baskit.Baskit;
 import com.example.baskit.MainComponents.Category;
 import com.example.baskit.MainComponents.Item;
+import com.example.baskit.MainComponents.PriceRow;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;
 
@@ -32,26 +33,54 @@ import java.util.HashMap;
 
 public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdapter.ViewHolder>
 {
-    Category category;
+    private Category category;
+
     private final ArrayList<Supermarket> baseSupermarkets;
-    ArrayList<Supermarket> supermarkets;
-    protected Map<Supermarket, ArrayList<Item>> itemsBySupermarket;
+    private ArrayList<Supermarket> supermarkets;
+    private Map<Supermarket, ArrayList<Item>> itemsBySupermarket;
+
     private Map<Supermarket, Boolean> expandedStates;
-    private Map<String, Map<String, Map<String, Double>>> itemPrices;
     private Map<String, Integer> supermarketSectionCounts;
 
-    Activity activity;
-    Context context;
-    ItemsAdapter.UpperClassFunctions upperClassFns;
+    private boolean draggable = false;
 
-    public static final Supermarket unassigned_supermarket = Baskit.UNASSIGNED_SUPERMARKET;
+    private static final Supermarket unassigned_supermarket = Baskit.UNASSIGNED_SUPERMARKET;
 
-    boolean isDropped;
-    boolean draggable = false;
+    private final Activity activity;
+    private final Context context;
+    private ItemsAdapter.UpperClassFunctions upperClassFns;
+
+    private final SupermarketItemsAdapter.OnItemMovedListener listener = (draggedItem, from, to) ->
+    {
+        if (itemsBySupermarket.get(from) != null)
+        {
+            itemsBySupermarket.get(from).remove(draggedItem);
+        }
+
+        if (to == unassigned_supermarket)
+        {
+            draggedItem.setUnchosen();
+        }
+        else
+        {
+            draggedItem.setSupermarketRow(to, APIHandler.getInstance().buildRow(draggedItem));
+        }
+
+        if (itemsBySupermarket.get(to) == null)
+        {
+            itemsBySupermarket.put(to, new ArrayList<>());
+            expandedStates.put(to, true);
+        }
+
+        itemsBySupermarket.get(to).add(draggedItem);
+        rebuildDisplaySupermarkets();
+        notifyDataSetChanged();
+
+        upperClassFns.updateItemCategory(draggedItem);
+    };
 
     public CategoryItemsAdapter(Category category, Activity activity, Context context,
-                                ItemsAdapter.UpperClassFunctions upperClassFns, ArrayList<Supermarket> supermarkets,
-                                Map<String, Map<String, Map<String, Double>>> itemPrices)
+                                ItemsAdapter.UpperClassFunctions upperClassFns, ArrayList<Supermarket> supermarkets)
     {
         this.category = category;
         this.activity = activity;
@@ -112,7 +141,6 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
 
         this.baseSupermarkets = supermarkets != null ? new ArrayList<>(supermarkets) : new ArrayList<>();
         this.supermarkets = new ArrayList<>(this.baseSupermarkets);
-        this.itemPrices = itemPrices;
 
         restart();
         sortByExisting();
@@ -235,7 +263,6 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
     public void onBindViewHolder(@NonNull ViewHolder holder, @SuppressLint("RecyclerView") int position)
     {
         holder.itemView.setOnDragListener(null);
-        isDropped = false;
         Supermarket supermarket = supermarkets.get(position);
 
         boolean isChosenSupermarket = false;
@@ -396,7 +423,6 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
                     break;
 
                 case DragEvent.ACTION_DROP:
-                    isDropped = true;
                     Supermarket targetSupermarket = supermarket;
 
                     if (containsSupermarket(draggedItem, targetSupermarket))
@@ -437,6 +463,12 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
         });
     }
 
+    @Override
+    public int getItemCount()
+    {
+        return supermarkets != null ? supermarkets.size() : 0;
+    }
+
     private boolean isSingleSectionCurrently(Supermarket current)
     {
         if (supermarketSectionCounts == null) return true;
@@ -454,10 +486,10 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
             return true;
         }
 
-        ArrayList<ItemViewPricesAdapter.PriceRow> rows = APIHandler.getInstance().buildRow(item);
+        ArrayList<PriceRow> rows = APIHandler.getInstance().buildRow(item);
         if (rows == null) return false;
 
-        for (ItemViewPricesAdapter.PriceRow row : rows)
+        for (PriceRow row : rows)
         {
             if (item.isVariantOf(row, supermarket))
             {
@@ -467,41 +499,6 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
 
         return false;
     }
-
-    @Override
-    public int getItemCount()
-    {
-        return supermarkets != null ? supermarkets.size() : 0;
-    }
-
-    private final SupermarketItemsAdapter.OnItemMovedListener listener = (draggedItem, from, to) ->
-    {
-        if (itemsBySupermarket.get(from) != null)
-        {
-            itemsBySupermarket.get(from).remove(draggedItem);
-        }
-
-        if (to == unassigned_supermarket)
-        {
-            draggedItem.setUnchosen();
-        }
-        else
-        {
-            draggedItem.setSupermarketRow(to, APIHandler.getInstance().buildRow(draggedItem));
-        }
-
-        if (itemsBySupermarket.get(to) == null)
-        {
-            itemsBySupermarket.put(to, new ArrayList<>());
-            expandedStates.put(to, true);
-        }
-
-        itemsBySupermarket.get(to).add(draggedItem);
-        rebuildDisplaySupermarkets();
-        notifyDataSetChanged();
-
-        upperClassFns.updateItemCategory(draggedItem);
-    };
 
     public void updateItems(ArrayList<Item> newItems)
     {

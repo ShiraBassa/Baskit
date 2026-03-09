@@ -1,6 +1,5 @@
 package com.example.baskit.MainComponents;
 
-import com.example.baskit.Categories.ItemViewPricesAdapter;
 import com.google.firebase.database.Exclude;
 import com.google.firebase.database.IgnoreExtraProperties;
 
@@ -49,24 +48,38 @@ public class Category implements SortableEntity
         }
     }
 
-    public void updateFinished()
+    public void setFinished(boolean finished)
     {
-        if (items == null || items.isEmpty())
+        this.finished = finished;
+    }
+
+    public boolean isFinished() {
+        return finished;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public ArrayList<Item> getItems()
+    {
+        return items;
+    }
+
+    public void setItems(Map<String, Item> items)
+    {
+        this.items = new ArrayList<>();
+
+        if (items != null)
         {
-            finished = false;
-            return;
+            this.items.addAll(items.values());
         }
 
-        for (Item item : items)
-        {
-            if (!item.isChecked())
-            {
-                finished = false;
-                return;
-            }
-        }
-
-        finished = true;
+        updateFinished();
     }
 
     @Exclude
@@ -88,17 +101,25 @@ public class Category implements SortableEntity
         return count;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public ArrayList<Item> getItems()
+    @Exclude
+    public void updateFinished()
     {
-        return items;
+        if (items == null || items.isEmpty())
+        {
+            finished = false;
+            return;
+        }
+
+        for (Item item : items)
+        {
+            if (!item.isChecked())
+            {
+                finished = false;
+                return;
+            }
+        }
+
+        finished = true;
     }
 
     @Exclude
@@ -115,18 +136,6 @@ public class Category implements SortableEntity
         }
 
         return items;
-    }
-
-    public void setItems(Map<String, Item> items)
-    {
-        this.items = new ArrayList<>();
-
-        if (items != null)
-        {
-            this.items.addAll(items.values());
-        }
-
-        updateFinished();
     }
 
     @Exclude
@@ -152,12 +161,6 @@ public class Category implements SortableEntity
         updateFinished();
     }
 
-    @Override
-    public String toString()
-    {
-        return name;
-    }
-
     @Exclude
     public void addItem(Item item)
     {
@@ -169,35 +172,24 @@ public class Category implements SortableEntity
         }
     }
 
-    public void setFinished(boolean finished)
-    {
-        this.finished = finished;
-    }
-
     @Exclude
-    public void finished(List list)
+    public void removeItem(String name)
     {
-        if (finished)
+        if (name != null)
         {
-            list.removeCategory(name);
-        }
-        else
-        {
-            items.removeIf(Item::isChecked);
-            list.updateCategory(this);
+            this.items.removeIf(i -> name.equals(i.getBaseName()));
+            updateFinished();
         }
     }
 
-    public boolean isFinished() {
-        return finished;
-    }
-
     @Exclude
-    public java.util.List<Item> getItemsSorted()
+    public void removeVariants(String baseName)
     {
-        java.util.List<Item> sortedItems = new ArrayList<>(items);
-        sortedItems.sort(Comparator.comparing(Item::getBaseName, String.CASE_INSENSITIVE_ORDER));
-        return sortedItems;
+        if (baseName != null)
+        {
+            this.items.removeIf(i -> baseName.equals(i.getBaseName()));
+            updateFinished();
+        }
     }
 
     @Exclude
@@ -260,55 +252,13 @@ public class Category implements SortableEntity
     }
 
     @Exclude
-    public void removeItem(Item item)
-    {
-        if (item != null)
-        {
-            removeItem(item.getBaseName());
-        }
-    }
-
-    @Exclude
-    public void removeItem(String name)
-    {
-        if (name != null)
-        {
-            this.items.removeIf(i -> name.equals(i.getBaseName()));
-            updateFinished();
-        }
-    }
-
-    @Exclude
-    public void removeVariants(String baseName)
-    {
-        if (baseName != null)
-        {
-            this.items.removeIf(i -> baseName.equals(i.getBaseName()));
-            updateFinished();
-        }
-    }
-
-    @Exclude
-    public void removeItems(ArrayList<String> itemIDs)
-    {
-        if (itemIDs == null) return;
-
-        for (String id : itemIDs)
-        {
-            this.items.removeIf(i -> Item.getFullId(id).equals(i.getId()));
-        }
-
-        updateFinished();
-    }
-
-    @Exclude
-    public void setCheapestRows(Map<String, ArrayList<ItemViewPricesAdapter.PriceRow>> rowsAllItems)
+    public void setCheapestRows(Map<String, ArrayList<PriceRow>> rowsAllItems)
     {
         if (rowsAllItems == null) return;
 
         for (Item item : this.items)
         {
-            ArrayList<ItemViewPricesAdapter.PriceRow> rows = rowsAllItems.get(item.baseName);
+            ArrayList<PriceRow> rows = rowsAllItems.get(item.baseName);
             if (rows == null) continue;
 
             item.setCheapestRow(rows);
@@ -316,13 +266,13 @@ public class Category implements SortableEntity
     }
 
     @Exclude
-    public void setSupermarketsRows(Supermarket supermarket, Map<String, ArrayList<ItemViewPricesAdapter.PriceRow>> rowsAllItems)
+    public void setSupermarketsRows(Supermarket supermarket, Map<String, ArrayList<PriceRow>> rowsAllItems)
     {
         if (rowsAllItems == null) return;
 
         for (Item item : this.items)
         {
-            ArrayList<ItemViewPricesAdapter.PriceRow> rows = rowsAllItems.get(item.baseName);
+            ArrayList<PriceRow> rows = rowsAllItems.get(item.baseName);
             if (rows == null) continue;
 
             item.setSupermarketRow(supermarket, rows);
@@ -334,5 +284,12 @@ public class Category implements SortableEntity
     public SortableEntity copy()
     {
         return new Category(this);
+    }
+
+    @Exclude
+    @Override
+    public String toString()
+    {
+        return name;
     }
 }

@@ -33,18 +33,22 @@ import java.util.Map;
 
 public class SignUpActivity extends MasterActivity
 {
+    User user;
+    String username;
+
+    ArrayList<String> cities, all_cities;
+    Map<String, ArrayList<String>> choices;
+
     FirebaseAuthHandler authHandler;
     APIHandler apiHandler = APIHandler.getInstance();
-    EditText etUsername;
-    Button btnSubmit;
-    String username;
-    ArrayList<String> cities, all_cities;
-    RecyclerView recyclerCities, recyclerSupermarkets;
-    Button btnAddCity, btnRemoveCity, btnAddSupermarket, btnRemoveSupermarket;
+
     CitiesListAdapter citiesAdapter;
-    Map<String, ArrayList<String>> choices;
     SupermarketsListAdapter supermarketsAdapter;
-    User user;
+
+    EditText etUsername;
+    RecyclerView recyclerCities, recyclerSupermarkets;
+    Button btnAddCity, btnRemoveCity, btnAddSupermarket, btnRemoveSupermarket, btnSubmit;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState)

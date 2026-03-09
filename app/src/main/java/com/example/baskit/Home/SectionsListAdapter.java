@@ -16,14 +16,16 @@ import java.util.ArrayList;
 
 public class SectionsListAdapter extends RecyclerView.Adapter<SectionsListAdapter.ViewHolder>
 {
-    ArrayList<String> sections;
     private int selectedPosition = RecyclerView.NO_POSITION;
-    private OnSectionClickListener listener;
-
     private String selectedSupermarket = null;
     private String selectedSection = null;
-    String supermarketName;
+
+    private String supermarketName;
+
+    private ArrayList<String> sections;
+
     private Context context;
+    private OnSectionClickListener listener;
 
     public interface OnSectionClickListener
     {

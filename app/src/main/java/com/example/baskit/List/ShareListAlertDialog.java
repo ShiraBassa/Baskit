@@ -2,23 +2,16 @@ package com.example.baskit.List;
 
 import static android.content.Context.CLIPBOARD_SERVICE;
 
-import static androidx.core.content.ContextCompat.getSystemService;
-
 import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.util.Base64;
-import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -27,26 +20,27 @@ import com.example.baskit.Baskit;
 import com.example.baskit.Firebase.FirebaseDBHandler;
 import com.example.baskit.MainComponents.List;
 import com.example.baskit.MainComponents.Request;
-import com.example.baskit.MasterActivity;
 import com.example.baskit.R;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.UUID;
 
 public class ShareListAlertDialog
 {
-    Activity activity;
-    Context context;
+    List list;
+
+    FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
+
+    ShareListRequestsAdapter requestsAdapter;
+    AlertDialog ad;
+    androidx.appcompat.app.AlertDialog.Builder adb;
+
     LinearLayout adLayout;
     TextView tvListName;
     Button btnCopyLink;
     RecyclerView recyclerRequests;
-    ShareListRequestsAdapter requestsAdapter;
-    List list;
-    androidx.appcompat.app.AlertDialog.Builder adb;
-    AlertDialog ad;
-    FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
+
+    Activity activity;
+    Context context;
 
     public ShareListAlertDialog(List list, Activity activity, Context context)
     {
@@ -59,7 +53,7 @@ public class ShareListAlertDialog
         btnCopyLink = adLayout.findViewById(R.id.btn_copy_link);
         recyclerRequests = adLayout.findViewById(R.id.recycler_requests);
 
-        requestsAdapter = new ShareListRequestsAdapter(list, activity, context, new ShareListRequestsAdapter.UpperClassFunctions()
+        requestsAdapter = new ShareListRequestsAdapter(list, new ShareListRequestsAdapter.UpperClassFunctions()
         {
             @Override
             public void acceptRequest(Request request)

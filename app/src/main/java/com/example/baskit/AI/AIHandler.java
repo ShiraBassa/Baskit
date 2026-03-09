@@ -3,17 +3,20 @@ package com.example.baskit.AI;
 import android.app.Activity;
 import android.util.Log;
 
-import org.json.JSONArray;
-
 import java.util.ArrayList;
 
 public class AIHandler
 {
+    private GeminiManager geminiManager = GeminiManager.getInstance();
+    private String prompt;
     private static AIHandler instance;
 
-    private String prompt;
+    public interface OnGeminiResult
+    {
+        void onResult(ArrayList<String> suggestions);
+    }
 
-    private GeminiManager geminiManager = GeminiManager.getInstance();
+    private AIHandler() {}
 
     public static AIHandler getInstance()
     {
@@ -23,13 +26,6 @@ public class AIHandler
         }
 
         return instance;
-    }
-
-    private AIHandler() {}
-
-    public interface OnGeminiResult
-    {
-        void onResult(ArrayList<String> suggestions);
     }
 
     public void getListSuggestions(String listName, Activity activity, OnGeminiResult onGeminiResult)

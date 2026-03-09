@@ -1,7 +1,5 @@
 package com.example.baskit.List;
 
-import static com.example.baskit.Baskit.getAppColor;
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
@@ -16,10 +14,11 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.baskit.Baskit;
-import com.example.baskit.Categories.ItemViewPricesAdapter;
 import com.example.baskit.Categories.ItemsAdapter;
 import com.example.baskit.Categories.SupermarketItemsAdapter;
 import com.example.baskit.MainComponents.Item;
+import com.example.baskit.MainComponents.List;
+import com.example.baskit.MainComponents.PriceRow;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;
 
@@ -29,28 +28,26 @@ import java.util.Map;
 
 public class PlanListItemsAdapter extends RecyclerView.Adapter<PlanListItemsAdapter.ViewHolder>
 {
-    com.example.baskit.MainComponents.List list;
-    com.example.baskit.MainComponents.List originalList;
+    private final List originalList;
+    private final List list;
+    private final String categoryName;
+    private Supermarket selectedSupermarket = null;
+
+    private final Map<String, Map<String, Map<String, Double>>> itemPrices;
+    private final Map<String, ArrayList<String>> groups;
     private final ArrayList<Supermarket> baseSupermarkets;
-    ArrayList<Supermarket> supermarkets;
-    protected Map<Supermarket, ArrayList<Item>> itemsBySupermarket;
+    private ArrayList<Supermarket> supermarkets;
+    private Map<Supermarket, ArrayList<Item>> itemsBySupermarket;
     private Map<Supermarket, Boolean> expandedStates;
-    private Map<String, Map<String, Map<String, Double>>> itemPrices;
-    private Map<String, ArrayList<String>> groups;
     private Map<String, Integer> supermarketSectionCounts;
 
-    Activity activity;
-    Context context;
-    ItemsAdapter.UpperClassFunctions upperClassFns;
-
-    public static final Supermarket unassigned_supermarket = Baskit.UNASSIGNED_SUPERMARKET;
-    Supermarket selectedSupermarket = null;
-    private String categoryName;
-
     private final int colorBase;
-    @SuppressLint("PrivateResource")
-    private final int colorUnavailable;
     private final int colorChosen;
+    private final Supermarket unassigned_supermarket = Baskit.UNASSIGNED_SUPERMARKET;
+
+    private final Activity activity;
+    private final Context context;
+    private ItemsAdapter.UpperClassFunctions upperClassFns;
 
     private final SupermarketItemsAdapter.OnItemMovedListener listener = (draggedItem, from, to) ->
     {
@@ -152,7 +149,6 @@ public class PlanListItemsAdapter extends RecyclerView.Adapter<PlanListItemsAdap
         this.groups = groups;
 
         colorBase = Baskit.getAppColor(context, com.google.android.material.R.attr.colorOnBackground);
-        colorUnavailable = Baskit.getAppColor(context, com.google.android.material.R.attr.colorOnContainerUnchecked);
         colorChosen = Baskit.getAppColor(context, com.google.android.material.R.attr.colorPrimaryVariant);
 
         if (list == null && list.isEmpty()) return;
@@ -262,10 +258,10 @@ public class PlanListItemsAdapter extends RecyclerView.Adapter<PlanListItemsAdap
         ArrayList<Item> single = new ArrayList<>();
         single.add(item);
 
-        Map<String, ArrayList<ItemViewPricesAdapter.PriceRow>> rowsMap =
+        Map<String, ArrayList<PriceRow>> rowsMap =
                 com.example.baskit.API.APIHandler.getInstance().buildRows(single);
 
-        ArrayList<ItemViewPricesAdapter.PriceRow> rows =
+        ArrayList<PriceRow> rows =
                 rowsMap.get(item.getBaseName());
 
         if (rows != null)
@@ -354,7 +350,7 @@ public class PlanListItemsAdapter extends RecyclerView.Adapter<PlanListItemsAdap
         ArrayList<Item> items = itemsBySupermarket.get(supermarket);
 
         SupermarketItemsAdapterPlan supermarketsAdapter =
-                new SupermarketItemsAdapterPlan(items, originalList, activity, context, upperClassFns, supermarket, selectedSupermarket, itemPrices, groups, listener);
+                new SupermarketItemsAdapterPlan(items, activity, context, upperClassFns, supermarket, selectedSupermarket, itemPrices, listener);
 
         holder.recyclerItems.setLayoutManager(new LinearLayoutManager(holder.itemView.getContext()));
         holder.recyclerItems.setAdapter(supermarketsAdapter);
@@ -388,6 +384,12 @@ public class PlanListItemsAdapter extends RecyclerView.Adapter<PlanListItemsAdap
         });
     }
 
+    @Override
+    public int getItemCount()
+    {
+        return supermarkets != null ? supermarkets.size() : 0;
+    }
+
     private boolean isSingleSectionCurrently(Supermarket current)
     {
         if (supermarketSectionCounts == null) return true;
@@ -396,11 +398,5 @@ public class PlanListItemsAdapter extends RecyclerView.Adapter<PlanListItemsAdap
         Integer count = supermarketSectionCounts.get(name);
 
         return count == null || count <= 1;
-    }
-
-    @Override
-    public int getItemCount()
-    {
-        return supermarkets != null ? supermarkets.size() : 0;
     }
 }

@@ -10,7 +10,6 @@ public class ItemCategory
     @PrimaryKey
     @NonNull
     public String itemCode;
-
     public String category;
 
     public ItemCategory(@NonNull String itemCode, String category)

@@ -28,24 +28,30 @@ import java.util.Map;
 
 public class AddSupermarketAlertDialog
 {
-    Activity activity;
-    Context context;
-    LinearLayout adLayout;
-    AlertDialog.Builder adb;
-    AlertDialog ad;
-    Button btnAdd;
-    FirebaseAuthHandler authHandler;
-    Spinner spinnerSupermarkets, spinnerSections;
+    Map<String, ArrayList<String>> choices;
+    ArrayList<String> cities;
+
+    ArrayList<String> all_stores, unchosen_stores;
     Map<String, ArrayList<String>> unchosen_branches;
     ArrayList<String> supermarkets;
-    ArrayList<String> all_stores, unchosen_stores;
     ArrayList<String> sections;
-    Map<String, ArrayList<String>> choices;
+
+    boolean runInBackground;
+
+    FirebaseAuthHandler authHandler;
+    APIHandler apiHandler = APIHandler.getInstance();
+
+    AlertDialog.Builder adb;
     SupermarketsListAdapter supermarketsAdapter;
-    private final APIHandler apiHandler = APIHandler.getInstance();
-    private OnSubmit onSubmit;
-    private boolean runInBackground;
-    private ArrayList<String> cities;
+
+    LinearLayout adLayout;
+    AlertDialog ad;
+    Button btnAdd;
+    Spinner spinnerSupermarkets, spinnerSections;
+
+    Activity activity;
+    Context context;
+    OnSubmit onSubmit;
 
     public interface OnSubmit
     {
@@ -119,7 +125,6 @@ public class AddSupermarketAlertDialog
     private void getAPIInfo() throws JSONException, IOException
     {
         all_stores = apiHandler.getStores();
-        // Removed line: choices = apiHandler.getChoices();
 
         unchosen_branches = new HashMap<>();
         unchosen_stores = new ArrayList<>();

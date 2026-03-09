@@ -43,10 +43,14 @@ import java.util.ArrayList;
 
 public class HomeActivity extends MasterActivity
 {
-    RecyclerView listsRecycler;
-    HomeGridAdapter listsGridAdapter;
+    User user;
+    String inviteCode;
+
+    FirebaseAuthHandler authHandler;
+    FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
 
     AlertDialog.Builder adb;
+
     LinearLayout adLayout;
     AlertDialog adCreateList;
     Button adBtnCreate;
@@ -54,11 +58,8 @@ public class HomeActivity extends MasterActivity
     ImageButton adBtnCancel, btnSettings;
     EditText adEtName;
     TextView tvTitle;
-    FirebaseAuthHandler authHandler;
-    FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
-    User user;
-    String inviteCode;
-    AIHandler aiHandler = AIHandler.getInstance();
+    RecyclerView listsRecycler;
+    HomeGridAdapter listsGridAdapter;
 
     private ActivityResultLauncher<Intent> loginLauncher =
             registerForActivityResult(
@@ -95,18 +96,6 @@ public class HomeActivity extends MasterActivity
                         }
                     }
             );
-
-    @Override
-    protected boolean enableSwipeBack()
-    {
-        return false;
-    }
-
-    @Override
-    protected boolean disableSystemBack()
-    {
-        return true;
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -155,14 +144,6 @@ public class HomeActivity extends MasterActivity
         }
     }
 
-    private void sendJoinRequest(String invitationCode)
-    {
-        String listId = new String(Base64.decode(invitationCode, Base64.NO_WRAP), StandardCharsets.UTF_8);
-
-        dbHandler.sendJoinRequest(listId, user);
-        Toast.makeText(this, "נשלחה בקשה, מחכה לאישור...", Toast.LENGTH_SHORT).show();
-    }
-
     @Override
     protected void onResume()
     {
@@ -202,6 +183,18 @@ public class HomeActivity extends MasterActivity
                 });
             });
         }
+    }
+
+    @Override
+    protected boolean enableSwipeBack()
+    {
+        return false;
+    }
+
+    @Override
+    protected boolean disableSystemBack()
+    {
+        return true;
     }
 
     private void init()
@@ -377,5 +370,13 @@ public class HomeActivity extends MasterActivity
         intent.putExtra("listId", listID);
 
         startActivity(intent);
+    }
+
+    private void sendJoinRequest(String invitationCode)
+    {
+        String listId = new String(Base64.decode(invitationCode, Base64.NO_WRAP), StandardCharsets.UTF_8);
+
+        dbHandler.sendJoinRequest(listId, user);
+        Toast.makeText(this, "נשלחה בקשה, מחכה לאישור...", Toast.LENGTH_SHORT).show();
     }
 }

@@ -19,42 +19,13 @@ import com.example.baskit.API.APIHandler;
 
 public abstract class MasterActivity extends AppCompatActivity
 {
-    private float downX, downY;
     private boolean tracking = false;
-    private AlertDialog offlineDialog;
-    private AlertDialog serverDownDialog;
-
-    private void showOfflineDialog()
-    {
-        if (isFinishing() || isDestroyed()) return;
-
-        if (offlineDialog == null || !offlineDialog.isShowing())
-        {
-            offlineDialog = new AlertDialog.Builder(this)
-                    .setTitle("No Internet Connection")
-                    .setMessage("Please connect to Wi‑Fi or mobile data to use the app.")
-                    .setCancelable(false)
-                    .create();
-            offlineDialog.show();
-        }
-    }
-
-    private void dismissOfflineDialog()
-    {
-        if (offlineDialog != null && offlineDialog.isShowing())
-        {
-            offlineDialog.dismiss();
-        }
-        offlineDialog = null;
-    }
-
-    private Runnable pendingAction;
-    private Runnable pendingServerAction;
-
+    private boolean serverCheckRunning = false;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final ExecutorService bg = Executors.newSingleThreadExecutor();
-    private Runnable serverRetryRunnable;
-    private boolean serverCheckRunning = false;
+    private float downX, downY;
+    private AlertDialog offlineDialog, serverDownDialog;
+    private Runnable pendingAction, pendingServerAction, serverRetryRunnable;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState)
@@ -103,13 +74,6 @@ public abstract class MasterActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onStop()
-    {
-        super.onStop();
-        stopServerPolling();
-    }
-
-    @Override
     protected void onStart()
     {
         super.onStart();
@@ -118,6 +82,24 @@ public abstract class MasterActivity extends AppCompatActivity
         {
             startServerPolling(pendingServerAction);
         }
+    }
+
+    @Override
+    protected void onStop()
+    {
+        super.onStop();
+        stopServerPolling();
+    }
+
+    @Override
+    protected void onDestroy()
+    {
+        super.onDestroy();
+        stopServerPolling();
+        dismissServerDownDialog();
+
+        dismissOfflineDialog();
+        bg.shutdownNow();
     }
 
     protected boolean canUseApp()
@@ -139,6 +121,31 @@ public abstract class MasterActivity extends AppCompatActivity
         }
     }
 
+    private void showOfflineDialog()
+    {
+        if (isFinishing() || isDestroyed()) return;
+
+        if (offlineDialog == null || !offlineDialog.isShowing())
+        {
+            offlineDialog = new AlertDialog.Builder(this)
+                    .setTitle("אין חיבור לאינטרנט")
+                    .setMessage("נא התחבר ל-WiFi או לרשת סלולרית")
+                    .setCancelable(false)
+                    .create();
+            offlineDialog.show();
+        }
+    }
+
+    private void dismissOfflineDialog()
+    {
+        if (offlineDialog != null && offlineDialog.isShowing())
+        {
+            offlineDialog.dismiss();
+        }
+
+        offlineDialog = null;
+    }
+
     public void runWhenServerActive(Runnable action)
     {
         if (action == null) return;
@@ -151,6 +158,31 @@ public abstract class MasterActivity extends AppCompatActivity
         }
 
         startServerPolling(action);
+    }
+
+    private void showServerDownDialog()
+    {
+        if (isFinishing() || isDestroyed()) return;
+
+        if (serverDownDialog != null && serverDownDialog.isShowing()) return;
+
+        serverDownDialog = new AlertDialog.Builder(this)
+                .setTitle("שרת לא זמין")
+                .setMessage("השרת לא זמין כרגע. אנא נסה שוב מאוחר יותר")
+                .setCancelable(false)
+                .create();
+
+        serverDownDialog.show();
+    }
+
+    private void dismissServerDownDialog()
+    {
+        if (serverDownDialog != null && serverDownDialog.isShowing())
+        {
+            serverDownDialog.dismiss();
+        }
+
+        serverDownDialog = null;
     }
 
     private void startServerPolling(Runnable action)
@@ -185,6 +217,7 @@ public abstract class MasterActivity extends AppCompatActivity
                     }
 
                     boolean finalUp = up;
+
                     mainHandler.post(() ->
                     {
                         if (finalUp)
@@ -235,73 +268,48 @@ public abstract class MasterActivity extends AppCompatActivity
         serverRetryRunnable = null;
     }
 
-    private void showServerDownDialog()
+    private int edgePx()
     {
-        if (isFinishing() || isDestroyed()) return;
-
-        if (serverDownDialog != null && serverDownDialog.isShowing()) return;
-
-        serverDownDialog = new AlertDialog.Builder(this)
-                .setTitle("Server unavailable")
-                .setMessage("The server isn’t active right now. Please come back later.")
-                .setCancelable(false)
-                .create();
-
-        serverDownDialog.show();
+        return (int) (24 * getResources().getDisplayMetrics().density);
     }
 
-    private void dismissServerDownDialog()
+    private int swipeThresholdPx()
     {
-        if (serverDownDialog != null && serverDownDialog.isShowing())
-        {
-            serverDownDialog.dismiss();
-        }
-
-        serverDownDialog = null;
+        return (int) (96 * getResources().getDisplayMetrics().density);
     }
 
-    @Override
-    protected void onDestroy()
+    protected boolean enableSwipeBack()
     {
-        super.onDestroy();
-        stopServerPolling();
-        dismissServerDownDialog();
-
-        dismissOfflineDialog();
-        bg.shutdownNow();
-    }
-
-    private int edgePx() {
-        return (int) (24 * getResources().getDisplayMetrics().density); // 24dp edge
-    }
-
-    private int swipeThresholdPx() {
-        return (int) (96 * getResources().getDisplayMetrics().density); // 96dp threshold
-    }
-
-    protected boolean enableSwipeBack() {
         return true;
     }
 
-    protected boolean enableSwipeForward() {
+    protected boolean enableSwipeForward()
+    {
         return true;
     }
 
-    protected @Nullable Intent getForwardIntent() {
+    protected @Nullable Intent getForwardIntent()
+    {
         return null; // override in activities that have a “forward”
     }
 
     @Override
-    public boolean dispatchTouchEvent(MotionEvent ev) {
+    public boolean dispatchTouchEvent(MotionEvent ev)
+    {
         int w = getWindow().getDecorView().getWidth();
 
-        switch (ev.getActionMasked()) {
+        switch (ev.getActionMasked())
+        {
             case MotionEvent.ACTION_DOWN:
                 downX = ev.getX();
                 downY = ev.getY();
-                if (!enableSwipeBack() && !enableSwipeForward()) {
+
+                if (!enableSwipeBack() && !enableSwipeForward())
+                {
                     tracking = false;
-                } else {
+                }
+                else
+                {
                     tracking = (downX <= edgePx() && enableSwipeBack()) || (downX >= w - edgePx() && enableSwipeForward());
                 }
                 break;
@@ -312,37 +320,45 @@ public abstract class MasterActivity extends AppCompatActivity
                 float dx = ev.getX() - downX;
                 float dy = ev.getY() - downY;
 
-                // avoid fighting vertical scroll
-                if (Math.abs(dy) > Math.abs(dx)) {
+                if (Math.abs(dy) > Math.abs(dx))
+                {
                     tracking = false;
                     break;
                 }
 
-                // swipe from LEFT edge → BACK
-                if (downX <= edgePx() && dx > swipeThresholdPx()) {
-                    if (!isTaskRoot()) {
+                if (downX <= edgePx() && dx > swipeThresholdPx())
+                {
+                    if (!isTaskRoot())
+                    {
                         tracking = false;
                         finish();
+
                         overridePendingTransition(R.anim.pop_in_left, R.anim.pop_out_right);
                         return true;
-                    } else {
+                    }
+                    else
+                    {
                         tracking = false;
                     }
                 }
 
-                // swipe from RIGHT edge → FORWARD (if defined)
-                if (downX >= w - edgePx() && dx < -swipeThresholdPx()) {
+                if (downX >= w - edgePx() && dx < -swipeThresholdPx())
+                {
                     Intent fwd = getForwardIntent();
                     tracking = false;
-                    if (fwd != null) {
+
+                    if (fwd != null)
+                    {
                         startActivity(fwd);
                         overridePendingTransition(R.anim.push_in_right, R.anim.push_out_left);
                         return true;
                     }
                 }
+
                 break;
 
             case MotionEvent.ACTION_UP:
+
             case MotionEvent.ACTION_CANCEL:
                 tracking = false;
                 break;

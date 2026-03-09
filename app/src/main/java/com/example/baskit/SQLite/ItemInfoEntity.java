@@ -10,7 +10,6 @@ public class ItemInfoEntity
     @PrimaryKey
     @NonNull
     public String itemCode;
-
     public String company;
     public double weight;
     public String unit;

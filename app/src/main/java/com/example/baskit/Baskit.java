@@ -28,15 +28,15 @@ import com.example.baskit.MainComponents.Supermarket;
 
 public class Baskit extends Application
 {
-    private static Context context;
-    public static final Supermarket UNASSIGNED_SUPERMARKET = new Supermarket("לא נבחר", "");
-    private static final MutableLiveData<Boolean> onlineLive = new MutableLiveData<>(true);
-    private ConnectivityManager.NetworkCallback networkCallback;
     public static final String PRIVATE_NETWORK_URL = "192.168.1.247";
     public static final String EMULATOR_URL = "10.0.2.2";
-
     public static final String SERVER_URL = "http://" + EMULATOR_URL + ":5001";
     public static final int HOME_GRID_NUM_BOXES = 2;
+    public static final Supermarket UNASSIGNED_SUPERMARKET = new Supermarket("לא נבחר", "");
+
+    private static Context context;
+    private static final MutableLiveData<Boolean> onlineLive = new MutableLiveData<>(true);
+    private ConnectivityManager.NetworkCallback networkCallback;
 
     @Override
     public void onCreate()
@@ -47,6 +47,7 @@ public class Baskit extends Application
         onlineLive.postValue(isOnline(Baskit.this));
 
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
         if (cm != null)
         {
             networkCallback = new ConnectivityManager.NetworkCallback()
@@ -101,7 +102,6 @@ public class Baskit extends Application
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         if (cm == null) return false;
 
-        // Pre-Marshmallow fallback (no getActiveNetwork() / VALIDATED capability)
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
         {
             NetworkInfo info = cm.getActiveNetworkInfo();
@@ -118,36 +118,56 @@ public class Baskit extends Application
                 && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
     }
 
+    public static void notActivityRunWhenServerActive(Runnable work, Activity activity)
+    {
+        if (activity instanceof MasterActivity)
+        {
+            ((MasterActivity) activity).runWhenServerActive(work);
+        }
+        else
+        {
+            new Thread(work).start();
+        }
+    }
+
+    public static void notActivityRunIfOnline(Runnable work, Activity activity)
+    {
+        if (activity instanceof MasterActivity)
+        {
+            ((MasterActivity) activity).runIfOnline(work);
+        }
+        else
+        {
+            work.run();
+        }
+    }
+
     public static int getAppColor(Context context, int id)
     {
         TypedValue typedValue = new TypedValue();
         Resources.Theme theme = context.getTheme();
-
-        // 1. Try to resolve it as a Theme Attribute (e.g., R.attr.colorPrimary)
         boolean found = theme.resolveAttribute(id, typedValue, true);
 
         if (found)
         {
-            // If the attribute directly points to a color
-            if (typedValue.type >= TypedValue.TYPE_FIRST_COLOR_INT && typedValue.type <= TypedValue.TYPE_LAST_COLOR_INT)
+            if (typedValue.type >= TypedValue.TYPE_FIRST_COLOR_INT && typedValue.type <= TypedValue.TYPE_LAST_COLOR_INT) // If the attribute directly points to a color
             {
                 return typedValue.data;
             }
-            // If the attribute points to a resource
-            else if (typedValue.resourceId != 0)
+            else if (typedValue.resourceId != 0) // If the attribute points to a resource
             {
                 return context.getResources().getColor(typedValue.resourceId, theme);
             }
         }
 
-        // 2. If not found as an attribute, assume it is a direct Resource ID (e.g., R.color.quantity)
+        // If not found as an attribute, assume it is a direct Resource ID
         try
         {
             return ContextCompat.getColor(context, id);
         }
         catch (Exception e)
         {
-            // 3. If both fail, return Red for debug
+            // If both fail, return Red for debug
             return 0xFFFF0000;
         }
     }
@@ -214,40 +234,18 @@ public class Baskit extends Application
         return TextUtils.getLayoutDirectionFromLocale(Locale.getDefault()) == View.LAYOUT_DIRECTION_LTR;
     }
 
-    public static void notActivityRunWhenServerActive(Runnable work, Activity activity)
-    {
-        if (activity instanceof MasterActivity)
-        {
-            ((MasterActivity) activity).runWhenServerActive(work);
-        }
-        else
-        {
-            new Thread(work).start();
-        }
-    }
-
-    public static void notActivityRunIfOnline(Runnable work, Activity activity)
-    {
-        if (activity instanceof MasterActivity)
-        {
-            ((MasterActivity) activity).runIfOnline(work);
-        }
-        else
-        {
-            work.run();
-        }
-    }
-
     public static String encodeKey(String s)
     {
         if (s == null) return null;
         String out = s;
+
         out = out.replace(".", "__dot__");
         out = out.replace("$", "__dollar__");
         out = out.replace("#", "__hash__");
         out = out.replace("[", "__lbracket__");
         out = out.replace("]", "__rbracket__");
         out = out.replace("/", "__slash__");
+
         return out;
     }
 
@@ -255,12 +253,14 @@ public class Baskit extends Application
     {
         if (s == null) return null;
         String out = s;
+
         out = out.replace("__dot__", ".");
         out = out.replace("__dollar__", "$");
         out = out.replace("__hash__", "#");
         out = out.replace("__lbracket__", "[");
         out = out.replace("__rbracket__", "]");
         out = out.replace("__slash__", "/");
+
         return out;
     }
 
