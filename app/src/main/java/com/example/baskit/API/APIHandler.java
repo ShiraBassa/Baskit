@@ -246,20 +246,32 @@ public class APIHandler
 
     private void updateAllCache() throws JSONException, IOException
     {
-        Map<String, Map<String, Map<String, Double>>> freshItemPrices = getItemPricesFromAPI();
-        Map<String, String> freshCategories = getCategoriesFromAPI();
-        Map<String, ArrayList<String>> freshGroups = getGroupsFromAPI();
-        Map<String, ItemInfo> freshItemInfos = getItemInfosFromAPI();
+        try
+        {
+            var pricesFuture = networkExecutor.submit(this::getItemPricesFromAPI);
+            var categoriesFuture = networkExecutor.submit(this::getCategoriesFromAPI);
+            var groupsFuture = networkExecutor.submit(this::getGroupsFromAPI);
+            var infosFuture = networkExecutor.submit(this::getItemInfosFromAPI);
 
-        cachedItemPrices = new HashMap<>(freshItemPrices);
-        cachedItemCategories = new HashMap<>(freshCategories);
-        cachedGroups = new HashMap<>(freshGroups);
-        cachedItemInfos = new HashMap<>(freshItemInfos);
+            Map<String, Map<String, Map<String, Double>>> freshItemPrices = pricesFuture.get();
+            Map<String, String> freshCategories = categoriesFuture.get();
+            Map<String, ArrayList<String>> freshGroups = groupsFuture.get();
+            Map<String, ItemInfo> freshItemInfos = infosFuture.get();
 
-        saveItemPricesToDB(freshItemPrices);
-        saveCategoriesToDB(freshCategories);
-        saveGroupsToDB(freshGroups);
-        saveItemInfosToDB(freshItemInfos);
+            cachedItemPrices = new HashMap<>(freshItemPrices);
+            cachedItemCategories = new HashMap<>(freshCategories);
+            cachedGroups = new HashMap<>(freshGroups);
+            cachedItemInfos = new HashMap<>(freshItemInfos);
+
+            saveItemPricesToDB(freshItemPrices);
+            saveCategoriesToDB(freshCategories);
+            saveGroupsToDB(freshGroups);
+            saveItemInfosToDB(freshItemInfos);
+        }
+        catch (Exception e)
+        {
+            throw new IOException("Cache update failed", e);
+        }
     }
 
     private Map<String, Map<String, Map<String, Double>>> loadItemPricesFromDB()
