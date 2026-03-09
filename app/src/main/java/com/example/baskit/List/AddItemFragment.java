@@ -13,6 +13,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 
+import com.example.baskit.Categories.VariationsManager;
 import com.example.baskit.MainComponents.PriceRow;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
@@ -72,20 +73,6 @@ public class AddItemFragment extends DialogFragment
     Activity activity;
     Context context;
     AddItemInterface addItemInterface;
-
-    private String decodeSanitizedKey(String s)
-    {
-        if (s == null) return null;
-
-        String out = s;
-        out = out.replace("__dot__", ".");
-        out = out.replace("__dollar__", "$");
-        out = out.replace("__hash__", "#");
-        out = out.replace("__lbracket__", "[");
-        out = out.replace("__rbracket__", "]");
-        out = out.replace("__slash__", "/");
-        return out;
-    }
 
     public interface AddItemInterface
     {
@@ -220,7 +207,7 @@ public class AddItemFragment extends DialogFragment
 
             for (String n : listItemNames)
             {
-                String d = decodeSanitizedKey(n);
+                String d = Baskit.decodeKey(n);
                 if (!isBadItemName(d)) decodedList.add(d.trim());
             }
 
@@ -231,7 +218,7 @@ public class AddItemFragment extends DialogFragment
         {
             for (String name : allItemNames)
             {
-                String decoded = decodeSanitizedKey(name);
+                String decoded = Baskit.decodeKey(name);
                 if (isBadItemName(decoded) || (listItemNames != null && listItemNames.contains(decoded))) continue;
 
                 String trimmed = decoded.trim();
@@ -253,7 +240,7 @@ public class AddItemFragment extends DialogFragment
 
         for (String name : this.allItemNames)
         {
-            String decoded = decodeSanitizedKey(name);
+            String decoded = Baskit.decodeKey(name);
             if (decoded == null) decoded = name;
             decoded = decoded.trim();
 
@@ -272,7 +259,7 @@ public class AddItemFragment extends DialogFragment
         {
             for (String s : itemSuggestions)
             {
-                String dec = decodeSanitizedKey(s);
+                String dec = Baskit.decodeKey(s);
 
                 if (dec != null)
                 {
@@ -304,7 +291,7 @@ public class AddItemFragment extends DialogFragment
                     return convertView;
                 }
 
-                String decoded = decodeSanitizedKey(filteredResults.get(position));
+                String decoded = Baskit.decodeKey(filteredResults.get(position));
                 boolean isSuggestion = false;
 
                 if (position < filteredIsSuggestion.size())
@@ -618,7 +605,7 @@ public class AddItemFragment extends DialogFragment
                             {
                                 int cmp = Integer.compare(b.score, a.score);
                                 if (cmp != 0) return cmp;
-                                return decodeSanitizedKey(a.item).compareToIgnoreCase(decodeSanitizedKey(b.item));
+                                return Baskit.decodeKey(a.item).compareToIgnoreCase(Baskit.decodeKey(b.item));
                             };
 
                             java.util.Collections.sort(suggestions, comp);
@@ -628,8 +615,8 @@ public class AddItemFragment extends DialogFragment
                         // Sort suggestions by keyword priority
                         java.util.Collections.sort(suggestions, (a, b) ->
                         {
-                            String aLow = decodeSanitizedKey(a.item).toLowerCase(Locale.ROOT);
-                            String bLow = decodeSanitizedKey(b.item).toLowerCase(Locale.ROOT);
+                            String aLow = Baskit.decodeKey(a.item).toLowerCase(Locale.ROOT);
+                            String bLow = Baskit.decodeKey(b.item).toLowerCase(Locale.ROOT);
 
                             int aKey = Integer.MAX_VALUE;
                             int bKey = Integer.MAX_VALUE;
@@ -804,77 +791,14 @@ public class AddItemFragment extends DialogFragment
             {
                 currentVariations.clear();
                 currentVariations.addAll(variations);
-                setupVariationFilters();
+                new VariationsManager(currentVariations,
+                        chipGroupWeights,
+                        chipGroupCompanies,
+                        context,
+                        this::applyVariationFilter).setupVariationFilters();
             });
 
         }, activity);
-    }
-
-    private void setupVariationFilters()
-    {
-        if (currentVariations == null || currentVariations.isEmpty()) return;
-
-        chipGroupWeights.removeAllViews();
-        chipGroupCompanies.removeAllViews();
-
-        chipGroupWeights.setSingleSelection(false);
-        chipGroupCompanies.setSingleSelection(false);
-
-        java.util.LinkedHashSet<String> weights = new java.util.LinkedHashSet<>();
-        java.util.LinkedHashSet<String> companies = new java.util.LinkedHashSet<>();
-
-        for (com.example.baskit.MainComponents.ItemInfo info : currentVariations)
-        {
-            if (info.getWeight() > 0)
-            {
-                weights.add(info.getFullMeasureStr());
-            }
-
-            if (info.getCompany() != null && !info.getCompany().isEmpty())
-            {
-                companies.add(info.getCompany());
-            }
-        }
-
-        if (weights.size() > 1)
-        {
-            for (String w : weights)
-            {
-                Chip chip = new Chip(context);
-                chip.setText(w);
-                chip.setCheckable(true);
-                chip.setClickable(true);
-                chip.setChipStrokeWidth(2f);
-                chip.setOnCheckedChangeListener((buttonView, isChecked) -> applyVariationFilter());
-                chipGroupWeights.addView(chip);
-            }
-            chipGroupWeights.setVisibility(View.VISIBLE);
-        }
-        else
-        {
-            chipGroupWeights.setVisibility(View.GONE);
-        }
-
-        if (companies.size() > 1)
-        {
-            for (String c : companies)
-            {
-                Chip chip = new Chip(context);
-                chip.setText(c);
-                chip.setCheckable(true);
-                chip.setClickable(true);
-                chip.setChipStrokeWidth(2f);
-                chip.setOnCheckedChangeListener((buttonView, isChecked) -> applyVariationFilter());
-                chipGroupCompanies.addView(chip);
-            }
-            chipGroupCompanies.setVisibility(View.VISIBLE);
-        }
-        else
-        {
-            chipGroupCompanies.setVisibility(View.GONE);
-        }
-
-        applyVariationFilter();
     }
 
     private void applyVariationFilter()

@@ -140,7 +140,11 @@ public class ItemViewAlertDialog
             {
                 currentVariations.clear();
                 currentVariations.addAll(variations);
-                setupVariationFilters();
+                new VariationsManager(currentVariations,
+                        chipGroupWeights,
+                        chipGroupCompanies,
+                        context,
+                        this::applyVariationFilter).setupVariationFilters();
 
                 pricesAdapter = new ItemViewPricesAdapter(
                         context,
@@ -337,76 +341,6 @@ public class ItemViewAlertDialog
         }
 
         adItemView.show();
-    }
-
-    private void setupVariationFilters()
-    {
-        if (currentVariations == null || currentVariations.isEmpty()) return;
-
-        if (chipGroupWeights == null || chipGroupCompanies == null)
-        {
-            return;
-        }
-
-        chipGroupWeights.removeAllViews();
-        chipGroupCompanies.removeAllViews();
-
-        chipGroupWeights.setSingleSelection(false);
-        chipGroupCompanies.setSingleSelection(false);
-
-        java.util.LinkedHashSet<String> weights = new java.util.LinkedHashSet<>();
-        java.util.LinkedHashSet<String> companies = new java.util.LinkedHashSet<>();
-
-        for (ItemInfo info : currentVariations)
-        {
-            if (info.getWeight() != null && info.getWeight() > 0)
-            {
-                weights.add(info.getFullMeasureStr());
-            }
-
-            if (info.getCompany() != null && !info.getCompany().isEmpty())
-            {
-                companies.add(info.getCompany());
-            }
-        }
-
-        if (weights.size() > 1)
-        {
-            for (String w : weights)
-            {
-                Chip chip = new Chip(context);
-                chip.setText(w);
-                chip.setCheckable(true);
-                chip.setClickable(true);
-                chip.setChipStrokeWidth(2f);
-                chip.setOnCheckedChangeListener((buttonView, isChecked) -> applyVariationFilter());
-                chipGroupWeights.addView(chip);
-            }
-            chipGroupWeights.setVisibility(View.VISIBLE);
-        }
-        else
-        {
-            chipGroupWeights.setVisibility(View.GONE);
-        }
-
-        if (companies.size() > 1)
-        {
-            for (String c : companies)
-            {
-                Chip chip = new Chip(context);
-                chip.setText(c);
-                chip.setCheckable(true);
-                chip.setClickable(true);
-                chip.setChipStrokeWidth(2f);
-                chip.setOnCheckedChangeListener((buttonView, isChecked) -> applyVariationFilter());
-                chipGroupCompanies.addView(chip);
-            }
-            chipGroupCompanies.setVisibility(View.VISIBLE);
-        }
-        else
-        {
-            chipGroupCompanies.setVisibility(View.GONE);
-        }
     }
 
     private void applyVariationFilter()

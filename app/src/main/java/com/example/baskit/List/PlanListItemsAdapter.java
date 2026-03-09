@@ -63,8 +63,7 @@ public class PlanListItemsAdapter extends RecyclerView.Adapter<PlanListItemsAdap
         }
         else
         {
-            draggedItem.setSupermarket(to);
-            updateItemPriceForSupermarket(draggedItem, to);
+            updateItemRow(draggedItem, to);
         }
 
         if (itemsBySupermarket.get(to) == null)
@@ -251,7 +250,7 @@ public class PlanListItemsAdapter extends RecyclerView.Adapter<PlanListItemsAdap
         notifyDataSetChanged();
     }
 
-    private void updateItemPriceForSupermarket(Item item, Supermarket supermarket)
+    private void updateItemRow(Item item, Supermarket supermarket)
     {
         if (item == null || supermarket == null) return;
 
