@@ -5,55 +5,55 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Categories.CategoryActivity"
-    android:orientation="vertical"
     android:gravity="center"
-    android:paddingHorizontal="10dp">
+    android:orientation="vertical"
+    android:paddingHorizontal="10dp"
+    tools:context=".Categories.CategoryActivity">
 
     <LinearLayout
         android:id="@+id/layout_top_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center_horizontal|top"
-        android:paddingVertical="16dp"
-        android:paddingHorizontal="10dp"
         android:background="?attr/colorSurface"
-        android:elevation="4dp">
+        android:elevation="4dp"
+        android:gravity="center_horizontal|top"
+        android:orientation="vertical"
+        android:paddingHorizontal="10dp"
+        android:paddingVertical="16dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
             <ImageButton
                 android:id="@+id/btn_back"
                 android:layout_width="45dp"
                 android:layout_height="45dp"
                 android:layout_marginEnd="10dp"
-                android:scaleType="fitCenter"
                 android:background="@null"
+                android:scaleType="fitCenter"
                 android:src="@drawable/ic_back"
                 app:tint="?attr/colorPrimary" />
 
             <TextView
                 android:id="@+id/tv_list_name"
                 android:layout_width="0dp"
-                android:layout_weight="1"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
                 android:text="רשימה"
-                android:textSize="28sp"
                 android:textColor="?attr/colorPrimary"
-                android:visibility="invisible"
-                android:gravity="center_vertical" />
+                android:textSize="28sp"
+                android:visibility="invisible" />
 
             <ImageButton
                 android:id="@+id/btn_more"
                 android:layout_width="45dp"
                 android:layout_height="45dp"
-                android:scaleType="fitCenter"
                 android:background="@null"
+                android:scaleType="fitCenter"
                 android:src="@drawable/ic_more"
                 app:tint="?attr/colorSecondary" />
 
@@ -63,29 +63,20 @@
             android:id="@+id/tv_category_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:gravity="center"
             android:text="קטגוריה"
+            android:textColor="?attr/colorPrimaryVariant"
             android:textSize="35sp"
             android:textStyle="bold"
-            android:textColor="?attr/colorPrimaryVariant"
-            android:visibility="invisible"
-            android:gravity="center"/>
+            android:visibility="invisible" />
 
     </LinearLayout>
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_sort_list"
+    <include
+        layout="@layout/btn_sort_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="סדר ▼"
-        android:layout_margin="10dp"
-        android:textColor="?attr/colorSecondary"
-        app:strokeColor="?attr/colorSecondary"
-        android:backgroundTint="?attr/colorSurface"
-        app:rippleColor="?attr/colorSecondaryContainer"
-        android:elevation="3dp"
-        app:strokeWidth="2dp"
-        android:textStyle="bold"
-        style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+        android:layout_margin="10dp" />
 
     <LinearLayout
         android:id="@+id/layout_items"
@@ -99,19 +90,20 @@
             android:id="@+id/recycler_supermarket_items"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="2"
+            android:layout_weight="1"
             android:clipToPadding="false"
-            android:scrollbars="vertical" />
+            android:scrollbars="vertical"
+            tools:ignore="NestedWeights" />
 
         <TextView
             android:id="@+id/tv_total"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="סך הכל: _ ש״ח"
             android:textColor="?attr/colorPrimary"
             android:textSize="26sp"
             android:textStyle="bold"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:visibility="invisible"
-            android:text="סך הכל: _ ש״ח" />
+            android:visibility="invisible" />
 
     </LinearLayout>
 

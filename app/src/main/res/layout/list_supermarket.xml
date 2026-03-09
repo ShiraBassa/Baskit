@@ -3,27 +3,17 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:gravity="end|top"
     android:layout_marginBottom="12dp"
+    android:gravity="end|top"
+    android:orientation="vertical"
     android:paddingHorizontal="6dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="10dp"
-        android:orientation="horizontal"
-        android:gravity="center_vertical|end">
-
-        <TextView
-            android:id="@+id/tv_supermarket_name"
-            android:textColor="?attr/colorSecondary"
-            android:textSize="22sp"
-            android:textStyle="bold"
-            android:layout_height="wrap_content"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:text="סופר, סניף" />
+        android:gravity="center_vertical|start"
+        android:orientation="horizontal">
 
         <ImageButton
             android:id="@+id/btn_expand"
@@ -34,18 +24,28 @@
             android:src="@drawable/ic_arrow_up"
             app:tint="?attr/colorSecondary" />
 
+        <TextView
+            android:id="@+id/tv_supermarket_name"
+            android:layout_width="375dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="סופר, סניף"
+            android:textColor="?attr/colorSecondary"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
     </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_items"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingEnd="5dp"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp"
-        android:clipToPadding="true"
         android:clipChildren="true"
+        android:clipToPadding="true"
         android:nestedScrollingEnabled="true"
-        android:overScrollMode="always" />
+        android:overScrollMode="always"
+        android:paddingTop="8dp"
+        android:paddingEnd="5dp"
+        android:paddingBottom="8dp" />
 
 </LinearLayout>

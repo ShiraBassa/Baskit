@@ -1,48 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="horizontal"
     android:padding="4dp">
 
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginVertical="2dp"
         android:layout_marginHorizontal="4dp"
-        android:elevation="2dp"
-        android:backgroundTint="?attr/colorSurface">
+        android:layout_marginVertical="2dp"
+        android:backgroundTint="?attr/colorSurface"
+        android:elevation="2dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
             android:gravity="center_vertical"
+            android:orientation="horizontal"
             android:padding="8dp">
-
-            <ImageView
-                android:id="@+id/ivStar"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:scaleType="fitCenter"
-                android:visibility="gone"
-                android:src="@drawable/ic_star"
-                app:tint="?attr/colorPrimary"/>
 
             <TextView
                 android:id="@+id/tvItemName"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:textColor="?attr/colorPrimaryVariant"
-                android:textSize="22sp"
-                android:textDirection="rtl"
-                android:singleLine="true"
+                android:background="?attr/selectableItemBackground"
                 android:gravity="start"
                 android:padding="4dp"
-                android:background="?attr/selectableItemBackground"
-                android:text="שם"/>
+                android:singleLine="true"
+                android:text="שם"
+                android:textColor="?attr/colorPrimaryVariant"
+                android:textSize="22sp" />
+
+            <ImageView
+                android:id="@+id/ivStar"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_star"
+                android:visibility="gone"
+                app:tint="?attr/colorPrimary" />
 
         </LinearLayout>
 

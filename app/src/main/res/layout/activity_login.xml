@@ -52,18 +52,18 @@
 
                 <EditText
                     android:id="@+id/et_email"
-                    android:singleLine="true"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="textEmailAddress"
-                    android:textSize="20sp"
-                    android:padding="12dp"
-                    android:textColor="?attr/colorSecondary"
-                    android:clipToOutline="true"
-                    android:outlineProvider="background"
                     android:layout_marginBottom="16dp"
+                    android:clipToOutline="true"
+                    android:inputType="textEmailAddress"
+                    android:outlineProvider="background"
+                    android:padding="12dp"
+                    android:scrollbars="none"
                     android:scrollHorizontally="false"
-                    android:scrollbars="none" />
+                    android:singleLine="true"
+                    android:textColor="?attr/colorSecondary"
+                    android:textSize="20sp" />
 
             </LinearLayout>
 
@@ -84,18 +84,18 @@
 
                 <EditText
                     android:id="@+id/et_password"
-                    android:singleLine="true"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textSize="20sp"
-                    android:inputType="textPassword"
-                    android:padding="12dp"
-                    android:clipToOutline="true"
-                    android:textColor="?attr/colorSecondary"
-                    android:outlineProvider="background"
                     android:layout_marginBottom="16dp"
+                    android:clipToOutline="true"
+                    android:inputType="textPassword"
+                    android:outlineProvider="background"
+                    android:padding="12dp"
+                    android:scrollbars="none"
                     android:scrollHorizontally="false"
-                    android:scrollbars="none" />
+                    android:singleLine="true"
+                    android:textColor="?attr/colorSecondary"
+                    android:textSize="20sp" />
 
             </LinearLayout>
 

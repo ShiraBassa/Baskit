@@ -1,17 +1,87 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="8dp"
-    android:elevation="3dp"
-    android:gravity="center_horizontal|top"
-    android:paddingHorizontal="6dp"
-    android:paddingVertical="8dp"
-    android:clipToPadding="false"
     android:clipChildren="false"
-    android:foreground="?attr/selectableItemBackground">
+    android:clipToPadding="false"
+    android:elevation="3dp"
+    android:foreground="?attr/selectableItemBackground"
+    android:gravity="center"
+    android:paddingHorizontal="6dp"
+    android:paddingVertical="8dp">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:gravity="center_vertical|start"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/drag_handle"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:background="@null"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_drag_handle"
+            app:tint="?attr/colorSecondary" />
+
+        <Space
+            android:layout_width="6dp"
+            android:layout_height="match_parent" />
+
+        <ImageButton
+            android:id="@+id/check_box"
+            android:layout_width="26dp"
+            android:layout_height="26dp"
+            android:background="@null"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_check_box_unchecked"
+            app:tint="?attr/colorSecondary" />
+
+        <Space
+            android:layout_width="4dp"
+            android:layout_height="match_parent" />
+
+        <TextView
+            android:id="@+id/tv_item_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:scrollHorizontally="false"
+            android:singleLine="true"
+            android:text="מוצר"
+            android:textColor="?attr/colorPrimaryVariant"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+    <Space
+        android:layout_width="2dp"
+        android:layout_height="match_parent" />
+
+    <TextView
+        android:id="@+id/tv_price"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="מחיר"
+        android:textColor="?attr/colorPrimary"
+        android:textSize="16sp"
+        android:visibility="gone" />
+
+    <View
+        android:id="@+id/spacer"
+        android:layout_width="2dp"
+        android:layout_height="24dp"
+        android:layout_marginHorizontal="6dp"
+        android:background="?attr/colorOnBackground"
+        android:visibility="gone" />
 
     <LinearLayout
         android:id="@+id/layout_quantity"
@@ -19,24 +89,6 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:orientation="horizontal">
-
-        <ImageButton
-            android:id="@+id/btn_down"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:background="@null"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ic_arrow_down"
-            app:tint="?attr/colorSecondary" />
-
-        <TextView
-            android:id="@+id/tv_quantity"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="כמות"
-            android:textColor="?attr/colorSecondary"
-            android:textSize="18sp"
-            android:textStyle="bold"/>
 
         <ImageButton
             android:id="@+id/btn_up"
@@ -47,66 +99,22 @@
             android:src="@drawable/ic_arrow_up"
             app:tint="?attr/colorSecondary" />
 
-    </LinearLayout>
-
-    <View
-        android:id="@+id/spacer"
-        android:visibility="gone"
-        android:layout_width="2dp"
-        android:layout_height="24dp"
-        android:layout_marginHorizontal="6dp"
-        android:background="?attr/colorOnBackground"/>
-
-    <TextView
-        android:id="@+id/tv_price"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="מחיר"
-        android:textColor="?attr/colorPrimary"
-        android:textSize="16sp"
-        android:layout_marginEnd="2dp"
-        android:visibility="gone"/>
-
-    <LinearLayout
-        android:layout_width="0dp"
-        android:layout_weight="1"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical|end"
-        android:clipToPadding="false"
-        android:clipChildren="false">
-
         <TextView
-            android:id="@+id/tv_item_name"
-            android:layout_width="0dp"
+            android:id="@+id/tv_quantity"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:singleLine="true"
-            android:ellipsize="end"
-            android:scrollHorizontally="false"
-            android:text="מוצר"
-            android:textColor="?attr/colorPrimaryVariant"
+            android:text="כמות"
+            android:textColor="?attr/colorSecondary"
             android:textSize="18sp"
-            android:layout_marginEnd="4dp"
-            android:layout_weight="1"
-            android:textStyle="bold"/>
+            android:textStyle="bold" />
 
         <ImageButton
-            android:id="@+id/check_box"
-            android:layout_width="26dp"
-            android:layout_height="26dp"
-            android:background="@null"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ic_check_box_unchecked"
-            android:layout_marginEnd="6dp"
-            app:tint="?attr/colorSecondary" />
-
-        <ImageButton
-            android:id="@+id/drag_handle"
+            android:id="@+id/btn_down"
             android:layout_width="28dp"
             android:layout_height="28dp"
             android:background="@null"
             android:scaleType="fitCenter"
-            android:src="@drawable/ic_drag_handle"
+            android:src="@drawable/ic_arrow_down"
             app:tint="?attr/colorSecondary" />
 
     </LinearLayout>

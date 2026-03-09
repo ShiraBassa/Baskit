@@ -3,27 +3,28 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:padding="15dp"
     android:backgroundTint="?attr/colorSurface"
+    android:elevation="8dp"
     android:gravity="center"
-    android:elevation="8dp">
+    android:orientation="horizontal"
+    android:padding="15dp">
 
     <LinearLayout
         android:layout_width="0dp"
+        android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:layout_height="wrap_content">
+        android:gravity="start">
 
         <ImageButton
             android:id="@+id/btn_finished"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:scaleType="fitCenter"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
             android:focusable="true"
+            android:scaleType="fitCenter"
             android:src="@drawable/ic_check"
-            app:tint="?attr/colorOnContainerUnchecked"/>
+            app:tint="?attr/colorOnContainerUnchecked" />
 
     </LinearLayout>
 
@@ -31,27 +32,27 @@
         android:id="@+id/btn_add_item"
         android:layout_width="70dp"
         android:layout_height="70dp"
-        android:scaleType="fitCenter"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:clickable="true"
         android:focusable="true"
+        android:scaleType="fitCenter"
         android:src="@drawable/ic_add"
         app:tint="?attr/colorPrimary" />
 
     <LinearLayout
         android:layout_width="0dp"
-        android:layout_weight="1"
         android:layout_height="wrap_content"
+        android:layout_weight="1"
         android:gravity="end">
 
         <ImageButton
             android:id="@+id/btn_plan"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:scaleType="fitCenter"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
             android:focusable="true"
+            android:scaleType="fitCenter"
             android:src="@drawable/ic_plan"
             app:tint="?attr/colorSecondary" />
 

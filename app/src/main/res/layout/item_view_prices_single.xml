@@ -1,56 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:gravity="center_vertical"
-    android:padding="12dp"
     android:layout_marginBottom="8dp"
-    android:elevation="2dp">
-
-    <TextView
-        android:id="@+id/tv_price"
-        android:textColor="?attr/colorPrimary"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:layout_marginEnd="10dp"
-        android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
-        android:text="מחיר"/>
+    android:elevation="2dp"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="12dp">
 
     <LinearLayout
         android:layout_width="0dp"
-        android:layout_weight="1"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="end|center_vertical">
+        android:layout_marginEnd="10dp"
+        android:layout_weight="1"
+        android:gravity="start|center_vertical"
+        android:orientation="vertical">
 
         <TextView
             android:id="@+id/tv_variation"
-            android:textColor="?attr/colorPrimaryVariant"
-            android:textSize="14sp"
-            android:layout_height="wrap_content"
             android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="2dp"
             android:text="חברה • 1 ליטר"
-            android:layout_marginBottom="2dp"/>
+            android:textColor="?attr/colorPrimaryVariant"
+            android:textSize="14sp" />
 
         <TextView
             android:id="@+id/tv_supermarket_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="סופרמרקט"
             android:textColor="?attr/colorPrimary"
             android:textSize="20sp"
-            android:textStyle="bold"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:text="סופרמרקט"/>
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/tv_supermarket"
-            android:textColor="?attr/colorPrimary"
-            android:textSize="20sp"
-            android:layout_height="wrap_content"
             android:layout_width="wrap_content"
-            android:text="(סניף)"/>
+            android:layout_height="wrap_content"
+            android:text="(סניף)"
+            android:textColor="?attr/colorPrimary"
+            android:textSize="20sp" />
+
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/tv_price"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="מחיר"
+        android:textColor="?attr/colorPrimary"
+        android:textSize="20sp"
+        android:textStyle="bold" />
 
 </LinearLayout>

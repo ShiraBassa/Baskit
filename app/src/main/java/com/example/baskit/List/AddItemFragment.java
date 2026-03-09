@@ -185,17 +185,6 @@ public class AddItemFragment extends DialogFragment
         return t.isEmpty() || t.equalsIgnoreCase("null");
     }
 
-    @Override
-    public void onViewCreated(@NonNull View view, Bundle savedInstanceState)
-    {
-        super.onViewCreated(view, savedInstanceState);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1)
-        {
-            view.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
-        }
-    }
-
     @Nullable
     @Override
     public View onCreateView(

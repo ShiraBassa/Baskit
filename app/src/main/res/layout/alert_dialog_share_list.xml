@@ -2,66 +2,66 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="350dp"
     android:layout_height="400dp"
-    android:orientation="vertical"
-    android:gravity="center"
     android:background="?attr/colorSurface"
-    android:padding="10dp"
-    android:layoutDirection="ltr">
+    android:gravity="center"
+    android:layoutDirection="ltr"
+    android:orientation="vertical"
+    android:padding="10dp">
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
+        android:layout_marginBottom="30dp"
         android:gravity="center_horizontal|top"
-        android:layout_marginBottom="30dp">
+        android:orientation="vertical">
 
         <TextView
             android:id="@+id/tv_list_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="רשימה"
             android:textColor="?attr/colorPrimary"
             android:textSize="32sp"
             android:textStyle="bold"
-            android:visibility="invisible"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:text="רשימה"/>
+            android:visibility="invisible" />
 
         <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="שתף"
             android:textColor="?attr/colorPrimary"
             android:textSize="48sp"
-            android:textStyle="bold"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:text="שתף"/>
+            android:textStyle="bold" />
     </LinearLayout>
 
     <Button
         android:id="@+id/btn_copy_link"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="30dp"
+        android:backgroundTint="?attr/colorPrimaryVariant"
         android:paddingHorizontal="10dp"
         android:paddingVertical="5dp"
-        android:layout_marginBottom="30dp"
+        android:text="העתק קישור"
         android:textColor="?attr/colorOnPrimary"
-        android:backgroundTint="?attr/colorPrimaryVariant"
         android:textSize="24sp"
-        android:textStyle="bold"
-        android:text="העתק קישור"/>
+        android:textStyle="bold" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:orientation="vertical"
         android:gravity="center_horizontal|top"
+        android:orientation="vertical"
         android:padding="10dp">
 
         <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="בקשות"
             android:textColor="?attr/colorPrimaryVariant"
             android:textSize="24sp"
-            android:textStyle="bold"
-            android:layout_height="wrap_content"
-            android:layout_width="match_parent"
-            android:text="בקשות"/>
+            android:textStyle="bold" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycler_requests"
@@ -69,9 +69,9 @@
             android:layout_height="0dp"
             android:layout_weight="1"
             android:clipToPadding="false"
-            android:scrollbars="vertical"
+            android:paddingHorizontal="15dp"
             android:paddingVertical="10dp"
-            android:paddingHorizontal="15dp"/>
+            android:scrollbars="vertical" />
     </LinearLayout>
 
 </LinearLayout>

@@ -13,6 +13,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
         android:layout_marginBottom="25dp"
         android:gravity="center"
         android:orientation="vertical">
@@ -21,7 +22,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="15dp"
-            android:layout_marginTop="10dp"
             android:gravity="center_vertical|end"
             android:orientation="horizontal">
 
@@ -29,10 +29,10 @@
                 android:id="@+id/btn_settings"
                 android:layout_width="45dp"
                 android:layout_height="45dp"
-                android:src="@drawable/ic_settings"
-                android:scaleType="fitCenter"
                 android:background="@null"
-                app:tint="?attr/colorSecondary"/>
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_settings"
+                app:tint="?attr/colorSecondary" />
 
         </LinearLayout>
 
@@ -40,11 +40,11 @@
             android:id="@+id/tv_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:gravity="center"
+            android:letterSpacing="0.02"
             android:text="היי ___"
             android:textColor="?attr/colorPrimary"
-            android:gravity="center"
             android:textSize="40sp"
-            android:letterSpacing="0.02"
             android:textStyle="bold" />
 
     </LinearLayout>
@@ -53,19 +53,18 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
         android:layout_marginBottom="35dp"
+        android:layout_weight="1"
         android:orientation="vertical">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/lists_grid"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:visibility="visible"
-            android:layoutDirection="rtl"
+            android:clipToPadding="false"
             android:orientation="vertical"
             android:padding="8dp"
-            android:clipToPadding="false"/>
+            android:visibility="visible" />
 
     </LinearLayout>
 
@@ -73,41 +72,41 @@
         android:id="@+id/layout_bottom_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="5dp"
+        android:elevation="4dp"
         android:gravity="center"
         android:orientation="horizontal"
-        android:layout_marginBottom="5dp"
-        android:padding="10dp"
-        android:elevation="4dp">
+        android:padding="10dp">
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center">
+            android:gravity="center"
+            android:orientation="vertical">
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_create_list"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:paddingHorizontal="32dp"
+                android:paddingVertical="14dp"
                 android:text="צור רשימה"
                 android:textAlignment="center"
                 android:textColor="?attr/colorPrimary"
                 android:textSize="28sp"
                 android:textStyle="bold"
-                android:paddingHorizontal="32dp"
-                android:paddingVertical="14dp"
 
                 app:backgroundTint="@android:color/transparent"
+                app:cornerRadius="50dp"
                 app:strokeColor="?attr/colorPrimary"
-                app:strokeWidth="4dp"
-                app:cornerRadius="50dp"/>
+                app:strokeWidth="4dp" />
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="3dp"
-                android:layout_marginTop="8dp"
                 android:layout_marginHorizontal="12dp"
-                android:background="?attr/colorSecondary"/>
+                android:layout_marginTop="8dp"
+                android:background="?attr/colorSecondary" />
         </LinearLayout>
 
     </LinearLayout>

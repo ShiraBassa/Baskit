@@ -11,11 +11,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="10dp"
+        android:letterSpacing="0.02"
         android:text="ערים"
         android:textColor="?attr/colorPrimaryVariant"
         android:textSize="36sp"
-        android:textStyle="bold"
-        android:letterSpacing="0.02" />
+        android:textStyle="bold" />
 
     <LinearLayout
         android:id="@+id/layout_table"
@@ -40,31 +40,29 @@
             android:padding="5dp">
 
             <Button
-                android:id="@+id/btn_remove_city"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
-                android:layout_marginEnd="10dp"
-                android:backgroundTint="?attr/colorTertiary"
-                android:text="-"
-                android:textColor="@android:color/white"
-                android:textSize="24sp"
-                android:elevation="4dp" />
-
-            <Space
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_marginEnd="10dp"
-                android:layout_weight="1" />
-
-            <Button
                 android:id="@+id/btn_add_city"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
                 android:backgroundTint="?attr/colorPrimary"
+                android:elevation="4dp"
                 android:text="+"
                 android:textColor="@android:color/white"
-                android:textSize="24sp"
-                android:elevation="4dp" />
+                android:textSize="24sp" />
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1" />
+
+            <Button
+                android:id="@+id/btn_remove_city"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:backgroundTint="?attr/colorTertiary"
+                android:elevation="4dp"
+                android:text="-"
+                android:textColor="@android:color/white"
+                android:textSize="24sp" />
 
         </LinearLayout>
 

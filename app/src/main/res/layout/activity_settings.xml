@@ -7,50 +7,51 @@
     android:layout_height="match_parent"
     android:gravity="center_horizontal|top"
     android:orientation="vertical"
-    android:paddingVertical="10dp"
     android:paddingHorizontal="10dp"
+    android:paddingVertical="10dp"
     tools:context=".Home.SettingsActivity">
 
     <LinearLayout
         android:id="@+id/layout_top_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingHorizontal="10dp"
         android:layout_marginBottom="15dp"
         android:background="?attr/colorSurface"
-        android:elevation="4dp">
+        android:elevation="4dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="10dp">
 
         <ImageButton
             android:id="@+id/btn_log_out"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:src="@drawable/ic_log_out"
-            android:scaleType="fitCenter"
             android:background="@null"
+            android:scaleType="fitCenter"
+
+            android:src="@drawable/ic_log_out"
             app:tint="?attr/colorSecondary" />
 
         <TextView
             android:id="@+id/tv_title"
             android:layout_width="0dp"
-            android:layout_weight="1"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:letterSpacing="0.02"
+            android:paddingTop="45dp"
             android:text="הגדרות"
             android:textColor="?attr/colorSecondary"
             android:textSize="40sp"
-            android:paddingTop="50dp"
-            android:letterSpacing="0.02"
-            android:textStyle="bold"
-            android:gravity="center" />
+            android:textStyle="bold" />
 
         <ImageButton
             android:id="@+id/btn_home"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:src="@drawable/ic_home"
-            android:scaleType="fitCenter"
             android:background="@null"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_home"
             app:tint="?attr/colorSecondary" />
 
     </LinearLayout>
@@ -61,41 +62,39 @@
         android:text="שם משתמש"
         android:textColor="?attr/colorPrimaryVariant"
         android:textSize="28sp"
-        android:textStyle="bold"/>
+        android:textStyle="bold" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="end|center_vertical"
         android:layout_marginHorizontal="10dp"
         android:layout_marginBottom="15dp"
+        android:gravity="end|center_vertical"
         android:orientation="horizontal">
-
-        <Button
-            android:id="@+id/btn_change_username"
-            android:layout_width="wrap_content"
-            android:textSize="20sp"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="15dp"
-            android:text="שנה"/>
 
         <EditText
             android:id="@+id/et_username"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="15dp"
             android:layout_weight="1"
-            android:minWidth="100dp"
-            android:textColor="?attr/colorSecondary"
-            android:singleLine="true"
-            android:layoutDirection="rtl"
-            android:textDirection="rtl"
-            android:maxLength="20"
-            android:inputType="text"
             android:backgroundTint="?attr/colorPrimary"
-            android:textCursorDrawable="@null"
-            android:textColorHighlight="?attr/colorPrimary"
             android:digits=" אבגדהוזחטיכלמנסעפצקרשתךםןףץ"
+            android:inputType="text"
+            android:maxLength="20"
+            android:minWidth="100dp"
+            android:singleLine="true"
+            android:textColor="?attr/colorSecondary"
+            android:textColorHighlight="?attr/colorPrimary"
+            android:textCursorDrawable="@null"
             android:textSize="26sp" />
+
+        <Button
+            android:id="@+id/btn_change_username"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="שנה"
+            android:textSize="20sp" />
 
     </LinearLayout>
 
@@ -116,7 +115,7 @@
 
             <include
                 android:id="@+id/supermarkets_table"
-                layout="@layout/supermarkets_table"/>
+                layout="@layout/supermarkets_table" />
 
         </LinearLayout>
 

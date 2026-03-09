@@ -1,64 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="350dp"
     android:layout_height="400dp"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="vertical"
+    android:background="?attr/colorSurface"
     android:gravity="center"
-    android:padding="12dp"
-    android:background="?attr/colorSurface">
+    android:orientation="vertical"
+    android:padding="12dp">
 
     <!-- Title and Cancel -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="30dp"
-        android:orientation="vertical"
-        android:gravity="center_vertical|start">
+        android:gravity="center_vertical|start"
+        android:orientation="vertical">
 
         <ImageButton
             android:id="@+id/btn_cancel"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_marginBottom="8dp"
-            android:scaleType="fitCenter"
             android:background="@null"
+            android:scaleType="fitCenter"
             android:src="@drawable/ic_cancel"
             app:tint="?attr/colorPrimaryVariant" />
 
         <TextView
             android:id="@+id/tv_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="צור רשימה"
+            android:textAlignment="center"
             android:textColor="?attr/colorPrimary"
             android:textSize="42sp"
-            android:textStyle="bold"
-            android:layout_height="wrap_content"
-            android:layout_width="match_parent"
-            android:textAlignment="center"
-            android:text="צור רשימה"/>
+            android:textStyle="bold" />
     </LinearLayout>
 
     <!-- EditText Input -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
         android:layout_marginBottom="30dp"
-        android:orientation="vertical"
-        android:gravity="center_horizontal|top">
+        android:layout_weight="1"
+        android:gravity="center_horizontal|top"
+        android:orientation="vertical">
 
         <EditText
             android:id="@+id/et_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:gravity="start"
+            android:hint="שם"
             android:padding="12dp"
+            android:singleLine="true"
             android:textColor="?attr/colorPrimaryVariant"
             android:textColorHint="?attr/colorPrimaryVariant"
             android:textSize="36sp"
-            android:textDirection="rtl"
-            android:singleLine="true"
-            android:gravity="start"
-            android:textStyle="bold"
-            android:hint="שם"/>
+            android:textStyle="bold" />
     </LinearLayout>
 
     <!-- Create Button -->
@@ -66,13 +65,13 @@
         android:id="@+id/btn_save_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="צור"
-        android:textSize="38sp"
-        android:textColor="?attr/colorOnPrimary"
+        android:backgroundTint="?attr/colorPrimaryVariant"
         android:paddingHorizontal="20dp"
         android:paddingVertical="12dp"
+        android:text="צור"
+        android:textColor="?attr/colorOnPrimary"
+        android:textSize="38sp"
+        android:textStyle="bold"
         app:cornerRadius="12dp"
-        android:backgroundTint="?attr/colorPrimaryVariant"
-        app:iconGravity="textStart"
-        android:textStyle="bold"/>
+        app:iconGravity="textStart" />
 </LinearLayout>

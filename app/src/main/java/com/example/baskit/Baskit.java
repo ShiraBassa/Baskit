@@ -15,6 +15,8 @@ import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.Toast;
+import android.text.TextUtils;
+import java.util.Locale;
 
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.ColorUtils;
@@ -30,7 +32,7 @@ public class Baskit extends Application
     public static final Supermarket UNASSIGNED_SUPERMARKET = new Supermarket("לא נבחר", "");
     private static final MutableLiveData<Boolean> onlineLive = new MutableLiveData<>(true);
     private ConnectivityManager.NetworkCallback networkCallback;
-    public static final String PRIVATE_NETWORK_URL = "192.168.1.228";
+    public static final String PRIVATE_NETWORK_URL = "192.168.1.247";
     public static final String EMULATOR_URL = "10.0.2.2";
 
     public static final String SERVER_URL = "http://" + EMULATOR_URL + ":5001";
@@ -79,25 +81,6 @@ public class Baskit extends Application
                         .build();
                 cm.registerNetworkCallback(request, networkCallback);
             }
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1)
-        {
-            registerActivityLifecycleCallbacks(new ActivityLifecycleCallbacks()
-            {
-                @Override
-                public void onActivityCreated(Activity activity, Bundle savedInstanceState)
-                {
-                    activity.getWindow().getDecorView().setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
-                }
-
-                @Override public void onActivityStarted(Activity activity) {}
-                @Override public void onActivityResumed(Activity activity) {}
-                @Override public void onActivityPaused(Activity activity) {}
-                @Override public void onActivityStopped(Activity activity) {}
-                @Override public void onActivitySaveInstanceState(Activity activity, Bundle outState) {}
-                @Override public void onActivityDestroyed(Activity activity) {}
-            });
         }
     }
 
@@ -212,10 +195,23 @@ public class Baskit extends Application
         if (withTitle)
         {
             String titleIsolated = "\u2067" + "סך הכל:" + "\u2069";
-            return amountIsolated + " " + titleIsolated;
+
+            if (!isLayoutDirectionLeft())
+            {
+                return titleIsolated + " " + amountIsolated;
+            }
+            else
+            {
+                return amountIsolated + " " + titleIsolated;
+            }
         }
 
         return amountIsolated;
+    }
+
+    public static boolean isLayoutDirectionLeft()
+    {
+        return TextUtils.getLayoutDirectionFromLocale(Locale.getDefault()) == View.LAYOUT_DIRECTION_LTR;
     }
 
     public static void notActivityRunWhenServerActive(Runnable work, Activity activity)
