@@ -149,32 +149,18 @@ public class ItemViewAlertDialog
                 pricesAdapter = new ItemViewPricesAdapter(
                         context,
                         rows,
-                        (supermarket, variation) ->
+                        (row) ->
                         {
-                            if (supermarket == null)
+                            if (item == null) return;
+
+                            if (row == null)
                             {
                                 item.setUnchosen();
-                                if (pricesAdapter != null) pricesAdapter.notifyDataSetChanged();
-                                return;
                             }
-
-                            item.setSupermarket(supermarket);
-
-                            for (PriceRow row : rows)
+                            else
                             {
-                                if (row.getSupermarket().getSupermarket().equals(supermarket.getSupermarket()) &&
-                                    row.getSupermarket().getSection().equals(supermarket.getSection()) &&
-                                    row.getInfo() != null &&
-                                    variation != null &&
-                                    row.getInfo().getCode() != null &&
-                                    row.getInfo().getCode().equals(variation.getCode()))
-                                {
-                                    item.setPrice(row.getPrice());
-                                    break;
-                                }
+                                item.fillRow(row);
                             }
-
-                            item.fillInfo(variation);
 
                             if (pricesAdapter != null)
                             {
@@ -433,5 +419,8 @@ public class ItemViewAlertDialog
         }
 
         rows.sort((a, b) -> Double.compare(a.getPrice(), b.getPrice()));
+        if (pricesAdapter != null) {
+            pricesAdapter.notifyDataSetChanged();
+        }
     }
 }

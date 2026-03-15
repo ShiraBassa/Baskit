@@ -30,7 +30,7 @@ public class Baskit extends Application
 {
     public static final String PRIVATE_NETWORK_URL = "192.168.1.247";
     public static final String EMULATOR_URL = "10.0.2.2";
-    //public static final String SERVER_URL = "http://" + EMULATOR_URL + ":5001";
+    //public static final String SERVER_URL = "http://" + EMULATOR_URL + ":10000";
     public static final String SERVER_URL = "https://baskit-ac3x.onrender.com";
     public static final int HOME_GRID_NUM_BOXES = 2;
     public static final Supermarket UNASSIGNED_SUPERMARKET = new Supermarket("לא נבחר", "");

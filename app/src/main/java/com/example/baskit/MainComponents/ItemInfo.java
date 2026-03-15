@@ -86,10 +86,10 @@ public class ItemInfo
 
         ItemInfo other = (ItemInfo) obj;
 
-        return Objects.equals(baseName, other.baseName) &&
-                Objects.equals(company, other.company) &&
-                Objects.equals(weight, other.weight) &&
-                Objects.equals(unit, other.unit);
+        return baseName.equals(other.baseName) &&
+                company.equals(other.company) &&
+                weight.equals(other.weight) &&
+                unit.equals(other.unit);
     }
 
     @Override

@@ -74,7 +74,7 @@ public class APIHandler
         try
         {
             Request request = new Request.Builder()
-                    .url(Baskit.SERVER_URL + "/active")
+                    .url(Baskit.SERVER_URL + "/health")
                     .get()
                     .build();
 
@@ -840,8 +840,16 @@ public class APIHandler
 
     public Map<String, Map<String, Double>> getItemPricesByCode(String itemCode) throws IOException, JSONException
     {
+        Map<String, Map<String, Double>> prices = cachedItemPrices.get(itemCode);
+
+        if (prices != null && !prices.isEmpty())
+        {
+            return prices;
+        }
+
         String endpoint = "/item_prices?"
                 + "item_code=" + URLEncoder.encode(itemCode, "UTF-8");
+
         return parsePriceResponse(getRaw(endpoint));
     }
 

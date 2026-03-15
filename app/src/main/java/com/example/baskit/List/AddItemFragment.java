@@ -858,8 +858,7 @@ public class AddItemFragment extends DialogFragment
             // If the selected variation no longer exists after filtering → clear selection
             if (!stillValid)
             {
-                selectedItem.setSupermarket(null);
-                selectedItem.setPrice(0);
+                selectedItem.setUnchosen();
             }
         }
 
@@ -1043,38 +1042,23 @@ public class AddItemFragment extends DialogFragment
                 pricesAdapter = new ItemViewPricesAdapter(
                         context,
                         rows,
-                        (supermarket, variation) ->
+                        (row) ->
                         {
                             if (selectedItem == null) return;
 
-                            if (supermarket == null)
+                            if (row == null)
                             {
-                                selectedItem.setSupermarket(null);
-                                selectedItem.setPrice(0);
+                                selectedItem.setUnchosen();
+                            }
+                            else
+                            {
+                                selectedItem.fillRow(row);
+                            }
+
+                            if (pricesAdapter != null)
+                            {
                                 pricesAdapter.notifyDataSetChanged();
-                                return;
                             }
-
-                            selectedItem.setSupermarket(supermarket);
-
-                            // Find matching row
-                            for (PriceRow row : rows)
-                            {
-                                if (row.getSupermarket().getSupermarket().equals(supermarket.getSupermarket()) &&
-                                        row.getSupermarket().getSection().equals(supermarket.getSection()) &&
-                                        row.getInfo() != null &&
-                                        variation != null &&
-                                        row.getInfo().getCode() != null &&
-                                        row.getInfo().getCode().equals(variation.getCode()))
-                                {
-                                    selectedItem.setPrice(row.getPrice());
-                                    break;
-                                }
-                            }
-
-                            // Set selected variation
-                            selectedItem.fillInfo(variation);
-                            pricesAdapter.notifyDataSetChanged();
                         }
                 );
 

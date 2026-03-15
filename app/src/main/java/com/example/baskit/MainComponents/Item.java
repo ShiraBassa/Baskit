@@ -320,7 +320,7 @@ public class Item implements Cloneable
             }
         }
 
-        if (cheapestRow.getPrice() == price)
+        if (cheapestRow != null && cheapestRow.getPrice() == price)
         {
             return ogRow;
         }

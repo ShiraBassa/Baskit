@@ -58,8 +58,7 @@ public class PlanListItemsAdapter extends RecyclerView.Adapter<PlanListItemsAdap
 
         if (to == unassigned_supermarket)
         {
-            draggedItem.setSupermarket(null);
-            draggedItem.setPrice(0.0);
+            draggedItem.setUnchosen();
         }
         else
         {

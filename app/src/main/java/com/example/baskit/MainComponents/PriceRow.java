@@ -1,5 +1,7 @@
 package com.example.baskit.MainComponents;
 
+import androidx.annotation.Nullable;
+
 public class PriceRow
 {
     private Supermarket supermarket;
@@ -35,5 +37,24 @@ public class PriceRow
 
     public void setInfo(ItemInfo info) {
         this.info = info;
+    }
+
+    @Override
+    public boolean equals(@Nullable Object obj)
+    {
+        if (this == obj) return true;
+        if (!(obj instanceof PriceRow)) return false;
+
+        PriceRow other = (PriceRow) obj;
+
+        return Double.compare(other.price, price) == 0 &&
+                supermarket.equals(other.supermarket) &&
+                info.equals(other.info);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return java.util.Objects.hash(supermarket, price, info);
     }
 }

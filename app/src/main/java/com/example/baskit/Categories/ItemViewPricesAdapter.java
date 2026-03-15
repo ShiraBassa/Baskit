@@ -23,7 +23,7 @@ import java.util.Objects;
 
 public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAdapter.ViewHolder>
 {
-    private int selectedPosition = -1;
+    private PriceRow selectedRow = null;
 
     private Map<String, Map<String, Double>> originalPricesMap;
     private ArrayList<PriceRow> priceRows;
@@ -35,69 +35,7 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
 
     public interface OnSupermarketClickListener
     {
-        void onSupermarketClick(Supermarket supermarket, ItemInfo variation);
-    }
-
-    public ItemViewPricesAdapter(
-            Context context,
-            Map<String, Map<String, Double>> pricesMap,
-            Supermarket preselected_supermarket,
-            ArrayList<ItemInfo> variations,
-            OnSupermarketClickListener onSupermarketClickListener)
-    {
-        this.originalPricesMap = pricesMap;
-
-        if (pricesMap == null)
-        {
-            this.priceRows = new ArrayList<>();
-            return;
-        }
-
-        this.context = context;
-        this.listener = onSupermarketClickListener;
-
-        priceRows = new ArrayList<>();
-
-        for (String supermarketName : pricesMap.keySet())
-        {
-            Map<String, Double> sections = pricesMap.get(supermarketName);
-            if (sections == null) continue;
-
-            for (String sectionName : sections.keySet())
-            {
-                Double priceObj = sections.get(sectionName);
-                if (priceObj == null) continue;
-                double price = priceObj;
-                Supermarket sm = new Supermarket(supermarketName, sectionName);
-
-                ItemInfo matchedVariation = null;
-
-                if (variations != null && !variations.isEmpty())
-                {
-                    // If there is only one variation, assign it directly
-                    if (variations.size() == 1)
-                    {
-                        matchedVariation = variations.get(0);
-                    }
-                    else
-                    {
-                        // Try matching by code if section still contains it
-                        for (ItemInfo info : variations)
-                        {
-                            if (sectionName != null && info.getCode() != null && sectionName.contains(info.getCode()))
-                            {
-                                matchedVariation = info;
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                priceRows.add(new PriceRow(sm, price, matchedVariation));
-            }
-        }
-
-        sortRows();
+        void onSupermarketClick(PriceRow row);
     }
 
     public ItemViewPricesAdapter(
@@ -123,7 +61,7 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
 
     public void resort()
     {
-        this.selectedPosition = -1;
+        this.selectedRow = null;
         sortRows();
         notifyDataSetChanged();
     }
@@ -170,6 +108,10 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, @SuppressLint("RecyclerView") int position)
     {
+        if (priceRows == null || position < 0 || position >= priceRows.size()) {
+            return;
+        }
+
         PriceRow row = priceRows.get(position);
         Supermarket supermarket = row.getSupermarket();
         double price = row.getPrice();
@@ -221,7 +163,9 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
 
         holder.tvPrice.setText(Baskit.getTotalDisplayString(price, true, false, false));
 
-        if (position == selectedPosition)
+        boolean isSelected = selectedRow != null && selectedRow.equals(row);
+
+        if (isSelected)
         {
             holder.itemView.setBackgroundColor(
                     Baskit.getAppColor(context, com.google.android.material.R.attr.colorSecondaryContainer)
@@ -236,24 +180,29 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
 
         holder.itemView.setOnClickListener(v ->
         {
-            if (position == selectedPosition)
+            int pos = holder.getAdapterPosition();
+            if (pos == RecyclerView.NO_POSITION) return;
+
+            PriceRow clickedRow = priceRows.get(pos);
+
+            if (selectedRow != null && selectedRow.equals(clickedRow))
             {
-                selectedPosition = -1;
+                selectedRow = null;
                 notifyDataSetChanged();
 
                 if (listener != null)
                 {
-                    listener.onSupermarketClick(null, null);
+                    listener.onSupermarketClick(null);
                 }
                 return;
             }
 
-            selectedPosition = position;
+            selectedRow = clickedRow;
             notifyDataSetChanged();
 
             if (listener != null)
             {
-                listener.onSupermarketClick(supermarket, matchedInfo);
+                listener.onSupermarketClick(clickedRow);
             }
         });
     }
@@ -261,41 +210,18 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
     @Override
     public int getItemCount()
     {
-        if (priceRows != null)
-        {
-            return priceRows.size();
-        }
-
-        return 0;
+        return priceRows == null ? 0 : priceRows.size();
     }
 
     public void setSelectedPosition(int position)
     {
         if (position >= 0 && position < priceRows.size())
         {
-            this.selectedPosition = position;
+            this.selectedRow = priceRows.get(position);
         }
         else
         {
-            this.selectedPosition = -1;
-        }
-
-        notifyDataSetChanged();
-    }
-
-    public void resetSelection(String supermarketName, String sectionName)
-    {
-        boolean exists = false;
-
-        for (PriceRow row : priceRows)
-        {
-            Supermarket sm = row.getSupermarket();
-
-            if (sm.getSupermarket().equals(supermarketName) &&
-                    sm.getSection().equals(sectionName)) {
-                exists = true;
-                break;
-            }
+            this.selectedRow = null;
         }
 
         notifyDataSetChanged();
