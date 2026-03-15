@@ -4,7 +4,6 @@
     android:layout_height="400dp"
     android:background="?attr/colorSurface"
     android:gravity="center"
-    android:layoutDirection="ltr"
     android:orientation="vertical"
     android:padding="10dp">
 
