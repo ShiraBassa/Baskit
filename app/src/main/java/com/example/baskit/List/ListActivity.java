@@ -1,22 +1,17 @@
 package com.example.baskit.List;
 
 import android.content.Intent;
-import android.graphics.Typeface;
 import android.os.Bundle;
-import android.text.SpannableString;
-import android.text.Spanned;
-import android.text.style.ForegroundColorSpan;
-import android.text.style.StyleSpan;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.baskit.API.APIHandler;
 import com.example.baskit.Baskit;
@@ -44,7 +39,6 @@ public class ListActivity extends MasterActivity
     List list;
     String listId;
 
-    boolean itemsLoaded = false;
     boolean initialized = true;
     boolean listListenerAttached = false;
     boolean uiInitialized = false;
@@ -53,7 +47,6 @@ public class ListActivity extends MasterActivity
     Map<String, ArrayList<String>> groups;
     Map<String, ItemInfo> infos;
     Map<String, Category> categories;
-    Map<String, View> categoriesViews;
 
     FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
     APIHandler apiHandler = APIHandler.getInstance();
@@ -66,7 +59,8 @@ public class ListActivity extends MasterActivity
     TextView tvListName, tvTotal;
     ImageButton btnBack, btnFinished, btnMore;
     View shareListDot;
-    LinearLayout categoriesListContainer;
+    RecyclerView categoriesRecycler;
+    CategoryAdapter categoryAdapter;
     Button btnSortList;
     ImageButton btnAddItem, btnPlan, btnShare;
 
@@ -79,35 +73,20 @@ public class ListActivity extends MasterActivity
         createInit();
         uiInitialized = true;
 
-        runWhenServerActive(() ->
+        allItemPrices = apiHandler.getItemPrices();
+        groups = apiHandler.getGroups();
+        infos = apiHandler.getItemInfos();
+
+        if (groups != null && !groups.isEmpty())
         {
-            try
-            {
-                allItemPrices = apiHandler.getItemPrices();
-                groups = apiHandler.getGroups();
-                infos = apiHandler.getItemInfos();
-                itemsLoaded = true;
-            }
-            catch (Exception e)
-            {
-                Log.e("ListActivity", "Failed to load items catalogs", e);
-                itemsLoaded = false;
-            }
+            btnAddItem.setEnabled(true);
+        }
+        else
+        {
+            btnAddItem.setEnabled(false);
+        }
 
-            runOnUiThread(() ->
-            {
-                if (groups != null && !groups.isEmpty())
-                {
-                    btnAddItem.setEnabled(true);
-                }
-                else
-                {
-                    btnAddItem.setEnabled(false);
-                }
-
-                resumeInit();
-            });
-        });
+        resumeInit();
     }
 
     @Override
@@ -116,7 +95,7 @@ public class ListActivity extends MasterActivity
         super.onResume();
 
         // Only attach if we never attached before
-        if (itemsLoaded && uiInitialized && !listListenerAttached)
+        if (uiInitialized && !listListenerAttached)
         {
             resumeInit();
         }
@@ -152,10 +131,11 @@ public class ListActivity extends MasterActivity
             return;
         }
 
-        categoriesListContainer = findViewById(R.id.categories_container);
+        categoriesRecycler = findViewById(R.id.categories_container);
+        categoriesRecycler.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this));
         categoriesListInflater = LayoutInflater.from(this);
 
-        setButton();
+        setButtons();
     }
 
     private void resumeInit()
@@ -166,132 +146,29 @@ public class ListActivity extends MasterActivity
 
         runIfOnline(() ->
         {
-            dbHandler.getList(listId, new FirebaseDBHandler.GetListCallback()
+            if (!listListenerAttached)
             {
-                @Override
-                public void onListFetched(List newList)
+                listListenerAttached = true;
+
+                dbHandler.listenToList(listId, new FirebaseDBHandler.GetListCallback()
                 {
-                    ListActivity.this.list = newList;
-
-                    if (newList == null)
+                    @Override
+                    public void onListFetched(List newList)
                     {
-                        ListActivity.this.list = new List();
-                        categoriesListContainer.removeAllViews();
-                        return;
+                        refreshWithNewList(newList);
                     }
 
-                    if (ListActivity.this.list.getId() == null)
+                    @Override
+                    public void onError(String error)
                     {
-                        ListActivity.this.list.setId(listId);
+                        initialized = false;
                     }
-
-                    tvListName.setText(ListActivity.this.list.getName());
-                    tvListName.setVisibility(View.VISIBLE);
-                    tvTotal.setText(Baskit.getTotalDisplayString(list.getTotal(), list.allPricesKnown(), true, true));
-                    tvTotal.setVisibility(View.VISIBLE);
-                    btnAddItem.setEnabled(true);
-                    btnAddItem.setAlpha(1f);
-
-                    if (groups != null && !groups.isEmpty())
-                    {
-                        addItemFragment = new AddItemFragment(
-                                ListActivity.this,
-                                ListActivity.this,
-                                groups,
-                                list.toItemNames(),
-                                ListActivity.this::addItem,
-                                list.getItemSuggestions()
-                        );
-                    }
-                    else
-                    {
-                        btnAddItem.setAlpha(0.5f);
-                    }
-
-                    categories = ListActivity.this.list.getCategories();
-
-                    if (categories == null)
-                    {
-                        categories = new HashMap<>();
-                    }
-
-                    shareAlertDialog = new ShareListAlertDialog(list, ListActivity.this, ListActivity.this);
-
-                    if (!list.getRequests().isEmpty())
-                    {
-                        shareListDot.setVisibility(View.VISIBLE);
-                    }
-
-                    setCategoriesInflater();
-
-                    if (!listListenerAttached)
-                    {
-                        listListenerAttached = true;
-
-                        dbHandler.listenToList(listId, new FirebaseDBHandler.GetListCallback()
-                        {
-                            @Override
-                            public void onListFetched(List newList)
-                            {
-                                if (newList == null) return;
-
-                                ListActivity.this.list = newList;
-                                shareAlertDialog = new ShareListAlertDialog(newList, ListActivity.this, ListActivity.this);
-
-                                if (!list.getRequests().isEmpty())
-                                {
-                                    shareListDot.setVisibility(View.VISIBLE);
-                                }
-                                else
-                                {
-                                    shareListDot.setVisibility(View.GONE);
-                                }
-
-                                if (tvListName != null)
-                                {
-                                    tvListName.setText(newList.getName());
-                                    tvListName.setVisibility(View.VISIBLE);
-                                }
-
-                                if (tvTotal != null)
-                                {
-                                    tvTotal.setText(Baskit.getTotalDisplayString(newList.getTotal(), newList.allPricesKnown(), true, true));
-                                    tvTotal.setVisibility(View.VISIBLE);
-                                }
-
-                                Map<String, Category> newCategories = newList.getCategories();
-                                if (newCategories == null) newCategories = new HashMap<>();
-
-                                if (categoriesViews == null)
-                                {
-                                    categories = new HashMap<>(newCategories);
-                                    setCategoriesInflater();
-                                }
-                                else
-                                {
-                                    updateCategoriesInflater(newCategories);
-                                }
-                            }
-
-                            @Override
-                            public void onError(String error)
-                            {
-                                initialized = false;
-                            }
-                        });
-                    }
-                }
-
-                @Override
-                public void onError(String error)
-                {
-                    initialized = false;
-                }
-            });
+                });
+            }
         });
     }
 
-    private void setButton()
+    private void setButtons()
     {
         btnBack.setOnClickListener(new View.OnClickListener()
         {
@@ -363,11 +240,7 @@ public class ListActivity extends MasterActivity
                     {
                         showSortBottomSheet();
                     }
-                    catch (JSONException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                    catch (IOException e)
+                    catch (JSONException | IOException e)
                     {
                         throw new RuntimeException(e);
                     }
@@ -489,123 +362,96 @@ public class ListActivity extends MasterActivity
         });
     }
 
-    private void setCategoriesInflater()
+    private void refreshWithNewList(List newList)
     {
-        categoriesListContainer.removeAllViews();
-        categoriesViews = new HashMap<>();
+        ListActivity.this.list = newList;
 
-        for (Category category : categories.values())
+        // The list is null
+        if (newList == null)
         {
-            inflaterAddItem(category);
-        }
-    }
-
-    private void updateCategoriesInflater(Map<String, Category> newCategories)
-    {
-        for (String key : new ArrayList<>(categories.keySet()))
-        {
-            if (!newCategories.containsKey(key))
-            {
-                View toRemove = categoriesViews.get(key);
-                if (toRemove != null) categoriesListContainer.removeView(toRemove);
-                categoriesViews.remove(key);
-            }
+            Toast.makeText(this,
+                    "הרשימה נמחקה",
+                    Toast.LENGTH_SHORT).show();
+            finish();
+            return;
         }
 
-        for (Map.Entry<String, Category> entry : newCategories.entrySet())
+        // We have it from the add list
+        if (ListActivity.this.list.getId() == null)
         {
-            String key = entry.getKey();
-            Category newCategory = entry.getValue();
+            ListActivity.this.list.setId(listId);
+        }
 
-            boolean hasOld = categories.containsKey(key);
-            Category oldCategory = hasOld ? categories.get(key) : null;
+        tvListName.setText(ListActivity.this.list.getName());
+        tvListName.setVisibility(View.VISIBLE);
+        tvTotal.setText(Baskit.getTotalDisplayString(list.getTotal(), list.allPricesKnown(), true, true));
+        tvTotal.setVisibility(View.VISIBLE);
+        btnAddItem.setAlpha(1f);
+        shareListDot.setVisibility(View.GONE);
+        btnSortList.setEnabled(true);
+        btnPlan.setEnabled(true);
+        btnFinished.setEnabled(true);
+        btnSortList.setAlpha(1f);
+        btnPlan.setAlpha(1f);
+        btnFinished.setAlpha(1f);
 
-            if (categoriesViews.containsKey(key))
+        if (addItemFragment == null)
+        {
+            if (groups != null && !groups.isEmpty())
             {
-                if (oldCategory != null && oldCategory.isFinished() != newCategory.isFinished())
-                {
-                    View oldView = categoriesViews.get(key);
-                    categoriesListContainer.removeView(oldView);
-                    categoriesViews.remove(key);
-                    inflaterAddItem(newCategory);
-                }
-                else
-                {
-                    View categoryView = categoriesViews.get(key);
-                    TextView tvCount = categoryView.findViewById(R.id.tv_count);
-                    TextView tvPrice = categoryView.findViewById(R.id.tv_price);
-
-                    tvCount.setText(Integer.toString(newCategory.countUnchecked()));
-                    tvPrice.setText(Baskit.getTotalDisplayString(newCategory.getTotal(), newCategory.allPricesKnown(), false, false));
-                }
+                addItemFragment = new AddItemFragment(
+                        ListActivity.this,
+                        ListActivity.this,
+                        groups,
+                        list.toItemNames(),
+                        ListActivity.this::addItem,
+                        list.getItemSuggestions()
+                );
             }
             else
             {
-                inflaterAddItem(newCategory);
+                btnAddItem.setAlpha(0.5f);
             }
         }
 
-        categories = new HashMap<>(newCategories);
-    }
+        categories = ListActivity.this.list.getCategories();
 
-    private void inflaterAddItem(Category category)
-    {
-        View categoryView;
-        TextView tvName, tvCount, tvPrice;
-        LinearLayout loutInfo;
-
-        categoryView = categoriesListInflater.inflate(R.layout.category_list_item, categoriesListContainer, false);
-
-        tvName = categoryView.findViewById(R.id.tv_supermarket);
-        tvCount  = categoryView.findViewById(R.id.tv_count);
-        tvPrice = categoryView.findViewById(R.id.tv_price);
-        loutInfo = categoryView.findViewById(R.id.lout_info);
-
-        String text = "- " + category.getName();
-        SpannableString spannable = new SpannableString(text);
-
-        spannable.setSpan(
-                new ForegroundColorSpan(
-                        Baskit.getAppColor(tvName.getContext(), com.google.android.material.R.attr.colorSecondary)
-                ),
-                0, 1,
-                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-        );
-
-        spannable.setSpan(
-                new StyleSpan(Typeface.BOLD),
-                0, 1,
-                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-        );
-
-        tvName.setText(spannable);
-
-        if (!category.isFinished())
+        if (categories == null)
         {
-            tvCount.setText(Integer.toString(category.countUnchecked()));
-            tvPrice.setText(Baskit.getTotalDisplayString(category.getTotal(), category.allPricesKnown(), false, false));
+            categories = new HashMap<>();
+        }
+
+        if (categoryAdapter == null)
+        {
+            categoryAdapter = new CategoryAdapter(
+                    ListActivity.this,
+                    listId,
+                    new ArrayList<>(categories.values())
+            );
+            categoriesRecycler.setAdapter(categoryAdapter);
         }
         else
         {
-            loutInfo.setVisibility(View.GONE);
-            tvName.setAlpha(0.5f);
+            categoryAdapter.update(new ArrayList<>(categories.values()));
         }
 
-        categoryView.setOnClickListener(new View.OnClickListener()
+        shareAlertDialog = new ShareListAlertDialog(list, ListActivity.this, ListActivity.this);
+
+        if (!list.getRequests().isEmpty())
         {
-            @Override
-            public void onClick(View view)
-            {
-                Intent intent = new Intent(ListActivity.this, CategoryActivity.class);
-                intent.putExtra("listId", list.getId());
-                intent.putExtra("categoryName", category.getName());
+            shareListDot.setVisibility(View.VISIBLE);
+        }
 
-                startActivity(intent);
-            }
-        });
+        if (list.isEmpty())
+        {
+            btnSortList.setEnabled(false);
+            btnPlan.setEnabled(false);
+            btnFinished.setEnabled(false);
 
-        categoriesListContainer.addView(categoryView);
-        categoriesViews.put(category.getName(), categoryView);
+            btnSortList.setAlpha(0.5f);
+            btnPlan.setAlpha(0.5f);
+            btnFinished.setAlpha(0.5f);
+        }
     }
 
     public void addItem(Item item)

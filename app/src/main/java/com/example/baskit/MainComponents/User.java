@@ -10,9 +10,10 @@ public class User
     protected String email = "";
     protected String name = "";
     private String token = "";
-    protected ArrayList<String> cities = new ArrayList<>();
     protected ArrayList<String> listIDs = new ArrayList<>();
     protected ArrayList<Supermarket> supermarkets = new ArrayList<>();
+    @Exclude
+    protected ArrayList<String> cities = new ArrayList<>();
 
     public User(String email)
     {
@@ -51,14 +52,6 @@ public class User
         this.name = name;
     }
 
-    public ArrayList<String> getCities() {
-        return cities;
-    }
-
-    public void setCities(ArrayList<String> cities) {
-        this.cities = cities;
-    }
-
     public ArrayList<String> getListIDs() {
         return listIDs;
     }
@@ -82,6 +75,16 @@ public class User
 
     public void setToken(String token) {
         this.token = token;
+    }
+
+    @Exclude
+    public ArrayList<String> getCities() {
+        return cities;
+    }
+
+    @Exclude
+    public void setCities(ArrayList<String> cities) {
+        this.cities = cities;
     }
 
     @Exclude

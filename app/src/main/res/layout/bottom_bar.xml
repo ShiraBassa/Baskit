@@ -23,6 +23,7 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
             android:focusable="true"
+            android:enabled="false"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_check"
             app:tint="?attr/colorOnContainerUnchecked" />

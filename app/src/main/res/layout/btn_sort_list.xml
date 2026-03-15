@@ -10,6 +10,7 @@
     android:text="סדר ▼"
     android:textColor="?attr/colorSecondary"
     android:textStyle="bold"
+    android:enabled="false"
     app:rippleColor="?attr/colorSecondaryContainer"
     app:strokeColor="?attr/colorSecondary"
     app:strokeWidth="2dp" />

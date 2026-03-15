@@ -44,12 +44,12 @@ public class CategoryActivity extends MasterActivity
     Map<String, Map<String, Map<String, Double>>> allItemPrices;
     Map<String, ArrayList<String>> groups;
     Map<String, ItemInfo> infos;
+    ArrayList<Supermarket> supermarkets;
 
     FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
     APIHandler apiHandler = APIHandler.getInstance();
 
     boolean initialized = true;
-    private boolean categoryListenerAttached = false;
 
     AddItemFragment addItemFragment;
     RecyclerView recyclerItems;
@@ -75,23 +75,12 @@ public class CategoryActivity extends MasterActivity
             return;
         }
 
-        runWhenServerActive(() ->
-        {
-            try
-            {
-                allItemPrices = apiHandler.getItemPrices();
-                groups = apiHandler.getGroups();
-                infos = apiHandler.getItemInfos();
-            }
-            catch (Exception e)
-            {
-                Log.e("CategoryActivity", "Failed to load catalogs", e);
-                allItemPrices = null;
-                groups = null;
-            }
+        allItemPrices = apiHandler.getItemPrices();
+        groups = apiHandler.getGroups();
+        infos = apiHandler.getItemInfos();
+        supermarkets = apiHandler.getSupermarkets();
 
-            runOnUiThread(this::init);
-        });
+        init();
     }
 
     @Override
@@ -117,6 +106,11 @@ public class CategoryActivity extends MasterActivity
         btnPlan = findViewById(R.id.btn_plan);
         btnMore = findViewById(R.id.btn_more);
 
+        recyclerItems = findViewById(R.id.recycler_supermarket_items);
+        recyclerItems.setLayoutManager(new LinearLayoutManager(CategoryActivity.this));
+
+        setButtons();
+
         final String listId = getIntent().getStringExtra("listId");
         final String categoryName = getIntent().getStringExtra("categoryName");
 
@@ -131,168 +125,138 @@ public class CategoryActivity extends MasterActivity
 
                     if (newList == null)
                     {
-                        Toast.makeText(CategoryActivity.this, "List not found", Toast.LENGTH_SHORT).show();
                         finish();
                         return;
                     }
 
-                    category = newList.getCategory(categoryName);
-
-                    if (category == null)
+                    runIfOnline(() ->
                     {
-                        Toast.makeText(CategoryActivity.this, "Category not found", Toast.LENGTH_SHORT).show();
-                        finish();
-                        return;
-                    }
-
-                    tvListName.setText(newList.getName());
-                    tvCategoryName.setText(category.getName());
-                    tvListName.setVisibility(View.VISIBLE);
-                    tvCategoryName.setVisibility(View.VISIBLE);
-
-                    setButtons();
-
-                    if (groups != null && !groups.isEmpty())
-                    {
-                        addItemFragment = new AddItemFragment(
-                                CategoryActivity.this,
-                                CategoryActivity.this,
-                                groups,
-                                list.toItemNames(),
-                                CategoryActivity.this::addItem,
-                                list.getItemSuggestions()
-                        );
-                        btnAddItem.setEnabled(true);
-                    }
-                    else
-                    {
-                        addItemFragment = null;
-                        btnAddItem.setEnabled(false);
-                    }
-
-                    recyclerItems = findViewById(R.id.recycler_supermarket_items);
-                    recyclerItems.setLayoutManager(new LinearLayoutManager(CategoryActivity.this));
-
-                    runWhenServerActive(() ->
-                    {
-                        ArrayList<Supermarket> supermarkets;
-
-                        try
+                        dbHandler.listenToList(listId, new FirebaseDBHandler.GetListCallback()
                         {
-                            supermarkets = apiHandler.getSupermarkets();
-                        }
-                        catch (Exception e)
-                        {
-                            Log.e("CategoryActivity", "Failed to load supermarkets", e);
-                            supermarkets = new ArrayList<>();
-                        }
+                            @Override
+                            public void onListFetched(List newList)
+                            {
+                                if (newList == null)
+                                {
+                                    finish();
+                                    return;
+                                }
 
-                        ArrayList<Supermarket> finalSupermarkets = supermarkets;
+                                list = newList;
+                                tvListName.setText(list.getName());
+                                tvListName.setVisibility(View.VISIBLE);
+                            }
 
-                        runOnUiThread(() ->
+                            @Override
+                            public void onError(String error) {}
+                        });
+
+                        dbHandler.listenToCategory(list, categoryName, new FirebaseDBHandler.GetCategoryCallback()
                         {
-                            itemsAdapter = new CategoryItemsAdapter(
-                                    category,
-                                    CategoryActivity.this,
-                                    CategoryActivity.this,
-                                    new ItemsAdapter.UpperClassFunctions()
+                            @Override
+                            public void onCategoryFetched(Category newCategory)
+                            {
+                                category = newCategory;
+
+                                if (category == null || category.getItems() == null || category.getItems().isEmpty())
+                                {
+                                    if (!isFinishing())
                                     {
-                                        @Override
-                                        public void updateItemCategory(Item item)
-                                        {
-                                            runIfOnline(() ->
-                                            {
-                                                category.removeVariants(item.getBaseName());
-                                                category.addItem(item);
-                                                dbHandler.updateCategory(list, category);
-                                            });
-                                        }
+                                        finish();
+                                    }
+                                    return;
+                                }
 
-                                        @Override
-                                        public void removeItemCategory(Item item)
-                                        {
-                                            if (category == null) return;
-                                            runIfOnline(() -> dbHandler.removeItem(list, category, item));
-                                        }
+                                list.updateCategory(category);
+                                tvCategoryName.setText(category.getName());
+                                tvCategoryName.setVisibility(View.VISIBLE);
+                                btnAddItem.setEnabled(true);
+                                tvTotal.setText(Baskit.getTotalDisplayString(category.getTotal(), category.allPricesKnown(), true, false));
+                                btnSortList.setEnabled(true);
 
-                                        @Override
-                                        public void updateCategory()
-                                        {
-                                            if (category == null) return;
-                                            runIfOnline(() -> dbHandler.updateItemsIndividuals(list, new ArrayList<>(category.getItems())));
-                                        }
+                                if (addItemFragment == null)
+                                {
+                                    if (groups != null && !groups.isEmpty())
+                                    {
+                                        addItemFragment = new AddItemFragment(
+                                                CategoryActivity.this,
+                                                CategoryActivity.this,
+                                                groups,
+                                                list.toItemNames(),
+                                                CategoryActivity.this::addItem,
+                                                list.getItemSuggestions()
+                                        );
+                                    }
+                                    else
+                                    {
+                                        btnAddItem.setEnabled(false);
+                                    }
+                                }
 
-                                        @Override
-                                        public void removeCategory()
-                                        {
-                                            runIfOnline(() ->
-                                            {
-                                                dbHandler.removeCategory(list, category);
-                                                finish();
-                                            });
-                                        }
-                                    },
-                                    finalSupermarkets
-                            );
+                                runOnUiThread(() ->
+                                {
+                                    if (itemsAdapter == null)
+                                    {
+                                        itemsAdapter = new CategoryItemsAdapter(
+                                                category,
+                                                CategoryActivity.this,
+                                                CategoryActivity.this,
+                                                new ItemsAdapter.UpperClassFunctions()
+                                                {
+                                                    @Override
+                                                    public void updateItemCategory(Item item)
+                                                    {
+                                                        runIfOnline(() ->
+                                                        {
+                                                            category.removeVariants(item.getBaseName());
+                                                            category.addItem(item);
+                                                            dbHandler.updateCategory(list, category);
+                                                        });
+                                                    }
 
-                            recyclerItems.setAdapter(itemsAdapter);
+                                                    @Override
+                                                    public void removeItemCategory(Item item)
+                                                    {
+                                                        if (category == null) return;
+                                                        runIfOnline(() -> dbHandler.removeItem(list, category, item));
+                                                    }
+
+                                                    @Override
+                                                    public void updateCategory()
+                                                    {
+                                                        if (category == null) return;
+                                                        runIfOnline(() -> dbHandler.updateItemsIndividuals(list, new ArrayList<>(category.getItems())));
+                                                    }
+
+                                                    @Override
+                                                    public void removeCategory()
+                                                    {
+                                                        runIfOnline(() ->
+                                                        {
+                                                            dbHandler.removeCategory(list, category);
+                                                            finish();
+                                                        });
+                                                    }
+                                                },
+                                                supermarkets
+                                        );
+
+                                        recyclerItems.setAdapter(itemsAdapter);
+                                    }
+                                    else
+                                    {
+                                        itemsAdapter.updateItems(new ArrayList<>(category.getItems()));
+                                    }
+                                });
+                            }
+
+                            @Override
+                            public void onError(String error)
+                            {
+                                initialized = false;
+                            }
                         });
                     });
-
-                    // Attach category listener once
-                    if (!categoryListenerAttached)
-                    {
-                        categoryListenerAttached = true;
-
-                        runIfOnline(() ->
-                        {
-                            dbHandler.listenToCategory(list, category, new FirebaseDBHandler.GetCategoryCallback()
-                            {
-                                @Override
-                                public void onCategoryFetched(Category newCategory)
-                                {
-                                    if (newCategory == null) return;
-
-                                    category = newCategory;
-                                    list.updateCategory(category);
-
-                                    if (category.getItems() == null || category.getItems().isEmpty())
-                                    {
-                                        if (!isFinishing()) {
-                                            finish();
-                                        }
-                                        return;
-                                    }
-
-                                    if (tvTotal != null)
-                                    {
-                                        tvTotal.setText(Baskit.getTotalDisplayString(category.getTotal(), category.allPricesKnown(), true, false));
-                                        tvTotal.setVisibility(View.VISIBLE);
-                                    }
-
-                                    if (initialized)
-                                    {
-                                        initialized = false;
-                                        return;
-                                    }
-
-                                    runOnUiThread(() ->
-                                    {
-                                        if (itemsAdapter != null)
-                                        {
-                                            itemsAdapter.updateItems(new ArrayList<>(category.getItems()));
-                                        }
-                                    });
-                                }
-
-                                @Override
-                                public void onError(String error)
-                                {
-                                    initialized = false;
-                                }
-                            });
-                        });
-                    }
                 }
 
                 @Override

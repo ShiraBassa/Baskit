@@ -229,7 +229,39 @@ public class HomeActivity extends MasterActivity
 
         listsRecycler = findViewById(R.id.lists_grid);
         listsRecycler.setLayoutManager(new GridLayoutManager(this, Baskit.HOME_GRID_NUM_BOXES));
-        listsRecycler.setAdapter(new HomeGridAdapter(this, new ArrayList<>(), null));
+
+        listsGridAdapter = new HomeGridAdapter(this, new ArrayList<>(), new HomeGridAdapter.OnItemClickListener()
+        {
+            @Override
+            public void onItemClick(int position)
+            {
+                openListScreen(user.getListIDs().get(position));
+            }
+
+            @Override
+            public void onItemLongClick(int position)
+            {
+                String listId = user.getListIDs().get(position);
+
+                runIfOnline(() ->
+                {
+                    dbHandler.getList(listId, new FirebaseDBHandler.GetListCallback()
+                    {
+                        @Override
+                        public void onListFetched(List newList)
+                        {
+                            runIfOnline(() -> dbHandler.removeList(newList));
+                            user.removeList(listId);
+                        }
+
+                        @Override
+                        public void onError(String error) {}
+                    });
+                });
+            }
+        });
+
+        listsRecycler.setAdapter(listsGridAdapter);
 
         runIfOnline(() ->
         {
@@ -238,7 +270,31 @@ public class HomeActivity extends MasterActivity
                 @Override
                 public void onNamesFetched(ArrayList<String> listNames)
                 {
-                    setListsRecycler(listNames);
+                    runOnUiThread(() ->
+                    {
+                        if (listsGridAdapter != null)
+                        {
+                            listsGridAdapter.updateList(listNames);
+                        }
+                    });
+                }
+            });
+        });
+
+        runIfOnline(() ->
+        {
+            dbHandler.listenToListNames(user, new FirebaseDBHandler.GetListNamesListenerCallback()
+            {
+                @Override
+                public void onInfoFetched(ArrayList<String> listNames)
+                {
+                    runOnUiThread(() ->
+                    {
+                        if (listsGridAdapter != null)
+                        {
+                            listsGridAdapter.updateList(listNames);
+                        }
+                    });
                 }
             });
         });
@@ -262,60 +318,6 @@ public class HomeActivity extends MasterActivity
             {
                 adEtName.setText("");
                 adCreateList.show();
-            }
-        });
-    }
-
-    private void setListsRecycler(ArrayList<String> listNamesRecycler)
-    {
-
-        listsGridAdapter = new HomeGridAdapter(this, listNamesRecycler, new HomeGridAdapter.OnItemClickListener()
-        {
-            @Override
-            public void onItemClick(int position)
-            {
-                openListScreen(user.getListIDs().get(position));
-            }
-
-            @Override
-            public void onItemLongClick(int position)
-            {
-                String listId = user.getListIDs().get(position);
-
-                runIfOnline(() ->
-                {
-                    dbHandler.getList(listId, new FirebaseDBHandler.GetListCallback()
-                    {
-                        @Override
-                        public void onListFetched(List newList)
-                        {
-                            runIfOnline(() ->
-                            {
-                                dbHandler.removeList(newList);
-                            });
-
-                            user.removeList(listId);
-                        }
-
-                        @Override
-                        public void onError(String error) {}
-                    });
-                });
-            }
-        });
-
-        listsRecycler.setAdapter(listsGridAdapter);
-        listsRecycler.setVisibility(View.VISIBLE);
-
-        dbHandler.listenToListNames(user, new FirebaseDBHandler.GetListNamesListenerCallback()
-        {
-            @Override
-            public void onInfoFetched(ArrayList<String> listNames)
-            {
-                if (listsGridAdapter != null)
-                {
-                    listsGridAdapter.updateList(listNames);
-                }
             }
         });
     }

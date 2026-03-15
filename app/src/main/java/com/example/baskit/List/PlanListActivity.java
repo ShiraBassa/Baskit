@@ -39,7 +39,6 @@ public class PlanListActivity extends MasterActivity
     String categoryName;
 
     boolean initialized = true;
-    boolean itemsLoaded = false;
     boolean listListenerAttached = false;
     boolean uiInitialized = false;
 
@@ -80,25 +79,10 @@ public class PlanListActivity extends MasterActivity
         createInit();
         uiInitialized = true;
 
-        runWhenServerActive(() ->
-        {
-            try
-            {
-                allItems = apiHandler.getItemPrices();
-                groups = apiHandler.getGroups();
-                itemsLoaded = true;
-            }
-            catch (Exception e)
-            {
-                Log.e("ListActivity", "Failed to load items catalogs", e);
-                itemsLoaded = false;
-            }
+        allItems = apiHandler.getItemPrices();
+        groups = apiHandler.getGroups();
 
-            runOnUiThread(() ->
-            {
-                resumeInit();
-            });
-        });
+        resumeInit();
     }
 
     @Override
@@ -107,7 +91,7 @@ public class PlanListActivity extends MasterActivity
         super.onResume();
 
         // Only attach if we never attached before.
-        if (itemsLoaded && uiInitialized && !listListenerAttached)
+        if (uiInitialized && !listListenerAttached)
         {
             resumeInit();
         }
@@ -181,60 +165,37 @@ public class PlanListActivity extends MasterActivity
                     recyclerItems = findViewById(R.id.recycler_supermarket_items);
                     recyclerItems.setLayoutManager(new LinearLayoutManager(PlanListActivity.this));
 
-                    runWhenServerActive(() ->
-                    {
-                        ArrayList<Supermarket> supermarkets;
-                        Map<String, Map<String, Map<String, Double>>> itemsCatalog;
+                    ArrayList<Supermarket> supermarkets = apiHandler.getSupermarkets();
 
-                        try
-                        {
-                            supermarkets = apiHandler.getSupermarkets();
-                        }
-                        catch (Exception e)
-                        {
-                            Log.e("PlanListActivity", "Failed to load supermarkets", e);
-                            supermarkets = new ArrayList<>();
-                        }
+                    itemsAdapter = new PlanListItemsAdapter(
+                            list,
+                            originalList,
+                            PlanListActivity.this,
+                            PlanListActivity.this,
+                            new ItemsAdapter.UpperClassFunctions()
+                            {
+                                @Override
+                                public void updateItemCategory(Item item) {}
 
-                        itemsCatalog = allItems;
+                                @Override
+                                public void removeItemCategory(Item item) {}
 
-                        ArrayList<Supermarket> finalSupermarkets = supermarkets;
-                        Map<String, Map<String, Map<String, Double>>> finalItemsCatalog = itemsCatalog;
+                                @Override
+                                public void updateCategory()
+                                {
+                                    displayTotalDif();
+                                }
 
-                        runOnUiThread(() ->
-                        {
-                            itemsAdapter = new PlanListItemsAdapter(
-                                    list,
-                                    originalList,
-                                    PlanListActivity.this,
-                                    PlanListActivity.this,
-                                    new ItemsAdapter.UpperClassFunctions()
-                                    {
-                                        @Override
-                                        public void updateItemCategory(Item item) {}
+                                @Override
+                                public void removeCategory() {}
+                            },
+                            supermarkets,
+                            allItems,
+                            groups,
+                            categoryName
+                    );
 
-                                        @Override
-                                        public void removeItemCategory(Item item) {}
-
-                                        @Override
-                                        public void updateCategory()
-                                        {
-                                            displayTotalDif();
-                                        }
-
-                                        @Override
-                                        public void removeCategory() {}
-                                    },
-                                    finalSupermarkets,
-                                    finalItemsCatalog,
-                                    groups,
-                                    categoryName
-                            );
-
-                            recyclerItems.setAdapter(itemsAdapter);
-                        });
-                    });
-
+                    recyclerItems.setAdapter(itemsAdapter);
                 }
 
                 @Override

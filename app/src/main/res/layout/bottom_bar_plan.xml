@@ -22,6 +22,7 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
             android:focusable="true"
+            android:enabled="false"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_check"
             app:tint="?attr/colorOnContainerUnchecked" />
@@ -50,8 +51,9 @@
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:clickable="true"
+            android:clickable="false"
             android:focusable="true"
+            android:enabled="false"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_plan"
             app:tint="?attr/colorSecondary" />

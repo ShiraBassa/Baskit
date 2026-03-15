@@ -129,19 +129,16 @@ public class FirebaseDBHandler
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot)
             {
+                String new_name = null;
+
                 if (snapshot.exists())
                 {
-                    String new_name = snapshot.getValue(String.class);
+                    new_name = snapshot.getValue(String.class);
+                }
 
-                    if (new_name == null)
-                    {
-                        return;
-                    }
-
-                    if (!new_name.equals(user.getName()))
-                    {
-                        callback.onUserNameFetched(new_name);
-                    }
+                if (new_name == null || !new_name.equals(user.getName()))
+                {
+                    callback.onUserNameFetched(new_name);
                 }
             }
 
@@ -219,11 +216,16 @@ public class FirebaseDBHandler
             public void onDataChange(@NonNull DataSnapshot snapshot)
             {
                 ArrayList<String> listIDs;
-                try {
+
+                try
+                {
                     listIDs = snapshot.getValue(new GenericTypeIndicator<ArrayList<String>>() {});
-                } catch (DatabaseException e) {
+                }
+                catch (DatabaseException e)
+                {
                     listIDs = new ArrayList<>();
                 }
+
                 ArrayList<String> listNames;
 
                 user.setListIDs(listIDs);
@@ -235,18 +237,29 @@ public class FirebaseDBHandler
                     return;
                 }
 
-                getListNames(user, new GetListNamesCallback()
+                // Listen to name changes for each list
+                for (String listId : listIDs)
                 {
-                    @Override
-                    public void onNamesFetched(ArrayList<String> listNames)
+                    refLists.child(listId).child("name").addValueEventListener(new ValueEventListener()
                     {
-                        if (!listNames.equals(lastListNames))
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot nameSnapshot)
                         {
-                            lastListNames = listNames;
-                            callback.onInfoFetched(listNames);
+                            getListNames(user, new GetListNamesCallback()
+                            {
+                                @Override
+                                public void onNamesFetched(ArrayList<String> listNames)
+                                {
+                                    lastListNames = new ArrayList<>(listNames);
+                                    callback.onInfoFetched(new ArrayList<>(listNames));
+                                }
+                            });
                         }
-                    }
-                });
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {}
+                    });
+                }
             }
 
             @Override
@@ -472,16 +485,20 @@ public class FirebaseDBHandler
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot)
             {
+                List list = null;
+
                 if (snapshot.exists())
                 {
-                    List list = parseListSnapshot(listId, snapshot);
-                    try {
-                        callback.onListFetched(list);
-                    } catch (JSONException e) {
-                        throw new RuntimeException(e);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
+                    list = parseListSnapshot(listId, snapshot);
+                }
+
+                try
+                {
+                    callback.onListFetched(list);
+                }
+                catch (JSONException | IOException e)
+                {
+                    throw new RuntimeException(e);
                 }
             }
 
@@ -555,30 +572,33 @@ public class FirebaseDBHandler
 
     }
 
-    public void listenToCategory(List list, Category category, GetCategoryCallback callback)
+    public void listenToCategory(List list, String categoryName, GetCategoryCallback callback)
     {
-        refLists.child(list.getId()).child("categories").child(category.getName()).addValueEventListener(new ValueEventListener()
+        refLists.child(list.getId()).child("categories").child(categoryName).addValueEventListener(new ValueEventListener()
         {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot)
             {
-                if (snapshot.exists())
+                if (!snapshot.exists())
                 {
-                    String catName = snapshot.getKey();
-                    Category newCategory = new Category(catName);
-
-                    ArrayList<Item> items = new ArrayList<>();
-                    DataSnapshot itemsSnap = snapshot.child("items");
-
-                    for (DataSnapshot itemSnap : itemsSnap.getChildren())
-                    {
-                        Item item = itemSnap.getValue(Item.class);
-                        if (item != null) items.add(item);
-                    }
-
-                    newCategory.setItems(items);
-                    callback.onCategoryFetched(newCategory);
+                    callback.onCategoryFetched(null);
+                    return;
                 }
+
+                String catName = snapshot.getKey();
+                Category newCategory = new Category(catName);
+
+                ArrayList<Item> items = new ArrayList<>();
+                DataSnapshot itemsSnap = snapshot.child("items");
+
+                for (DataSnapshot itemSnap : itemsSnap.getChildren())
+                {
+                    Item item = itemSnap.getValue(Item.class);
+                    if (item != null) items.add(item);
+                }
+
+                newCategory.setItems(items);
+                callback.onCategoryFetched(newCategory);
             }
 
             @Override

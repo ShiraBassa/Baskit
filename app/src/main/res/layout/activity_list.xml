@@ -84,21 +84,14 @@
         android:layout_height="wrap_content"
         android:layout_margin="10dp" />
 
-    <ScrollView
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/categories_container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:paddingTop="10dp"
-        android:paddingBottom="10dp">
-
-        <LinearLayout
-            android:id="@+id/categories_container"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_horizontal|top"
-            android:orientation="vertical"
-            android:paddingHorizontal="5dp" />
-    </ScrollView>
+        android:paddingBottom="10dp"
+        android:clipToPadding="false" />
 
     <!-- Total Text -->
     <TextView
