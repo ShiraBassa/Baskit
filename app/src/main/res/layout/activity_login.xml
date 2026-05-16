@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center"
     android:orientation="vertical"
     android:padding="10dp"
-    tools:context=".Login.LoginActivity">
+    tools:context=".login.LoginActivity">
 
     <TextView
         android:id="@+id/tv_title"
@@ -48,13 +46,15 @@
                     android:text="אימייל"
                     android:textColor="?attr/colorSecondary"
                     android:textSize="22sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    android:labelFor="@+id/et_email" />
 
                 <EditText
                     android:id="@+id/et_email"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp"
+                    android:autofillHints=""
                     android:clipToOutline="true"
                     android:inputType="textEmailAddress"
                     android:outlineProvider="background"
@@ -63,7 +63,8 @@
                     android:scrollHorizontally="false"
                     android:singleLine="true"
                     android:textColor="?attr/colorSecondary"
-                    android:textSize="20sp" />
+                    android:textSize="20sp"
+                    tools:targetApi="31" />
 
             </LinearLayout>
 
@@ -80,13 +81,15 @@
                     android:text="סיסמא"
                     android:textColor="?attr/colorSecondary"
                     android:textSize="22sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    android:labelFor="@+id/et_password" />
 
                 <EditText
                     android:id="@+id/et_password"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp"
+                    android:autofillHints=""
                     android:clipToOutline="true"
                     android:inputType="textPassword"
                     android:outlineProvider="background"
@@ -95,7 +98,8 @@
                     android:scrollHorizontally="false"
                     android:singleLine="true"
                     android:textColor="?attr/colorSecondary"
-                    android:textSize="20sp" />
+                    android:textSize="20sp"
+                    tools:targetApi="31" />
 
             </LinearLayout>
 

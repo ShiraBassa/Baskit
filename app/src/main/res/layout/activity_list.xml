@@ -2,16 +2,14 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center"
     android:orientation="vertical"
     android:paddingHorizontal="10dp"
-    tools:context=".List.ListActivity">
+    tools:context=".list.ListActivity">
 
     <LinearLayout
-        android:id="@+id/layout_top_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?attr/colorSurface"
@@ -28,7 +26,8 @@
             android:background="@null"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_back"
-            app:tint="?attr/colorPrimary" />
+            app:tint="?attr/colorPrimary"
+            android:contentDescription="@string/back" />
 
         <TextView
             android:id="@+id/tv_list_name"
@@ -54,7 +53,8 @@
                 android:background="@null"
                 android:scaleType="fitCenter"
                 android:src="@drawable/ic_share"
-                app:tint="?attr/colorPrimaryVariant" />
+                app:tint="?attr/colorPrimaryVariant"
+                android:contentDescription="@string/more" />
 
             <View
                 android:id="@+id/share_list_dot"
@@ -74,7 +74,8 @@
             android:background="@null"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_more"
-            app:tint="?attr/colorSecondary" />
+            app:tint="?attr/colorSecondary"
+            android:contentDescription="@string/more" />
 
     </LinearLayout>
 

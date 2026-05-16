@@ -1,3 +1,18 @@
 <resources>
     <string name="app_name">Baskit</string>
+
+    <string name="back">חזור</string>
+    <string name="more">עוד</string>
+    <string name="settings">הגדרות</string>
+    <string name="cancel">ביטול</string>
+    <string name="log_out">יציאה מהמשתמש</string>
+    <string name="home">בית</string>
+    <string name="suggested_item">פריט מוצע</string>
+    <string name="increase_quantity">העלאת כמות</string>
+    <string name="decrease_quantity">הקטנת כמות</string>
+    <string name="finish">סיים</string>
+    <string name="add_item">הוספת פריט</string>
+    <string name="plan_list">תכנון רשימה</string>
+    <string name="change_supermarket">החלפת סופר</string>
+    <string name="expand">הרחב</string>
 </resources>

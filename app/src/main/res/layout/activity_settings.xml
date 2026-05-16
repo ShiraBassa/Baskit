@@ -2,17 +2,15 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center_horizontal|top"
     android:orientation="vertical"
     android:paddingHorizontal="10dp"
     android:paddingVertical="10dp"
-    tools:context=".Home.SettingsActivity">
+    tools:context=".home.SettingsActivity">
 
     <LinearLayout
-        android:id="@+id/layout_top_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="15dp"
@@ -28,9 +26,9 @@
             android:layout_height="48dp"
             android:background="@null"
             android:scaleType="fitCenter"
-
             android:src="@drawable/ic_log_out"
-            app:tint="?attr/colorSecondary" />
+            app:tint="?attr/colorSecondary"
+            android:contentDescription="@string/log_out" />
 
         <TextView
             android:id="@+id/tv_title"
@@ -43,7 +41,8 @@
             android:text="הגדרות"
             android:textColor="?attr/colorSecondary"
             android:textSize="40sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            tools:ignore="DuplicateIncludedIds" />
 
         <ImageButton
             android:id="@+id/btn_home"
@@ -52,7 +51,8 @@
             android:background="@null"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_home"
-            app:tint="?attr/colorSecondary" />
+            app:tint="?attr/colorSecondary"
+            android:contentDescription="@string/home" />
 
     </LinearLayout>
 
@@ -62,7 +62,8 @@
         android:text="שם משתמש"
         android:textColor="?attr/colorPrimaryVariant"
         android:textSize="28sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        android:labelFor="@+id/et_username" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -78,6 +79,7 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="15dp"
             android:layout_weight="1"
+            android:autofillHints=""
             android:backgroundTint="?attr/colorPrimary"
             android:digits=" אבגדהוזחטיכלמנסעפצקרשתךםןףץ"
             android:inputType="text"
@@ -110,12 +112,12 @@
             android:orientation="vertical">
 
             <include
-                android:id="@+id/cities_table"
-                layout="@layout/cities_table" />
+                layout="@layout/cities_table"
+                tools:ignore="DuplicateIncludedIds" />
 
             <include
-                android:id="@+id/supermarkets_table"
-                layout="@layout/supermarkets_table" />
+                layout="@layout/supermarkets_table"
+                tools:ignore="DuplicateIncludedIds" />
 
         </LinearLayout>
 

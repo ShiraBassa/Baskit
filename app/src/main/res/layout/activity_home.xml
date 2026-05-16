@@ -2,13 +2,12 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center"
     android:orientation="vertical"
     android:padding="10dp"
-    tools:context=".Home.HomeActivity">
+    tools:context=".home.HomeActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -32,7 +31,8 @@
                 android:background="@null"
                 android:scaleType="fitCenter"
                 android:src="@drawable/ic_settings"
-                app:tint="?attr/colorSecondary" />
+                app:tint="?attr/colorSecondary"
+                android:contentDescription="@string/settings" />
 
         </LinearLayout>
 
@@ -69,45 +69,37 @@
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/layout_bottom_bar"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="5dp"
         android:elevation="4dp"
         android:gravity="center"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:padding="10dp">
 
-        <LinearLayout
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_create_list"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="vertical">
+            android:paddingHorizontal="32dp"
+            android:paddingVertical="14dp"
+            android:text="צור רשימה"
+            android:textAlignment="center"
+            android:textColor="?attr/colorPrimary"
+            android:textSize="28sp"
+            android:textStyle="bold"
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_create_list"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingHorizontal="32dp"
-                android:paddingVertical="14dp"
-                android:text="צור רשימה"
-                android:textAlignment="center"
-                android:textColor="?attr/colorPrimary"
-                android:textSize="28sp"
-                android:textStyle="bold"
+            app:backgroundTint="@android:color/transparent"
+            app:cornerRadius="50dp"
+            app:strokeColor="?attr/colorPrimary"
+            app:strokeWidth="4dp" />
 
-                app:backgroundTint="@android:color/transparent"
-                app:cornerRadius="50dp"
-                app:strokeColor="?attr/colorPrimary"
-                app:strokeWidth="4dp" />
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="3dp"
-                android:layout_marginHorizontal="12dp"
-                android:layout_marginTop="8dp"
-                android:background="?attr/colorSecondary" />
-        </LinearLayout>
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="3dp"
+            android:layout_marginHorizontal="12dp"
+            android:layout_marginTop="8dp"
+            android:background="?attr/colorSecondary" />
 
     </LinearLayout>
 

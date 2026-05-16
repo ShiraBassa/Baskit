@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
 
     <!-- 🎨 Brand Palette -->
     <color name="white_smoke">#F7F5F3</color>
@@ -10,9 +9,6 @@
     <color name="evergreen">#145C43</color>
     <color name="rich_mahogany">#3C1802</color>
     <color name="deep_crimson">#8E0413</color>
-
-    <color name="dark_teal_transparent">#094142</color>
-    <color name="tan_transparent">#D7BD98</color>
 
     <!-- 🟦 Semantic Roles -->
     <color name="primary">@color/evergreen</color>
@@ -27,7 +23,6 @@
     <color name="destructive">@color/deep_crimson</color>
 
     <!-- 🌿 Accents -->
-    <color name="accent">@color/evergreen</color>
 
     <!-- 📝 Text Colors -->
     <color name="on_primary">@color/white_smoke</color>
@@ -36,8 +31,6 @@
     <color name="on_background">@color/black</color>
 
     <!-- 💡 States -->
-    <color name="pressed_primary">@color/primary</color>
-    <color name="pressed_secondary">@color/primary_variant</color>
     <color name="unchecked">#808080</color>
 
     <color name="background">@color/white_smoke</color>
@@ -55,7 +48,6 @@
     <color name="destructive_night">#9E2A2F</color>
 
     <!-- 🌿 Accents -->
-    <color name="accent_night">@color/primary</color>
 
     <!-- 📝 Text Colors -->
     <color name="on_primary_night">#F7F5F3</color>
@@ -64,8 +56,6 @@
     <color name="on_background_night">#DDD6CC</color>
 
     <!-- 💡 States -->
-    <color name="pressed_primary_night">@color/primary_night</color>
-    <color name="pressed_secondary_night">@color/primary_variant_night</color>
     <color name="unchecked_night">#A79F94</color>
 
     <color name="background_night">#0B0F0E</color>

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/colorSurface"
@@ -22,7 +23,8 @@
             android:background="@null"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_cancel"
-            app:tint="?attr/colorPrimaryVariant" />
+            app:tint="?attr/colorPrimaryVariant"
+            android:contentDescription="@string/cancel" />
 
     </LinearLayout>
 
@@ -75,7 +77,8 @@
                     android:background="@null"
                     android:scaleType="fitCenter"
                     android:src="@drawable/ic_arrow_up"
-                    app:tint="?attr/colorSecondary" />
+                    app:tint="?attr/colorSecondary"
+                    android:contentDescription="@string/increase_quantity" />
 
                 <TextView
                     android:id="@+id/tv_quantity"
@@ -92,7 +95,8 @@
                     android:background="@null"
                     android:scaleType="fitCenter"
                     android:src="@drawable/ic_arrow_down"
-                    app:tint="?attr/colorSecondary" />
+                    app:tint="?attr/colorSecondary"
+                    android:contentDescription="@string/decrease_quantity" />
 
             </LinearLayout>
 
@@ -100,7 +104,6 @@
 
         <!-- Variation Filter (Weight / Unit Chips) -->
         <LinearLayout
-            android:id="@+id/layout_variation_filter"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="10dp"
@@ -148,7 +151,8 @@
             android:layout_weight="1"
             android:gravity="center"
             android:orientation="vertical"
-            android:paddingHorizontal="10dp">
+            android:paddingHorizontal="10dp"
+            tools:ignore="NestedWeights">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -160,11 +164,11 @@
                 android:textStyle="bold" />
 
             <include
-                android:id="@+id/supermarkets_list"
                 layout="@layout/supermarkets_list"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="1" />
+                android:layout_weight="1"
+                tools:ignore="NestedWeights" />
 
         </LinearLayout>
 

@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="?attr/colorSurface"
     android:orientation="vertical"
-    android:padding="24dp">
+    android:padding="24dp"
+    tools:ignore="Overdraw">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -22,7 +24,8 @@
             android:background="@null"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_cancel"
-            app:tint="?attr/colorPrimaryVariant" />
+            app:tint="?attr/colorPrimaryVariant"
+            android:contentDescription="@string/cancel" />
 
         <TextView
             android:layout_width="0dp"
@@ -31,7 +34,8 @@
             android:text="שנה שם"
             android:textColor="?attr/colorPrimary"
             android:textSize="22sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:labelFor="@+id/et_name" />
 
     </LinearLayout>
 
@@ -40,6 +44,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="24dp"
+        android:autofillHints=""
+        android:inputType="textPersonName"
         android:padding="12dp"
         android:singleLine="true"
         android:textColor="?attr/colorPrimary"

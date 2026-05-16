@@ -41,7 +41,8 @@
                 android:scaleType="fitCenter"
                 android:src="@drawable/ic_star"
                 android:visibility="gone"
-                app:tint="?attr/colorPrimary" />
+                app:tint="?attr/colorPrimary"
+                android:contentDescription="@string/suggested_item" />
 
         </LinearLayout>
 

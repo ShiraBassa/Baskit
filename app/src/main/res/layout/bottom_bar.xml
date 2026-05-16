@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:backgroundTint="?attr/colorSurface"
@@ -25,7 +26,9 @@
             android:enabled="false"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_check"
-            app:tint="?attr/colorOnContainerUnchecked" />
+            app:tint="?attr/colorOnContainerUnchecked"
+            android:contentDescription="@string/finish"
+            tools:ignore="PrivateResource" />
 
     </LinearLayout>
 
@@ -38,7 +41,8 @@
         android:focusable="true"
         android:scaleType="fitCenter"
         android:src="@drawable/ic_add"
-        app:tint="?attr/colorPrimary" />
+        app:tint="?attr/colorPrimary"
+        android:contentDescription="@string/add_item" />
 
     <LinearLayout
         android:layout_width="0dp"
@@ -56,7 +60,8 @@
             android:enabled="false"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_plan"
-            app:tint="?attr/colorSecondary" />
+            app:tint="?attr/colorSecondary"
+            android:contentDescription="@string/plan_list" />
 
     </LinearLayout>
 

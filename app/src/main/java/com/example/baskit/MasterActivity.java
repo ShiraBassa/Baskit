@@ -183,7 +183,7 @@ public abstract class MasterActivity extends AppCompatActivity
     }
 
 
-    public class ConnectionDialogs
+    public static class ConnectionDialogs
     {
         private final Context context;
         private AlertDialog offlineDialog;
@@ -242,7 +242,8 @@ public abstract class MasterActivity extends AppCompatActivity
     }
 
 
-    public class EdgeSwipeHandler
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public static class EdgeSwipeHandler
     {
         private final Activity activity;
 
@@ -466,7 +467,8 @@ public abstract class MasterActivity extends AppCompatActivity
 
                         // Smooth finish animation from current position
                         float remaining = isLTR2 ? (width2 - currentTx) : (-width2 - currentTx);
-                        float duration = Math.max(80, Math.min(180, Math.abs(remaining) / width2 * 180));
+                        Math.max(80, Math.min(180, Math.abs(remaining) / width2 * 180));
+                        float duration;
                         float target = isLTR2 ? width2 : -width2;
 
                         // Slight velocity boost for snappier finish

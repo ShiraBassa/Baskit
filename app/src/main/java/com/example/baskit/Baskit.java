@@ -1,29 +1,24 @@
 package com.example.baskit;
 
-import android.app.Activity;
+import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.Context;
 import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
-import android.net.NetworkInfo;
-import android.net.NetworkRequest;
-import android.os.Build;
-import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.Toast;
 import android.text.TextUtils;
 import java.util.Locale;
 
+import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.ColorUtils;
-import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
-import com.example.baskit.Home.SettingsActivity;
-import com.example.baskit.MainComponents.Supermarket;
+import com.example.baskit.main_components.Supermarket;
 
 public class Baskit extends Application
 {
@@ -31,7 +26,7 @@ public class Baskit extends Application
     public static final int HOME_GRID_NUM_BOXES = 2;
     public static final Supermarket UNASSIGNED_SUPERMARKET = new Supermarket("לא נבחר", "");
 
-    private static Context context;
+    private static Baskit instance;
     public static final MutableLiveData<Boolean> onlineLive = new MutableLiveData<>(true);
     public static final MutableLiveData<Boolean> serverAliveLive = new MutableLiveData<>(true);
 
@@ -40,52 +35,36 @@ public class Baskit extends Application
     private boolean serverPollingRunning = false;
     private Runnable serverPollingRunnable;
 
-    private ConnectivityManager.NetworkCallback networkCallback;
-
     @Override
     public void onCreate()
     {
         super.onCreate();
 
-        context = getApplicationContext();
+        instance = this;
         onlineLive.postValue(isOnline(Baskit.this));
 
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
         if (cm != null)
         {
-            networkCallback = new ConnectivityManager.NetworkCallback()
-            {
+            ConnectivityManager.NetworkCallback networkCallback = new ConnectivityManager.NetworkCallback() {
                 @Override
-                public void onAvailable(Network network)
-                {
+                public void onAvailable(@NonNull Network network) {
                     onlineLive.postValue(isOnline(Baskit.this));
                 }
 
                 @Override
-                public void onLost(Network network)
-                {
+                public void onLost(@NonNull Network network) {
                     onlineLive.postValue(isOnline(Baskit.this));
                 }
 
                 @Override
-                public void onCapabilitiesChanged(Network network, NetworkCapabilities caps)
-                {
+                public void onCapabilitiesChanged(@NonNull Network network, @NonNull NetworkCapabilities caps) {
                     onlineLive.postValue(isOnline(Baskit.this));
                 }
             };
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-            {
-                cm.registerDefaultNetworkCallback(networkCallback);
-            }
-            else
-            {
-                NetworkRequest request = new NetworkRequest.Builder()
-                        .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                        .build();
-                cm.registerNetworkCallback(request, networkCallback);
-            }
+            cm.registerDefaultNetworkCallback(networkCallback);
         }
 
         startServerPolling();
@@ -108,7 +87,7 @@ public class Baskit extends Application
 
     public static Context getContext()
     {
-        return context;
+        return instance.getApplicationContext();
     }
 
     public static boolean isOnline(Context context)
@@ -117,12 +96,6 @@ public class Baskit extends Application
 
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         if (cm == null) return false;
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
-        {
-            NetworkInfo info = cm.getActiveNetworkInfo();
-            return info != null && info.isConnected();
-        }
 
         Network network = cm.getActiveNetwork();
         if (network == null) return false;
@@ -169,6 +142,7 @@ public class Baskit extends Application
         return ColorUtils.setAlphaComponent(getAppColor(context, attributeId), alpha);
     }
 
+    @SuppressLint("DefaultLocale")
     private static String getTotalDisplayString(Double total, boolean allPricesKnown, boolean allowZero)
     {
         String str;
@@ -262,7 +236,7 @@ public class Baskit extends Application
 
         if (!valid && showError)
         {
-            Toast.makeText(context, "יש להזין שם משתמש" + username, Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "יש להזין שם משתמש" + username, Toast.LENGTH_SHORT).show();
         }
 
         return valid;
@@ -291,7 +265,7 @@ public class Baskit extends Application
 
                     try
                     {
-                        up = com.example.baskit.OnlineComponents.APIHandler.getInstance().isServerActive();
+                        up = com.example.baskit.online_components.APIHandler.getInstance().isServerActive();
                     }
                     catch (Exception e)
                     {
