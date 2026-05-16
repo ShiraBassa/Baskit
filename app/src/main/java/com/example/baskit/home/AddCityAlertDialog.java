@@ -12,6 +12,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 
+import com.example.baskit.Baskit;
 import com.example.baskit.R;
 
 import java.io.IOException;
@@ -96,7 +97,7 @@ public class AddCityAlertDialog
 
             if (city == null)
             {
-                Toast.makeText(context, "נא לבחור עיר", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, Baskit.getAppStr(R.string.msg_select_city), Toast.LENGTH_SHORT).show();
                 return;
             }
 

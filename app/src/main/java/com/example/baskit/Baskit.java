@@ -142,6 +142,11 @@ public class Baskit extends Application
         return ColorUtils.setAlphaComponent(getAppColor(context, attributeId), alpha);
     }
 
+    public static String getAppStr(int id)
+    {
+        return getContext().getString(id);
+    }
+
     @SuppressLint("DefaultLocale")
     private static String getTotalDisplayString(Double total, boolean allPricesKnown, boolean allowZero)
     {
@@ -180,24 +185,34 @@ public class Baskit extends Application
 
         if (withTitle)
         {
-            String titleIsolated = "\u2067" + "סך הכל:" + "\u2069";
+            String title = getAppStr(R.string.total_title);
+            String titleIsolated;
 
-            if (!isLayoutDirectionLeft())
+            if (isLayoutRight())
             {
-                return titleIsolated + " " + amountIsolated;
+                titleIsolated = "\u2067" + title + "\u2069";
             }
             else
             {
-                return amountIsolated + " " + titleIsolated;
+                titleIsolated = "\u2066" + title + "\u2069";
             }
+
+            return titleIsolated + " " + amountIsolated;
         }
 
         return amountIsolated;
     }
 
-    public static boolean isLayoutDirectionLeft()
+    public static boolean isLayoutLeft()
     {
-        return TextUtils.getLayoutDirectionFromLocale(Locale.getDefault()) == View.LAYOUT_DIRECTION_LTR;
+        return TextUtils.getLayoutDirectionFromLocale(Locale.getDefault())
+                == View.LAYOUT_DIRECTION_LTR;
+    }
+
+    public static boolean isLayoutRight()
+    {
+        return TextUtils.getLayoutDirectionFromLocale(Locale.getDefault())
+                == View.LAYOUT_DIRECTION_RTL;
     }
 
     public static String encodeKey(String s)
@@ -236,7 +251,11 @@ public class Baskit extends Application
 
         if (!valid && showError)
         {
-            Toast.makeText(getContext(), "יש להזין שם משתמש" + username, Toast.LENGTH_SHORT).show();
+            Toast.makeText(
+                    getContext(),
+                    getAppStr(R.string.error_enter_username),
+                    Toast.LENGTH_SHORT
+            ).show();
         }
 
         return valid;

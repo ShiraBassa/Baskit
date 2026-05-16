@@ -79,7 +79,7 @@ public class PlanListActivity extends MasterActivity
 
         if (listId == null)
         {
-            Toast.makeText(this, "Missing list id", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, Baskit.getAppStr(R.string.msg_general_error), Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
@@ -147,7 +147,7 @@ public class PlanListActivity extends MasterActivity
 
                         if (newList == null)
                         {
-                            Toast.makeText(PlanListActivity.this, "List not found", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(PlanListActivity.this, Baskit.getAppStr(R.string.msg_general_error), Toast.LENGTH_SHORT).show();
                             finish();
                             return;
                         }

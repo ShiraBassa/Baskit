@@ -67,7 +67,7 @@ public class SortListBottomSheetBuilder
 
             activity.runOnUiThread(() ->
             {
-                cheapestTvSupermarket.setText("הזולים ביותר");
+                cheapestTvSupermarket.setText(Baskit.getAppStr(R.string.cheapests));
                 cheapestTvPrice.setText(
                         Baskit.getTotalDisplayString(
                                 cheapestPreview.getTotal(),

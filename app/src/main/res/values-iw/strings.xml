@@ -9,6 +9,14 @@
     <string name="auth_password">סיסמה</string>
     <string name="auth_username">שם משתמש</string>
     <string name="auth_log_out">יציאה מהמשתמש</string>
+    <string name="auth_no_connection">אין חיבור לאינטרנט</string>
+    <string name="auth_session_expired">החיבור נותק. נא התחבר שוב</string>
+    <string name="auth_invalid_email">אימייל לא תקין</string>
+    <string name="auth_weak_password">סיסמה חלשה מידי</string>
+    <string name="auth_wrong_password">סיסמה שגויה. אנא נסה שנית</string>
+    <string name="auth_enter_email">נא הכנס אימייל</string>
+    <string name="auth_enter_password">נא הכנס סיסמה</string>
+    <string name="auth_server_unavailable">השרת אינו זמין כעת</string>
 
     <!-- Common Actions -->
     <string name="action_add">הוסף</string>
@@ -40,6 +48,9 @@
     <string name="list_duplicate">שכפל רשימה</string>
     <string name="list_delete">מחק רשימה</string>
     <string name="list_leave">עזוב רשימה</string>
+    <string name="list_request_sent">הבקשה נשלחה. מחכה לתשובה...</string>
+    <string name="list_already_member">אתה כבר נמצא ברשימה זו</string>
+    <string name="list_invitation_label">הזמנה לרשימה</string>
 
     <!-- Items -->
     <string name="item_search">חפש פריט</string>
@@ -58,6 +69,25 @@
     <string name="cities">ערים</string>
     <string name="section_choose">בחר סניף</string>
 
+    <!-- Prices -->
+    <string name="total_title">סך הכל:</string>
+    <string name="error_enter_username">יש להזין שם משתמש</string>
+
+    <!-- Messages -->
+    <string name="msg_loading">עדיין טוען מידע...</string>
+    <string name="msg_general_error">קרתה שגיאה. נסה שוב</string>
+    <string name="msg_added_to_category">נוסף לקטגוריה: </string>
+    <string name="msg_list_duplicated">הרשימה שוכפלה</string>
+    <string name="msg_username_changed">שם המשתמש שונה ל</string>
+    <string name="msg_link_copied">הקישור הועתק!</string>
+    <string name="msg_select_supermarket_and_section">נא לבחור סופר וסניף</string>
+    <string name="msg_select_city">נא לבחור עיר</string>
+    <string name="msg_enter_name">נא להזין שם</string>
+    <string name="msg_connect_to_wifi">נא התחבר ל-WiFi או לרשת סלולרית</string>
+    <string name="msg_try_again">אנא נסה שוב מאוחר יותר</string>
+
     <!-- More Labels -->
     <string name="name_label">שם</string>
+    <string name="hello">שלום</string>
+    <string name="cheapests">הזולים ביותר</string>
 </resources>

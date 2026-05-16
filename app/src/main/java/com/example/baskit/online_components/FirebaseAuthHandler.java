@@ -9,6 +9,8 @@ import android.os.Looper;
 
 import androidx.annotation.NonNull;
 
+import com.example.baskit.Baskit;
+import com.example.baskit.R;
 import com.example.baskit.main_components.List;
 import com.example.baskit.main_components.User;
 import com.google.firebase.FirebaseException;
@@ -50,6 +52,11 @@ public class FirebaseAuthHandler
     {
         void onAuthSuccess();
         void onAuthError(String msg, ErrorType type);
+
+        default void onAuthError(ErrorType type)
+        {
+            onAuthError(Baskit.getAppStr(R.string.msg_general_error), type);
+        }
     }
 
 
@@ -80,13 +87,18 @@ public class FirebaseAuthHandler
         new Handler(Looper.getMainLooper()).post(() -> callback.onAuthError(msg, type));
     }
 
+    private void postError(AuthCallback callback, ErrorType type)
+    {
+        postError(callback, Baskit.getAppStr(R.string.msg_general_error), type);
+    }
+
     public void checkCurrUser(AuthCallback callback)
     {
         FirebaseUser currUser = refAuth.getCurrentUser();
 
         if (currUser == null)
         {
-            postError(callback, "", ErrorType.NOT_LOGGED);
+            postError(callback, ErrorType.NOT_LOGGED);
             return;
         }
 
@@ -100,12 +112,12 @@ public class FirebaseAuthHandler
 
                 if (e instanceof FirebaseNetworkException)
                 {
-                    postError(callback, "No internet connection", ErrorType.SERVER);
+                    postError(callback, Baskit.getAppStr(R.string.auth_no_connection), ErrorType.SERVER);
                     return;
                 }
 
                 refAuth.signOut();
-                postError(callback, "Session expired. Please log in again.", ErrorType.GENERAL);
+                postError(callback, Baskit.getAppStr(R.string.auth_session_expired), ErrorType.GENERAL);
                 return;
             }
 
@@ -159,13 +171,13 @@ public class FirebaseAuthHandler
                                             new Handler(Looper.getMainLooper()).post(() ->
                                             {
                                                 if (ok) callback.onAuthSuccess();
-                                                else callback.onAuthError("Server unavailable", ErrorType.SERVER);
+                                                else callback.onAuthError(ErrorType.SERVER);
                                             });
                                         }).start();
                                     }
                                     else // There is no token
                                     {
-                                        postError(callback, "Failed to get session token. Please try again.", ErrorType.GENERAL);
+                                        postError(callback, ErrorType.GENERAL);
                                     }
                                 });
                             }
@@ -185,7 +197,7 @@ public class FirebaseAuthHandler
 
                                             if (!loginSuccess)
                                             {
-                                                postError(callback, "Server unavailable", ErrorType.SERVER);
+                                                postError(callback, ErrorType.SERVER);
                                                 return;
                                             }
 
@@ -198,14 +210,14 @@ public class FirebaseAuthHandler
                                                         }
                                                         else
                                                         {
-                                                            postError(callback, "Database error", ErrorType.GENERAL);
+                                                            postError(callback, ErrorType.GENERAL);
                                                         }
                                                     });
                                         }).start();
                                     }
                                     else
                                     {
-                                        postError(callback, "Failed to get session token. Please try again.", ErrorType.GENERAL);
+                                        postError(callback, ErrorType.GENERAL);
                                     }
                                 });
                             }
@@ -218,11 +230,11 @@ public class FirebaseAuthHandler
 
                             if (msg.contains("network") || msg.contains("timeout"))
                             {
-                                postError(callback, "No internet connection", ErrorType.SERVER);
+                                postError(callback, Baskit.getAppStr(R.string.auth_no_connection), ErrorType.SERVER);
                             }
                             else
                             {
-                                postError(callback, "DB error: " + error.getMessage(), ErrorType.GENERAL);
+                                postError(callback, ErrorType.GENERAL);
                             }
                         }
                     });
@@ -240,7 +252,7 @@ public class FirebaseAuthHandler
 
                         if (firebaseUser == null)
                         {
-                            postError(callback, "Signup failed: no user info", ErrorType.GENERAL);
+                            postError(callback, ErrorType.GENERAL);
                             return;
                         }
 
@@ -258,7 +270,7 @@ public class FirebaseAuthHandler
 
                                     if (!loginSuccess)
                                     {
-                                        postError(callback, "Server unavailable", ErrorType.SERVER);
+                                        postError(callback, ErrorType.SERVER);
                                         return;
                                     }
 
@@ -271,14 +283,14 @@ public class FirebaseAuthHandler
                                                 }
                                                 else
                                                 {
-                                                    postError(callback, "Database error", ErrorType.GENERAL);
+                                                    postError(callback, ErrorType.GENERAL);
                                                 }
                                             });
                                 }).start();
                             }
                             else
                             {
-                                postError(callback, "Failed to get session token. Please try again.", ErrorType.GENERAL);
+                                postError(callback, ErrorType.GENERAL);
                             }
                         });
                     }
@@ -288,7 +300,7 @@ public class FirebaseAuthHandler
 
                         if (e instanceof FirebaseNetworkException)
                         {
-                            postError(callback, "No internet connection", ErrorType.SERVER);
+                            postError(callback, Baskit.getAppStr(R.string.auth_no_connection), ErrorType.SERVER);
                         }
                         else if (e instanceof FirebaseAuthUserCollisionException)
                         {
@@ -297,15 +309,15 @@ public class FirebaseAuthHandler
                         }
                         else if (e instanceof FirebaseAuthInvalidUserException)
                         {
-                            postError(callback, "Invalid email format", ErrorType.EMAIL);
+                            postError(callback, Baskit.getAppStr(R.string.auth_invalid_email), ErrorType.EMAIL);
                         }
                         else if (e instanceof FirebaseAuthWeakPasswordException)
                         {
-                            postError(callback, "Password too weak", ErrorType.PASSWORD);
+                            postError(callback, Baskit.getAppStr(R.string.auth_weak_password), ErrorType.PASSWORD);
                         }
                         else if (e instanceof FirebaseAuthInvalidCredentialsException)
                         {
-                            postError(callback, "General authentication failure", ErrorType.GENERAL);
+                            postError(callback, ErrorType.GENERAL);
                         }
                         else if (e instanceof FirebaseException)
                         {
@@ -313,24 +325,24 @@ public class FirebaseAuthHandler
 
                             if (msg.contains("password"))
                             {
-                                postError(callback, "Password too weak", ErrorType.PASSWORD);
+                                postError(callback, Baskit.getAppStr(R.string.auth_weak_password), ErrorType.PASSWORD);
                             }
                             else if (msg.contains("email"))
                             {
-                                postError(callback, "Invalid email format", ErrorType.EMAIL);
+                                postError(callback, Baskit.getAppStr(R.string.auth_invalid_email), ErrorType.EMAIL);
                             }
                             else if (msg.contains("network"))
                             {
-                                postError(callback, "No internet connection", ErrorType.SERVER);
+                                postError(callback, Baskit.getAppStr(R.string.auth_no_connection), ErrorType.SERVER);
                             }
                             else
                             {
-                                postError(callback, "An error occurred. Please try again later", ErrorType.GENERAL);
+                                postError(callback, ErrorType.GENERAL);
                             }
                         }
                         else
                         {
-                            postError(callback, "An error occurred. Please try again later", ErrorType.GENERAL);
+                            postError(callback, ErrorType.GENERAL);
                         }
                     }
                 });
@@ -347,15 +359,15 @@ public class FirebaseAuthHandler
 
                         if (e instanceof FirebaseAuthInvalidCredentialsException)
                         {
-                            postError(callback, "Invalid password", ErrorType.PASSWORD);
+                            postError(callback, Baskit.getAppStr(R.string.auth_wrong_password), ErrorType.PASSWORD);
                         }
                         else if (e instanceof FirebaseNetworkException)
                         {
-                            postError(callback, "No internet connection", ErrorType.SERVER);
+                            postError(callback, Baskit.getAppStr(R.string.auth_no_connection), ErrorType.SERVER);
                         }
                         else
                         {
-                            postError(callback, "An error occurred. Please try again later", ErrorType.GENERAL);
+                            postError(callback, ErrorType.GENERAL);
                         }
 
                         return;
@@ -365,7 +377,7 @@ public class FirebaseAuthHandler
 
                     if (firebaseUser == null)
                     {
-                        postError(callback, "Login failed: no user info", ErrorType.GENERAL);
+                        postError(callback, ErrorType.GENERAL);
                         return;
                     }
 
@@ -388,7 +400,7 @@ public class FirebaseAuthHandler
 
                                                 if (!ok)
                                                 {
-                                                    postError(callback, "Server unavailable", ErrorType.SERVER);
+                                                    postError(callback, ErrorType.SERVER);
                                                     return;
                                                 }
 
@@ -397,7 +409,7 @@ public class FirebaseAuthHandler
                                         }
                                         else
                                         {
-                                            postError(callback, "Failed to get session token. Please try again.", ErrorType.GENERAL);
+                                            postError(callback, ErrorType.GENERAL);
                                         }
                                     });
                                 }
@@ -417,7 +429,7 @@ public class FirebaseAuthHandler
 
                                                 if (!loginSuccess)
                                                 {
-                                                    postError(callback, "Server unavailable", ErrorType.SERVER);
+                                                    postError(callback, ErrorType.SERVER);
                                                     return;
                                                 }
 
@@ -430,14 +442,14 @@ public class FirebaseAuthHandler
                                                             }
                                                             else
                                                             {
-                                                                postError(callback, "Database error", ErrorType.GENERAL);
+                                                                postError(callback, ErrorType.GENERAL);
                                                             }
                                                         });
                                             }).start();
                                         }
                                         else
                                         {
-                                            postError(callback, "Failed to get session token. Please try again.", ErrorType.GENERAL);
+                                            postError(callback, ErrorType.GENERAL);
                                         }
                                     });
                                 }

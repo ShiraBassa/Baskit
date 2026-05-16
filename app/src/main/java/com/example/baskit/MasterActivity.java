@@ -96,7 +96,7 @@ public abstract class MasterActivity extends AppCompatActivity
     {
         super.startActivity(intent);
 
-        if (Baskit.isLayoutDirectionLeft())
+        if (Baskit.isLayoutLeft())
         {
             // LTR: forward = from right to left
             overridePendingTransition(R.anim.push_in_right, R.anim.push_out_left);
@@ -113,7 +113,7 @@ public abstract class MasterActivity extends AppCompatActivity
     {
         super.startActivity(intent, options);
 
-        if (Baskit.isLayoutDirectionLeft())
+        if (Baskit.isLayoutLeft())
         {
             // LTR: forward = from right to left
             overridePendingTransition(R.anim.push_in_right, R.anim.push_out_left);
@@ -136,7 +136,7 @@ public abstract class MasterActivity extends AppCompatActivity
         }
 
         super.finish();
-        if (Baskit.isLayoutDirectionLeft())
+        if (Baskit.isLayoutLeft())
         {
             // LTR: back = to right
             overridePendingTransition(R.anim.pop_in_left, R.anim.pop_out_right);
@@ -199,8 +199,8 @@ public abstract class MasterActivity extends AppCompatActivity
             if (offlineDialog == null || !offlineDialog.isShowing())
             {
                 offlineDialog = new AlertDialog.Builder(context)
-                        .setTitle("אין חיבור לאינטרנט")
-                        .setMessage("נא התחבר ל-WiFi או לרשת סלולרית")
+                        .setTitle(Baskit.getAppStr(R.string.auth_no_connection))
+                        .setMessage(Baskit.getAppStr(R.string.msg_connect_to_wifi))
                         .setCancelable(false)
                         .create();
 
@@ -222,8 +222,8 @@ public abstract class MasterActivity extends AppCompatActivity
             if (serverDownDialog == null || !serverDownDialog.isShowing())
             {
                 serverDownDialog = new AlertDialog.Builder(context)
-                        .setTitle("שרת לא זמין")
-                        .setMessage("השרת לא זמין כרגע. נסה שוב מאוחר יותר")
+                        .setTitle(Baskit.getAppStr(R.string.auth_server_unavailable))
+                        .setMessage(Baskit.getAppStr(R.string.msg_try_again))
                         .setCancelable(false)
                         .create();
 
@@ -297,14 +297,14 @@ public abstract class MasterActivity extends AppCompatActivity
 
                     // Shadow orientation: LTR = LEFT_RIGHT, RTL = RIGHT_LEFT
                     edgeShadow = new android.graphics.drawable.GradientDrawable(
-                            Baskit.isLayoutDirectionLeft()
+                            Baskit.isLayoutLeft()
                                     ? android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT
                                     : android.graphics.drawable.GradientDrawable.Orientation.RIGHT_LEFT,
                             new int[]{0x33000000, 0x00000000}); // soft shadow gradient
 
                     // Set initial bounds for shadow at edge of content
                     int shadowWidth = (int)(16 * activity.getResources().getDisplayMetrics().density);
-                    if (Baskit.isLayoutDirectionLeft())
+                    if (Baskit.isLayoutLeft())
                     {
                         edgeShadow.setBounds(0, 0, shadowWidth, content.getHeight());
                     }
@@ -317,7 +317,7 @@ public abstract class MasterActivity extends AppCompatActivity
                     downX = ev.getX();
                     downY = ev.getY();
 
-                    if (!Baskit.isLayoutDirectionLeft())
+                    if (!Baskit.isLayoutLeft())
                     {
                         tracking = (downX >= w - edgePx());
                     }
@@ -341,7 +341,7 @@ public abstract class MasterActivity extends AppCompatActivity
 
                     downY = ev.getY(); // keep Y updated to reduce false vertical cancels
 
-                    boolean isLTR = Baskit.isLayoutDirectionLeft();
+                    boolean isLTR = Baskit.isLayoutLeft();
 
                     // Allow back-and-forth dragging, but block "pushing" past edge
                     if (isLTR && dx < 0) dx = 0;
@@ -356,7 +356,7 @@ public abstract class MasterActivity extends AppCompatActivity
                     float width = content.getWidth();
 
                     // Clamp movement so it doesn't go too far, with subtle resistance near edges
-                    if (Baskit.isLayoutDirectionLeft())
+                    if (Baskit.isLayoutLeft())
                     {
                         float progressRaw = dx / width;
                         float resistance = (float) Math.pow(progressRaw, 0.85); // subtle resistance
@@ -376,14 +376,14 @@ public abstract class MasterActivity extends AppCompatActivity
                     float eased = (float) Math.pow(progress, 0.8);
                     float parallax = dx * (0.08f + 0.04f * eased);
                     root2.setTranslationX(parallax);
-                    content.setPivotX(Baskit.isLayoutDirectionLeft() ? 0 : content.getWidth()); // anchor movement visually from edge (more natural)
+                    content.setPivotX(Baskit.isLayoutLeft() ? 0 : content.getWidth()); // anchor movement visually from edge (more natural)
 
                     // Update shadow bounds to stick to moving edge of content
                     if (edgeShadow != null)
                     {
                         int shadowWidth2 = (int)((12 + 6 * progress) * activity.getResources().getDisplayMetrics().density);
 
-                        if (Baskit.isLayoutDirectionLeft())
+                        if (Baskit.isLayoutLeft())
                         {
                             // LTR: shadow on LEFT edge of content
                             edgeShadow.setBounds(
@@ -443,7 +443,7 @@ public abstract class MasterActivity extends AppCompatActivity
                     float currentTx = content.getTranslationX();
                     float width2 = content.getWidth();
 
-                    boolean isLTR2 = Baskit.isLayoutDirectionLeft();
+                    boolean isLTR2 = Baskit.isLayoutLeft();
 
                     if (isLTR2) {
                         currentTx = Math.max(0, Math.min(currentTx, width2));

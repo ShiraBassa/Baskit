@@ -706,7 +706,6 @@ public class AddItemFragment extends DialogFragment
 
             if (isBadItemName(clickedName))
             {
-                searchItem.setError("שם פריט לא תקין");
                 selectedItem = null;
                 return;
             }
@@ -917,10 +916,6 @@ public class AddItemFragment extends DialogFragment
             {
                 startProgressBar();
                 addItemConsumer.accept(selectedItem);
-            }
-            else
-            {
-                searchItem.setError("בחר פריט מהרשימה");
             }
         });
 

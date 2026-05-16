@@ -832,11 +832,6 @@ public class APIHandler
         JSONObject obj = new JSONObject(raw);
         itemCategory = obj.optString("category", null);
 
-        if (itemCategory.isEmpty())
-        {
-            return null;
-        }
-
         // Update the cache
         cachedItemCategories.put(itemCode, itemCategory);
 

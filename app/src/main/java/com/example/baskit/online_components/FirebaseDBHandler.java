@@ -10,6 +10,8 @@ import android.content.Context;
 
 import androidx.annotation.NonNull;
 
+import com.example.baskit.Baskit;
+import com.example.baskit.R;
 import com.example.baskit.main_components.Category;
 import com.example.baskit.main_components.Item;
 import com.example.baskit.main_components.List;
@@ -659,7 +661,7 @@ public class FirebaseDBHandler
                 {
                     new Handler(Looper.getMainLooper()).post(() ->
                             Toast.makeText(context,
-                                    "נשלחה בקשה, מחכה לאישור...",
+                                    Baskit.getAppStr(R.string.list_request_sent),
                                     Toast.LENGTH_SHORT).show()
                     );
                     return;
@@ -694,7 +696,7 @@ public class FirebaseDBHandler
                 {
                     new Handler(Looper.getMainLooper()).post(() ->
                             Toast.makeText(context,
-                                    "אתה כבר נמצא ברשימה זו",
+                                    Baskit.getAppStr(R.string.list_already_member),
                                     Toast.LENGTH_SHORT).show()
                     );
                     return;
@@ -705,7 +707,7 @@ public class FirebaseDBHandler
 
                 new Handler(Looper.getMainLooper()).post(() ->
                         Toast.makeText(context,
-                                "נשלחה בקשה, מחכה לאישור...",
+                                Baskit.getAppStr(R.string.list_request_sent),
                                 Toast.LENGTH_SHORT).show()
                 );
             });

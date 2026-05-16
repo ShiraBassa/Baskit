@@ -160,7 +160,7 @@ public class SettingsActivity extends MasterActivity
             }
 
             runWhenServerActive(() -> authHandler.changeUserName(username));
-            Toast.makeText(SettingsActivity.this, "שם המשתמש שונה ל" + username, Toast.LENGTH_SHORT).show();
+            Toast.makeText(SettingsActivity.this, Baskit.getAppStr(R.string.msg_username_changed) + username, Toast.LENGTH_SHORT).show();
         });
 
         btnAddSupermarket.setOnClickListener(v ->
@@ -237,7 +237,6 @@ public class SettingsActivity extends MasterActivity
 
                 if (!Baskit.isOnline(SettingsActivity.this))
                 {
-                    Toast.makeText(SettingsActivity.this, "אין חיבור לאינטרנט", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -310,7 +309,7 @@ public class SettingsActivity extends MasterActivity
                                     Log.e("AddCityAlertDialog", "Failed to set cities", e);
                                     SettingsActivity.this.runOnUiThread(() -> setLoading(false));
                                     SettingsActivity.this.runOnUiThread(() ->
-                                            Toast.makeText(SettingsActivity.this, "שגיאה בשמירת הערים", Toast.LENGTH_SHORT).show());
+                                            Toast.makeText(SettingsActivity.this, Baskit.getAppStr(R.string.msg_general_error), Toast.LENGTH_SHORT).show());
                                 }
                             });
                         }

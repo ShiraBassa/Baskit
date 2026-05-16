@@ -13,6 +13,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 
+import com.example.baskit.Baskit;
 import com.example.baskit.online_components.APIHandler;
 import com.example.baskit.main_components.Supermarket;
 import com.example.baskit.MasterActivity;
@@ -71,7 +72,7 @@ public class AddSupermarketAlertDialog
             {
                 Log.e("AddSectionAlertDialog", "Failed to load store/branch data", e);
                 activity.runOnUiThread(() ->
-                        Toast.makeText(context, "שגיאה בטעינת נתונים", Toast.LENGTH_SHORT).show());
+                        Toast.makeText(context, Baskit.getAppStr(R.string.msg_general_error), Toast.LENGTH_SHORT).show());
             }
         });
     }
@@ -214,7 +215,7 @@ public class AddSupermarketAlertDialog
 
             if (supermarketName == null || sectionName == null)
             {
-                Toast.makeText(context, "נא לבחור סופרמרקט ומחלקה", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, Baskit.getAppStr(R.string.msg_select_supermarket_and_section), Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -233,7 +234,7 @@ public class AddSupermarketAlertDialog
                     catch (Exception e)
                     {
                         activity.runOnUiThread(() ->
-                                Toast.makeText(context, "שגיאה בהוספה", Toast.LENGTH_SHORT).show());
+                                Toast.makeText(context, Baskit.getAppStr(R.string.msg_general_error), Toast.LENGTH_SHORT).show());
                     }
                 }).start();
             }
@@ -246,7 +247,7 @@ public class AddSupermarketAlertDialog
                 }
                 catch (Exception e)
                 {
-                    Toast.makeText(context, "שגיאה בהוספה", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, Baskit.getAppStr(R.string.msg_general_error), Toast.LENGTH_SHORT).show();
                 }
             }
         });

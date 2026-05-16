@@ -65,7 +65,7 @@ public class CategoryActivity extends MasterActivity
 
         if (listId == null || categoryName == null)
         {
-            Toast.makeText(this, "Missing list/category", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, Baskit.getAppStr(R.string.msg_general_error), Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
@@ -247,7 +247,8 @@ public class CategoryActivity extends MasterActivity
 
         btnBack.setOnClickListener(view -> finish());
 
-        btnAddItem.setOnClickListener(view -> {
+        btnAddItem.setOnClickListener(view ->
+        {
             if (addItemFragment != null)
             {
                 addItemFragment.updateData(list.toItemNames());
@@ -255,7 +256,7 @@ public class CategoryActivity extends MasterActivity
             }
             else
             {
-                Toast.makeText(CategoryActivity.this, "Still loading…", Toast.LENGTH_SHORT).show();
+                Toast.makeText(CategoryActivity.this, Baskit.getAppStr(R.string.msg_loading), Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -323,7 +324,7 @@ public class CategoryActivity extends MasterActivity
 
         if (groups == null)
         {
-            Toast.makeText(this, "Items are still loading…", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, Baskit.getAppStr(R.string.msg_loading), Toast.LENGTH_SHORT).show();
             if (addItemFragment != null) addItemFragment.endProgressBar();
             return;
         }
@@ -339,15 +340,6 @@ public class CategoryActivity extends MasterActivity
             catch (IOException | JSONException e)
             {
                 throw new RuntimeException(e);
-            }
-
-            if (categoryName == null || categoryName.isEmpty())
-            {
-                if (addItemFragment != null) addItemFragment.endProgressBar();
-                runOnUiThread(() ->
-                        Toast.makeText(CategoryActivity.this, "לא נמצאה קטגוריה לפריט", Toast.LENGTH_SHORT).show()
-                );
-                return;
             }
 
             if (list.hasCategory(categoryName))
@@ -373,13 +365,13 @@ public class CategoryActivity extends MasterActivity
                                 {
                                     Snackbar snackbar = Snackbar.make(
                                             findViewById(android.R.id.content),
-                                            "הפריט נוסף לקטגוריה: " + categoryName,
+                                            Baskit.getAppStr(R.string.msg_added_to_category) + categoryName,
                                             Snackbar.LENGTH_LONG
                                     );
 
                                     snackbar.getView().setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
 
-                                    snackbar.setAction("בטל", v ->
+                                    snackbar.setAction(Baskit.getAppStr(R.string.action_cancel), v ->
                                             runWhenServerActive(() -> dbHandler.removeItem(list, categoryName, item)));
 
                                     snackbar.setAnchorView(btnAddItem);
@@ -398,7 +390,7 @@ public class CategoryActivity extends MasterActivity
                                     addItemFragment.endProgressBar();
                                     addItemFragment.dismiss();
                                 }
-                                Toast.makeText(CategoryActivity.this, "שגיאה בניסיון להוסיף את הפריט", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(CategoryActivity.this, Baskit.getAppStr(R.string.msg_general_error), Toast.LENGTH_SHORT).show();
                             });
                         }
                     }));

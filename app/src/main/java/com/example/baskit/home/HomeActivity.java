@@ -175,11 +175,11 @@ public class HomeActivity extends MasterActivity
 
         if (user != null)
         {
-            tvTitle.setText("היי " + user.getName());
+            tvTitle.setText(Baskit.getAppStr(R.string.hello) + " " + user.getName());
         }
         else
         {
-            tvTitle.setText("היי");
+            tvTitle.setText(Baskit.getAppStr(R.string.hello));
             Log.w("HomeActivity", "User is null in init()");
         }
 
@@ -221,14 +221,14 @@ public class HomeActivity extends MasterActivity
         }
         else
         {
-            tvTitle.setText("היי");
+            tvTitle.setText(Baskit.getAppStr(R.string.hello));
             Log.w("HomeActivity", "User is null in init()");
             return;
         }
 
         dbHandler.listenToUserName(user, username -> {
             user.setName(username);
-            tvTitle.setText("היי " + authHandler.getUser().getName());
+            tvTitle.setText(Baskit.getAppStr(R.string.hello) + " " + authHandler.getUser().getName());
         });
 
         createAddListAlertDialog();
@@ -292,9 +292,6 @@ public class HomeActivity extends MasterActivity
             runWhenServerActive(() ->
                     authHandler.createList(adEtName.getText().toString(), HomeActivity.this, newList -> {
                         adCreateList.dismiss();
-                        Toast.makeText(HomeActivity.this,
-                                "הרשימה " + newList.getName() + " נוצרה",
-                                Toast.LENGTH_SHORT).show();
                         openListScreen(newList.getId());
                     }));
         });

@@ -21,6 +21,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.baskit.Baskit;
 import com.example.baskit.MasterActivity;
 import com.example.baskit.online_components.FirebaseDBHandler;
 import com.example.baskit.main_components.List;
@@ -117,15 +118,15 @@ public class ShareListAlertDialog
     {
         if (link == null)
         {
-            Toast.makeText(activity, "Cannot create invite link", Toast.LENGTH_SHORT).show();
+            Toast.makeText(activity, Baskit.getAppStr(R.string.msg_general_error), Toast.LENGTH_SHORT).show();
             return;
         }
 
         ClipboardManager clipboard = (ClipboardManager) activity.getSystemService(CLIPBOARD_SERVICE);
-        ClipData clip = ClipData.newPlainText("List Invite", link);
+        ClipData clip = ClipData.newPlainText(Baskit.getAppStr(R.string.list_invitation_label), link);
         clipboard.setPrimaryClip(clip);
 
-        Toast.makeText(activity, "Invite link copied!", Toast.LENGTH_SHORT).show();
+        Toast.makeText(activity, Baskit.getAppStr(R.string.msg_link_copied), Toast.LENGTH_SHORT).show();
     }
 
 

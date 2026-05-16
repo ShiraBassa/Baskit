@@ -10,6 +10,14 @@
     <string name="auth_password">Password</string>
     <string name="auth_username">Username</string>
     <string name="auth_log_out">Log Out</string>
+    <string name="auth_no_connection">No internet connection</string>
+    <string name="auth_session_expired">Session expired. Please log in again</string>
+    <string name="auth_invalid_email">Invalid email format</string>
+    <string name="auth_weak_password">Password too weak</string>
+    <string name="auth_wrong_password">Wrong password. Please try again</string>
+    <string name="auth_enter_email">Please enter your email</string>
+    <string name="auth_enter_password">Please enter your password</string>
+    <string name="auth_server_unavailable">The server is currently unavailable</string>
 
     <!-- Common Actions -->
     <string name="action_add">Add</string>
@@ -41,6 +49,9 @@
     <string name="list_duplicate">Duplicate List</string>
     <string name="list_delete">Delete List</string>
     <string name="list_leave">Leave List</string>
+    <string name="list_request_sent">The request was sent. Waiting for response...</string>
+    <string name="list_already_member">You are already in this list</string>
+    <string name="list_invitation_label">List Invite</string>
 
     <!-- Items -->
     <string name="item_search">Search Item</string>
@@ -63,6 +74,25 @@
     <string name="plus" translatable="false">+</string>
     <string name="minus" translatable="false">-</string>
 
+    <!-- Prices -->
+    <string name="total_title">Total:</string>
+    <string name="error_enter_username">Please enter a username</string>
+
+    <!-- Messages -->
+    <string name="msg_loading">Still loading info...</string>
+    <string name="msg_general_error">An error occurred. Please try again</string>
+    <string name="msg_added_to_category">Added to category: </string>
+    <string name="msg_list_duplicated">The list was duplicated</string>
+    <string name="msg_username_changed">Username changed to </string>
+    <string name="msg_link_copied">The link has been copied!</string>
+    <string name="msg_select_supermarket_and_section">Please choose a supermarket and a section</string>
+    <string name="msg_select_city">Please choose a city</string>
+    <string name="msg_enter_name">Please enter a name</string>
+    <string name="msg_connect_to_wifi">Please connect to WiFi</string>
+    <string name="msg_try_again">Please try again later</string>
+
     <!-- More Labels -->
     <string name="name_label">Name</string>
+    <string name="hello">Hello</string>
+    <string name="cheapests">Cheapests</string>
 </resources>

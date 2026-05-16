@@ -105,7 +105,7 @@ public class LoginActivity extends MasterActivity implements FirebaseAuthHandler
             if (email.isEmpty())
             {
                 enableButtons();
-                etEmail.setError("Please enter your email");
+                etEmail.setError(Baskit.getAppStr(R.string.auth_enter_email));
                 etEmail.requestFocus();
                 focused = true;
             }
@@ -113,7 +113,7 @@ public class LoginActivity extends MasterActivity implements FirebaseAuthHandler
             if (password.isEmpty())
             {
                 enableButtons();
-                etPassword.setError("Please enter your password");
+                etPassword.setError(Baskit.getAppStr(R.string.auth_enter_password));
 
                 if (!focused)
                 {

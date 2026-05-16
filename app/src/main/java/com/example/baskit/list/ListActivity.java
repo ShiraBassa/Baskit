@@ -121,7 +121,7 @@ public class ListActivity extends MasterActivity
 
         if (listId == null)
         {
-            Toast.makeText(this, "Missing list id", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, Baskit.getAppStr(R.string.msg_general_error), Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
@@ -175,16 +175,11 @@ public class ListActivity extends MasterActivity
         btnFinished.setOnClickListener(view -> runWhenServerActive(() ->
                 dbHandler.finishList(list)));
 
-        btnAddItem.setOnClickListener(view -> {
-            if (groups == null || groups.isEmpty())
-            {
-                Toast.makeText(ListActivity.this, "נא לבחור סופרים בהגדרות", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
+        btnAddItem.setOnClickListener(view ->
+        {
             if (addItemFragment == null)
             {
-                Toast.makeText(ListActivity.this, "עדיין טוען מסך זה...", Toast.LENGTH_SHORT).show();
+                Toast.makeText(ListActivity.this, Baskit.getAppStr(R.string.msg_loading), Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -199,7 +194,7 @@ public class ListActivity extends MasterActivity
             }
             else
             {
-                Toast.makeText(ListActivity.this, "Still loading…", Toast.LENGTH_SHORT).show();
+                Toast.makeText(ListActivity.this, Baskit.getAppStr(R.string.msg_loading), Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -261,7 +256,7 @@ public class ListActivity extends MasterActivity
                         else
                         {
                             Toast.makeText(ListActivity.this,
-                                    "נא להזין שם",
+                                    Baskit.getAppStr(R.string.msg_enter_name),
                                     Toast.LENGTH_SHORT).show();
                         }
                     });
@@ -273,24 +268,14 @@ public class ListActivity extends MasterActivity
                     runWhenServerActive(() ->
                             authHandler.duplicateList(list, newList -> runOnUiThread(() ->
                                     Toast.makeText(ListActivity.this,
-                                            "הרשימה שוכפלה",
+                                            Baskit.getAppStr(R.string.msg_list_duplicated),
                                             Toast.LENGTH_SHORT).show()
                             )));
                 }
                 else if (id == R.id.action_delete_items)
                 {
                     list.removeAllItems();
-
-                    runWhenServerActive(() ->
-                    {
-                        dbHandler.removeItems(list);
-
-                        runOnUiThread(() ->
-                                Toast.makeText(ListActivity.this,
-                                        "כל הפריטים נמחקו",
-                                        Toast.LENGTH_SHORT).show()
-                        );
-                    });
+                    runWhenServerActive(() -> dbHandler.removeItems(list));
                 }
                 else if (id == R.id.action_delete_list)
                 {
@@ -300,18 +285,9 @@ public class ListActivity extends MasterActivity
                 }
                 else if (id == R.id.action_leave_list)
                 {
-                    runWhenServerActive(() ->
-                    {
-                        dbHandler.leaveList(list, authHandler.getUser());
-
-                        runOnUiThread(() ->
-                                Toast.makeText(ListActivity.this,
-                                        "עזבת את הרשימה",
-                                        Toast.LENGTH_SHORT).show()
-                        );
-                    });
-
+                    runWhenServerActive(() -> dbHandler.leaveList(list, authHandler.getUser()));
                     authHandler.getUser().removeList(listId);
+
                     finish();
                 }
 
@@ -329,9 +305,6 @@ public class ListActivity extends MasterActivity
         // The list is null
         if (newList == null)
         {
-            Toast.makeText(this,
-                    "הרשימה נמחקה",
-                    Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
@@ -419,7 +392,7 @@ public class ListActivity extends MasterActivity
         if (groups == null)
         {
             if (addItemFragment != null) addItemFragment.endProgressBar();
-            Toast.makeText(this, "Items are still loading…", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, Baskit.getAppStr(R.string.msg_loading), Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -439,7 +412,7 @@ public class ListActivity extends MasterActivity
             if (categoryName == null || categoryName.isEmpty())
             {
                 runOnUiThread(() ->
-                        Toast.makeText(ListActivity.this, "לא נמצאה קטגוריה לפריט", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(ListActivity.this, Baskit.getAppStr(R.string.msg_general_error), Toast.LENGTH_SHORT).show()
                 );
                 return;
             }
@@ -486,7 +459,7 @@ public class ListActivity extends MasterActivity
                                 addItemFragment.endProgressBar();
                                 addItemFragment.dismiss();
                             }
-                            Toast.makeText(ListActivity.this, "Failed to add item: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(ListActivity.this, Baskit.getAppStr(R.string.msg_general_error), Toast.LENGTH_SHORT).show();
                         });
                     }
                 });
