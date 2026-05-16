@@ -44,6 +44,7 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.function.Consumer;
 
 public class AddItemFragment extends DialogFragment
 {
@@ -75,26 +76,21 @@ public class AddItemFragment extends DialogFragment
 
     final MasterActivity activity;
     final Context context;
-    final AddItemInterface addItemInterface;
-
-    public interface AddItemInterface
-    {
-        void addItem(Item item) throws IOException;
-    }
+    final Consumer<Item> addItemConsumer;
 
     public AddItemFragment(
             MasterActivity activity,
             Context context,
             Map<String, ArrayList<String>> groups,
             ArrayList<String> listItemNames,
-            AddItemInterface addItemInterface,
+            Consumer<Item> addItemConsumer,
             ArrayList<String> itemSuggestions)
     {
         this.activity = activity;
         this.context = context;
         this.groups = groups;
         this.listItemNames = listItemNames;
-        this.addItemInterface = addItemInterface;
+        this.addItemConsumer = addItemConsumer;
         this.itemSuggestions = itemSuggestions;
 
         this.masterItemNames = groups != null
@@ -365,16 +361,20 @@ public class AddItemFragment extends DialogFragment
             }
 
             @Override
-            public View getDropDownView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+            public View getDropDownView(int position, @Nullable View convertView, @NonNull ViewGroup parent)
+            {
                 return getView(position, convertView, parent);
             }
 
             @NonNull
             @Override
-            public android.widget.Filter getFilter() {
-                return new android.widget.Filter() {
+            public android.widget.Filter getFilter()
+            {
+                return new android.widget.Filter()
+                {
                     @Override
-                    protected FilterResults performFiltering(CharSequence constraint) {
+                    protected FilterResults performFiltering(CharSequence constraint)
+                    {
                         FilterResults results = new FilterResults();
                         results.values = filteredResults;
                         results.count = filteredResults.size();
@@ -383,8 +383,7 @@ public class AddItemFragment extends DialogFragment
                     }
 
                     @Override
-                    protected void publishResults(CharSequence constraint, FilterResults results) {
-                    }
+                    protected void publishResults(CharSequence constraint, FilterResults results) {}
                 };
             }
         };
@@ -917,14 +916,7 @@ public class AddItemFragment extends DialogFragment
             if (selectedItem != null)
             {
                 startProgressBar();
-                try
-                {
-                    addItemInterface.addItem(selectedItem);
-                }
-                catch (IOException e)
-                {
-                    throw new RuntimeException(e);
-                }
+                addItemConsumer.accept(selectedItem);
             }
             else
             {

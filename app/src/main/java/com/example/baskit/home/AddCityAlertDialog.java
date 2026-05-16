@@ -16,6 +16,7 @@ import com.example.baskit.R;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.function.Consumer;
 
 public class AddCityAlertDialog
 {
@@ -30,20 +31,14 @@ public class AddCityAlertDialog
     final LinearLayout adLayout;
 
     final Context context;
-    final OnSubmit onSubmit;
-
-    public interface OnSubmit
-    {
-        @SuppressLint("NotConstructor")
-        void onSubmit(ArrayList<String> city_choices);
-    }
+    final Consumer<ArrayList<String>> onSubmit;
 
     @SuppressLint("InflateParams")
     public AddCityAlertDialog(Activity activity,
                               Context context,
                               ArrayList<String> city_choices,
                               ArrayList<String> all_cities,
-                              OnSubmit onSubmit)
+                              Consumer<ArrayList<String>> onSubmit)
             throws IOException
     {
         this.context = context;
@@ -106,7 +101,7 @@ public class AddCityAlertDialog
             }
 
             city_choices.add(city);
-            onSubmit.onSubmit(city_choices);
+            onSubmit.accept(city_choices);
             ad.dismiss();
         });
     }

@@ -10,6 +10,7 @@ import com.google.ai.client.generativeai.GenerativeModel;
 import com.google.ai.client.generativeai.type.GenerateContentResponse;
 
 import java.util.ArrayList;
+import java.util.function.Consumer;
 
 import kotlin.Result;
 import kotlin.coroutines.Continuation;
@@ -21,16 +22,6 @@ public class AIHandler
     private final GenerativeModel gemini;
     private static AIHandler instance;
 
-    public interface OnGeminiResult
-    {
-        void onResult(ArrayList<String> suggestions);
-    }
-
-    public interface GeminiCallback
-    {
-        void onSuccess(String result);
-        void onFailure(Throwable error);
-    }
 
     private AIHandler()
     {
@@ -50,50 +41,40 @@ public class AIHandler
         return instance;
     }
 
-    public void getListSuggestions(String listName, Activity activity, OnGeminiResult onGeminiResult)
+    public void getListSuggestions(String listName, Activity activity, Consumer<ArrayList<String>> onGeminiResult)
     {
         String prompt = createListSuggestionsPrompt(listName);
 
-        sendTextPrompt(activity, prompt, new GeminiCallback()
+        sendTextPrompt(activity, prompt, result ->
         {
-            @Override
-            public void onSuccess(String result)
+            ArrayList<String> suggestions = new ArrayList<>();
+
+            try
             {
-                ArrayList<String> suggestions = new ArrayList<>();
+                String normalized = result.trim();
+                String cleaned = normalized.replace("'", "").replace("\\", "").replaceAll("[^\\p{L}\\p{N}, ]", "").trim();
+                String[] items = cleaned.split(",");
 
-                try
+                for (String item : items)
                 {
-                    String normalized = result.trim();
-                    String cleaned = normalized.replace("'", "").replace("\\", "").replaceAll("[^\\p{L}\\p{N}, ]", "").trim();
-                    String[] items = cleaned.split(",");
+                    String trimmed = item.trim();
 
-                    for (String item : items)
+                    if (!trimmed.isEmpty())
                     {
-                        String trimmed = item.trim();
-
-                        if (!trimmed.isEmpty())
-                        {
-                            suggestions.add(trimmed);
-                        }
+                        suggestions.add(trimmed);
                     }
+                }
 
-                    onGeminiResult.onResult(suggestions);
-                }
-                catch (Exception e)
-                {
-                    Log.e("AI_PARSE", "Failed to parse Gemini response: " + result);
-                    Log.e("AI_PARSE", e.toString());
-                    onGeminiResult.onResult(new ArrayList<>());
-                }
+                onGeminiResult.accept(suggestions);
             }
-
-            @Override
-            public void onFailure(Throwable error)
+            catch (Exception e)
             {
-                Log.e("AI", error.toString());
-                onGeminiResult.onResult(new ArrayList<>());
+                Log.e("AI_PARSE", "Failed to parse Gemini response: " + result);
+                Log.e("AI_PARSE", e.toString());
+                onGeminiResult.accept(new ArrayList<>());
             }
-        });
+        }
+        );
     }
 
     public String createListSuggestionsPrompt(String listName)
@@ -105,7 +86,7 @@ public class AIHandler
                 "שם הרשימה: '" + listName + "'";
     }
 
-    public void sendTextPrompt(Activity activity, String prompt, GeminiCallback callback)
+    public void sendTextPrompt(Activity activity, String prompt, Consumer<String> callback)
     {
         new Thread(() ->
         {
@@ -156,9 +137,9 @@ public class AIHandler
                                 String finalText = text;
 
                                 if (activity != null) {
-                                    activity.runOnUiThread(() -> callback.onSuccess(finalText));
+                                    activity.runOnUiThread(() -> callback.accept(finalText));
                                 } else {
-                                    callback.onSuccess(finalText);
+                                    callback.accept(finalText);
                                 }
                             } catch (Exception e) {
                                 Log.e("AI", "Resume crash prevented", e);
@@ -182,16 +163,15 @@ public class AIHandler
         }).start();
     }
 
-    private void failedRequest(Activity activity, GeminiCallback callback)
+    private void failedRequest(Activity activity, Consumer<String> callback)
     {
         if (activity != null)
         {
-            activity.runOnUiThread(() -> callback.onFailure(
-                    new Exception("AI unavailable")));
+            activity.runOnUiThread(() -> callback.accept(""));
         }
         else
         {
-            callback.onFailure(new Exception("AI unavailable"));
+            callback.accept("");
         }
     }
 }

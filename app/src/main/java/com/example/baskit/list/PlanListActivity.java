@@ -35,6 +35,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 public class PlanListActivity extends MasterActivity
 {
@@ -59,9 +61,10 @@ public class PlanListActivity extends MasterActivity
     TextView tvListName, tvTotal;
     RecyclerView recyclerItems;
 
-    public interface OnItemMovedListener
+    @FunctionalInterface
+    public interface TriConsumer<T, U, V>
     {
-        void onItemMoved(Item item, Supermarket from, Supermarket to);
+        void accept(T t, U u, V v);
     }
 
     protected void onCreate(Bundle savedInstanceState)
@@ -274,7 +277,7 @@ public class PlanListActivity extends MasterActivity
         private final ItemsAdapter.UpperClassFunctions upperClassFns;
 
         @SuppressLint("NotifyDataSetChanged")
-        private final PlanListActivity.OnItemMovedListener listener;
+        private final TriConsumer<Item, Supermarket, Supermarket> listener;
 
         @SuppressLint({"PrivateResource", "NotifyDataSetChanged"})
         public PlanListItemsAdapter(com.example.baskit.main_components.List list,
@@ -621,7 +624,7 @@ public class PlanListActivity extends MasterActivity
             private final int colorUnavailable;
             private final int colorChosen;
 
-            private final PlanListActivity.OnItemMovedListener onItemMovedListener;
+            private final TriConsumer<Item, Supermarket, Supermarket> onItemMovedListener;
 
             @SuppressLint("PrivateResource")
             public SupermarketItemsAdapterPlan(ArrayList<Item> items,
@@ -629,7 +632,7 @@ public class PlanListActivity extends MasterActivity
                                                UpperClassFunctions upperClassFns,
                                                Supermarket supermarket,
                                                Supermarket selectedSupermarketParent,
-                                               PlanListActivity.OnItemMovedListener onItemMovedListener)
+                                               TriConsumer<Item, Supermarket, Supermarket> onItemMovedListener)
             {
                 super(items, upperClassFns, activity, context);
 
@@ -714,7 +717,7 @@ public class PlanListActivity extends MasterActivity
                 holder.tvName.setOnClickListener(null);
                 holder.tvName.setActivated(false);
 
-                holder.dragHandle.setOnClickListener(v -> onItemMovedListener.onItemMoved(item, supermarket, selectedSupermarketParent));
+                holder.dragHandle.setOnClickListener(v -> onItemMovedListener.accept(item, supermarket, selectedSupermarketParent));
             }
 
             private void showItemPriceDif(ViewHolder holder, Item item, double newPrice)

@@ -175,40 +175,35 @@ public class SettingsActivity extends MasterActivity
                 new AddSupermarketAlertDialog(
                         SettingsActivity.this,
                         SettingsActivity.this,
-                        new AddSupermarketAlertDialog.OnSubmit()
+                        supermarket ->
                         {
-                            @SuppressLint("NotifyDataSetChanged")
-                            @Override
-                            public void onSubmit(Supermarket supermarket)
-                            {
-                                setLoading(true);
-                                runWhenServerActive(() -> addSupermarketSection(supermarket, () ->
-                                        new Thread(() ->
+                            setLoading(true);
+                            runWhenServerActive(() -> addSupermarketSection(supermarket, () ->
+                                    new Thread(() ->
+                                    {
+                                        try
                                         {
-                                            try
+                                            apiHandler.reset();
+
+                                            choices = Supermarket.getStringsFromSupermarkets(apiHandler.getUpdatedSupermarkets());
+                                            cities = apiHandler.getCities();
+
+                                            SettingsActivity.this.runOnUiThread(() ->
                                             {
-                                                apiHandler.reset();
+                                                supermarketsAdapter.updateData(choices);
+                                                supermarketsAdapter.notifyDataSetChanged();
 
-                                                choices = Supermarket.getStringsFromSupermarkets(apiHandler.getUpdatedSupermarkets());
-                                                cities = apiHandler.getCities();
+                                                citiesAdapter.updateData(cities);
+                                                citiesAdapter.notifyDataSetChanged();
 
-                                                SettingsActivity.this.runOnUiThread(() ->
-                                                {
-                                                    supermarketsAdapter.updateData(choices);
-                                                    supermarketsAdapter.notifyDataSetChanged();
-
-                                                    citiesAdapter.updateData(cities);
-                                                    citiesAdapter.notifyDataSetChanged();
-
-                                                    setLoading(false);
-                                                });
-                                            }
-                                            catch (Exception e)
-                                            {
-                                                Log.e("SettingsActivity", "Full refresh after add failed", e);
-                                            }
-                                        }).start()));
-                            }
+                                                setLoading(false);
+                                            });
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            Log.e("SettingsActivity", "Full refresh after add failed", e);
+                                        }
+                                    }).start()));
                         },
                         true,
                         cities,
@@ -295,34 +290,29 @@ public class SettingsActivity extends MasterActivity
                         SettingsActivity.this,
                         cities,
                         all_cities,
-                        new AddCityAlertDialog.OnSubmit()
+                        city_choices ->
                         {
-                            @SuppressLint("NotifyDataSetChanged")
-                            @Override
-                            public void onSubmit(ArrayList<String> city_choices)
+                            setLoading(true);
+                            runWhenServerActive(() ->
                             {
-                                setLoading(true);
-                                runWhenServerActive(() ->
+                                try
                                 {
-                                    try
-                                    {
-                                        apiHandler.setCities(city_choices);
+                                    apiHandler.setCities(city_choices);
 
-                                        SettingsActivity.this.runOnUiThread(() ->
-                                        {
-                                            citiesAdapter.notifyDataSetChanged();
-                                            setLoading(false);
-                                        });
-                                    }
-                                    catch (IOException | JSONException e)
+                                    SettingsActivity.this.runOnUiThread(() ->
                                     {
-                                        Log.e("AddCityAlertDialog", "Failed to set cities", e);
-                                        SettingsActivity.this.runOnUiThread(() -> setLoading(false));
-                                        SettingsActivity.this.runOnUiThread(() ->
-                                                Toast.makeText(SettingsActivity.this, "שגיאה בשמירת הערים", Toast.LENGTH_SHORT).show());
-                                    }
-                                });
-                            }
+                                        citiesAdapter.notifyDataSetChanged();
+                                        setLoading(false);
+                                    });
+                                }
+                                catch (IOException | JSONException e)
+                                {
+                                    Log.e("AddCityAlertDialog", "Failed to set cities", e);
+                                    SettingsActivity.this.runOnUiThread(() -> setLoading(false));
+                                    SettingsActivity.this.runOnUiThread(() ->
+                                            Toast.makeText(SettingsActivity.this, "שגיאה בשמירת הערים", Toast.LENGTH_SHORT).show());
+                                }
+                            });
                         }
                 ).show();
             }

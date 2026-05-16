@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class AddSupermarketAlertDialog
 {
@@ -47,16 +48,11 @@ public class AddSupermarketAlertDialog
 
     final Activity activity;
     final Context context;
-    final OnSubmit onSubmit;
-
-    public interface OnSubmit
-    {
-        void onSubmit(Supermarket supermarket);
-    }
+    final Consumer<Supermarket> onSubmit;
 
     public AddSupermarketAlertDialog(MasterActivity activity,
                                      Context context,
-                                     OnSubmit onSubmit,
+                                     Consumer<Supermarket> onSubmit,
                                      boolean runInBackground)
     {
         this.activity = activity;
@@ -82,7 +78,7 @@ public class AddSupermarketAlertDialog
 
     public AddSupermarketAlertDialog(MasterActivity activity,
                                      Context context,
-                                     OnSubmit onSubmit,
+                                     Consumer<Supermarket> onSubmit,
                                      boolean runInBackground,
                                      ArrayList<String> cities,
                                      Map<String, ArrayList<String>> currentChoices)
@@ -232,7 +228,7 @@ public class AddSupermarketAlertDialog
                 {
                     try
                     {
-                        onSubmit.onSubmit(supermarket);
+                        onSubmit.accept(supermarket);
                     }
                     catch (Exception e)
                     {
@@ -245,7 +241,7 @@ public class AddSupermarketAlertDialog
             {
                 try
                 {
-                    onSubmit.onSubmit(supermarket);
+                    onSubmit.accept(supermarket);
                     ad.dismiss();
                 }
                 catch (Exception e)

@@ -26,6 +26,7 @@ import org.json.JSONException;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.function.Consumer;
 
 public class FirebaseDBHandler
 {
@@ -45,30 +46,6 @@ public class FirebaseDBHandler
         void onFailure(Exception e);
     }
 
-    public interface GetCategoryCallback
-    {
-        void onCategoryFetched(Category newCategory);
-    }
-
-    public interface GetListNamesListenerCallback
-    {
-        void onInfoFetched(ArrayList<String> listNames);
-    }
-
-    public interface GetListNamesCallback
-    {
-        void onNamesFetched(ArrayList<String> listNames);
-    }
-
-    public interface GetUserNameCallback
-    {
-        void onUserNameFetched(String username);
-    }
-
-    public interface GetRequestsCallback
-    {
-        void onRequestsFetched(ArrayList<Request> requests);
-    }
 
     public static FirebaseDBHandler getInstance()
     {
@@ -80,7 +57,7 @@ public class FirebaseDBHandler
         return instance;
     }
 
-    public void listenToUserName(User user, GetUserNameCallback callback)
+    public void listenToUserName(User user, Consumer<String> callback)
     {
         refUsers.child(user.getId()).child("name").addValueEventListener(new ValueEventListener()
         {
@@ -96,7 +73,7 @@ public class FirebaseDBHandler
 
                 if (new_name == null || !new_name.equals(user.getName()))
                 {
-                    callback.onUserNameFetched(new_name);
+                    callback.accept(new_name);
                 }
             }
 
@@ -105,7 +82,7 @@ public class FirebaseDBHandler
         });
     }
 
-    public void listenToListNames(User user, GetListNamesListenerCallback callback)
+    public void listenToListNames(User user, Consumer<ArrayList<String>> callback)
     {
         refUsers.child(user.getId()).child("listIDs").addValueEventListener(new ValueEventListener()
         {
@@ -131,7 +108,7 @@ public class FirebaseDBHandler
                 if (listIDs == null)
                 {
                     listNames = new ArrayList<>();
-                    callback.onInfoFetched(listNames);
+                    callback.accept(listNames);
                     return;
                 }
 
@@ -143,7 +120,7 @@ public class FirebaseDBHandler
                         @Override
                         public void onDataChange(@NonNull DataSnapshot nameSnapshot)
                         {
-                            getListNames(user, listNames1 -> callback.onInfoFetched(new ArrayList<>(listNames1)));
+                            getListNames(user, listNames1 -> callback.accept(new ArrayList<>(listNames1)));
                         }
 
                         @Override
@@ -186,7 +163,7 @@ public class FirebaseDBHandler
         });
     }
 
-    public void listenToCategory(List list, String categoryName, GetCategoryCallback callback)
+    public void listenToCategory(List list, String categoryName, Consumer<Category> callback)
     {
         refLists.child(list.getId()).child("categories").child(categoryName).addValueEventListener(new ValueEventListener()
         {
@@ -195,7 +172,7 @@ public class FirebaseDBHandler
             {
                 if (!snapshot.exists())
                 {
-                    callback.onCategoryFetched(null);
+                    callback.accept(null);
                     return;
                 }
 
@@ -212,7 +189,7 @@ public class FirebaseDBHandler
                 }
 
                 newCategory.setItems(items);
-                callback.onCategoryFetched(newCategory);
+                callback.accept(newCategory);
             }
 
             @Override
@@ -220,7 +197,7 @@ public class FirebaseDBHandler
         });
     }
 
-    public void listenForRequests(List list, GetRequestsCallback callback)
+    public void listenForRequests(List list, Consumer<ArrayList<Request>> callback)
     {
         refLists.child(list.getId()).child("requests")
                 .addValueEventListener(new ValueEventListener()
@@ -240,12 +217,12 @@ public class FirebaseDBHandler
                         if (updatedRequests == null)
                         {
                             updatedRequests = new ArrayList<>();
-                            callback.onRequestsFetched(updatedRequests);
+                            callback.accept(updatedRequests);
                             return;
                         }
 
                         list.setRequests(updatedRequests);
-                        callback.onRequestsFetched(updatedRequests);
+                        callback.accept(updatedRequests);
                     }
 
                     @Override
@@ -263,13 +240,13 @@ public class FirebaseDBHandler
         refUsers.child(user.getId()).child("name").setValue(username);
     }
 
-    public void getListNames(User user, GetListNamesCallback callback)
+    public void getListNames(User user, Consumer<ArrayList<String>> callback)
     {
         ArrayList<String> listIDs = user.getListIDs();
 
         if (listIDs == null || listIDs.isEmpty())
         {
-            callback.onNamesFetched(new ArrayList<>());
+            callback.accept(new ArrayList<>());
             return;
         }
 
@@ -318,7 +295,7 @@ public class FirebaseDBHandler
                         user.setListIDs(validListIDs);
                     }
 
-                    callback.onNamesFetched(finalListNames);
+                    callback.accept(finalListNames);
                 }
             });
         }

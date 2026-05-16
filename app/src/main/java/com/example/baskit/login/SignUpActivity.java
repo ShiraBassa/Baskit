@@ -135,15 +135,10 @@ public class SignUpActivity extends MasterActivity
                         SignUpActivity.this,
                         cities,
                         all_cities,
-                        new AddCityAlertDialog.OnSubmit()
+                        city_choices ->
                         {
-                            @SuppressLint("NotifyDataSetChanged")
-                            @Override
-                            public void onSubmit(ArrayList<String> city_choices)
-                            {
-                                cities = city_choices;
-                                citiesAdapter.notifyDataSetChanged();
-                            }
+                            cities = city_choices;
+                            citiesAdapter.notifyDataSetChanged();
                         }
                 ).show();
             } catch (IOException e) {
@@ -187,23 +182,18 @@ public class SignUpActivity extends MasterActivity
                 new AddSupermarketAlertDialog(
                         SignUpActivity.this,
                         SignUpActivity.this,
-                        new AddSupermarketAlertDialog.OnSubmit()
+                        supermarket ->
                         {
-                            @SuppressLint("NotifyDataSetChanged")
-                            @Override
-                            public void onSubmit(Supermarket supermarket)
+                            choices.putIfAbsent(supermarket.getSupermarket(), new ArrayList<>());
+                            ArrayList<String> sectionsList = choices.computeIfAbsent(supermarket.getSupermarket(), k -> new ArrayList<>());
+
+                            if (!sectionsList.contains(supermarket.getSection()))
                             {
-                                choices.putIfAbsent(supermarket.getSupermarket(), new ArrayList<>());
-                                ArrayList<String> sectionsList = choices.computeIfAbsent(supermarket.getSupermarket(), k -> new ArrayList<>());
-
-                                if (!sectionsList.contains(supermarket.getSection()))
-                                {
-                                    sectionsList.add(supermarket.getSection());
-                                }
-
-                                supermarketsAdapter.updateData(choices);
-                                supermarketsAdapter.notifyDataSetChanged();
+                                sectionsList.add(supermarket.getSection());
                             }
+
+                            supermarketsAdapter.updateData(choices);
+                            supermarketsAdapter.notifyDataSetChanged();
                         },
                         false,
                         cities,

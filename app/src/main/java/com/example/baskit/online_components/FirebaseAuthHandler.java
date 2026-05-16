@@ -24,6 +24,7 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 public class FirebaseAuthHandler
 {
@@ -51,10 +52,6 @@ public class FirebaseAuthHandler
         void onAuthError(String msg, ErrorType type);
     }
 
-    public interface CreateListCallback
-    {
-        void onSuccess(List newList);
-    }
 
     public static FirebaseAuthHandler getInstance()
     {
@@ -466,7 +463,7 @@ public class FirebaseAuthHandler
         user.setName(username);
     }
 
-    public void createList(String name, Activity activity, CreateListCallback callback)
+    public void createList(String name, Activity activity, Consumer<List> callback)
     {
         List list = new List(dbHandler.getUniqueId(), name);
         list.addUser(user.getId());
@@ -478,12 +475,12 @@ public class FirebaseAuthHandler
             if (callback != null)
             {
                 new Handler(Looper.getMainLooper()).post(() ->
-                        callback.onSuccess(list));
+                        callback.accept(list));
             }
         });
     }
 
-    public void duplicateList(List list, CreateListCallback callback)
+    public void duplicateList(List list, Consumer<List> callback)
     {
         List listNew = new List(dbHandler.getUniqueId(), list.getName() + " חדש");
         listNew.addUser(user.getId());
@@ -495,7 +492,7 @@ public class FirebaseAuthHandler
         if (callback != null)
         {
             new Handler(Looper.getMainLooper()).post(() ->
-                    callback.onSuccess(listNew));
+                    callback.accept(listNew));
         }
     }
 }

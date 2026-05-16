@@ -17,6 +17,7 @@ import com.example.baskit.R;
 
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 @SuppressWarnings("ALL")
 public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsListAdapter.ViewHolder>
@@ -26,12 +27,7 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
     private Map<String, ArrayList<String>> supermarkets;
 
     private final Context context;
-    private final OnSupermarketClickListener listener = null;
-
-    public interface OnSupermarketClickListener
-    {
-        void onSupermarketClick(Supermarket supermarket);
-    }
+    private final BiConsumer<String, String> listener = null;
 
     public SupermarketsListAdapter(Context context, Map<String, ArrayList<String>> supermarkets)
     {
@@ -76,16 +72,11 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
         if (holder.sectionsAdapter == null)
         {
             holder.sectionsAdapter = new SectionsListAdapter(context, supermarketName,
-                    supermarkets.get(supermarketName), new SectionsListAdapter.OnSectionClickListener()
+                    supermarkets.get(supermarketName), (clickedSupermarketName, clickedSectionName) ->
                     {
-                        @SuppressLint("NotifyDataSetChanged")
-                        @Override
-                        public void onSectionClick(String clickedSupermarketName, String clickedSectionName)
-                        {
-                            SupermarketsListAdapter.this.onSectionClick(clickedSupermarketName, clickedSectionName);
+                        SupermarketsListAdapter.this.onSectionClick(clickedSupermarketName, clickedSectionName);
 
-                            notifyDataSetChanged();
-                        }
+                        notifyDataSetChanged();
                     }
             );
 
@@ -161,14 +152,9 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
         private ArrayList<String> sections;
 
         private final Context context;
-        private final SectionsListAdapter.OnSectionClickListener listener;
+        private final BiConsumer<String, String> listener;
 
-        public interface OnSectionClickListener
-        {
-            void onSectionClick(String selectedSupermarketName, String selectedSectionName);
-        }
-
-        public SectionsListAdapter(Context context, String supermarketName, ArrayList<String> sections, SectionsListAdapter.OnSectionClickListener onSupermarketClickListener)
+        public SectionsListAdapter(Context context, String supermarketName, ArrayList<String> sections, BiConsumer<String, String> onSupermarketClickListener)
         {
             this.context = context;
             this.supermarketName = supermarketName;
@@ -244,7 +230,7 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
                 if (listener != null)
                 {
                     String sectionNameClick = sections.get(adapterPos);
-                    listener.onSectionClick(supermarketName, sectionNameClick);
+                    listener.accept(supermarketName, sectionNameClick);
                 }
             });
 
