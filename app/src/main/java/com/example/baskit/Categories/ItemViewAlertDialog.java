@@ -29,8 +29,8 @@ public class ItemViewAlertDialog
 {
     Item item;
 
-    ArrayList<ItemVariant> rows = new ArrayList<>();
-    ArrayList<ItemVariant> allRows = new ArrayList<>();
+    ArrayList<ItemVariant> variants = new ArrayList<>();
+    ArrayList<ItemVariant> allVariants = new ArrayList<>();
     ArrayList<ItemInfo> currentVariations = new ArrayList<>();
 
     boolean showQuantity;
@@ -102,8 +102,8 @@ public class ItemViewAlertDialog
                 Log.e("ItemViewAlertDialog", "Failed to load variations", e);
             }
 
-            rows.clear();
-            allRows.clear();
+            variants.clear();
+            allVariants.clear();
 
             for (ItemInfo info : variations)
             {
@@ -122,14 +122,14 @@ public class ItemViewAlertDialog
                             Double priceObj = sectionEntry.getValue();
                             if (priceObj == null) continue;
                             Supermarket sm = new Supermarket(supermarketName, sectionName);
-                            ItemVariant newRow =
+                            ItemVariant newVariant =
                                     new ItemVariant(
                                             sm,
                                             priceObj,
                                             info
                                     );
-                            rows.add(newRow);
-                            allRows.add(newRow);
+                            variants.add(newVariant);
+                            allVariants.add(newVariant);
                         }
                     }
                 }
@@ -148,18 +148,18 @@ public class ItemViewAlertDialog
 
                 pricesAdapter = new ItemViewPricesAdapter(
                         context,
-                        rows,
-                        (row) ->
+                        variants,
+                        (variant) ->
                         {
                             if (item == null) return;
 
-                            if (row == null)
+                            if (variant == null)
                             {
                                 item.setUnchosen();
                             }
                             else
                             {
-                                item.fillVariant(row);
+                                item.fillVariant(variant);
                             }
 
                             if (pricesAdapter != null)
@@ -176,15 +176,15 @@ public class ItemViewAlertDialog
                 // Auto-select current variant
                 if (item.getAbsoluteId() != null && item.getSupermarket() != null)
                 {
-                    for (int i = 0; i < rows.size(); i++)
+                    for (int i = 0; i < variants.size(); i++)
                     {
-                        ItemVariant row = rows.get(i);
+                        ItemVariant variant = variants.get(i);
 
-                        if (item.isIdenticalVariantOf(row))
+                        if (item.isIdenticalVariantOf(variant))
                         {
                             pricesAdapter.setSelectedPosition(i);
-                            item.setPrice(row.getPrice());
-                            item.fillInfo(row.getInfo());
+                            item.setPrice(variant.getPrice());
+                            item.fillInfo(variant.getInfo());
                             break;
                         }
                     }
@@ -267,9 +267,9 @@ public class ItemViewAlertDialog
             }
         }
 
-        rows.clear();
-        rows.addAll(allRows);
-        rows.sort((a, b) -> Double.compare(a.getPrice(), b.getPrice()));
+        variants.clear();
+        variants.addAll(allVariants);
+        variants.sort((a, b) -> Double.compare(a.getPrice(), b.getPrice()));
 
         applyVariationFilter();
 
@@ -308,19 +308,19 @@ public class ItemViewAlertDialog
             adBtnDown.setVisibility(View.INVISIBLE);
         }
 
-        if (pricesAdapter != null && rows != null)
+        if (pricesAdapter != null && variants != null)
         {
             pricesAdapter.setSelectedPosition(-1); // clear previous adapter state
 
-            for (int i = 0; i < rows.size(); i++)
+            for (int i = 0; i < variants.size(); i++)
             {
-                ItemVariant row = rows.get(i);
+                ItemVariant variant = variants.get(i);
 
-                if (item.isIdenticalVariantOf(row))
+                if (item.isIdenticalVariantOf(variant))
                 {
                     pricesAdapter.setSelectedPosition(i);
-                    item.setPrice(row.getPrice());
-                    item.fillInfo(row.getInfo());
+                    item.setPrice(variant.getPrice());
+                    item.fillInfo(variant.getInfo());
                     break;
                 }
             }
@@ -346,9 +346,9 @@ public class ItemViewAlertDialog
             if (chip.isChecked()) selectedCompanies.add(chip.getText().toString());
         }
 
-        rows.clear();
+        variants.clear();
 
-        for (ItemVariant r : allRows)
+        for (ItemVariant r : allVariants)
         {
             if (r.getInfo() == null) continue;
 
@@ -362,13 +362,13 @@ public class ItemViewAlertDialog
 
             if (weightMatch && companyMatch)
             {
-                rows.add(r);
+                variants.add(r);
             }
         }
 
         java.util.Set<String> availableWeights = new java.util.HashSet<>();
 
-        for (ItemVariant r : allRows)
+        for (ItemVariant r : allVariants)
         {
             if (r.getInfo() == null) continue;
 
@@ -386,7 +386,7 @@ public class ItemViewAlertDialog
 
         java.util.Set<String> availableCompanies = new java.util.HashSet<>();
 
-        for (ItemVariant r : allRows)
+        for (ItemVariant r : allVariants)
         {
             if (r.getInfo() == null) continue;
 
@@ -418,7 +418,7 @@ public class ItemViewAlertDialog
             chip.setAlpha(enabled ? 1f : 0.3f);
         }
 
-        rows.sort((a, b) -> Double.compare(a.getPrice(), b.getPrice()));
+        variants.sort((a, b) -> Double.compare(a.getPrice(), b.getPrice()));
         if (pricesAdapter != null) {
             pricesAdapter.notifyDataSetChanged();
         }

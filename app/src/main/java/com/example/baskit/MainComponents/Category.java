@@ -248,10 +248,10 @@ public class Category implements SortableEntity
 
         for (Item item : this.items)
         {
-            ArrayList<ItemVariant> rows = variantsAllItems.get(item.baseName);
-            if (rows == null) continue;
+            ArrayList<ItemVariant> variants = variantsAllItems.get(item.baseName);
+            if (variants == null) continue;
 
-            item.setCheapestVariant(rows);
+            item.setCheapestVariant(variants);
         }
     }
 
@@ -262,10 +262,10 @@ public class Category implements SortableEntity
 
         for (Item item : this.items)
         {
-            ArrayList<ItemVariant> rows = variantsAllItems.get(item.baseName);
-            if (rows == null) continue;
+            ArrayList<ItemVariant> variants = variantsAllItems.get(item.baseName);
+            if (variants == null) continue;
 
-            item.setSupermarketVariant(supermarket, rows);
+            item.setSupermarketVariant(supermarket, variants);
         }
     }
 

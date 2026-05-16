@@ -576,20 +576,20 @@ public class ListActivity extends MasterActivity
 
     private void showSortBottomSheet() throws JSONException, IOException
     {
-        Map<String, ArrayList<ItemVariant>> rows = apiHandler.buildVariants(list.getRemainedItems());
+        Map<String, ArrayList<ItemVariant>> variants = apiHandler.buildVariants(list.getRemainedItems());
 
         SortListBottomSheetBuilder.show(
                 this,
                 list,
-                rows,
+                variants,
                 apiHandler.getSupermarkets(),
                 new SortListBottomSheetBuilder.ApplyListener()
                 {
                     @Override
                     public void onApplyCheapest()
                     {
-                        Map<String, ArrayList<ItemVariant>> rows = apiHandler.buildVariants(list.getRemainedItems());
-                        list.setCheapestVariants(rows);
+                        Map<String, ArrayList<ItemVariant>> variants = apiHandler.buildVariants(list.getRemainedItems());
+                        list.setCheapestVariants(variants);
                         tvTotal.setText(
                                 Baskit.getTotalDisplayString(
                                         list.getTotal(),
@@ -604,8 +604,8 @@ public class ListActivity extends MasterActivity
                     @Override
                     public void onApplySupermarket(Supermarket sm)
                     {
-                        Map<String, ArrayList<ItemVariant>> rows = apiHandler.buildVariants(list.getRemainedItems());
-                        list.setSupermarketsVariants(sm, rows);
+                        Map<String, ArrayList<ItemVariant>> variants = apiHandler.buildVariants(list.getRemainedItems());
+                        list.setSupermarketsVariants(sm, variants);
                         tvTotal.setText(
                                 Baskit.getTotalDisplayString(
                                         list.getTotal(),

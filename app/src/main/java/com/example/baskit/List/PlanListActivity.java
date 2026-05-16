@@ -305,7 +305,7 @@ public class PlanListActivity extends MasterActivity
             }
             else
             {
-                updateItemRow(draggedItem, to);
+                updateItemVariant(draggedItem, to);
             }
 
             if (itemsBySupermarket.get(to) == null)
@@ -490,22 +490,22 @@ public class PlanListActivity extends MasterActivity
             notifyDataSetChanged();
         }
 
-        private void updateItemRow(Item item, Supermarket supermarket)
+        private void updateItemVariant(Item item, Supermarket supermarket)
         {
             if (item == null || supermarket == null) return;
 
             ArrayList<Item> single = new ArrayList<>();
             single.add(item);
 
-            Map<String, ArrayList<ItemVariant>> rowsMap =
+            Map<String, ArrayList<ItemVariant>> variantsMap =
                     APIHandler.getInstance().buildVariants(single);
 
-            ArrayList<ItemVariant> rows =
-                    rowsMap.get(item.getBaseName());
+            ArrayList<ItemVariant> variants =
+                    variantsMap.get(item.getBaseName());
 
-            if (rows != null)
+            if (variants != null)
             {
-                item.setSupermarketVariant(supermarket, rows);
+                item.setSupermarketVariant(supermarket, variants);
             }
             else
             {
@@ -802,19 +802,19 @@ public class PlanListActivity extends MasterActivity
                 ArrayList<Item> single = new ArrayList<>();
                 single.add(item);
 
-                Map<String, ArrayList<ItemVariant>> rowsMap =
+                Map<String, ArrayList<ItemVariant>> variantsMap =
                         APIHandler.getInstance().buildVariants(single);
 
-                ArrayList<ItemVariant> rows =
-                        rowsMap.get(item.getBaseName());
+                ArrayList<ItemVariant> variants =
+                        variantsMap.get(item.getBaseName());
 
-                if (rows != null)
+                if (variants != null)
                 {
-                    ItemVariant row = item.getSupermarketVariant(otherSupermarket, rows);
+                    ItemVariant variant = item.getSupermarketVariant(otherSupermarket, variants);
 
-                    if (row != null)
+                    if (variant != null)
                     {
-                        return row.getPrice();
+                        return variant.getPrice();
                     }
                 }
 

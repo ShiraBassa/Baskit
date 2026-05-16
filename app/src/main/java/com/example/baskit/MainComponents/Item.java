@@ -278,29 +278,29 @@ public class Item implements Cloneable
     }
 
     @Exclude
-    public ItemVariant getCheapestVariant(ArrayList<ItemVariant> itemVariants)
+    public ItemVariant getCheapestVariant(ArrayList<ItemVariant> variants)
     {
-        if (itemVariants == null || itemVariants.isEmpty())
+        if (variants == null || variants.isEmpty())
         {
             return null;
         }
 
-        ItemVariant ogRow = getVariant();
+        ItemVariant ogVariant = getVariant();
         double cheapestPrice = Double.MAX_VALUE;
-        ItemVariant cheapestRow = null;
+        ItemVariant cheapestVariant = null;
 
-        for (ItemVariant row : itemVariants)
+        for (ItemVariant variant : variants)
         {
-            if (!isVariantOf(row)) continue;
+            if (!isVariantOf(variant)) continue;
 
-            ItemInfo info = row.getInfo();
+            ItemInfo info = variant.getInfo();
 
-            double currPrice = row.getPrice();
+            double currPrice = variant.getPrice();
             if (currPrice == 0.0) continue;
 
-            if (cheapestRow == null)
+            if (cheapestVariant == null)
             {
-                cheapestRow = row;
+                cheapestVariant = variant;
                 cheapestPrice = currPrice;
                 continue;
             }
@@ -308,15 +308,15 @@ public class Item implements Cloneable
             boolean hasCurrentCompany = this.company != null && !this.company.isEmpty();
 
             int currScoreCompany = (hasCurrentCompany && Objects.equals(this.company, info.getCompany())) ? 1 : 0;
-            int bestScoreCompany = (hasCurrentCompany && Objects.equals(this.company, cheapestRow.getInfo().getCompany())) ? 1 : 0;
+            int bestScoreCompany = (hasCurrentCompany && Objects.equals(this.company, cheapestVariant.getInfo().getCompany())) ? 1 : 0;
 
             boolean hasCurrentSupermarket = this.supermarket != null && !this.supermarket.equals(Baskit.UNASSIGNED_SUPERMARKET);
 
-            int currScoreSupermarket = (hasCurrentSupermarket && row.getSupermarket() != null &&
-                    row.getSupermarket().equals(this.supermarket)) ? 1 : 0;
+            int currScoreSupermarket = (hasCurrentSupermarket && variant.getSupermarket() != null &&
+                    variant.getSupermarket().equals(this.supermarket)) ? 1 : 0;
 
-            int bestScoreSupermarket = (hasCurrentSupermarket && cheapestRow.getSupermarket() != null &&
-                    cheapestRow.getSupermarket().equals(this.supermarket)) ? 1 : 0;
+            int bestScoreSupermarket = (hasCurrentSupermarket && cheapestVariant.getSupermarket() != null &&
+                    cheapestVariant.getSupermarket().equals(this.supermarket)) ? 1 : 0;
 
             boolean better = false;
 
@@ -338,54 +338,54 @@ public class Item implements Cloneable
 
             if (better)
             {
-                cheapestRow = row;
+                cheapestVariant = variant;
                 cheapestPrice = currPrice;
             }
         }
 
-        if (cheapestRow != null && cheapestRow.getPrice() == price)
+        if (cheapestVariant != null && cheapestVariant.getPrice() == price)
         {
-            return ogRow;
+            return ogVariant;
         }
 
-        return cheapestRow;
+        return cheapestVariant;
     }
 
     @Exclude
-    public void setCheapestVariant(ArrayList<ItemVariant> itemVariants)
+    public void setCheapestVariant(ArrayList<ItemVariant> variants)
     {
-        ItemVariant row = getCheapestVariant(itemVariants);
+        ItemVariant variant = getCheapestVariant(variants);
 
-        if (row != null)
+        if (variant != null)
         {
-            fillVariant(row);
+            fillVariant(variant);
         }
     }
 
     @Exclude
     public ItemVariant getSupermarketVariant(
             Supermarket supermarket,
-            ArrayList<ItemVariant> rows)
+            ArrayList<ItemVariant> variants)
     {
-        if (rows == null || rows.isEmpty())
+        if (variants == null || variants.isEmpty())
         {
             return null;
         }
 
-        ItemVariant ogRow = getVariant();
-        ItemVariant cheapestRow = null;
+        ItemVariant ogVariant = getVariant();
+        ItemVariant cheapestVariant = null;
         double cheapestPrice = Double.MAX_VALUE;
 
-        for (ItemVariant row : rows)
+        for (ItemVariant variant : variants)
         {
-            if (!isVariantOf(row, supermarket)) continue;
+            if (!isVariantOf(variant, supermarket)) continue;
 
-            ItemInfo info = row.getInfo();
-            double currPrice = row.getPrice();
+            ItemInfo info = variant.getInfo();
+            double currPrice = variant.getPrice();
 
-            if (cheapestRow == null)
+            if (cheapestVariant == null)
             {
-                cheapestRow = row;
+                cheapestVariant = variant;
                 cheapestPrice = currPrice;
                 continue;
             }
@@ -393,7 +393,7 @@ public class Item implements Cloneable
             boolean hasCurrentCompany = this.company != null && !this.company.isEmpty();
 
             int currScoreCompany = (hasCurrentCompany && Objects.equals(this.company, info.getCompany())) ? 1 : 0;
-            ItemInfo bestInfo = cheapestRow.getInfo();
+            ItemInfo bestInfo = cheapestVariant.getInfo();
             int bestScoreCompany =
                     (hasCurrentCompany && Objects.equals(this.company, bestInfo.getCompany())) ? 1 : 0;
             boolean better = false;
@@ -412,29 +412,29 @@ public class Item implements Cloneable
 
             if (better)
             {
-                cheapestRow = row;
+                cheapestVariant = variant;
                 cheapestPrice = currPrice;
             }
         }
 
-        if (this.supermarket == supermarket && cheapestRow.getPrice() == price)
+        if (this.supermarket == supermarket && cheapestVariant.getPrice() == price)
         {
-            return ogRow;
+            return ogVariant;
         }
 
-        return cheapestRow;
+        return cheapestVariant;
     }
 
     @Exclude
     public void setSupermarketVariant(
             Supermarket supermarket,
-            ArrayList<ItemVariant> rows)
+            ArrayList<ItemVariant> variants)
     {
-        ItemVariant row = getSupermarketVariant(supermarket, rows);
+        ItemVariant variant = getSupermarketVariant(supermarket, variants);
 
-        if (row != null)
+        if (variant != null)
         {
-            fillVariant(row);
+            fillVariant(variant);
         }
         else
         {
@@ -459,9 +459,9 @@ public class Item implements Cloneable
     }
 
     @Exclude
-    public boolean isVariantOf(ItemVariant row)
+    public boolean isVariantOf(ItemVariant variant)
     {
-        if (row == null || row.getInfo() == null)
+        if (variant == null || variant.getInfo() == null)
         {
             return false;
         }
@@ -471,12 +471,12 @@ public class Item implements Cloneable
             return true;
         }
 
-        if (row.getSupermarket() == null)
+        if (variant.getSupermarket() == null)
         {
             return false;
         }
 
-        ItemInfo info = row.getInfo();
+        ItemInfo info = variant.getInfo();
         Double vWeight = info.getWeight();
         String vUnit = info.getUnit();
 
@@ -492,14 +492,14 @@ public class Item implements Cloneable
     }
 
     @Exclude
-    public boolean isVariantOf(ItemVariant row, Supermarket newSupermarket)
+    public boolean isVariantOf(ItemVariant variant, Supermarket newSupermarket)
     {
-        if (row == null || row.getInfo() == null)
+        if (variant == null || variant.getInfo() == null)
         {
             return false;
         }
 
-        if (row.getSupermarket() == null || !row.getSupermarket().equals(newSupermarket))
+        if (variant.getSupermarket() == null || !variant.getSupermarket().equals(newSupermarket))
         {
             return false;
         }
@@ -509,7 +509,7 @@ public class Item implements Cloneable
             return true;
         }
 
-        ItemInfo info = row.getInfo();
+        ItemInfo info = variant.getInfo();
         Double vWeight = info.getWeight();
         String vUnit = info.getUnit();
 
@@ -525,10 +525,10 @@ public class Item implements Cloneable
     }
 
     @Exclude
-    public boolean isIdenticalVariantOf(ItemVariant row)
+    public boolean isIdenticalVariantOf(ItemVariant variant)
     {
-        return row.getInfo().equals(getInfo()) &&
-                row.getSupermarket().equals(supermarket);
+        return variant.getInfo().equals(getInfo()) &&
+                variant.getSupermarket().equals(supermarket);
     }
 
 

@@ -22,7 +22,7 @@ import java.util.Map;
 
 public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAdapter.ViewHolder>
 {
-    private ItemVariant selectedRow = null;
+    private ItemVariant selectedVariant = null;
 
     private Map<String, Map<String, Double>> originalPricesMap;
     private ArrayList<ItemVariant> itemVariants;
@@ -34,23 +34,23 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
 
     public interface OnSupermarketClickListener
     {
-        void onSupermarketClick(ItemVariant row);
+        void onSupermarketClick(ItemVariant variant);
     }
 
     public ItemViewPricesAdapter(
             Context context,
-            ArrayList<ItemVariant> rows,
+            ArrayList<ItemVariant> variants,
             OnSupermarketClickListener onSupermarketClickListener)
     {
         this.context = context;
         this.listener = onSupermarketClickListener;
-        this.itemVariants = (rows != null) ? rows : new ArrayList<>();
+        this.itemVariants = (variants != null) ? variants : new ArrayList<>();
         this.originalPricesMap = null;
 
-        sortRows();
+        sortVariants();
     }
 
-    private void sortRows()
+    private void sortVariants()
     {
         if (itemVariants != null)
         {
@@ -91,10 +91,10 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
             return;
         }
 
-        ItemVariant row = itemVariants.get(position);
-        Supermarket supermarket = row.getSupermarket();
-        double price = row.getPrice();
-        ItemInfo matchedInfo = row.getInfo();
+        ItemVariant variant = itemVariants.get(position);
+        Supermarket supermarket = variant.getSupermarket();
+        double price = variant.getPrice();
+        ItemInfo matchedInfo = variant.getInfo();
 
         if (matchedInfo != null)
         {
@@ -142,7 +142,7 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
 
         holder.tvPrice.setText(Baskit.getTotalDisplayString(price, true, false, false));
 
-        boolean isSelected = selectedRow != null && selectedRow.equals(row);
+        boolean isSelected = selectedVariant != null && selectedVariant.equals(variant);
 
         if (isSelected)
         {
@@ -162,11 +162,11 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
             int pos = holder.getAdapterPosition();
             if (pos == RecyclerView.NO_POSITION) return;
 
-            ItemVariant clickedRow = itemVariants.get(pos);
+            ItemVariant clickedVariant = itemVariants.get(pos);
 
-            if (selectedRow != null && selectedRow.equals(clickedRow))
+            if (selectedVariant != null && selectedVariant.equals(clickedVariant))
             {
-                selectedRow = null;
+                selectedVariant = null;
                 notifyDataSetChanged();
 
                 if (listener != null)
@@ -176,12 +176,12 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
                 return;
             }
 
-            selectedRow = clickedRow;
+            selectedVariant = clickedVariant;
             notifyDataSetChanged();
 
             if (listener != null)
             {
-                listener.onSupermarketClick(clickedRow);
+                listener.onSupermarketClick(clickedVariant);
             }
         });
     }
@@ -196,11 +196,11 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
     {
         if (position >= 0 && position < itemVariants.size())
         {
-            this.selectedRow = itemVariants.get(position);
+            this.selectedVariant = itemVariants.get(position);
         }
         else
         {
-            this.selectedRow = null;
+            this.selectedVariant = null;
         }
 
         notifyDataSetChanged();

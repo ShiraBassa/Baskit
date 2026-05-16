@@ -447,11 +447,11 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
                         }
                     }
 
-                    View originalRow = (View) dragHandle.getTag(R.id.drag_original_row);
+                    View ogVariant = (View) dragHandle.getTag(R.id.drag_og_variant);
 
-                    if (originalRow != null)
+                    if (ogVariant != null)
                     {
-                        originalRow.setVisibility(View.VISIBLE);
+                        ogVariant.setVisibility(View.VISIBLE);
                     }
 
                     upperClassFns.expandAllSupermarkets();
@@ -487,12 +487,12 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
             return true;
         }
 
-        ArrayList<ItemVariant> rows = APIHandler.getInstance().buildVariant(item);
-        if (rows == null) return false;
+        ArrayList<ItemVariant> variants = APIHandler.getInstance().buildVariant(item);
+        if (variants == null) return false;
 
-        for (ItemVariant row : rows)
+        for (ItemVariant variant : variants)
         {
-            if (item.isVariantOf(row, supermarket))
+            if (item.isVariantOf(variant, supermarket))
             {
                 return true;
             }
@@ -598,7 +598,7 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
                 v.setTag(R.id.drag_touch_offset_y, touchOffsetY);
                 v.setTag(R.id.drag_initial_x, rootLoc[0]);
                 v.setTag(R.id.drag_root_y_offset, rootYOffset);
-                v.setTag(R.id.drag_original_row, holder.itemView);
+                v.setTag(R.id.drag_og_variant, holder.itemView);
 
                 View.DragShadowBuilder invisibleShadow = new View.DragShadowBuilder(holder.itemView)
                 {

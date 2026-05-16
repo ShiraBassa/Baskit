@@ -31,7 +31,7 @@ public class SortListBottomSheetBuilder
     public static void show(
             AppCompatActivity activity,
             SortableEntity entity,
-            Map<String, ArrayList<ItemVariant>> rows,
+            Map<String, ArrayList<ItemVariant>> variants,
             ArrayList<Supermarket> supermarkets,
             ApplyListener listener)
     {
@@ -51,12 +51,12 @@ public class SortListBottomSheetBuilder
             Map<Supermarket, Boolean> allKnown = new HashMap<>();
 
             SortableEntity cheapestPreview = entity.copy();
-            cheapestPreview.setCheapestVariants(rows);
+            cheapestPreview.setCheapestVariants(variants);
 
             for (Supermarket sm : supermarkets)
             {
                 SortableEntity preview = entity.copy();
-                preview.setSupermarketsVariants(sm, rows);
+                preview.setSupermarketsVariants(sm, variants);
 
                 totals.put(sm, preview.getTotal());
                 allKnown.put(sm, preview.allPricesKnown());

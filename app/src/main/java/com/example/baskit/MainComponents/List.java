@@ -265,10 +265,10 @@ public class List implements SortableEntity
 
         for (Item item : items)
         {
-            ArrayList<ItemVariant> rows = variantsAllItems.get(item.baseName);
-            if (rows == null) continue;
+            ArrayList<ItemVariant> variants = variantsAllItems.get(item.baseName);
+            if (variants == null) continue;
 
-            item.setCheapestVariant(rows);
+            item.setCheapestVariant(variants);
         }
     }
 
@@ -281,10 +281,10 @@ public class List implements SortableEntity
 
         for (Item item : items)
         {
-            ArrayList<ItemVariant> rows = variantsAllItems.get(item.baseName);
-            if (rows == null) continue;
+            ArrayList<ItemVariant> variants = variantsAllItems.get(item.baseName);
+            if (variants == null) continue;
 
-            item.setSupermarketVariant(supermarket, rows);
+            item.setSupermarketVariant(supermarket, variants);
         }
     }
 

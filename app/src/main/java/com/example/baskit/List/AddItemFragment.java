@@ -993,7 +993,7 @@ public class AddItemFragment extends DialogFragment
 
         activity.runWhenServerActive(() ->
         {
-            ArrayList<ItemVariant> rows = new ArrayList<>();
+            ArrayList<ItemVariant> variants = new ArrayList<>();
 
             for (ItemInfo info : variations)
             {
@@ -1019,7 +1019,7 @@ public class AddItemFragment extends DialogFragment
                             Supermarket sm =
                                     new Supermarket(supermarketName, sectionName);
 
-                            rows.add(
+                            variants.add(
                                     new ItemVariant(
                                             sm,
                                             priceObj,
@@ -1032,8 +1032,8 @@ public class AddItemFragment extends DialogFragment
                 catch (Exception ignored) {}
             }
 
-            // Sort rows by price (cheapest first)
-            rows.sort((a, b) -> Double.compare(a.getPrice(), b.getPrice()));
+            // Sort variants by price (cheapest first)
+            variants.sort((a, b) -> Double.compare(a.getPrice(), b.getPrice()));
 
             if (activity == null) return;
 
@@ -1041,18 +1041,18 @@ public class AddItemFragment extends DialogFragment
             {
                 pricesAdapter = new ItemViewPricesAdapter(
                         context,
-                        rows,
-                        (row) ->
+                        variants,
+                        (variant) ->
                         {
                             if (selectedItem == null) return;
 
-                            if (row == null)
+                            if (variant == null)
                             {
                                 selectedItem.setUnchosen();
                             }
                             else
                             {
-                                selectedItem.fillVariant(row);
+                                selectedItem.fillVariant(variant);
                             }
 
                             if (pricesAdapter != null)

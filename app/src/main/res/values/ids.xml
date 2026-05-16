@@ -7,5 +7,5 @@
     <item name="drag_touch_offset_y" type="id"/>
     <item name="drag_initial_x" type="id"/>
     <item name="drag_root_y_offset" type="id"/>
-    <item name="drag_original_row" type="id"/>
+    <item name="drag_og_variant" type="id"/>
 </resources>

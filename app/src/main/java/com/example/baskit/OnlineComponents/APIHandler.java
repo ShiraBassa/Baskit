@@ -886,19 +886,19 @@ public class APIHandler
 
     public ArrayList<ItemVariant> buildVariant(Item item)
     {
-        ArrayList<ItemVariant> rows = new ArrayList<>();
+        ArrayList<ItemVariant> variants = new ArrayList<>();
 
         if (item == null)
         {
-            return rows;
+            return variants;
         }
 
         String itemName = item.getBaseName();
-        if (itemName == null || itemName.isEmpty()) return rows;
+        if (itemName == null || itemName.isEmpty()) return variants;
 
         ArrayList<String> groupCodes = cachedGroups.get(itemName);
 
-        if (groupCodes == null || groupCodes.isEmpty()) return rows;
+        if (groupCodes == null || groupCodes.isEmpty()) return variants;
 
         for (String code : groupCodes)
         {
@@ -921,7 +921,7 @@ public class APIHandler
 
                     Supermarket sm = new Supermarket(supermarketName, section);
 
-                    rows.add(
+                    variants.add(
                             new ItemVariant(
                                     sm,
                                     price,
@@ -933,16 +933,16 @@ public class APIHandler
             }
         }
 
-        return rows;
+        return variants;
     }
 
     public Map<String, ArrayList<ItemVariant>> buildVariants(ArrayList<Item> items)
     {
-        Map<String, ArrayList<ItemVariant>> rows = new java.util.HashMap<>();
+        Map<String, ArrayList<ItemVariant>> variants = new java.util.HashMap<>();
 
         if (items == null)
         {
-            return rows;
+            return variants;
         }
 
         for (Item item : items)
@@ -950,10 +950,10 @@ public class APIHandler
             String itemName = item.getBaseName();
             if (itemName == null || itemName.isEmpty()) continue;
 
-            ArrayList<ItemVariant> itemRows = buildVariant(item);
-            rows.put(itemName, itemRows);
+            ArrayList<ItemVariant> itemVariants = buildVariant(item);
+            variants.put(itemName, itemVariants);
         }
 
-        return rows;
+        return variants;
     }
 }
