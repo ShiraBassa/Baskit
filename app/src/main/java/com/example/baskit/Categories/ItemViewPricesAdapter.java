@@ -24,13 +24,12 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
 {
     private ItemVariant selectedVariant = null;
 
-    private Map<String, Map<String, Double>> originalPricesMap;
-    private ArrayList<ItemVariant> itemVariants;
+    private final ArrayList<ItemVariant> itemVariants;
 
     private final APIHandler apiHandler = APIHandler.getInstance();
 
-    private Context context;
-    private OnSupermarketClickListener listener;
+    private final Context context;
+    private final OnSupermarketClickListener listener;
 
     public interface OnSupermarketClickListener
     {
@@ -45,7 +44,6 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
         this.context = context;
         this.listener = onSupermarketClickListener;
         this.itemVariants = (variants != null) ? variants : new ArrayList<>();
-        this.originalPricesMap = null;
 
         sortVariants();
     }

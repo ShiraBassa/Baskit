@@ -22,11 +22,11 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
 {
     private String selectedSupermarketName, selectedSectionName;
 
-    private ArrayList<SectionsListAdapter> allSectionAdapters = new ArrayList<>();
+    private final ArrayList<SectionsListAdapter> allSectionAdapters = new ArrayList<>();
     private Map<String, ArrayList<String>> supermarkets;
 
-    private Context context;
-    private OnSupermarketClickListener listener = null;
+    private final Context context;
+    private final OnSupermarketClickListener listener = null;
 
     public interface OnSupermarketClickListener
     {
@@ -164,8 +164,8 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
 
         private ArrayList<String> sections;
 
-        private Context context;
-        private SectionsListAdapter.OnSectionClickListener listener;
+        private final Context context;
+        private final SectionsListAdapter.OnSectionClickListener listener;
 
         public interface OnSectionClickListener
         {

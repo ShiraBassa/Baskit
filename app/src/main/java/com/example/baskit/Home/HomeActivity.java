@@ -71,7 +71,7 @@ public class HomeActivity extends MasterActivity
     RecyclerView listsRecycler;
     GridAdapter listsGridAdapter;
 
-    private ActivityResultLauncher<Intent> loginLauncher =
+    private final ActivityResultLauncher<Intent> loginLauncher =
             registerForActivityResult(
                     new ActivityResultContracts.StartActivityForResult(),
                     new ActivityResultCallback<ActivityResult>()
@@ -392,10 +392,10 @@ public class HomeActivity extends MasterActivity
 
     public static class GridAdapter extends RecyclerView.Adapter<GridAdapter.GridViewHolder>
     {
-        private ArrayList<String> listNames;
+        private final ArrayList<String> listNames;
 
-        private Context context;
-        private GridAdapter.OnItemClickListener listener;
+        private final Context context;
+        private final GridAdapter.OnItemClickListener listener;
 
         public interface OnItemClickListener
         {

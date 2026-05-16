@@ -140,7 +140,7 @@ public class ShareListAlertDialog
     {
         private ArrayList<Request> requests;
 
-        private UpperClassFunctions upperClassFns;
+        private final UpperClassFunctions upperClassFns;
 
         public interface UpperClassFunctions
         {

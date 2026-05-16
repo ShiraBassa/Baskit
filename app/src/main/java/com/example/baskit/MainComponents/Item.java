@@ -224,13 +224,8 @@ public class Item implements Cloneable
             return false;
         }
 
-        if (supermarket.equals(Baskit.UNASSIGNED_SUPERMARKET) ||
-                price == 0)
-        {
-            return false;
-        }
-
-        return true;
+        return !supermarket.equals(Baskit.UNASSIGNED_SUPERMARKET) &&
+                price != 0;
     }
 
     @Exclude
@@ -241,12 +236,7 @@ public class Item implements Cloneable
             return true;
         }
 
-        if (supermarket.equals(Baskit.UNASSIGNED_SUPERMARKET))
-        {
-            return true;
-        }
-
-        return false;
+        return supermarket.equals(Baskit.UNASSIGNED_SUPERMARKET);
     }
 
     @Exclude

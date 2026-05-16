@@ -18,7 +18,7 @@ import kotlin.coroutines.EmptyCoroutineContext;
 
 public class AIHandler
 {
-    private GenerativeModel gemini;
+    private final GenerativeModel gemini;
     private String prompt;
     private static AIHandler instance;
 

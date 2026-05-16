@@ -471,12 +471,12 @@ public class FirebaseDBHandler
         ArrayList<String> userIDs = list.getUserIDs();
         ArrayList<String> listIDs = user.getListIDs();
 
-        if (userIDs != null && userIDs.contains(userID))
+        if (userIDs != null)
         {
             userIDs.remove(userID);
         }
 
-        if (listIDs != null && listIDs.contains(listID))
+        if (listIDs != null)
         {
             listIDs.remove(listID);
         }

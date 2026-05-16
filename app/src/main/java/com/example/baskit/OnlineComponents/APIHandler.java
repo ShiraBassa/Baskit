@@ -1,5 +1,6 @@
 package com.example.baskit.OnlineComponents;
 
+import android.os.Build;
 import android.util.Log;
 
 import com.example.baskit.Baskit;
@@ -8,6 +9,7 @@ import com.example.baskit.MainComponents.Item.ItemInfo;
 import com.example.baskit.MainComponents.Item.ItemVariant;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.SQLite.AppDatabase;
+import com.example.baskit.SQLite.GroupsEntity;
 import com.example.baskit.SQLite.ItemCategory;
 import com.example.baskit.SQLite.ItemInfoEntity;
 import com.example.baskit.SQLite.ItemPricesEntity;
@@ -17,6 +19,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -168,7 +171,7 @@ public class APIHandler
 
     public boolean login(String firebaseToken)
     {
-        this.firebaseToken = firebaseToken;
+        APIHandler.firebaseToken = firebaseToken;
 
         try
         {
@@ -276,14 +279,14 @@ public class APIHandler
 
     private Map<String, ArrayList<String>> loadGroupsFromDB()
     {
-        List<com.example.baskit.SQLite.GroupsEntity> dbGroups =
+        List<GroupsEntity> dbGroups =
                 AppDatabase.getDatabase(Baskit.getContext())
                         .groupDao()
                         .getAll();
 
         Map<String, ArrayList<String>> groups = new HashMap<>();
 
-        for (com.example.baskit.SQLite.GroupsEntity group : dbGroups)
+        for (GroupsEntity group : dbGroups)
         {
             ArrayList<String> codes = new ArrayList<>();
             try
@@ -430,13 +433,13 @@ public class APIHandler
             AppDatabase db = AppDatabase.getDatabase(Baskit.getContext());
             db.groupDao().clearAll();
 
-            List<com.example.baskit.SQLite.GroupsEntity> list = new ArrayList<>();
+            List<GroupsEntity> list = new ArrayList<>();
 
             for (Map.Entry<String, ArrayList<String>> entry : groups.entrySet())
             {
                 JSONArray arr = new JSONArray(entry.getValue());
 
-                list.add(new com.example.baskit.SQLite.GroupsEntity(
+                list.add(new GroupsEntity(
                         entry.getKey(),
                         arr.toString()
                 ));
@@ -687,7 +690,10 @@ public class APIHandler
             for (int i = 0; i < cities.size(); i++)
             {
                 endpoint.append("cities=");
-                endpoint.append(URLEncoder.encode(cities.get(i), "UTF-8"));
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                {
+                    endpoint.append(URLEncoder.encode(cities.get(i), StandardCharsets.UTF_8));
+                }
 
                 if (i < cities.size() - 1)
                 {
@@ -784,7 +790,7 @@ public class APIHandler
         if ((itemCode == null  || itemCode.isEmpty()) &&
                 (itemName == null || itemName.isEmpty())) return null;
 
-        String endpoint, itemCategory;
+        String endpoint = "", itemCategory;
 
         if (itemCode != null && !itemCode.isEmpty())
         {
@@ -795,8 +801,11 @@ public class APIHandler
                 return itemCategory;
             }
 
-            endpoint = "/item_category?"
-                    + "item_code=" + URLEncoder.encode(itemCode, "UTF-8");
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+            {
+                endpoint = "/item_category?"
+                        + "item_code=" + URLEncoder.encode(itemCode, StandardCharsets.UTF_8);
+            }
         }
         else
         {
@@ -807,8 +816,11 @@ public class APIHandler
                 return itemCategory;
             }
 
-            endpoint = "/item_category?"
-                    + "item_name=" + URLEncoder.encode(itemName, "UTF-8");
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+            {
+                endpoint = "/item_category?"
+                        + "item_name=" + URLEncoder.encode(itemName, StandardCharsets.UTF_8);
+            }
         }
 
         // If not in cache -> try the server
@@ -844,8 +856,12 @@ public class APIHandler
             return prices;
         }
 
-        String endpoint = "/item_prices?"
-                + "item_code=" + URLEncoder.encode(itemCode, "UTF-8");
+        String endpoint = null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+        {
+            endpoint = "/item_prices?"
+                    + "item_code=" + URLEncoder.encode(itemCode, StandardCharsets.UTF_8);
+        }
 
         return parsePriceResponse(getRaw(endpoint));
     }
@@ -938,7 +954,7 @@ public class APIHandler
 
     public Map<String, ArrayList<ItemVariant>> buildVariants(ArrayList<Item> items)
     {
-        Map<String, ArrayList<ItemVariant>> variants = new java.util.HashMap<>();
+        Map<String, ArrayList<ItemVariant>> variants = new HashMap<>();
 
         if (items == null)
         {

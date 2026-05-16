@@ -81,14 +81,7 @@ public class ListActivity extends MasterActivity
 
         groups = apiHandler.getGroups();
 
-        if (groups != null && !groups.isEmpty())
-        {
-            btnAddItem.setEnabled(true);
-        }
-        else
-        {
-            btnAddItem.setEnabled(false);
-        }
+        btnAddItem.setEnabled(groups != null && !groups.isEmpty());
 
         resumeInit();
     }

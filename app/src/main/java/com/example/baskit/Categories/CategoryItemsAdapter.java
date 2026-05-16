@@ -34,7 +34,7 @@ import java.util.HashMap;
 
 public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdapter.ViewHolder>
 {
-    private Category category;
+    private final Category category;
 
     private final ArrayList<Supermarket> baseSupermarkets;
     private ArrayList<Supermarket> supermarkets;
@@ -525,7 +525,7 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
 
     public static class SupermarketItemsAdapter extends ItemsAdapter
     {
-        private OnItemMovedListener listener;
+        private final OnItemMovedListener listener;
 
         public interface OnItemMovedListener
         {

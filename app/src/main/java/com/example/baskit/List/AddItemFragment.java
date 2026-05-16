@@ -715,9 +715,9 @@ public class AddItemFragment extends DialogFragment
 
             class ScoredItem
             {
-                String item;
-                int score;
-                boolean isSuggestion;
+                final String item;
+                final int score;
+                final boolean isSuggestion;
                 ScoredItem(String item, int score, boolean isSuggestion)
                 {
                     this.item = item;
