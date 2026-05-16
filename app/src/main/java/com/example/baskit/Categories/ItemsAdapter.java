@@ -120,7 +120,7 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
             holder.btnDown.setColorFilter(Baskit.getAppColor(context, com.google.android.material.R.attr.colorSecondary));
         }
 
-        if (!item.isUnassigned())
+        if (!item.isUnassignedToSupermarket())
         {
             holder.tvPrice.setText(Baskit.getTotalDisplayString(item.getTotal(), item.isPriceKnown(), false, false));
             holder.tvPrice.setTextColor(Baskit.getAppColor(context, com.google.android.material.R.attr.colorPrimary));
@@ -232,24 +232,16 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
         }
     }
 
-    private void sortItems()
+    public void removeItem(Item item)
     {
-        Collections.sort(items, (i1, i2) -> i1.getId().compareTo(i2.getId()));
-    }
+        int position = items.indexOf(item);
 
-    public void removeItemFromAdapter(int position)
-    {
+        // Remove from adapter
         if (position >= 0 && position < items.size())
         {
             items.remove(position);
             notifyItemRemoved(position);
         }
-    }
-
-    public void removeItem(Item item)
-    {
-        int position = items.indexOf(item);
-        removeItemFromAdapter(position);
 
         if (upperClassFns != null)
         {
@@ -257,20 +249,8 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
         }
     }
 
-    public void clearAll()
+    private void sortItems()
     {
-        if (!items.isEmpty())
-        {
-            items.clear();
-            notifyDataSetChanged();
-        }
-    }
-
-    public void updateItems(ArrayList<Item> newItems)
-    {
-        items.clear();
-        items.addAll(newItems);
-        sortItems();
-        notifyDataSetChanged();
+        Collections.sort(items, (i1, i2) -> i1.getId().compareTo(i2.getId()));
     }
 }

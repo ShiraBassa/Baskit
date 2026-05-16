@@ -1,12 +1,11 @@
-package com.example.baskit.API;
+package com.example.baskit.OnlineComponents;
 
 import android.util.Log;
 
 import com.example.baskit.Baskit;
-import com.example.baskit.Categories.ItemViewPricesAdapter;
 import com.example.baskit.MainComponents.Item;
-import com.example.baskit.MainComponents.ItemInfo;
-import com.example.baskit.MainComponents.PriceRow;
+import com.example.baskit.MainComponents.Item.ItemInfo;
+import com.example.baskit.MainComponents.Item.ItemVariant;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.SQLite.AppDatabase;
 import com.example.baskit.SQLite.ItemCategory;
@@ -112,13 +111,18 @@ public class APIHandler
 
         try (Response response = client.newCall(request).execute())
         {
-            if (!response.isSuccessful()) {
-                throw new IOException("GET failed: " + response.code() + " " + response.message());
+            ResponseBody responseBody = response.body();
+
+            if (!response.isSuccessful())
+            {
+                Log.e("API", "GET failed: " + endpoint + " -> " + response.code());
+                return null; // instead of crashing, return null
             }
 
-            ResponseBody responseBody = response.body();
-            if (responseBody == null) {
-                throw new IOException("Empty response body for GET " + endpoint);
+            if (responseBody == null)
+            {
+                Log.e("API", "Empty response body: " + endpoint);
+                return null;
             }
 
             return responseBody.string();
@@ -137,14 +141,6 @@ public class APIHandler
         {
             if (!response.isSuccessful()) throw new IOException("POST failed: " + response);
         }
-    }
-
-    private String getBody(String name, ArrayList<String> arr) throws JSONException
-    {
-        JSONArray jsonArray = new JSONArray(arr);  // convert ArrayList<String> to JSONArray
-        JSONObject body = new JSONObject().put(name, jsonArray);
-
-        return body.toString();
     }
 
     private Map<String, Map<String, Double>> parsePriceResponse(String response) throws JSONException
@@ -244,36 +240,6 @@ public class APIHandler
         }
     }
 
-    private void updateAllCache() throws JSONException, IOException
-    {
-        try
-        {
-            var pricesFuture = networkExecutor.submit(this::getItemPricesFromAPI);
-            var categoriesFuture = networkExecutor.submit(this::getCategoriesFromAPI);
-            var groupsFuture = networkExecutor.submit(this::getGroupsFromAPI);
-            var infosFuture = networkExecutor.submit(this::getItemInfosFromAPI);
-
-            Map<String, Map<String, Map<String, Double>>> freshItemPrices = pricesFuture.get();
-            Map<String, String> freshCategories = categoriesFuture.get();
-            Map<String, ArrayList<String>> freshGroups = groupsFuture.get();
-            Map<String, ItemInfo> freshItemInfos = infosFuture.get();
-
-            cachedItemPrices = new HashMap<>(freshItemPrices);
-            cachedItemCategories = new HashMap<>(freshCategories);
-            cachedGroups = new HashMap<>(freshGroups);
-            cachedItemInfos = new HashMap<>(freshItemInfos);
-
-            saveItemPricesToDB(freshItemPrices);
-            saveCategoriesToDB(freshCategories);
-            saveGroupsToDB(freshGroups);
-            saveItemInfosToDB(freshItemInfos);
-        }
-        catch (Exception e)
-        {
-            throw new IOException("Cache update failed", e);
-        }
-    }
-
     private Map<String, Map<String, Map<String, Double>>> loadItemPricesFromDB()
     {
         List<ItemPricesEntity> dbItems = AppDatabase.getDatabase(Baskit.getContext())
@@ -353,6 +319,50 @@ public class APIHandler
         }
 
         return result;
+    }
+
+    private void updateAllCache()
+    {
+        try
+        {
+            var pricesFuture = networkExecutor.submit(this::getItemPricesFromAPI);
+            var categoriesFuture = networkExecutor.submit(this::getCategoriesFromAPI);
+            var groupsFuture = networkExecutor.submit(this::getGroupsFromAPI);
+            var infosFuture = networkExecutor.submit(this::getItemInfosFromAPI);
+
+            Map<String, Map<String, Map<String, Double>>> freshItemPrices = pricesFuture.get();
+            Map<String, String> freshCategories = categoriesFuture.get();
+            Map<String, ArrayList<String>> freshGroups = groupsFuture.get();
+            Map<String, ItemInfo> freshItemInfos = infosFuture.get();
+
+            if (freshItemPrices != null && !freshItemPrices.isEmpty())
+            {
+                cachedItemPrices = new HashMap<>(freshItemPrices);
+                saveItemPricesToDB(freshItemPrices);
+            }
+
+            if (freshCategories != null && !freshCategories.isEmpty())
+            {
+                cachedItemCategories = new HashMap<>(freshCategories);
+                saveCategoriesToDB(freshCategories);
+            }
+
+            if (freshGroups != null && !freshGroups.isEmpty())
+            {
+                cachedGroups = new HashMap<>(freshGroups);
+                saveGroupsToDB(freshGroups);
+            }
+
+            if (freshItemInfos != null && !freshItemInfos.isEmpty())
+            {
+                cachedItemInfos = new HashMap<>(freshItemInfos);
+                saveItemInfosToDB(freshItemInfos);
+            }
+        }
+        catch (Exception e)
+        {
+            Log.e("API", "Cache update failed but app continues", e);
+        }
     }
 
     private void saveItemPricesToDB(Map<String, Map<String, Map<String, Double>>> freshItems)
@@ -469,6 +479,18 @@ public class APIHandler
         });
     }
 
+    public void updateSupermarkets() throws JSONException, IOException
+    {
+        Map<String, ArrayList<String>> branches = getChoices();
+        this.supermarkets = Supermarket.getSupermarketsFromStrings(branches);
+    }
+
+    public ArrayList<Supermarket> getUpdatedSupermarkets() throws JSONException, IOException
+    {
+        updateSupermarkets();
+        return getSupermarkets();
+    }
+
     private Map<String, Map<String, Map<String, Double>>> getItemPricesFromAPI()
     {
         Map<String, Map<String, Map<String, Double>>> items = new HashMap<>();
@@ -476,6 +498,7 @@ public class APIHandler
         try
         {
             String itemsRaw = getRaw("/items_prices");
+            if (itemsRaw == null) return new HashMap<>();
             JSONObject itemsJson = new JSONObject(itemsRaw);
 
             for (Iterator<String> itemIter = itemsJson.keys(); itemIter.hasNext();)
@@ -498,7 +521,7 @@ public class APIHandler
     public Map<String, String> getCategoriesFromAPI() throws IOException, JSONException
     {
         String raw = getRaw("/categories");
-
+        if (raw == null) return new HashMap<>();
         JSONObject categoriesJson = new JSONObject(raw);
         Map<String, String> categories = new HashMap<>();
 
@@ -521,6 +544,7 @@ public class APIHandler
         try
         {
             String raw = getRaw("/groups");
+            if (raw == null) return new HashMap<>();
             JSONObject json = new JSONObject(raw);
 
             for (Iterator<String> it = json.keys(); it.hasNext();)
@@ -552,6 +576,7 @@ public class APIHandler
         try
         {
             String raw = getRaw("/item_infos");
+            if (raw == null) return new HashMap<>();
             JSONObject json = new JSONObject(raw);
 
             for (Iterator<String> it = json.keys(); it.hasNext();)
@@ -585,24 +610,169 @@ public class APIHandler
         return infos;
     }
 
-    public Map<String, Map<String, Map<String, Double>>> getItemPrices()
+    public ArrayList<String> getAllCities() throws IOException, JSONException
     {
-        return cachedItemPrices;
+        String citiesRaw = getRaw("/all_cities");
+
+        JSONArray citiesJson = new JSONArray(citiesRaw);
+        ArrayList<String> cities = new ArrayList<>();
+
+        for (int i = 0; i < citiesJson.length(); i++)
+        {
+            cities.add(citiesJson.getString(i));
+        }
+
+        return cities;
     }
 
-    public Map<String, String> getCategories()
+    public ArrayList<String> getCities() throws IOException, JSONException
     {
-        return cachedItemCategories;
+        String citiesRaw = getRaw("/cities");
+
+        JSONArray citiesJson = new JSONArray(citiesRaw);
+        ArrayList<String> cities = new ArrayList<>();
+
+        for (int i = 0; i < citiesJson.length(); i++)
+        {
+            cities.add(citiesJson.getString(i));
+        }
+
+        return cities;
     }
 
-    public Map<String, ArrayList<String>> getGroups()
+    public ArrayList<String> getStores() throws IOException, JSONException
     {
-        return cachedGroups;
+        String storesRaw = getRaw("/stores");
+        JSONArray storesJson = new JSONArray(storesRaw);
+        ArrayList<String> stores = new ArrayList<>();
+
+        for (int i = 0; i < storesJson.length(); i++)
+        {
+            stores.add(storesJson.getString(i));
+        }
+
+        return stores;
+    }
+
+    private Map<String, ArrayList<String>> getChoices() throws IOException, JSONException
+    {
+        String branchesRaw = getRaw("/choices");
+        JSONObject branchesJson = new JSONObject(branchesRaw);
+        Map<String, ArrayList<String>> branchesMap = new HashMap<>();
+
+        for (Iterator<String> it = branchesJson.keys(); it.hasNext();)
+        {
+            String store = it.next();
+            JSONArray arr = branchesJson.getJSONArray(store);
+            ArrayList<String> branchList = new ArrayList<>();
+
+            for (int i = 0; i < arr.length(); i++)
+            {
+                branchList.add(arr.getString(i));
+            }
+            branchesMap.put(store, branchList);
+        }
+
+        return branchesMap;
+    }
+
+    public Map<String, ArrayList<String>> getAllBranches(ArrayList<String> cities)
+            throws IOException, JSONException
+    {
+        StringBuilder endpoint = new StringBuilder("/all_branches");
+
+        if (cities != null && !cities.isEmpty())
+        {
+            endpoint.append("?");
+            for (int i = 0; i < cities.size(); i++)
+            {
+                endpoint.append("cities=");
+                endpoint.append(URLEncoder.encode(cities.get(i), "UTF-8"));
+
+                if (i < cities.size() - 1)
+                {
+                    endpoint.append("&");
+                }
+            }
+        }
+
+        String raw = getRaw(endpoint.toString());
+        JSONObject json = new JSONObject(raw);
+
+        Map<String, ArrayList<String>> result = new HashMap<>();
+
+        Iterator<String> keys = json.keys();
+        while (keys.hasNext())
+        {
+            String store = keys.next();
+            JSONArray arr = json.getJSONArray(store);
+
+            ArrayList<String> branches = new ArrayList<>();
+            for (int i = 0; i < arr.length(); i++)
+            {
+                branches.add(arr.getString(i));
+            }
+
+            result.put(store, branches);
+        }
+
+        return result;
+    }
+    
+    public ItemInfo getItemInfo(String itemCode)
+    {
+        if (itemCode == null || itemCode.isEmpty() || cachedItemInfos == null || cachedItemInfos.isEmpty()) return null;
+        return cachedItemInfos.get(itemCode);
     }
 
     public Map<String, ItemInfo> getItemInfos()
     {
         return cachedItemInfos;
+    }
+
+    public ArrayList<String> getGroup(String base)
+    {
+        if (base == null || base.isEmpty() || cachedGroups == null || cachedGroups.isEmpty()) return new ArrayList<>();
+
+        ArrayList<String> cached = cachedGroups.get(base);
+        return cached;
+    }
+    
+    public Map<String, ArrayList<String>> getGroups()
+    {
+        return cachedGroups;
+    }
+
+    private String getItemCategoryByName(String name)
+    {
+        if (name == null || name.isEmpty() || cachedGroups == null || cachedGroups.isEmpty())
+        {
+            return null;
+        }
+
+        ArrayList<String> group = cachedGroups.get(name);
+
+        if (group == null || group.isEmpty())
+        {
+            return null;
+        }
+
+        for (String code : group)
+        {
+            String category = cachedItemCategories.get(code);
+
+            if (category != null && !category.isEmpty())
+            {
+                return category;
+            }
+        }
+
+        return null;
+    }
+
+    public ArrayList<Supermarket> getSupermarkets()
+    {
+        return supermarkets;
     }
 
     public String getItemCategory(Item item) throws IOException, JSONException
@@ -665,179 +835,6 @@ public class APIHandler
         return itemCategory;
     }
 
-    private String getItemCategoryByName(String name)
-    {
-        if (name == null || name.isEmpty() || cachedGroups == null || cachedGroups.isEmpty())
-        {
-            return null;
-        }
-
-        ArrayList<String> group = cachedGroups.get(name);
-
-        if (group == null || group.isEmpty())
-        {
-            return null;
-        }
-
-        for (String code : group)
-        {
-            String category = cachedItemCategories.get(code);
-
-            if (category != null && !category.isEmpty())
-            {
-                return category;
-            }
-        }
-
-        return null;
-    }
-
-    public boolean hasCategory(String itemCode)
-    {
-        if (itemCode == null) return false;
-        return cachedItemCategories.containsKey(itemCode.trim().toLowerCase());
-    }
-
-    public ArrayList<String> getAllCities() throws IOException, JSONException
-    {
-        String citiesRaw = getRaw("/all_cities");
-
-        JSONArray citiesJson = new JSONArray(citiesRaw);
-        ArrayList<String> cities = new ArrayList<>();
-
-        for (int i = 0; i < citiesJson.length(); i++)
-        {
-            cities.add(citiesJson.getString(i));
-        }
-
-        return cities;
-    }
-
-    public ArrayList<String> getCities() throws IOException, JSONException
-    {
-        String citiesRaw = getRaw("/cities");
-
-        JSONArray citiesJson = new JSONArray(citiesRaw);
-        ArrayList<String> cities = new ArrayList<>();
-
-        for (int i = 0; i < citiesJson.length(); i++)
-        {
-            cities.add(citiesJson.getString(i));
-        }
-
-        return cities;
-    }
-
-
-    public void setCities(ArrayList<String> cities) throws IOException, JSONException
-    {
-        postRaw("/cities", getBody("cities", cities));
-    }
-
-    public ArrayList<String> getStores() throws IOException, JSONException
-    {
-        String storesRaw = getRaw("/stores");
-        JSONArray storesJson = new JSONArray(storesRaw);
-        ArrayList<String> stores = new ArrayList<>();
-
-        for (int i = 0; i < storesJson.length(); i++) {
-            stores.add(storesJson.getString(i));
-        }
-        return stores;
-    }
-
-    public Map<String, ArrayList<String>> getBranches() throws IOException, JSONException
-    {
-        String branchesRaw = getRaw("/branches");
-        JSONObject branchesJson = new JSONObject(branchesRaw);
-        Map<String, ArrayList<String>> branchesMap = new HashMap<>();
-
-        for (Iterator<String> it = branchesJson.keys(); it.hasNext();)
-        {
-            String store = it.next();
-            JSONArray arr = branchesJson.getJSONArray(store);
-            ArrayList<String> branchList = new ArrayList<>();
-
-            for (int i = 0; i < arr.length(); i++)
-            {
-                branchList.add(arr.getString(i));
-            }
-            branchesMap.put(store, branchList);
-        }
-
-        return branchesMap;
-    }
-
-    public void setBranches(Map<String, ArrayList<String>> branches) throws IOException, JSONException
-    {
-        JSONObject body = new JSONObject();
-
-        for (Map.Entry<String, ArrayList<String>> entry : branches.entrySet())
-        {
-            JSONArray arr = new JSONArray(entry.getValue()); // convert ArrayList to JSONArray
-            body.put(entry.getKey(), arr); // now it will serialize as ["a","b","c"]
-        }
-
-        postRaw("/branches", body.toString());
-    }
-
-    private Map<String, ArrayList<String>> getChoices() throws IOException, JSONException
-    {
-        String branchesRaw = getRaw("/choices");
-        JSONObject branchesJson = new JSONObject(branchesRaw);
-        Map<String, ArrayList<String>> branchesMap = new HashMap<>();
-
-        for (Iterator<String> it = branchesJson.keys(); it.hasNext();)
-        {
-            String store = it.next();
-            JSONArray arr = branchesJson.getJSONArray(store);
-            ArrayList<String> branchList = new ArrayList<>();
-
-            for (int i = 0; i < arr.length(); i++)
-            {
-                branchList.add(arr.getString(i));
-            }
-            branchesMap.put(store, branchList);
-        }
-
-        return branchesMap;
-    }
-
-    public ArrayList<Supermarket> getSupermarkets()
-    {
-        return supermarkets;
-    }
-
-    public boolean singleSectionInSupermarkets(Supermarket supermarket)
-    {
-        for (Supermarket sm : supermarkets)
-        {
-            if (!sm.equals(supermarket) && sm.getSupermarket().equals(supermarket.getSupermarket()))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    public void updateSupermarkets() throws JSONException, IOException
-    {
-        Map<String, ArrayList<String>> branches = getChoices();
-        this.supermarkets = Supermarket.getSupermarketsFromStrings(branches);
-    }
-
-    public void updateSupermarkets(ArrayList<Supermarket> supermarketsNew)
-    {
-        this.supermarkets = supermarketsNew;
-    }
-
-    public ArrayList<Supermarket> getUpdatedSupermarkets() throws JSONException, IOException
-    {
-        updateSupermarkets();
-        return getSupermarkets();
-    }
-
     public Map<String, Map<String, Double>> getItemPricesByCode(String itemCode) throws IOException, JSONException
     {
         Map<String, Map<String, Double>> prices = cachedItemPrices.get(itemCode);
@@ -853,218 +850,43 @@ public class APIHandler
         return parsePriceResponse(getRaw(endpoint));
     }
 
-    public ItemInfo getItemInfoFromAPI(String itemCode) throws IOException, JSONException
+    public void setCities(ArrayList<String> cities) throws IOException, JSONException
     {
-        if (itemCode == null || itemCode.isEmpty()) return null;
+        JSONArray jsonArray = new JSONArray(cities);  // convert ArrayList<String> to JSONArray
+        JSONObject body = new JSONObject().put("cities", jsonArray);
 
-        String endpoint = "/item_info?"
-                + "item_code=" + URLEncoder.encode(itemCode, "UTF-8");
+        postRaw("/cities", body.toString());
+    }
 
-        String raw = getRaw(endpoint);
-        JSONObject json = new JSONObject(raw);
+    public void setBranches(Map<String, ArrayList<String>> branches) throws IOException, JSONException
+    {
+        JSONObject body = new JSONObject();
 
-        String baseName = json.optString("name", "");
-        String company = json.optString("company", "");
-        String unit = json.optString("unit", "");
-
-        double weight = 0;
-
-        if (json.has("weight"))
+        for (Map.Entry<String, ArrayList<String>> entry : branches.entrySet())
         {
-            try
+            JSONArray arr = new JSONArray(entry.getValue()); // convert ArrayList to JSONArray
+            body.put(entry.getKey(), arr); // now it will serialize as ["a","b","c"]
+        }
+
+        postRaw("/branches", body.toString());
+    }
+
+    public boolean singleSectionInSupermarkets(Supermarket supermarket)
+    {
+        for (Supermarket sm : supermarkets)
+        {
+            if (!sm.equals(supermarket) && sm.getSupermarket().equals(supermarket.getSupermarket()))
             {
-                weight = json.getDouble("weight");
-            }
-            catch (Exception ignored) {}
-        }
-
-        return new ItemInfo(itemCode, baseName, company, weight, unit);
-    }
-
-    public ItemInfo getItemInfo(String itemCode)
-    {
-        if (itemCode == null || itemCode.isEmpty() || cachedItemInfos == null || cachedItemInfos.isEmpty()) return null;
-        return cachedItemInfos.get(itemCode);
-    }
-
-    public Map<String, Map<String, Map<String, Double>>> previewItems(String store, String branch)
-            throws IOException, JSONException
-    {
-        String endpoint = "/preview_items?"
-                + "store=" + URLEncoder.encode(store, "UTF-8")
-                + "&branch=" + URLEncoder.encode(branch, "UTF-8");
-
-        String raw = getRaw(endpoint);
-        JSONObject itemsJson = new JSONObject(raw);
-
-        Map<String, Map<String, Map<String, Double>>> items = new HashMap<>();
-
-        for (Iterator<String> itemIter = itemsJson.keys(); itemIter.hasNext();)
-        {
-            String itemCode = itemIter.next();
-            JSONObject storesJson = itemsJson.getJSONObject(itemCode);
-            Map<String, Map<String, Double>> storeMap = parsePriceResponse(storesJson.toString());
-
-            items.put(itemCode, storeMap);
-        }
-
-        return items;
-    }
-
-    public ArrayList<String> getAllBranches(String store) throws IOException, JSONException
-    {
-        String endpoint = "/all_branches?"
-                + "store=" + URLEncoder.encode(store, "UTF-8");
-
-        String raw = getRaw(endpoint);
-        JSONArray arr = new JSONArray(raw);
-
-        ArrayList<String> branches = new ArrayList<>();
-
-        for (int i = 0; i < arr.length(); i++)
-        {
-            branches.add(arr.getString(i));
-        }
-
-        return branches;
-    }
-
-    public Map<String, ArrayList<String>> getAllBranchesBulk(ArrayList<String> cities)
-            throws IOException, JSONException
-    {
-        StringBuilder endpoint = new StringBuilder("/all_branches_bulk");
-
-        if (cities != null && !cities.isEmpty())
-        {
-            endpoint.append("?");
-            for (int i = 0; i < cities.size(); i++)
-            {
-                endpoint.append("cities=");
-                endpoint.append(URLEncoder.encode(cities.get(i), "UTF-8"));
-
-                if (i < cities.size() - 1)
-                {
-                    endpoint.append("&");
-                }
+                return false;
             }
         }
 
-        String raw = getRaw(endpoint.toString());
-        JSONObject json = new JSONObject(raw);
-
-        Map<String, ArrayList<String>> result = new HashMap<>();
-
-        Iterator<String> keys = json.keys();
-        while (keys.hasNext())
-        {
-            String store = keys.next();
-            JSONArray arr = json.getJSONArray(store);
-
-            ArrayList<String> branches = new ArrayList<>();
-            for (int i = 0; i < arr.length(); i++)
-            {
-                branches.add(arr.getString(i));
-            }
-
-            result.put(store, branches);
-        }
-
-        return result;
+        return true;
     }
 
-    public Map<String, ArrayList<String>> getAllBranchesBulk()
-            throws IOException, JSONException
+    public ArrayList<ItemVariant> buildVariant(Item item)
     {
-        return getAllBranchesBulk(null);
-    }
-
-    public ArrayList<String> getGroupFromAPI(String base) throws IOException, JSONException
-    {
-        if (base == null || base.isEmpty()) return new ArrayList<>();
-
-        ArrayList<String> cached = cachedGroups != null ? cachedGroups.get(base) : null;
-        if (cached != null)
-        {
-            return cached;
-        }
-
-        String endpoint = "/group?"
-                + "base=" + URLEncoder.encode(base, "UTF-8");
-
-        String raw = getRaw(endpoint);
-        JSONArray arr = new JSONArray(raw);
-
-        ArrayList<String> codes = new ArrayList<>();
-        for (int i = 0; i < arr.length(); i++)
-        {
-            codes.add(arr.getString(i));
-        }
-
-        // Update cache
-        if (cachedGroups != null)
-        {
-            cachedGroups.put(base, codes);
-        }
-
-        return codes;
-    }
-
-    public ArrayList<String> getGroup(String base) throws IOException, JSONException
-    {
-        if (base == null || base.isEmpty() || cachedGroups == null || cachedGroups.isEmpty()) return new ArrayList<>();
-
-        ArrayList<String> cached = cachedGroups.get(base);
-        return cached;
-    }
-
-    public String getItemGroupName(String id) throws IOException, JSONException
-    {
-        if (id == null || id.isEmpty()) return null;
-
-        for (String baseName : cachedGroups.keySet())
-        {
-            ArrayList<String> itemCodes = cachedGroups.get(baseName);
-            if (itemCodes == null || itemCodes.isEmpty()) continue;
-
-            if (itemCodes.contains(id))
-            {
-                return baseName;
-            }
-        }
-
-        return null;
-    }
-
-    public ArrayList<String> getItemVariants(String id) throws IOException, JSONException
-    {
-        if (id == null || id.isEmpty()) return new ArrayList<>();
-        return cachedGroups.get(getItemGroupName(id));
-    }
-
-    public Map<String, ArrayList<PriceRow>> buildRows(ArrayList<Item> items)
-    {
-        Map<String, ArrayList<PriceRow>> rows = new java.util.HashMap<>();
-
-        if (items == null)
-        {
-            return rows;
-        }
-
-        for (Item item : items)
-        {
-            String itemName = item.getBaseName();
-            if (itemName == null || itemName.isEmpty()) continue;
-
-            ArrayList<PriceRow> itemRows = buildRow(item);
-            rows.put(itemName, itemRows);
-        }
-
-        return rows;
-    }
-
-    public ArrayList<PriceRow> buildRow(Item item)
-    {
-        ArrayList<PriceRow> rows = new ArrayList<>();
+        ArrayList<ItemVariant> rows = new ArrayList<>();
 
         if (item == null)
         {
@@ -1100,7 +922,7 @@ public class APIHandler
                     Supermarket sm = new Supermarket(supermarketName, section);
 
                     rows.add(
-                            new PriceRow(
+                            new ItemVariant(
                                     sm,
                                     price,
                                     cachedItemInfos.get(code)
@@ -1109,6 +931,27 @@ public class APIHandler
                     );
                 }
             }
+        }
+
+        return rows;
+    }
+
+    public Map<String, ArrayList<ItemVariant>> buildVariants(ArrayList<Item> items)
+    {
+        Map<String, ArrayList<ItemVariant>> rows = new java.util.HashMap<>();
+
+        if (items == null)
+        {
+            return rows;
+        }
+
+        for (Item item : items)
+        {
+            String itemName = item.getBaseName();
+            if (itemName == null || itemName.isEmpty()) continue;
+
+            ArrayList<ItemVariant> itemRows = buildVariant(item);
+            rows.put(itemName, itemRows);
         }
 
         return rows;

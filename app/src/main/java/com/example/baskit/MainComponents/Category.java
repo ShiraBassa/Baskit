@@ -4,9 +4,9 @@ import com.google.firebase.database.Exclude;
 import com.google.firebase.database.IgnoreExtraProperties;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import com.example.baskit.MainComponents.Item.ItemVariant;
 
 @IgnoreExtraProperties
 public class Category implements SortableEntity
@@ -83,6 +83,29 @@ public class Category implements SortableEntity
     }
 
     @Exclude
+    public void setItems(ArrayList<Item> items)
+    {
+        Map<String, Item> newItems = new HashMap<>();
+
+        if (items != null)
+        {
+            for (Item item : items)
+            {
+                newItems.put(item.getBaseName(), item);
+            }
+        }
+
+        setItems(newItems);
+    }
+
+    @Exclude
+    public void setItemsFromFlat(ArrayList<Item> items)
+    {
+        this.items = new ArrayList<>(items);
+        updateFinished();
+    }
+
+    @Exclude
     public int countUnchecked()
     {
         int count = 0;
@@ -136,29 +159,6 @@ public class Category implements SortableEntity
         }
 
         return items;
-    }
-
-    @Exclude
-    public void setItems(ArrayList<Item> items)
-    {
-        Map<String, Item> newItems = new HashMap<>();
-
-        if (items != null)
-        {
-            for (Item item : items)
-            {
-                newItems.put(item.getBaseName(), item);
-            }
-        }
-
-        setItems(newItems);
-    }
-
-    @Exclude
-    public void setItemsFromFlat(ArrayList<Item> items)
-    {
-        this.items = new ArrayList<>(items);
-        updateFinished();
     }
 
     @Exclude
@@ -223,16 +223,6 @@ public class Category implements SortableEntity
     }
 
     @Exclude
-    public boolean doesExists(Item item)
-    {
-        for (Item i : items)
-        {
-            if (i.getBaseName().equals(item.getBaseName())) return true;
-        }
-        return false;
-    }
-
-    @Exclude
     public ArrayList<String> toItemNames()
     {
         ArrayList<String> itemNames = new ArrayList<>();
@@ -252,30 +242,30 @@ public class Category implements SortableEntity
     }
 
     @Exclude
-    public void setCheapestRows(Map<String, ArrayList<PriceRow>> rowsAllItems)
+    public void setCheapestVariants(Map<String, ArrayList<ItemVariant>> variantsAllItems)
     {
-        if (rowsAllItems == null) return;
+        if (variantsAllItems == null) return;
 
         for (Item item : this.items)
         {
-            ArrayList<PriceRow> rows = rowsAllItems.get(item.baseName);
+            ArrayList<ItemVariant> rows = variantsAllItems.get(item.baseName);
             if (rows == null) continue;
 
-            item.setCheapestRow(rows);
+            item.setCheapestVariant(rows);
         }
     }
 
     @Exclude
-    public void setSupermarketsRows(Supermarket supermarket, Map<String, ArrayList<PriceRow>> rowsAllItems)
+    public void setSupermarketsVariants(Supermarket supermarket, Map<String, ArrayList<ItemVariant>> variantsAllItems)
     {
-        if (rowsAllItems == null) return;
+        if (variantsAllItems == null) return;
 
         for (Item item : this.items)
         {
-            ArrayList<PriceRow> rows = rowsAllItems.get(item.baseName);
+            ArrayList<ItemVariant> rows = variantsAllItems.get(item.baseName);
             if (rows == null) continue;
 
-            item.setSupermarketRow(supermarket, rows);
+            item.setSupermarketVariant(supermarket, rows);
         }
     }
 

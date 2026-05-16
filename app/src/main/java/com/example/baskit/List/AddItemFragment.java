@@ -3,7 +3,6 @@ import android.view.WindowManager;
 
 import com.example.baskit.Categories.ItemViewPricesAdapter;
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -13,8 +12,10 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 
-import com.example.baskit.Categories.VariationsManager;
-import com.example.baskit.MainComponents.PriceRow;
+import com.example.baskit.Categories.ItemViewAlertDialog.VariationsManager;
+import com.example.baskit.MainComponents.Item.ItemInfo;
+import com.example.baskit.MainComponents.Item.ItemVariant;
+import com.example.baskit.MasterActivity;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import android.widget.Button;
@@ -30,7 +31,7 @@ import androidx.fragment.app.DialogFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.baskit.API.APIHandler;
+import com.example.baskit.OnlineComponents.APIHandler;
 import com.example.baskit.Baskit;
 import com.example.baskit.MainComponents.Item;
 import com.example.baskit.MainComponents.Supermarket;
@@ -47,12 +48,12 @@ public class AddItemFragment extends DialogFragment
     Item selectedItem;
 
     ArrayList<String> allItemNames;
-    ArrayList<String> masterItemNames;
+    final ArrayList<String> masterItemNames;
     ArrayList<String> decodedItemNames = new ArrayList<>();
     ArrayList<String> decodedItemNamesLower = new ArrayList<>();
     ChipGroup chipGroupWeights;
     ChipGroup chipGroupCompanies;
-    ArrayList<com.example.baskit.MainComponents.ItemInfo> currentVariations = new ArrayList<>();
+    ArrayList<ItemInfo> currentVariations = new ArrayList<>();
     ArrayList<String> listItemNames;
     ArrayList<String> itemSuggestions;
     Map<String, ArrayList<String>> groups;
@@ -70,7 +71,7 @@ public class AddItemFragment extends DialogFragment
     AutoCompleteTextView searchItem;
     RecyclerView recyclerSupermarkets;
 
-    Activity activity;
+    MasterActivity activity;
     Context context;
     AddItemInterface addItemInterface;
 
@@ -80,7 +81,7 @@ public class AddItemFragment extends DialogFragment
     }
 
     public AddItemFragment(
-            Activity activity,
+            MasterActivity activity,
             Context context,
             Map<String, ArrayList<String>> groups,
             ArrayList<String> listItemNames,
@@ -767,15 +768,15 @@ public class AddItemFragment extends DialogFragment
         ArrayList<String> codes = groups.get(baseName);
         if (codes == null || codes.isEmpty()) return;
 
-        Baskit.notActivityRunWhenServerActive(() ->
+        activity.runWhenServerActive(() ->
         {
-            ArrayList<com.example.baskit.MainComponents.ItemInfo> variations = new ArrayList<>();
+            ArrayList<ItemInfo> variations = new ArrayList<>();
 
             for (String code : codes)
             {
                 try
                 {
-                    com.example.baskit.MainComponents.ItemInfo info = apiHandler.getItemInfo(code);
+                    ItemInfo info = apiHandler.getItemInfo(code);
 
                     if (info != null && !variations.contains(info))
                     {
@@ -798,7 +799,7 @@ public class AddItemFragment extends DialogFragment
                         this::applyVariationFilter).setupVariationFilters();
             });
 
-        }, activity);
+        });
     }
 
     private void applyVariationFilter()
@@ -818,9 +819,9 @@ public class AddItemFragment extends DialogFragment
             if (chip.isChecked()) selectedCompanies.add(chip.getText().toString());
         }
 
-        ArrayList<com.example.baskit.MainComponents.ItemInfo> matching = new ArrayList<>();
+        ArrayList<ItemInfo> matching = new ArrayList<>();
 
-        for (com.example.baskit.MainComponents.ItemInfo info : currentVariations)
+        for (ItemInfo info : currentVariations)
         {
             boolean weightMatch = selectedWeights.isEmpty() ||
                     selectedWeights.contains(info.getFullMeasureStr());
@@ -838,7 +839,7 @@ public class AddItemFragment extends DialogFragment
         {
             boolean stillValid = false;
 
-            for (com.example.baskit.MainComponents.ItemInfo info : matching)
+            for (ItemInfo info : matching)
             {
                 boolean sameWeight =
                         selectedItem.getInfo().getFullMeasureStr() != null &&
@@ -864,7 +865,7 @@ public class AddItemFragment extends DialogFragment
 
         java.util.Set<String> availableWeights = new java.util.HashSet<>();
 
-        for (com.example.baskit.MainComponents.ItemInfo info : currentVariations)
+        for (ItemInfo info : currentVariations)
         {
             boolean companyMatch = selectedCompanies.isEmpty() ||
                     (info.getCompany() != null && selectedCompanies.contains(info.getCompany()));
@@ -877,7 +878,7 @@ public class AddItemFragment extends DialogFragment
 
         java.util.Set<String> availableCompanies = new java.util.HashSet<>();
 
-        for (com.example.baskit.MainComponents.ItemInfo info : currentVariations)
+        for (ItemInfo info : currentVariations)
         {
             boolean weightMatch = selectedWeights.isEmpty() ||
                     selectedWeights.contains(info.getFullMeasureStr());
@@ -982,8 +983,7 @@ public class AddItemFragment extends DialogFragment
         });
     }
 
-    private void loadSupermarketPricesForVariations(
-            ArrayList<com.example.baskit.MainComponents.ItemInfo> variations)
+    private void loadSupermarketPricesForVariations(ArrayList<ItemInfo> variations)
     {
         if (variations == null || variations.isEmpty())
         {
@@ -991,11 +991,11 @@ public class AddItemFragment extends DialogFragment
             return;
         }
 
-        Baskit.notActivityRunWhenServerActive(() ->
+        activity.runWhenServerActive(() ->
         {
-            ArrayList<PriceRow> rows = new ArrayList<>();
+            ArrayList<ItemVariant> rows = new ArrayList<>();
 
-            for (com.example.baskit.MainComponents.ItemInfo info : variations)
+            for (ItemInfo info : variations)
             {
                 try
                 {
@@ -1020,7 +1020,7 @@ public class AddItemFragment extends DialogFragment
                                     new Supermarket(supermarketName, sectionName);
 
                             rows.add(
-                                    new PriceRow(
+                                    new ItemVariant(
                                             sm,
                                             priceObj,
                                             info
@@ -1052,7 +1052,7 @@ public class AddItemFragment extends DialogFragment
                             }
                             else
                             {
-                                selectedItem.fillRow(row);
+                                selectedItem.fillVariant(row);
                             }
 
                             if (pricesAdapter != null)
@@ -1065,7 +1065,7 @@ public class AddItemFragment extends DialogFragment
                 recyclerSupermarkets.setAdapter(pricesAdapter);
             });
 
-        }, activity);
+        });
     }
 
     public void startProgressBar()

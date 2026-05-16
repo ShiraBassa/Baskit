@@ -2,16 +2,18 @@ package com.example.baskit.List;
 
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.baskit.Baskit;
-import com.example.baskit.MainComponents.PriceRow;
+import com.example.baskit.MainComponents.Item.ItemVariant;
 import com.example.baskit.MainComponents.SortableEntity;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import java.util.ArrayList;
@@ -29,7 +31,7 @@ public class SortListBottomSheetBuilder
     public static void show(
             AppCompatActivity activity,
             SortableEntity entity,
-            Map<String, ArrayList<PriceRow>> rows,
+            Map<String, ArrayList<ItemVariant>> rows,
             ArrayList<Supermarket> supermarkets,
             ApplyListener listener)
     {
@@ -49,12 +51,12 @@ public class SortListBottomSheetBuilder
             Map<Supermarket, Boolean> allKnown = new HashMap<>();
 
             SortableEntity cheapestPreview = entity.copy();
-            cheapestPreview.setCheapestRows(rows);
+            cheapestPreview.setCheapestVariants(rows);
 
             for (Supermarket sm : supermarkets)
             {
                 SortableEntity preview = entity.copy();
-                preview.setSupermarketsRows(sm, rows);
+                preview.setSupermarketsVariants(sm, rows);
 
                 totals.put(sm, preview.getTotal());
                 allKnown.put(sm, preview.allPricesKnown());
@@ -122,5 +124,19 @@ public class SortListBottomSheetBuilder
         }).start();
 
         dialog.show();
+
+        View bottomSheet = dialog.findViewById(com.google.android.material.R.id.design_bottom_sheet);
+
+        if (bottomSheet != null)
+        {
+            ViewGroup.LayoutParams params = bottomSheet.getLayoutParams();
+            params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+            bottomSheet.setLayoutParams(params);
+
+            BottomSheetBehavior<View> behavior = BottomSheetBehavior.from(bottomSheet);
+            behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+            behavior.setSkipCollapsed(false);
+            behavior.setFitToContents(true);
+        }
     }
 }

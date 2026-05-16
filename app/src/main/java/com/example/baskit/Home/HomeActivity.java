@@ -1,12 +1,22 @@
 package com.example.baskit.Home;
 
+import static com.example.baskit.Baskit.getAppColor;
+
+import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Typeface;
+import android.graphics.text.LineBreaker;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.text.Layout;
 import android.util.Base64;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -18,15 +28,15 @@ import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.baskit.AI.AIHandler;
-import com.example.baskit.API.APIHandler;
+import com.example.baskit.OnlineComponents.APIHandler;
 import com.example.baskit.Baskit;
-import com.example.baskit.Firebase.FirebaseAuthHandler;
-import com.example.baskit.Firebase.FirebaseDBHandler;
+import com.example.baskit.OnlineComponents.FirebaseAuthHandler;
+import com.example.baskit.OnlineComponents.FirebaseDBHandler;
 import com.example.baskit.Login.LoginActivity;
 import com.example.baskit.MainComponents.List;
 import com.example.baskit.List.ListActivity;
@@ -59,7 +69,7 @@ public class HomeActivity extends MasterActivity
     EditText adEtName;
     TextView tvTitle;
     RecyclerView listsRecycler;
-    HomeGridAdapter listsGridAdapter;
+    GridAdapter listsGridAdapter;
 
     private ActivityResultLauncher<Intent> loginLauncher =
             registerForActivityResult(
@@ -71,27 +81,49 @@ public class HomeActivity extends MasterActivity
                         {
                             if (result.getResultCode() == Activity.RESULT_OK)
                             {
-                                user = authHandler.getUser();
-
-                                runWhenServerActive(() ->
+                                authHandler.checkCurrUser(new FirebaseAuthHandler.AuthCallback()
                                 {
-                                    try
+                                    @Override
+                                    public void onAuthSuccess()
                                     {
-                                        APIHandler.getInstance().preload();
-                                    }
-                                    catch (JSONException | IOException e)
-                                    {
-                                        Log.e("HomeActivity", "Preload failed", e);
+                                        user = authHandler.getUser();
+
+                                        runWhenServerActive(() ->
+                                        {
+                                            try
+                                            {
+                                                APIHandler.getInstance().preload();
+                                            }
+                                            catch (JSONException | IOException e)
+                                            {
+                                                Log.e("HomeActivity", "Preload failed", e);
+                                            }
+
+                                        runOnUiThread(() ->
+                                        {
+                                            if (listsRecycler == null)
+                                            {
+                                                setContentView(R.layout.activity_home);
+                                                init();
+                                            }
+                                        });
+                                        });
+
+                                        runWhenServerActive(() ->
+                                        {
+                                            if (user != null && inviteCode != null)
+                                            {
+                                                sendJoinRequest(inviteCode);
+                                            }
+                                        });
                                     }
 
-                                    runOnUiThread(() ->
+                                    @Override
+                                    public void onAuthError(String msg, FirebaseAuthHandler.ErrorType type)
                                     {
-                                        setContentView(R.layout.activity_home);
-                                        init();
-                                    });
+                                        Log.e("HomeActivity", "Auth failed after login: " + msg);
+                                    }
                                 });
-
-                                runIfOnline(() -> sendJoinRequest(inviteCode));
                             }
                         }
                     }
@@ -115,6 +147,8 @@ public class HomeActivity extends MasterActivity
 
             if ("https".equals(scheme) && "www.baskit.com".equals(host) && "/joinlist".equals(path) && inviteCode != null)
             {
+                setContentView(R.layout.activity_home);
+                init();
                 Intent loginIntent = new Intent(this, LoginActivity.class);
                 loginIntent.putExtra("fromLink", true);
                 loginLauncher.launch(loginIntent);
@@ -123,6 +157,9 @@ public class HomeActivity extends MasterActivity
         else
         {
             user = authHandler.getUser();
+
+            setContentView(R.layout.activity_home);
+            init();
 
             runWhenServerActive(() ->
             {
@@ -134,12 +171,6 @@ public class HomeActivity extends MasterActivity
                 {
                     Log.e("HomeActivity", "Preload failed", e);
                 }
-
-                runOnUiThread(() ->
-                {
-                    setContentView(R.layout.activity_home);
-                    init();
-                });
             });
         }
     }
@@ -165,7 +196,7 @@ public class HomeActivity extends MasterActivity
 
         if (user != null)
         {
-            runIfOnline(() ->
+            runWhenServerActive(() ->
             {
                 dbHandler.getListNames(user, new FirebaseDBHandler.GetListNamesCallback()
                 {
@@ -230,40 +261,18 @@ public class HomeActivity extends MasterActivity
         listsRecycler = findViewById(R.id.lists_grid);
         listsRecycler.setLayoutManager(new GridLayoutManager(this, Baskit.HOME_GRID_NUM_BOXES));
 
-        listsGridAdapter = new HomeGridAdapter(this, new ArrayList<>(), new HomeGridAdapter.OnItemClickListener()
+        listsGridAdapter = new GridAdapter(this, new ArrayList<>(), new GridAdapter.OnItemClickListener()
         {
             @Override
             public void onItemClick(int position)
             {
                 openListScreen(user.getListIDs().get(position));
             }
-
-            @Override
-            public void onItemLongClick(int position)
-            {
-                String listId = user.getListIDs().get(position);
-
-                runIfOnline(() ->
-                {
-                    dbHandler.getList(listId, new FirebaseDBHandler.GetListCallback()
-                    {
-                        @Override
-                        public void onListFetched(List newList)
-                        {
-                            runIfOnline(() -> dbHandler.removeList(newList));
-                            user.removeList(listId);
-                        }
-
-                        @Override
-                        public void onError(String error) {}
-                    });
-                });
-            }
         });
 
         listsRecycler.setAdapter(listsGridAdapter);
 
-        runIfOnline(() ->
+        runWhenServerActive(() ->
         {
             dbHandler.getListNames(user, new FirebaseDBHandler.GetListNamesCallback()
             {
@@ -281,7 +290,7 @@ public class HomeActivity extends MasterActivity
             });
         });
 
-        runIfOnline(() ->
+        runWhenServerActive(() ->
         {
             dbHandler.listenToListNames(user, new FirebaseDBHandler.GetListNamesListenerCallback()
             {
@@ -340,7 +349,7 @@ public class HomeActivity extends MasterActivity
         {
             adBtnCreate.setActivated(false);
 
-            runIfOnline(() ->
+            runWhenServerActive(() ->
             {
                 authHandler.createList(adEtName.getText().toString(), HomeActivity.this, new FirebaseAuthHandler.CreateListCallback()
                 {
@@ -377,8 +386,163 @@ public class HomeActivity extends MasterActivity
     private void sendJoinRequest(String invitationCode)
     {
         String listId = new String(Base64.decode(invitationCode, Base64.NO_WRAP), StandardCharsets.UTF_8);
+        dbHandler.sendJoinRequest(listId, user, HomeActivity.this);
+    }
 
-        dbHandler.sendJoinRequest(listId, user);
-        Toast.makeText(this, "נשלחה בקשה, מחכה לאישור...", Toast.LENGTH_SHORT).show();
+
+    public static class GridAdapter extends RecyclerView.Adapter<GridAdapter.GridViewHolder>
+    {
+        private ArrayList<String> listNames;
+
+        private Context context;
+        private GridAdapter.OnItemClickListener listener;
+
+        public interface OnItemClickListener
+        {
+            void onItemClick(int position);
+        }
+
+        public GridAdapter(Context context, ArrayList<String> listNames, GridAdapter.OnItemClickListener listener)
+        {
+            this.context = context;
+            this.listNames = listNames;
+            this.listener = listener;
+        }
+
+        @SuppressLint("ResourceType")
+        @NonNull
+        @Override
+        public GridAdapter.GridViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType)
+        {
+            MaterialButton button = new MaterialButton(parent.getContext())
+            {
+                @Override
+                protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec)
+                {
+                    super.onMeasure(widthMeasureSpec, widthMeasureSpec);
+                }
+            };
+            button.setCornerRadius(28);
+
+            button.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
+                    getAppColor(context, com.google.android.material.R.attr.colorSurface)));
+
+            button.setStrokeWidth(8);
+            button.setStrokeColor(android.content.res.ColorStateList.valueOf(
+                    getAppColor(context, com.google.android.material.R.attr.colorPrimary)
+            ));
+
+            button.setTextColor(getAppColor(context, com.google.android.material.R.attr.colorSecondary));
+
+            button.setTypeface(Typeface.DEFAULT_BOLD);
+            button.setTextSize(24f);
+            button.setSingleLine(false);
+            button.setHorizontallyScrolling(false);
+            button.setAutoSizeTextTypeUniformWithConfiguration(
+                    12,
+                    40,
+                    1,
+                    android.util.TypedValue.COMPLEX_UNIT_SP
+            );
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+            {
+                button.setBreakStrategy(LineBreaker.BREAK_STRATEGY_HIGH_QUALITY);
+                button.setHyphenationFrequency(Layout.HYPHENATION_FREQUENCY_NONE);
+            }
+
+            button.setGravity(Gravity.CENTER);
+            button.setTextAlignment(android.view.View.TEXT_ALIGNMENT_CENTER);
+            int pad = (int) (12 * parent.getContext().getResources().getDisplayMetrics().density);
+            button.setPadding(pad, pad, pad, pad);
+
+            button.setRippleColor(android.content.res.ColorStateList.valueOf(
+                    getAppColor(context, com.google.android.material.R.attr.colorSecondary)
+            ));
+
+            int margin = (int) (12 * parent.getContext().getResources().getDisplayMetrics().density);
+            RecyclerView.LayoutParams params = new RecyclerView.LayoutParams(
+                    RecyclerView.LayoutParams.MATCH_PARENT,
+                    RecyclerView.LayoutParams.WRAP_CONTENT
+            );
+            params.setMargins(margin, margin, margin, margin);
+            button.setLayoutParams(params);
+
+            return new GridAdapter.GridViewHolder(button);
+        }
+
+        public static class GridViewHolder extends RecyclerView.ViewHolder
+        {
+            public Button button;
+
+            public GridViewHolder(Button button)
+            {
+                super(button);
+                this.button = button;
+            }
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull GridAdapter.GridViewHolder holder, int position)
+        {
+            holder.button.setText(listNames.get(position));
+
+            holder.button.setOnClickListener(v ->
+            {
+                int newPosition = holder.getAdapterPosition();
+
+                if (newPosition != RecyclerView.NO_POSITION)
+                {
+                    listener.onItemClick(newPosition);
+                }
+            });
+
+            holder.button.setOnLongClickListener(v -> {
+                int newPosition = holder.getAdapterPosition();
+                if (newPosition != RecyclerView.NO_POSITION) {
+                    listener.onItemClick(newPosition);
+                }
+                return true;
+            });
+        }
+
+        @Override
+        public int getItemCount()
+        {
+            return listNames.size();
+        }
+
+
+        public void add(List list, boolean notifyItemInserted)
+        {
+            listNames.add(list.getName());
+
+            if (notifyItemInserted)
+            {
+                this.notifyItemInserted(listNames.size()-1);
+            }
+        }
+
+        public void add(List list)
+        {
+            this.add(list, true);
+        }
+
+        public void remove(int position, boolean notifyItemRemoved)
+        {
+            listNames.remove(position);
+
+            if (notifyItemRemoved)
+            {
+                this.notifyItemRemoved(position);
+            }
+        }
+
+        public void updateList(ArrayList<String> newList)
+        {
+            this.listNames.clear();
+            this.listNames.addAll(newList);
+            notifyDataSetChanged();
+        }
     }
 }

@@ -13,10 +13,10 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.baskit.API.APIHandler;
+import com.example.baskit.OnlineComponents.APIHandler;
 import com.example.baskit.MainComponents.Item;
-import com.example.baskit.MainComponents.ItemInfo;
-import com.example.baskit.MainComponents.PriceRow;
+import com.example.baskit.MainComponents.Item.ItemInfo;
+import com.example.baskit.MainComponents.Item.ItemVariant;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;
 import com.google.android.material.chip.Chip;
@@ -29,8 +29,8 @@ public class ItemViewAlertDialog
 {
     Item item;
 
-    ArrayList<PriceRow> rows = new ArrayList<>();
-    ArrayList<PriceRow> allRows = new ArrayList<>();
+    ArrayList<ItemVariant> rows = new ArrayList<>();
+    ArrayList<ItemVariant> allRows = new ArrayList<>();
     ArrayList<ItemInfo> currentVariations = new ArrayList<>();
 
     boolean showQuantity;
@@ -122,8 +122,8 @@ public class ItemViewAlertDialog
                             Double priceObj = sectionEntry.getValue();
                             if (priceObj == null) continue;
                             Supermarket sm = new Supermarket(supermarketName, sectionName);
-                            PriceRow newRow =
-                                    new PriceRow(
+                            ItemVariant newRow =
+                                    new ItemVariant(
                                             sm,
                                             priceObj,
                                             info
@@ -159,7 +159,7 @@ public class ItemViewAlertDialog
                             }
                             else
                             {
-                                item.fillRow(row);
+                                item.fillVariant(row);
                             }
 
                             if (pricesAdapter != null)
@@ -178,7 +178,7 @@ public class ItemViewAlertDialog
                 {
                     for (int i = 0; i < rows.size(); i++)
                     {
-                        PriceRow row = rows.get(i);
+                        ItemVariant row = rows.get(i);
 
                         if (item.isIdenticalVariantOf(row))
                         {
@@ -314,7 +314,7 @@ public class ItemViewAlertDialog
 
             for (int i = 0; i < rows.size(); i++)
             {
-                PriceRow row = rows.get(i);
+                ItemVariant row = rows.get(i);
 
                 if (item.isIdenticalVariantOf(row))
                 {
@@ -348,7 +348,7 @@ public class ItemViewAlertDialog
 
         rows.clear();
 
-        for (PriceRow r : allRows)
+        for (ItemVariant r : allRows)
         {
             if (r.getInfo() == null) continue;
 
@@ -368,7 +368,7 @@ public class ItemViewAlertDialog
 
         java.util.Set<String> availableWeights = new java.util.HashSet<>();
 
-        for (PriceRow r : allRows)
+        for (ItemVariant r : allRows)
         {
             if (r.getInfo() == null) continue;
 
@@ -386,7 +386,7 @@ public class ItemViewAlertDialog
 
         java.util.Set<String> availableCompanies = new java.util.HashSet<>();
 
-        for (PriceRow r : allRows)
+        for (ItemVariant r : allRows)
         {
             if (r.getInfo() == null) continue;
 
@@ -421,6 +421,101 @@ public class ItemViewAlertDialog
         rows.sort((a, b) -> Double.compare(a.getPrice(), b.getPrice()));
         if (pricesAdapter != null) {
             pricesAdapter.notifyDataSetChanged();
+        }
+    }
+
+
+    public static class VariationsManager
+    {
+        ArrayList<ItemInfo> currentVariations;
+        ChipGroup chipGroupWeights;
+        ChipGroup chipGroupCompanies;
+        Context context;
+        Runnable applyVariationFilter;
+
+        public VariationsManager(ArrayList<ItemInfo> currentVariations,
+                                 ChipGroup chipGroupWeights,
+                                 ChipGroup chipGroupCompanies,
+                                 Context context,
+                                 Runnable applyVariationFilter)
+        {
+            this.currentVariations = currentVariations;
+            this.chipGroupWeights = chipGroupWeights;
+            this.chipGroupCompanies = chipGroupCompanies;
+            this.context = context;
+            this.applyVariationFilter = applyVariationFilter;
+        }
+
+        public void setupVariationFilters()
+        {
+            if (currentVariations == null || currentVariations.isEmpty()) return;
+
+            if (chipGroupWeights == null || chipGroupCompanies == null)
+            {
+                return;
+            }
+
+            chipGroupWeights.removeAllViews();
+            chipGroupCompanies.removeAllViews();
+
+            chipGroupWeights.setSingleSelection(false);
+            chipGroupCompanies.setSingleSelection(false);
+
+            java.util.LinkedHashSet<String> weights = new java.util.LinkedHashSet<>();
+            java.util.LinkedHashSet<String> companies = new java.util.LinkedHashSet<>();
+
+            for (ItemInfo info : currentVariations)
+            {
+                if (info.getWeight() != null && info.getWeight() > 0)
+                {
+                    weights.add(info.getFullMeasureStr());
+                }
+
+                if (info.getCompany() != null && !info.getCompany().isEmpty())
+                {
+                    companies.add(info.getCompany());
+                }
+            }
+
+            if (weights.size() > 1)
+            {
+                for (String w : weights)
+                {
+                    Chip chip = new Chip(context);
+                    chip.setText(w);
+                    chip.setCheckable(true);
+                    chip.setClickable(true);
+                    chip.setChipStrokeWidth(2f);
+                    chip.setOnCheckedChangeListener((buttonView, isChecked) -> applyVariationFilter.run());
+                    chipGroupWeights.addView(chip);
+                }
+                chipGroupWeights.setVisibility(View.VISIBLE);
+            }
+            else
+            {
+                chipGroupWeights.setVisibility(View.GONE);
+            }
+
+            if (companies.size() > 1)
+            {
+                for (String c : companies)
+                {
+                    Chip chip = new Chip(context);
+                    chip.setText(c);
+                    chip.setCheckable(true);
+                    chip.setClickable(true);
+                    chip.setChipStrokeWidth(2f);
+                    chip.setOnCheckedChangeListener((buttonView, isChecked) -> applyVariationFilter.run());
+                    chipGroupCompanies.addView(chip);
+                }
+                chipGroupCompanies.setVisibility(View.VISIBLE);
+            }
+            else
+            {
+                chipGroupCompanies.setVisibility(View.GONE);
+            }
+
+            applyVariationFilter.run();
         }
     }
 }

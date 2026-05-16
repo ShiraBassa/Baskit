@@ -1,6 +1,5 @@
 package com.example.baskit;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
@@ -28,15 +27,19 @@ import com.example.baskit.MainComponents.Supermarket;
 
 public class Baskit extends Application
 {
-    public static final String PRIVATE_NETWORK_URL = "192.168.1.247";
-    public static final String EMULATOR_URL = "10.0.2.2";
-    //public static final String SERVER_URL = "http://" + EMULATOR_URL + ":10000";
     public static final String SERVER_URL = "https://baskit-ac3x.onrender.com";
     public static final int HOME_GRID_NUM_BOXES = 2;
     public static final Supermarket UNASSIGNED_SUPERMARKET = new Supermarket("לא נבחר", "");
 
     private static Context context;
-    private static final MutableLiveData<Boolean> onlineLive = new MutableLiveData<>(true);
+    public static final MutableLiveData<Boolean> onlineLive = new MutableLiveData<>(true);
+    public static final MutableLiveData<Boolean> serverAliveLive = new MutableLiveData<>(true);
+
+    private final android.os.Handler serverHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private final java.util.concurrent.ExecutorService serverBg = java.util.concurrent.Executors.newSingleThreadExecutor();
+    private boolean serverPollingRunning = false;
+    private Runnable serverPollingRunnable;
+
     private ConnectivityManager.NetworkCallback networkCallback;
 
     @Override
@@ -84,16 +87,28 @@ public class Baskit extends Application
                 cm.registerNetworkCallback(request, networkCallback);
             }
         }
+
+        startServerPolling();
+
+        onlineLive.observeForever(isOnline ->
+        {
+            boolean online = isOnline != null && isOnline;
+
+            if (online)
+            {
+                startServerPolling();
+            }
+            else
+            {
+                stopServerPolling();
+                serverAliveLive.postValue(false);
+            }
+        });
     }
 
     public static Context getContext()
     {
         return context;
-    }
-
-    public static LiveData<Boolean> getOnlineLive()
-    {
-        return onlineLive;
     }
 
     public static boolean isOnline(Context context)
@@ -117,30 +132,6 @@ public class Baskit extends Application
 
         return caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
                 && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
-    }
-
-    public static void notActivityRunWhenServerActive(Runnable work, Activity activity)
-    {
-        if (activity instanceof MasterActivity)
-        {
-            ((MasterActivity) activity).runWhenServerActive(work);
-        }
-        else
-        {
-            new Thread(work).start();
-        }
-    }
-
-    public static void notActivityRunIfOnline(Runnable work, Activity activity)
-    {
-        if (activity instanceof MasterActivity)
-        {
-            ((MasterActivity) activity).runIfOnline(work);
-        }
-        else
-        {
-            work.run();
-        }
     }
 
     public static int getAppColor(Context context, int id)
@@ -269,11 +260,63 @@ public class Baskit extends Application
     {
         boolean valid = !username.isBlank();
 
-        if (!valid)
+        if (!valid && showError)
         {
             Toast.makeText(context, "יש להזין שם משתמש" + username, Toast.LENGTH_SHORT).show();
         }
 
         return valid;
+    }
+
+    private void startServerPolling()
+    {
+        if (serverPollingRunning) return;
+        serverPollingRunning = true;
+
+        serverPollingRunnable = new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                if (!isOnline(Baskit.this))
+                {
+                    stopServerPolling();
+                    serverAliveLive.postValue(false);
+                    return;
+                }
+
+                serverBg.execute(() ->
+                {
+                    boolean up;
+
+                    try
+                    {
+                        up = com.example.baskit.OnlineComponents.APIHandler.getInstance().isServerActive();
+                    }
+                    catch (Exception e)
+                    {
+                        up = false;
+                    }
+
+                    serverAliveLive.postValue(up);
+
+                    serverHandler.postDelayed(this, 5000);
+                });
+            }
+        };
+
+        serverPollingRunnable.run();
+    }
+
+    private void stopServerPolling()
+    {
+        serverPollingRunning = false;
+
+        if (serverPollingRunnable != null)
+        {
+            serverHandler.removeCallbacks(serverPollingRunnable);
+        }
+
+        serverPollingRunnable = null;
     }
 }

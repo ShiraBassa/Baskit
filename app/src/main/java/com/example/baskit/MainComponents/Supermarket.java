@@ -58,6 +58,7 @@ public class Supermarket implements Cloneable
         return Baskit.decodeKey(section);
     }
 
+    @Exclude
     public static ArrayList<Supermarket> getSupermarketsFromStrings(Map<String, ArrayList<String>> supermarketStrings)
     {
         ArrayList<Supermarket> supermarkets = new ArrayList<>();

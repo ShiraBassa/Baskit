@@ -2,7 +2,6 @@ package com.example.baskit.Categories;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -14,17 +13,17 @@ import android.widget.Toast;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.baskit.API.APIHandler;
+import com.example.baskit.OnlineComponents.APIHandler;
 import com.example.baskit.Baskit;
-import com.example.baskit.Firebase.FirebaseDBHandler;
+import com.example.baskit.OnlineComponents.FirebaseDBHandler;
 import com.example.baskit.List.AddItemFragment;
 import com.example.baskit.List.PlanListActivity;
 import com.example.baskit.List.SortListBottomSheetBuilder;
 import com.example.baskit.MainComponents.Category;
 import com.example.baskit.MainComponents.Item;
-import com.example.baskit.MainComponents.ItemInfo;
+import com.example.baskit.MainComponents.Item.ItemInfo;
 import com.example.baskit.MainComponents.List;
-import com.example.baskit.MainComponents.PriceRow;
+import com.example.baskit.MainComponents.Item.ItemVariant;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.MasterActivity;
 import com.example.baskit.R;
@@ -41,7 +40,6 @@ public class CategoryActivity extends MasterActivity
     List list;
     Category category;
 
-    Map<String, Map<String, Map<String, Double>>> allItemPrices;
     Map<String, ArrayList<String>> groups;
     Map<String, ItemInfo> infos;
     ArrayList<Supermarket> supermarkets;
@@ -75,7 +73,6 @@ public class CategoryActivity extends MasterActivity
             return;
         }
 
-        allItemPrices = apiHandler.getItemPrices();
         groups = apiHandler.getGroups();
         infos = apiHandler.getItemInfos();
         supermarkets = apiHandler.getSupermarkets();
@@ -91,6 +88,7 @@ public class CategoryActivity extends MasterActivity
         if (!initialized && tvTotal != null && category != null)
         {
             tvTotal.setText(Baskit.getTotalDisplayString(category.getTotal(), category.allPricesKnown(), true, false));
+            tvTotal.setVisibility(View.VISIBLE);
         }
     }
 
@@ -114,7 +112,7 @@ public class CategoryActivity extends MasterActivity
         final String listId = getIntent().getStringExtra("listId");
         final String categoryName = getIntent().getStringExtra("categoryName");
 
-        runIfOnline(() ->
+        runWhenServerActive(() ->
         {
             dbHandler.getList(listId, new FirebaseDBHandler.GetListCallback()
             {
@@ -129,7 +127,7 @@ public class CategoryActivity extends MasterActivity
                         return;
                     }
 
-                    runIfOnline(() ->
+                    runWhenServerActive(() ->
                     {
                         dbHandler.listenToList(listId, new FirebaseDBHandler.GetListCallback()
                         {
@@ -172,6 +170,7 @@ public class CategoryActivity extends MasterActivity
                                 tvCategoryName.setVisibility(View.VISIBLE);
                                 btnAddItem.setEnabled(true);
                                 tvTotal.setText(Baskit.getTotalDisplayString(category.getTotal(), category.allPricesKnown(), true, false));
+                                tvTotal.setVisibility(View.VISIBLE);
                                 btnSortList.setEnabled(true);
 
                                 if (addItemFragment == null)
@@ -206,7 +205,7 @@ public class CategoryActivity extends MasterActivity
                                                     @Override
                                                     public void updateItemCategory(Item item)
                                                     {
-                                                        runIfOnline(() ->
+                                                        runWhenServerActive(() ->
                                                         {
                                                             category.removeVariants(item.getBaseName());
                                                             category.addItem(item);
@@ -218,20 +217,20 @@ public class CategoryActivity extends MasterActivity
                                                     public void removeItemCategory(Item item)
                                                     {
                                                         if (category == null) return;
-                                                        runIfOnline(() -> dbHandler.removeItem(list, category, item));
+                                                        runWhenServerActive(() -> dbHandler.removeItem(list, category, item));
                                                     }
 
                                                     @Override
                                                     public void updateCategory()
                                                     {
                                                         if (category == null) return;
-                                                        runIfOnline(() -> dbHandler.updateItemsIndividuals(list, new ArrayList<>(category.getItems())));
+                                                        runWhenServerActive(() -> dbHandler.updateCategory(list, category));
                                                     }
 
                                                     @Override
                                                     public void removeCategory()
                                                     {
-                                                        runIfOnline(() ->
+                                                        runWhenServerActive(() ->
                                                         {
                                                             dbHandler.removeCategory(list, category);
                                                             finish();
@@ -275,7 +274,7 @@ public class CategoryActivity extends MasterActivity
             @Override
             public void onClick(View view)
             {
-                runIfOnline(() -> dbHandler.finishCategory(list, category));
+                runWhenServerActive(() -> dbHandler.finishCategory(list, category));
             }
         });
 
@@ -358,7 +357,7 @@ public class CategoryActivity extends MasterActivity
                         if (id == R.id.action_delete_items)
                         {
                             list.removeCategory(category);
-                            runIfOnline(() -> dbHandler.removeCategory(list, category));
+                            runWhenServerActive(() -> dbHandler.removeCategory(list, category));
                             finish();
                             return true;
                         }
@@ -380,6 +379,7 @@ public class CategoryActivity extends MasterActivity
             finish();
             return true;
         }
+
         return super.onOptionsItemSelected(item);
     }
 
@@ -421,10 +421,10 @@ public class CategoryActivity extends MasterActivity
 
             if (!list.hasCategory(categoryName))
             {
-                runIfOnline(() -> dbHandler.addCategory(list, new Category(categoryName)));
+                runWhenServerActive(() -> dbHandler.addCategory(list, new Category(categoryName)));
             }
 
-            runIfOnline(() ->
+            runWhenServerActive(() ->
             {
                 dbHandler.addItem(list, categoryName, item, new FirebaseDBHandler.DBCallback()
                 {
@@ -451,7 +451,7 @@ public class CategoryActivity extends MasterActivity
 
                                 snackbar.setAction("בטל", v ->
                                 {
-                                    runIfOnline(() -> dbHandler.removeItem(list, categoryName, item));
+                                    runWhenServerActive(() -> dbHandler.removeItem(list, categoryName, item));
                                 });
 
                                 snackbar.setAnchorView(btnAddItem);
@@ -481,7 +481,7 @@ public class CategoryActivity extends MasterActivity
 
     private void showSortBottomSheet() throws JSONException, IOException
     {
-        Map<String, ArrayList<PriceRow>> rows = apiHandler.buildRows(category.getRemainedItems());
+        Map<String, ArrayList<ItemVariant>> rows = apiHandler.buildVariants(category.getRemainedItems());
 
         SortListBottomSheetBuilder.show(
                 this,
@@ -493,8 +493,8 @@ public class CategoryActivity extends MasterActivity
                     @Override
                     public void onApplyCheapest()
                     {
-                        Map<String, ArrayList<PriceRow>> rows = apiHandler.buildRows(category.getRemainedItems());
-                        category.setCheapestRows(rows);
+                        Map<String, ArrayList<ItemVariant>> rows = apiHandler.buildVariants(category.getRemainedItems());
+                        category.setCheapestVariants(rows);
 
                         tvTotal.setText(
                                 Baskit.getTotalDisplayString(
@@ -505,15 +505,15 @@ public class CategoryActivity extends MasterActivity
                                 )
                         );
 
-                        runIfOnline(() -> dbHandler.updateCategory(list, category));
+                        runWhenServerActive(() -> dbHandler.updateCategory(list, category));
                         itemsAdapter.updateItems(new ArrayList<>(category.getItems()));
                     }
 
                     @Override
                     public void onApplySupermarket(Supermarket sm)
                     {
-                        Map<String, ArrayList<PriceRow>> rows = apiHandler.buildRows(category.getRemainedItems());
-                        category.setSupermarketsRows(sm, rows);
+                        Map<String, ArrayList<ItemVariant>> rows = apiHandler.buildVariants(category.getRemainedItems());
+                        category.setSupermarketsVariants(sm, rows);
 
                         tvTotal.setText(
                                 Baskit.getTotalDisplayString(
@@ -524,7 +524,7 @@ public class CategoryActivity extends MasterActivity
                                 )
                         );
 
-                        runIfOnline(() -> dbHandler.updateCategory(list, category));
+                        runWhenServerActive(() -> dbHandler.updateCategory(list, category));
                         itemsAdapter.updateItems(new ArrayList<>(category.getItems()));
                     }
                 }

@@ -3,6 +3,8 @@ package com.example.baskit.Home;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -16,10 +18,9 @@ import android.widget.Toast;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.baskit.API.APIHandler;
+import com.example.baskit.OnlineComponents.APIHandler;
 import com.example.baskit.Baskit;
-import com.example.baskit.Firebase.FirebaseAuthHandler;
-import com.example.baskit.List.CitiesListAdapter;
+import com.example.baskit.OnlineComponents.FirebaseAuthHandler;
 import com.example.baskit.Login.LoginActivity;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.MasterActivity;
@@ -30,6 +31,7 @@ import org.json.JSONException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Objects;
 
 public class SettingsActivity extends MasterActivity
 {
@@ -172,7 +174,7 @@ public class SettingsActivity extends MasterActivity
                     return;
                 }
 
-                runIfOnline(() -> authHandler.changeUserName(username));
+                runWhenServerActive(() -> authHandler.changeUserName(username));
                 Toast.makeText(SettingsActivity.this, "שם המשתמש שונה ל" + username, Toast.LENGTH_SHORT).show();
             }
         });
@@ -196,7 +198,7 @@ public class SettingsActivity extends MasterActivity
                             public void onSubmit(Supermarket supermarket)
                             {
                                 setLoading(true);
-                                Baskit.notActivityRunIfOnline(() -> authHandler.addSupermarketSection(supermarket, () ->
+                                runWhenServerActive(() -> addSupermarketSection(supermarket, () ->
                                 {
                                     new Thread(() ->
                                     {
@@ -223,7 +225,7 @@ public class SettingsActivity extends MasterActivity
                                             Log.e("SettingsActivity", "Full refresh after add failed", e);
                                         }
                                     }).start();
-                                }), SettingsActivity.this);
+                                }));
                             }
                         },
                         true,
@@ -269,7 +271,7 @@ public class SettingsActivity extends MasterActivity
 
                 new Thread(() ->
                 {
-                    authHandler.removeSupermarketSection(
+                    removeSupermarketSection(
                             new Supermarket(supermarketName, sectionName),
                             () ->
                             {
@@ -326,7 +328,7 @@ public class SettingsActivity extends MasterActivity
                             public void OnSubmit(ArrayList<String> city_choices)
                             {
                                 setLoading(true);
-                                Baskit.notActivityRunWhenServerActive(() ->
+                                runWhenServerActive(() ->
                                 {
                                     try
                                     {
@@ -345,7 +347,7 @@ public class SettingsActivity extends MasterActivity
                                         SettingsActivity.this.runOnUiThread(() ->
                                                 Toast.makeText(SettingsActivity.this, "שגיאה בשמירת הערים", Toast.LENGTH_SHORT).show());
                                     }
-                                }, SettingsActivity.this);
+                                });
                             }
                         }
                 ).show();
@@ -380,7 +382,7 @@ public class SettingsActivity extends MasterActivity
 
                 setLoading(true);
 
-                authHandler.removeCity(city, () ->
+                removeCity(city, () ->
                 {
                     runOnUiThread(() ->
                     {
@@ -395,6 +397,91 @@ public class SettingsActivity extends MasterActivity
                 });
             }
         });
+    }
+
+    public void removeCity(String city, Runnable onComplete)
+    {
+        new Thread(() ->
+        {
+            try
+            {
+                ArrayList<String> cities = apiHandler.getCities();
+
+                if (!cities.contains(city))
+                {
+                    return;
+                }
+
+                cities.remove(city);
+                apiHandler.setCities(cities);
+                apiHandler.reset();
+
+                if (onComplete != null)
+                {
+                    new Handler(Looper.getMainLooper()).post(onComplete);
+                }
+            }
+            catch (IOException | JSONException e)
+            {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
+    public void addSupermarketSection(Supermarket supermarket, Runnable onComplete)
+    {
+        try
+        {
+            Map<String, ArrayList<String>> branches = Supermarket.getStringsFromSupermarkets(apiHandler.getUpdatedSupermarkets());
+            String supermarketName = supermarket.getSupermarket();
+            String sectionName = supermarket.getSection();
+
+            if (!branches.containsKey(supermarketName) || branches.get(supermarketName) == null) {
+                branches.put(supermarketName, new ArrayList<>());
+            }
+
+            branches.get(supermarketName).add(sectionName);
+            apiHandler.setBranches(branches);
+            apiHandler.updateSupermarkets();
+            apiHandler.reset();
+
+            if (onComplete != null)
+            {
+                new Handler(Looper.getMainLooper()).post(onComplete);
+            }
+        }
+        catch (IOException | JSONException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public void removeSupermarketSection(Supermarket supermarket, Runnable onComplete)
+    {
+        try
+        {
+            Map<String, ArrayList<String>> branches = Supermarket.getStringsFromSupermarkets(apiHandler.getUpdatedSupermarkets());
+            String supermarketName = supermarket.getSupermarket();
+            Objects.requireNonNull(branches.get(supermarketName)).remove(supermarket.getSection());
+
+            if (Objects.requireNonNull(branches.get(supermarketName)).isEmpty())
+            {
+                branches.remove(supermarketName);
+            }
+
+            apiHandler.setBranches(branches);
+            apiHandler.updateSupermarkets();
+            apiHandler.reset();
+
+            if (onComplete != null)
+            {
+                new Handler(Looper.getMainLooper()).post(onComplete);
+            }
+        }
+        catch (IOException | JSONException e)
+        {
+            Log.e("Remove supermarket", e.getMessage());
+        }
     }
 
     private void setLoading(boolean loading)

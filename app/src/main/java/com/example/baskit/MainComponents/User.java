@@ -9,16 +9,7 @@ public class User
     protected String id = "";
     protected String email = "";
     protected String name = "";
-    private String token = "";
     protected ArrayList<String> listIDs = new ArrayList<>();
-    protected ArrayList<Supermarket> supermarkets = new ArrayList<>();
-    @Exclude
-    protected ArrayList<String> cities = new ArrayList<>();
-
-    public User(String email)
-    {
-        this.email = email;
-    }
 
     public User() {}
 
@@ -58,33 +49,6 @@ public class User
 
     public void setListIDs(ArrayList<String> lists) {
         this.listIDs = lists;
-    }
-
-    public ArrayList<Supermarket> getSupermarkets() {
-        return supermarkets;
-    }
-
-    public void setSupermarkets(ArrayList<Supermarket> supermarkets)
-    {
-        this.supermarkets = supermarkets;
-    }
-
-    public String getToken() {
-        return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
-    }
-
-    @Exclude
-    public ArrayList<String> getCities() {
-        return cities;
-    }
-
-    @Exclude
-    public void setCities(ArrayList<String> cities) {
-        this.cities = cities;
     }
 
     @Exclude

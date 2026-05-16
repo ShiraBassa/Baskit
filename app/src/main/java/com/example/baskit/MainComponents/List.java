@@ -6,6 +6,7 @@ import com.google.firebase.database.IgnoreExtraProperties;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import com.example.baskit.MainComponents.Item.ItemVariant;
 
 @IgnoreExtraProperties
 public class List implements SortableEntity
@@ -105,9 +106,27 @@ public class List implements SortableEntity
     }
 
     @Exclude
+    public void addRequest(Request request)
+    {
+        this.requests.add(request);
+    }
+
+    @Exclude
+    public void removeRequest(Request request)
+    {
+        this.requests.remove(request);
+    }
+
+    @Exclude
     public void addUser(String userID)
     {
         this.userIDs.add(userID);
+    }
+
+    @Exclude
+    public void removeUser(String userID)
+    {
+        this.userIDs.remove(userID);
     }
 
     @Exclude
@@ -119,6 +138,7 @@ public class List implements SortableEntity
     @Exclude
     public void updateCategory(Category category)
     {
+        removeCategory(category);
         addCategory(category);
     }
 
@@ -173,31 +193,6 @@ public class List implements SortableEntity
     }
 
     @Exclude
-    public double getTotal()
-    {
-        double sum = 0;
-
-        for (Category category : categories.values())
-        {
-            sum += Math.round(category.getTotal() * 100.0) / 100.0;
-        }
-
-        return Math.round(sum * 100.0) / 100.0;
-    }
-
-    @Exclude
-    public void addRequest(Request request)
-    {
-        this.requests.add(request);
-    }
-
-    @Exclude
-    public void removeRequest(Request request)
-    {
-        this.requests.remove(request);
-    }
-
-    @Exclude
     public ArrayList<String> toItemNames()
     {
         ArrayList<String> itemNames = new ArrayList<>();
@@ -208,6 +203,25 @@ public class List implements SortableEntity
         }
 
         return itemNames;
+    }
+
+    @Exclude
+    public void removeAllItems()
+    {
+        this.categories = new HashMap<>();
+    }
+
+    @Exclude
+    public double getTotal()
+    {
+        double sum = 0;
+
+        for (Category category : categories.values())
+        {
+            sum += Math.round(category.getTotal() * 100.0) / 100.0;
+        }
+
+        return Math.round(sum * 100.0) / 100.0;
     }
 
     @Exclude
@@ -244,33 +258,33 @@ public class List implements SortableEntity
     }
 
     @Exclude
-    public void setCheapestRows(Map<String, ArrayList<PriceRow>> rowsAllItems)
+    public void setCheapestVariants(Map<String, ArrayList<ItemVariant>> variantsAllItems)
     {
-        if (rowsAllItems == null) return;
+        if (variantsAllItems == null) return;
         ArrayList<Item> items = getItems();
 
         for (Item item : items)
         {
-            ArrayList<PriceRow> rows = rowsAllItems.get(item.baseName);
+            ArrayList<ItemVariant> rows = variantsAllItems.get(item.baseName);
             if (rows == null) continue;
 
-            item.setCheapestRow(rows);
+            item.setCheapestVariant(rows);
         }
     }
 
     @Exclude
-    public void setSupermarketsRows(Supermarket supermarket, Map<String, ArrayList<PriceRow>> rowsAllItems)
+    public void setSupermarketsVariants(Supermarket supermarket, Map<String, ArrayList<ItemVariant>> variantsAllItems)
     {
-        if (rowsAllItems == null) return;
+        if (variantsAllItems == null) return;
 
         ArrayList<Item> items = getItems();
 
         for (Item item : items)
         {
-            ArrayList<PriceRow> rows = rowsAllItems.get(item.baseName);
+            ArrayList<ItemVariant> rows = variantsAllItems.get(item.baseName);
             if (rows == null) continue;
 
-            item.setSupermarketRow(supermarket, rows);
+            item.setSupermarketVariant(supermarket, rows);
         }
     }
 
@@ -281,9 +295,40 @@ public class List implements SortableEntity
         return new List(this);
     }
 
-    @Exclude
-    public void removeAllItems()
+
+    public static class Request
     {
-        this.categories = new HashMap<>();
+        private String userID = "";
+        private String username = "";
+
+        public Request() {}
+
+        public Request(String userID, String username)
+        {
+            this.userID = userID;
+            this.username = username;
+        }
+
+        public Request(User user)
+        {
+            this.userID = user.getId();
+            this.username = user.getName();
+        }
+
+        public String getUserID() {
+            return userID;
+        }
+
+        public void setUserID(String userID) {
+            this.userID = userID;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public void setUsername(String username) {
+            this.username = username;
+        }
     }
 }

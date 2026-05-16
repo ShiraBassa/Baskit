@@ -7,22 +7,27 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.util.Base64;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.baskit.Baskit;
-import com.example.baskit.Firebase.FirebaseDBHandler;
+import com.example.baskit.MasterActivity;
+import com.example.baskit.OnlineComponents.FirebaseDBHandler;
 import com.example.baskit.MainComponents.List;
-import com.example.baskit.MainComponents.Request;
+import com.example.baskit.MainComponents.List.Request;
 import com.example.baskit.R;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 
 public class ShareListAlertDialog
 {
@@ -42,7 +47,7 @@ public class ShareListAlertDialog
     Activity activity;
     Context context;
 
-    public ShareListAlertDialog(List list, Activity activity, Context context)
+    public ShareListAlertDialog(List list, MasterActivity activity, Context context)
     {
         this.list = list;
         this.activity = activity;
@@ -58,13 +63,13 @@ public class ShareListAlertDialog
             @Override
             public void acceptRequest(Request request)
             {
-                Baskit.notActivityRunIfOnline(() -> dbHandler.acceptRequest(list, request), activity);
+                activity.runWhenServerActive(() -> dbHandler.acceptRequest(list, request));
             }
 
             @Override
             public void declineRequest(Request request)
             {
-                Baskit.notActivityRunIfOnline(() -> dbHandler.declineRequest(list, request), activity);
+                activity.runWhenServerActive(() -> dbHandler.declineRequest(list, request));
             }
         });
 
@@ -128,5 +133,89 @@ public class ShareListAlertDialog
         clipboard.setPrimaryClip(clip);
 
         Toast.makeText(activity, "Invite link copied!", Toast.LENGTH_SHORT).show();
+    }
+
+
+    public static class ShareListRequestsAdapter extends RecyclerView.Adapter<ShareListRequestsAdapter.ViewHolder>
+    {
+        private ArrayList<Request> requests;
+
+        private UpperClassFunctions upperClassFns;
+
+        public interface UpperClassFunctions
+        {
+            void acceptRequest(Request request);
+            void declineRequest(Request request);
+        }
+
+        public ShareListRequestsAdapter(List list, UpperClassFunctions upperClassFns)
+        {
+            this.requests = list.getRequests();
+            this.upperClassFns = upperClassFns;
+        }
+
+        public static class ViewHolder extends RecyclerView.ViewHolder
+        {
+            protected TextView tvUsername;
+            protected Button btnAccept, btnDecline;
+
+            public ViewHolder(View requestView)
+            {
+                super(requestView);
+
+                tvUsername = requestView.findViewById(R.id.tv_username);
+                btnAccept = requestView.findViewById(R.id.btn_accept);
+                btnDecline = requestView.findViewById(R.id.btn_decline);
+            }
+        }
+
+        @NonNull
+        @Override
+        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType)
+        {
+            View view = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.share_request_view, parent, false);
+
+            return new ViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull ViewHolder holder, int position)
+        {
+            Request request = requests.get(position);
+
+            holder.tvUsername.setText(request.getUsername());
+            holder.tvUsername.setVisibility(View.VISIBLE);
+
+            holder.btnAccept.setOnClickListener(new View.OnClickListener()
+            {
+                @Override
+                public void onClick(View v)
+                {
+                    upperClassFns.acceptRequest(request);
+                }
+            });
+
+            holder.btnDecline.setOnClickListener(new View.OnClickListener()
+            {
+                @Override
+                public void onClick(View v)
+                {
+                    upperClassFns.declineRequest(request);
+                }
+            });
+        }
+
+        @Override
+        public int getItemCount()
+        {
+            return requests.size();
+        }
+
+        public void updateRequests(ArrayList<Request> newRequests)
+        {
+            this.requests = newRequests;
+            notifyDataSetChanged();
+        }
     }
 }

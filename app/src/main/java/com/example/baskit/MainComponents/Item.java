@@ -1,6 +1,7 @@
 package com.example.baskit.MainComponents;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.example.baskit.Baskit;
 import com.google.firebase.database.Exclude;
@@ -12,9 +13,6 @@ import java.util.Objects;
 @IgnoreExtraProperties
 public class Item implements Cloneable
 {
-    @Exclude
-    private static final String ID_PREFIX = "item_";
-
     protected String id = "";
     protected String baseName = "";
     protected double price = 0;
@@ -24,6 +22,9 @@ public class Item implements Cloneable
     protected String company;
     protected Double weight;
     protected String unit;
+
+    @Exclude
+    private static final String ID_PREFIX = "item_";
 
     public Item() {}
 
@@ -162,13 +163,13 @@ public class Item implements Cloneable
     }
 
     @Exclude
-    public String getAbsoluteId()
+    public static boolean isFullId(String id)
     {
-        return getAbsoluteId(id);
+        return id.startsWith(ID_PREFIX);
     }
 
     @Exclude
-    public static String getAbsoluteId(String id)
+    public String getAbsoluteId()
     {
         return isFullId(id) ? id.substring(ID_PREFIX.length()) : id;
     }
@@ -177,12 +178,6 @@ public class Item implements Cloneable
     public static String getFullId(String id)
     {
         return isFullId(id) ? id : ID_PREFIX + id;
-    }
-
-    @Exclude
-    public static boolean isFullId(String id)
-    {
-        return id.startsWith(ID_PREFIX);
     }
 
     @Exclude
@@ -239,7 +234,7 @@ public class Item implements Cloneable
     }
 
     @Exclude
-    public boolean isUnassigned()
+    public boolean isUnassignedToSupermarket()
     {
         if (supermarket == null)
         {
@@ -255,18 +250,46 @@ public class Item implements Cloneable
     }
 
     @Exclude
-    public PriceRow getCheapestRow(ArrayList<PriceRow> priceRows)
+    public void setUnchosen()
     {
-        if (priceRows == null || priceRows.isEmpty())
+        this.price = 0.0;
+        this.supermarket = null;
+        this.company = null;
+        this.weight = null;
+        this.unit = null;
+        this.id = "";
+    }
+
+    @Exclude
+    public void fillInfo(ItemInfo info)
+    {
+        this.company = info.getCompany();
+        this.weight = info.getWeight();
+        this.unit = info.getUnit();
+        setId(info.getCode());
+    }
+
+    @Exclude
+    public void fillVariant(ItemVariant variant)
+    {
+        fillInfo(variant.getInfo());
+        this.price = variant.getPrice();
+        this.supermarket = variant.getSupermarket();
+    }
+
+    @Exclude
+    public ItemVariant getCheapestVariant(ArrayList<ItemVariant> itemVariants)
+    {
+        if (itemVariants == null || itemVariants.isEmpty())
         {
             return null;
         }
 
-        PriceRow ogRow = getRow();
+        ItemVariant ogRow = getVariant();
         double cheapestPrice = Double.MAX_VALUE;
-        PriceRow cheapestRow = null;
+        ItemVariant cheapestRow = null;
 
-        for (PriceRow row : priceRows)
+        for (ItemVariant row : itemVariants)
         {
             if (!isVariantOf(row)) continue;
 
@@ -329,31 +352,31 @@ public class Item implements Cloneable
     }
 
     @Exclude
-    public void setCheapestRow(ArrayList<PriceRow> priceRows)
+    public void setCheapestVariant(ArrayList<ItemVariant> itemVariants)
     {
-        PriceRow row = getCheapestRow(priceRows);
+        ItemVariant row = getCheapestVariant(itemVariants);
 
         if (row != null)
         {
-            fillRow(row);
+            fillVariant(row);
         }
     }
 
     @Exclude
-    public PriceRow getSupermarketRow(
+    public ItemVariant getSupermarketVariant(
             Supermarket supermarket,
-            ArrayList<PriceRow> rows)
+            ArrayList<ItemVariant> rows)
     {
         if (rows == null || rows.isEmpty())
         {
             return null;
         }
 
-        PriceRow ogRow = getRow();
-        PriceRow cheapestRow = null;
+        ItemVariant ogRow = getVariant();
+        ItemVariant cheapestRow = null;
         double cheapestPrice = Double.MAX_VALUE;
 
-        for (PriceRow row : rows)
+        for (ItemVariant row : rows)
         {
             if (!isVariantOf(row, supermarket)) continue;
 
@@ -403,48 +426,20 @@ public class Item implements Cloneable
     }
 
     @Exclude
-    public void setSupermarketRow(
+    public void setSupermarketVariant(
             Supermarket supermarket,
-            ArrayList<PriceRow> rows)
+            ArrayList<ItemVariant> rows)
     {
-        PriceRow row = getSupermarketRow(supermarket, rows);
+        ItemVariant row = getSupermarketVariant(supermarket, rows);
 
         if (row != null)
         {
-            fillRow(row);
+            fillVariant(row);
         }
         else
         {
             setUnchosen();
         }
-    }
-
-    @Exclude
-    public void setUnchosen()
-    {
-        this.price = 0.0;
-        this.supermarket = null;
-        this.company = null;
-        this.weight = null;
-        this.unit = null;
-        this.id = "";
-    }
-
-    @Exclude
-    public void fillInfo(ItemInfo info)
-    {
-        this.company = info.getCompany();
-        this.weight = info.getWeight();
-        this.unit = info.getUnit();
-        setId(info.getCode());
-    }
-
-    @Exclude
-    public void fillRow(PriceRow row)
-    {
-        fillInfo(row.getInfo());
-        this.price = row.getPrice();
-        this.supermarket = row.getSupermarket();
     }
 
     @Exclude
@@ -458,13 +453,13 @@ public class Item implements Cloneable
     }
 
     @Exclude
-    public PriceRow getRow()
+    public ItemVariant getVariant()
     {
-        return new PriceRow(supermarket, price, getInfo());
+        return new ItemVariant(supermarket, price, getInfo());
     }
 
     @Exclude
-    public boolean isVariantOf(PriceRow row)
+    public boolean isVariantOf(ItemVariant row)
     {
         if (row == null || row.getInfo() == null)
         {
@@ -497,7 +492,7 @@ public class Item implements Cloneable
     }
 
     @Exclude
-    public boolean isVariantOf(PriceRow row, Supermarket newSupermarket)
+    public boolean isVariantOf(ItemVariant row, Supermarket newSupermarket)
     {
         if (row == null || row.getInfo() == null)
         {
@@ -530,9 +525,182 @@ public class Item implements Cloneable
     }
 
     @Exclude
-    public boolean isIdenticalVariantOf(PriceRow row)
+    public boolean isIdenticalVariantOf(ItemVariant row)
     {
         return row.getInfo().equals(getInfo()) &&
                 row.getSupermarket().equals(supermarket);
+    }
+
+
+    public static class ItemInfo
+    {
+        private String code;
+        private String baseName;
+        private String company;
+        private Double weight;
+        private String unit;
+
+        public ItemInfo(String code, String baseName,
+                        String company, Double weight, String unit)
+        {
+            this.code = code;
+            this.baseName = baseName;
+            this.company = company;
+            this.weight = weight;
+            this.unit = unit;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public void setCode(String code) {
+            this.code = code;
+        }
+
+        public String getBaseName() {
+            return baseName;
+        }
+
+        public void setBaseName(String baseName) {
+            this.baseName = baseName;
+        }
+
+        public String getCompany() {
+            return company;
+        }
+
+        public void setCompany(String company) {
+            this.company = company;
+        }
+
+        public Double getWeight()
+        {
+            return weight;
+        }
+
+        public String getWeightStr()
+        {
+            if (weight == null || weight == 0.0) return "";
+
+            if (weight.doubleValue() == weight.longValue())
+            {
+                return String.valueOf(weight.longValue());
+            }
+            else
+            {
+                java.math.BigDecimal bd = java.math.BigDecimal.valueOf(weight);
+                bd = bd.stripTrailingZeros();
+                return bd.toPlainString();
+            }
+        }
+
+        public void setWeight(Double weight) {
+            this.weight = weight;
+        }
+
+        public String getUnit() {
+            return unit;
+        }
+
+        public void setUnit(String unit)
+        {
+            this.unit = unit;
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this == obj) return true;
+            if (obj == null || getClass() != obj.getClass()) return false;
+
+            ItemInfo other = (ItemInfo) obj;
+
+            return baseName.equals(other.baseName) &&
+                    company.equals(other.company) &&
+                    weight.equals(other.weight) &&
+                    unit.equals(other.unit);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return java.util.Objects.hash(baseName, company, weight, unit);
+        }
+
+        public String getFullMeasureStr()
+        {
+            String str = "";
+
+            if (weight != null && weight != 0.0)
+            {
+                str += getWeightStr();
+
+                if (unit != null && !unit.isEmpty() && !unit.equals("יחידות"))
+                {
+                    str += " " + unit;
+                }
+            }
+
+            return str;
+        }
+    }
+
+
+    public static class ItemVariant
+    {
+        private Supermarket supermarket;
+        private double price;
+        private ItemInfo info;
+
+        public ItemVariant(Supermarket supermarket, double price, ItemInfo info)
+        {
+            this.supermarket = supermarket;
+            this.price = price;
+            this.info = info;
+        }
+
+        public Supermarket getSupermarket() {
+            return supermarket;
+        }
+
+        public void setSupermarket(Supermarket supermarket) {
+            this.supermarket = supermarket;
+        }
+
+        public double getPrice() {
+            return price;
+        }
+
+        public void setPrice(double price) {
+            this.price = price;
+        }
+
+        public ItemInfo getInfo() {
+            return info;
+        }
+
+        public void setInfo(ItemInfo info) {
+            this.info = info;
+        }
+
+        @Override
+        public boolean equals(@Nullable Object obj)
+        {
+            if (this == obj) return true;
+            if (!(obj instanceof ItemVariant)) return false;
+
+            ItemVariant other = (ItemVariant) obj;
+
+            return Double.compare(other.price, price) == 0 &&
+                    supermarket.equals(other.supermarket) &&
+                    info.equals(other.info);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return java.util.Objects.hash(supermarket, price, info);
+        }
     }
 }

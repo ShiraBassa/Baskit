@@ -1,20 +1,15 @@
-package com.example.baskit.Firebase;
+package com.example.baskit.OnlineComponents;
 
-import static com.example.baskit.Firebase.FBRefs.refAuth;
-import static com.example.baskit.Firebase.FBRefs.refUsers;
+import static com.example.baskit.OnlineComponents.FBRefs.refAuth;
+import static com.example.baskit.OnlineComponents.FBRefs.refUsers;
 
 import android.app.Activity;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.example.baskit.AI.AIHandler;
-import com.example.baskit.API.APIHandler;
-import com.example.baskit.Login.ErrorType;
 import com.example.baskit.MainComponents.List;
-import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.MainComponents.User;
 import com.google.firebase.FirebaseException;
 import com.google.firebase.FirebaseNetworkException;
@@ -27,22 +22,28 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
 
-import org.json.JSONException;
-
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.Objects;
 
 public class FirebaseAuthHandler
 {
     private static User user;
+    public static String token;
 
     private final APIHandler apiHandler = APIHandler.getInstance();
     private final FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
     private final AIHandler aiHandler = AIHandler.getInstance();
 
     private static FirebaseAuthHandler instance;
+
+    public enum ErrorType
+    {
+        GENERAL,
+        EMAIL,
+        PASSWORD,
+        NOT_LOGGED,
+        SERVER
+    }
 
     public interface AuthCallback
     {
@@ -99,6 +100,14 @@ public class FirebaseAuthHandler
             // No current session
             if (!task.isSuccessful())
             {
+                Exception e = task.getException();
+
+                if (e instanceof FirebaseNetworkException)
+                {
+                    postError(callback, "No internet connection", ErrorType.SERVER);
+                    return;
+                }
+
                 refAuth.signOut();
                 postError(callback, "Session expired. Please log in again.", ErrorType.GENERAL);
                 return;
@@ -120,8 +129,7 @@ public class FirebaseAuthHandler
                                 {
                                     if (taskTwo.isSuccessful()) // There is a token
                                     {
-                                        String idToken = taskTwo.getResult().getToken();
-                                        user.setToken(idToken);
+                                        String token = taskTwo.getResult().getToken();
 
                                         ArrayList<String> listIDs = user.getListIDs();
 
@@ -151,11 +159,11 @@ public class FirebaseAuthHandler
                                         // Login to the server
                                         new Thread(() ->
                                         {
-                                            boolean ok = apiHandler.login(idToken);
+                                            boolean ok = apiHandler.login(token);
                                             new Handler(Looper.getMainLooper()).post(() ->
                                             {
                                                 if (ok) callback.onAuthSuccess();
-                                                else callback.onAuthError("Server login failed", ErrorType.GENERAL);
+                                                else callback.onAuthError("Server unavailable", ErrorType.SERVER);
                                             });
                                         }).start();
                                     }
@@ -173,16 +181,15 @@ public class FirebaseAuthHandler
                                 {
                                     if (taskTwo.isSuccessful())
                                     {
-                                        String idToken = taskTwo.getResult().getToken();
-                                        user.setToken(idToken);
+                                        token = taskTwo.getResult().getToken();
 
                                         new Thread(() ->
                                         {
-                                            boolean loginSuccess = apiHandler.login(user.getToken());
+                                            boolean loginSuccess = apiHandler.login(FirebaseAuthHandler.token);
 
                                             if (!loginSuccess)
                                             {
-                                                postError(callback, "Server login failed", ErrorType.GENERAL);
+                                                postError(callback, "Server unavailable", ErrorType.SERVER);
                                                 return;
                                             }
 
@@ -211,7 +218,16 @@ public class FirebaseAuthHandler
                         @Override
                         public void onCancelled(@NonNull DatabaseError error)
                         {
-                            postError(callback, "DB error: " + error.getMessage(), ErrorType.GENERAL);
+                            String msg = error.getMessage() != null ? error.getMessage().toLowerCase() : "";
+
+                            if (msg.contains("network") || msg.contains("timeout"))
+                            {
+                                postError(callback, "No internet connection", ErrorType.SERVER);
+                            }
+                            else
+                            {
+                                postError(callback, "DB error: " + error.getMessage(), ErrorType.GENERAL);
+                            }
                         }
                     });
         });
@@ -238,16 +254,15 @@ public class FirebaseAuthHandler
                         {
                             if (taskTwo.isSuccessful())
                             {
-                                String idToken = taskTwo.getResult().getToken();
-                                user.setToken(idToken);
+                                token = taskTwo.getResult().getToken();
 
                                 new Thread(() ->
                                 {
-                                    boolean loginSuccess = apiHandler.login(user.getToken());
+                                    boolean loginSuccess = apiHandler.login(FirebaseAuthHandler.token);
 
                                     if (!loginSuccess)
                                     {
-                                        postError(callback, "Server login failed", ErrorType.GENERAL);
+                                        postError(callback, "Server unavailable", ErrorType.SERVER);
                                         return;
                                     }
 
@@ -277,7 +292,7 @@ public class FirebaseAuthHandler
 
                         if (e instanceof FirebaseNetworkException)
                         {
-                            postError(callback, "Network error. Please check your connection", ErrorType.GENERAL);
+                            postError(callback, "No internet connection", ErrorType.SERVER);
                         }
                         else if (e instanceof FirebaseAuthUserCollisionException)
                         {
@@ -310,7 +325,7 @@ public class FirebaseAuthHandler
                             }
                             else if (msg.contains("network"))
                             {
-                                postError(callback, "Network error. Please check your connection", ErrorType.GENERAL);
+                                postError(callback, "No internet connection", ErrorType.SERVER);
                             }
                             else
                             {
@@ -340,7 +355,7 @@ public class FirebaseAuthHandler
                         }
                         else if (e instanceof FirebaseNetworkException)
                         {
-                            postError(callback, "Network error. Please check your connection", ErrorType.GENERAL);
+                            postError(callback, "No internet connection", ErrorType.SERVER);
                         }
                         else
                         {
@@ -369,16 +384,15 @@ public class FirebaseAuthHandler
                                     {
                                         if (taskTwo.isSuccessful())
                                         {
-                                            String idToken = taskTwo.getResult().getToken();
-                                            user.setToken(idToken);
+                                            token = taskTwo.getResult().getToken();
 
                                             new Thread(() ->
                                             {
-                                                boolean ok = apiHandler.login(user.getToken());
+                                                boolean ok = apiHandler.login(FirebaseAuthHandler.token);
 
                                                 if (!ok)
                                                 {
-                                                    postError(callback, "Server login failed", ErrorType.GENERAL);
+                                                    postError(callback, "Server unavailable", ErrorType.SERVER);
                                                     return;
                                                 }
 
@@ -399,16 +413,15 @@ public class FirebaseAuthHandler
                                     {
                                         if(taskTwo.isSuccessful())
                                         {
-                                            String idToken = taskTwo.getResult().getToken();
-                                            user.setToken(idToken);
+                                            token = taskTwo.getResult().getToken();
 
                                             new Thread(() ->
                                             {
-                                                boolean loginSuccess = apiHandler.login(user.getToken());
+                                                boolean loginSuccess = apiHandler.login(FirebaseAuthHandler.token);
 
                                                 if (!loginSuccess)
                                                 {
-                                                    postError(callback, "Server login failed", ErrorType.GENERAL);
+                                                    postError(callback, "Server unavailable", ErrorType.SERVER);
                                                     return;
                                                 }
 
@@ -446,139 +459,6 @@ public class FirebaseAuthHandler
         refAuth.signOut();
         resetInstance();
         apiHandler.resetInstance();
-    }
-
-    public void setSupermarkets(Map<String, ArrayList<String>> supermarkets, Runnable onComplete)
-    {
-        try
-        {
-            apiHandler.setBranches(supermarkets);
-            apiHandler.updateSupermarkets();
-            apiHandler.reset();
-
-            if (onComplete != null)
-            {
-                new Handler(Looper.getMainLooper()).post(onComplete);
-            }
-        }
-        catch (IOException | JSONException e)
-        {
-            e.printStackTrace();
-        }
-    }
-
-    public void addSupermarketSection(Supermarket supermarket, Runnable onComplete)
-    {
-        try
-        {
-            Map<String, ArrayList<String>> branches = Supermarket.getStringsFromSupermarkets(apiHandler.getUpdatedSupermarkets());
-            String supermarketName = supermarket.getSupermarket();
-            String sectionName = supermarket.getSection();
-
-            if (!branches.containsKey(supermarketName) || branches.get(supermarketName) == null) {
-                branches.put(supermarketName, new ArrayList<>());
-            }
-
-            branches.get(supermarketName).add(sectionName);
-            apiHandler.setBranches(branches);
-            apiHandler.updateSupermarkets();
-            apiHandler.reset();
-
-            if (onComplete != null)
-            {
-                new Handler(Looper.getMainLooper()).post(onComplete);
-            }
-        }
-        catch (IOException | JSONException e)
-        {
-            e.printStackTrace();
-        }
-    }
-
-    public void removeSupermarketSection(Supermarket supermarket, Runnable onComplete)
-    {
-        try
-        {
-            Map<String, ArrayList<String>> branches = Supermarket.getStringsFromSupermarkets(apiHandler.getUpdatedSupermarkets());
-            String supermarketName = supermarket.getSupermarket();
-            Objects.requireNonNull(branches.get(supermarketName)).remove(supermarket.getSection());
-
-            if (Objects.requireNonNull(branches.get(supermarketName)).isEmpty())
-            {
-                branches.remove(supermarketName);
-            }
-
-            apiHandler.setBranches(branches);
-            apiHandler.updateSupermarkets();
-            apiHandler.reset();
-
-            if (onComplete != null)
-            {
-                new Handler(Looper.getMainLooper()).post(onComplete);
-            }
-        }
-        catch (IOException | JSONException e)
-        {
-            Log.e("Remove supermarket", e.getMessage());
-        }
-    }
-
-    public void addCity(String city, Runnable onComplete)
-    {
-        new Thread(() ->
-        {
-            try
-            {
-                ArrayList<String> cities = apiHandler.getCities();
-
-                if (cities.contains(city))
-                {
-                    return;
-                }
-
-                cities.add(city);
-                apiHandler.setCities(cities);
-                apiHandler.reset();
-
-                if (onComplete != null)
-                {
-                    new Handler(Looper.getMainLooper()).post(onComplete);
-                }
-            }
-            catch (IOException | JSONException e)
-            {
-                e.printStackTrace();
-            }
-        }).start();
-    }
-
-    public void removeCity(String city, Runnable onComplete)
-    {
-        new Thread(() ->
-        {
-            try
-            {
-                ArrayList<String> cities = apiHandler.getCities();
-
-                if (!cities.contains(city))
-                {
-                    return;
-                }
-
-                cities.remove(city);
-                apiHandler.setCities(cities);
-                apiHandler.reset();
-
-                if (onComplete != null)
-                {
-                    new Handler(Looper.getMainLooper()).post(onComplete);
-                }
-            }
-            catch (IOException | JSONException e)
-            {
-                e.printStackTrace();
-            }
-        }).start();
     }
 
     public void changeUserName(String username)

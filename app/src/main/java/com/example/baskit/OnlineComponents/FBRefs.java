@@ -1,6 +1,5 @@
-package com.example.baskit.Firebase;
+package com.example.baskit.OnlineComponents;
 
-import com.example.baskit.MainComponents.User;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;

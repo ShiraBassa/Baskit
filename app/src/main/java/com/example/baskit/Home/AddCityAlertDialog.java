@@ -2,7 +2,6 @@ package com.example.baskit.Home;
 
 import android.app.Activity;
 import android.content.Context;
-import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -12,11 +11,6 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 
-import com.example.baskit.API.APIHandler;
-import com.example.baskit.Baskit;
-import com.example.baskit.List.CitiesListAdapter;
-import com.example.baskit.MainComponents.Supermarket;
-import com.example.baskit.MasterActivity;
 import com.example.baskit.R;
 
 import org.json.JSONException;

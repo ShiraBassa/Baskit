@@ -12,7 +12,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 
 import com.example.baskit.Baskit;
-import com.example.baskit.Firebase.FirebaseAuthHandler;
+import com.example.baskit.OnlineComponents.FirebaseAuthHandler;
 import com.example.baskit.Home.HomeActivity;
 import com.example.baskit.MainComponents.User;
 import com.example.baskit.MasterActivity;
@@ -71,8 +71,14 @@ public class LoginActivity extends MasterActivity implements FirebaseAuthHandler
                     }
 
                     @Override
-                    public void onAuthError(String msg, ErrorType type)
+                    public void onAuthError(String msg, FirebaseAuthHandler.ErrorType type)
                     {
+                        if (type == FirebaseAuthHandler.ErrorType.SERVER)
+                        {
+                            runWhenServerActive(() ->
+                                    authHandler.checkCurrUser(this));
+                            return;
+                        }
                         startLogin();
                     }
                 });
@@ -86,10 +92,10 @@ public class LoginActivity extends MasterActivity implements FirebaseAuthHandler
         etEmail = findViewById(R.id.et_email);
         etPassword = findViewById(R.id.et_password);
 
-        setBtn();
+        setButtons();
     }
 
-    private void setBtn()
+    private void setButtons()
     {
         btnSubmit.setOnClickListener(new View.OnClickListener()
         {
@@ -126,7 +132,7 @@ public class LoginActivity extends MasterActivity implements FirebaseAuthHandler
 
                 if (!email.isEmpty() && !password.isEmpty())
                 {
-                    runIfOnline(() ->
+                    runWhenServerActive(() ->
                     {
                         authHandler.signInOrSignUp(email, password, LoginActivity.this);
                     });
@@ -204,8 +210,14 @@ public class LoginActivity extends MasterActivity implements FirebaseAuthHandler
     }
 
     @Override
-    public void onAuthError(String msg, ErrorType type)
+    public void onAuthError(String msg, FirebaseAuthHandler.ErrorType type)
     {
+        if (type == FirebaseAuthHandler.ErrorType.SERVER)
+        {
+            runWhenServerActive(() ->
+                    authHandler.checkCurrUser(LoginActivity.this));
+            return;
+        }
         switch (type)
         {
             case EMAIL:

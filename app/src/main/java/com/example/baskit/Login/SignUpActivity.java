@@ -1,6 +1,6 @@
 package com.example.baskit.Login;
 
-import static com.example.baskit.Firebase.FBRefs.refUsers;
+import static com.example.baskit.OnlineComponents.FBRefs.refUsers;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
@@ -12,13 +12,13 @@ import android.widget.EditText;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.baskit.API.APIHandler;
+import com.example.baskit.OnlineComponents.APIHandler;
 import com.example.baskit.Baskit;
-import com.example.baskit.Firebase.FirebaseAuthHandler;
+import com.example.baskit.OnlineComponents.FirebaseAuthHandler;
 import com.example.baskit.Home.AddCityAlertDialog;
 import com.example.baskit.Home.AddSupermarketAlertDialog;
 import com.example.baskit.Home.SupermarketsListAdapter;
-import com.example.baskit.List.CitiesListAdapter;
+import com.example.baskit.Home.CitiesListAdapter;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.MainComponents.User;
 import com.example.baskit.MasterActivity;
@@ -277,7 +277,6 @@ public class SignUpActivity extends MasterActivity
     {
         user = authHandler.getUser();
         user.setName(username);
-        user.setCities(cities);
 
         refUsers.child(user.getId()).setValue(user)
                 .addOnCompleteListener(taskDB ->
@@ -297,7 +296,17 @@ public class SignUpActivity extends MasterActivity
                             throw new RuntimeException(e);
                         }
 
-                        authHandler.setSupermarkets(choices, null);
+                        try
+                        {
+                            apiHandler.setBranches(choices);
+                            apiHandler.updateSupermarkets();
+                            apiHandler.reset();
+                        }
+                        catch (IOException | JSONException e)
+                        {
+                            e.printStackTrace();
+                        }
+
                         finish();
                     }).start();
                 });

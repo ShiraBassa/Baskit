@@ -10,23 +10,22 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.baskit.API.APIHandler;
+import com.example.baskit.OnlineComponents.APIHandler;
 import com.example.baskit.Baskit;
-import com.example.baskit.MainComponents.ItemInfo;
-import com.example.baskit.MainComponents.PriceRow;
+import com.example.baskit.MainComponents.Item.ItemInfo;
+import com.example.baskit.MainComponents.Item.ItemVariant;
 import com.example.baskit.MainComponents.Supermarket;
 import com.example.baskit.R;
 
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.Objects;
 
 public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAdapter.ViewHolder>
 {
-    private PriceRow selectedRow = null;
+    private ItemVariant selectedRow = null;
 
     private Map<String, Map<String, Double>> originalPricesMap;
-    private ArrayList<PriceRow> priceRows;
+    private ArrayList<ItemVariant> itemVariants;
 
     private final APIHandler apiHandler = APIHandler.getInstance();
 
@@ -35,17 +34,17 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
 
     public interface OnSupermarketClickListener
     {
-        void onSupermarketClick(PriceRow row);
+        void onSupermarketClick(ItemVariant row);
     }
 
     public ItemViewPricesAdapter(
             Context context,
-            ArrayList<PriceRow> rows,
+            ArrayList<ItemVariant> rows,
             OnSupermarketClickListener onSupermarketClickListener)
     {
         this.context = context;
         this.listener = onSupermarketClickListener;
-        this.priceRows = (rows != null) ? rows : new ArrayList<>();
+        this.itemVariants = (rows != null) ? rows : new ArrayList<>();
         this.originalPricesMap = null;
 
         sortRows();
@@ -53,31 +52,11 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
 
     private void sortRows()
     {
-        if (priceRows != null)
+        if (itemVariants != null)
         {
-            priceRows.sort((a, b) -> Double.compare(a.getPrice(), b.getPrice()));
+            itemVariants.sort((a, b) -> Double.compare(a.getPrice(), b.getPrice()));
         }
     }
-
-    public void resort()
-    {
-        this.selectedRow = null;
-        sortRows();
-        notifyDataSetChanged();
-    }
-
-    public void setRows(ArrayList<PriceRow> rows)
-    {
-        this.priceRows = (rows != null) ? rows : new ArrayList<>();
-        resort();
-    }
-
-    public Map<String, Map<String, Double>> getData()
-    {
-        return originalPricesMap;
-    }
-
-
 
     public static class ViewHolder extends RecyclerView.ViewHolder
     {
@@ -108,11 +87,11 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, @SuppressLint("RecyclerView") int position)
     {
-        if (priceRows == null || position < 0 || position >= priceRows.size()) {
+        if (itemVariants == null || position < 0 || position >= itemVariants.size()) {
             return;
         }
 
-        PriceRow row = priceRows.get(position);
+        ItemVariant row = itemVariants.get(position);
         Supermarket supermarket = row.getSupermarket();
         double price = row.getPrice();
         ItemInfo matchedInfo = row.getInfo();
@@ -183,7 +162,7 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
             int pos = holder.getAdapterPosition();
             if (pos == RecyclerView.NO_POSITION) return;
 
-            PriceRow clickedRow = priceRows.get(pos);
+            ItemVariant clickedRow = itemVariants.get(pos);
 
             if (selectedRow != null && selectedRow.equals(clickedRow))
             {
@@ -210,14 +189,14 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
     @Override
     public int getItemCount()
     {
-        return priceRows == null ? 0 : priceRows.size();
+        return itemVariants == null ? 0 : itemVariants.size();
     }
 
     public void setSelectedPosition(int position)
     {
-        if (position >= 0 && position < priceRows.size())
+        if (position >= 0 && position < itemVariants.size())
         {
-            this.selectedRow = priceRows.get(position);
+            this.selectedRow = itemVariants.get(position);
         }
         else
         {

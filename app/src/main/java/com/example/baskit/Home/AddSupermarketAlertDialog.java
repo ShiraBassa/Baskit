@@ -1,6 +1,5 @@
 package com.example.baskit.Home;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
@@ -13,10 +12,10 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 
-import com.example.baskit.API.APIHandler;
-import com.example.baskit.Baskit;
-import com.example.baskit.Firebase.FirebaseAuthHandler;
+import com.example.baskit.OnlineComponents.APIHandler;
+import com.example.baskit.OnlineComponents.FirebaseAuthHandler;
 import com.example.baskit.MainComponents.Supermarket;
+import com.example.baskit.MasterActivity;
 import com.example.baskit.R;
 
 import org.json.JSONException;
@@ -58,7 +57,7 @@ public class AddSupermarketAlertDialog
         void onSubmit(Supermarket supermarket);
     }
 
-    public AddSupermarketAlertDialog(Activity activity,
+    public AddSupermarketAlertDialog(MasterActivity activity,
                                      Context context,
                                      SupermarketsListAdapter supermarketsAdapter,
                                      OnSubmit onSubmit,
@@ -70,7 +69,7 @@ public class AddSupermarketAlertDialog
         this.onSubmit = onSubmit;
         this.runInBackground = runInBackground;
 
-        Baskit.notActivityRunWhenServerActive(() ->
+        activity.runWhenServerActive(() ->
         {
             try
             {
@@ -83,10 +82,10 @@ public class AddSupermarketAlertDialog
                 activity.runOnUiThread(() ->
                         Toast.makeText(context, "שגיאה בטעינת נתונים", Toast.LENGTH_SHORT).show());
             }
-        }, activity);
+        });
     }
 
-    public AddSupermarketAlertDialog(Activity activity,
+    public AddSupermarketAlertDialog(MasterActivity activity,
                                      Context context,
                                      SupermarketsListAdapter supermarketsAdapter,
                                      OnSubmit onSubmit,
@@ -134,12 +133,12 @@ public class AddSupermarketAlertDialog
         if (cities == null)
         {
             allBranches =
-                    apiHandler.getAllBranchesBulk();
+                    apiHandler.getAllBranches(null);
         }
         else
         {
             allBranches =
-                    apiHandler.getAllBranchesBulk(cities);
+                    apiHandler.getAllBranches(cities);
         }
 
         for (String store : allBranches.keySet())
