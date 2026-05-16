@@ -9,18 +9,15 @@
     <string name="auth_email">Email</string>
     <string name="auth_password">Password</string>
     <string name="auth_username">Username</string>
-    <string name="name_label">Name</string>
     <string name="auth_log_out">Log Out</string>
 
     <!-- Common Actions -->
     <string name="action_add">Add</string>
     <string name="action_create">Create</string>
-    <string name="list_edit_label">Edit</string>
     <string name="action_save">Save</string>
     <string name="action_change">Change</string>
     <string name="action_done">Done</string>
     <string name="action_cancel">Cancel</string>
-    <string name="list_share_label">Share</string>
     <string name="action_copy_link">Copy Link</string>
     <string name="action_finish">Finish</string>
     <string name="action_expand">Expand</string>
@@ -42,6 +39,8 @@
     <string name="list_plan">Plan List</string>
     <string name="list_change_name">Change Name</string>
     <string name="list_requests">Requests</string>
+    <string name="list_edit_label">Edit</string>
+    <string name="list_share_label">Share</string>
 
     <!-- Items -->
     <string name="item_search">Search Item</string>
@@ -56,13 +55,14 @@
     <string name="supermarket_available">Available Supermarkets</string>
     <string name="supermarket_change">Change Supermarket</string>
     <string name="supermarkets">Supermarkets</string>
-
-    <!-- Locations -->
     <string name="city_choose">Choose City</string>
     <string name="cities">Cities</string>
     <string name="section_choose">Choose Branch</string>
 
-    <!-- Misc -->
+    <!-- Symbols -->
     <string name="plus" translatable="false">+</string>
     <string name="minus" translatable="false">-</string>
+
+    <!-- More Labels -->
+    <string name="name_label">Name</string>
 </resources>

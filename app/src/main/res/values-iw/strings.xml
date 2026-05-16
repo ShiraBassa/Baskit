@@ -8,18 +8,15 @@
     <string name="auth_email">אימייל</string>
     <string name="auth_password">סיסמה</string>
     <string name="auth_username">שם משתמש</string>
-    <string name="name_label">שם</string>
     <string name="auth_log_out">יציאה מהמשתמש</string>
 
     <!-- Common Actions -->
     <string name="action_add">הוסף</string>
     <string name="action_create">צור</string>
-    <string name="list_edit_label">ערוך</string>
     <string name="action_save">שמור</string>
     <string name="action_change">שנה</string>
     <string name="action_done">בוצע</string>
     <string name="action_cancel">ביטול</string>
-    <string name="list_share_label">שתף</string>
     <string name="action_copy_link">העתק קישור</string>
     <string name="action_finish">סיים</string>
     <string name="action_expand">הרחב</string>
@@ -41,6 +38,8 @@
     <string name="list_plan">תכנון רשימה</string>
     <string name="list_change_name">שנה שם</string>
     <string name="list_requests">בקשות</string>
+    <string name="list_edit_label">ערוך</string>
+    <string name="list_share_label">שתף</string>
 
     <!-- Items -->
     <string name="item_search">חפש פריט</string>
@@ -55,9 +54,10 @@
     <string name="supermarket_available">סופרים זמינים</string>
     <string name="supermarket_change">החלפת סופר</string>
     <string name="supermarkets">סופרמרקטים</string>
-
-    <!-- Locations -->
     <string name="city_choose">בחר עיר</string>
     <string name="cities">ערים</string>
     <string name="section_choose">בחר סניף</string>
+
+    <!-- More Labels -->
+    <string name="name_label">שם</string>
 </resources>
