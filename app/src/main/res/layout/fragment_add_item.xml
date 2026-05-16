@@ -29,7 +29,7 @@
                 android:backgroundTint="?attr/colorSecondary"
                 android:scaleType="fitCenter"
                 android:src="@drawable/ic_cancel"
-                android:contentDescription="@string/cancel" />
+                android:contentDescription="@string/action_cancel" />
 
         </LinearLayout>
 
@@ -78,7 +78,7 @@
                 android:ellipsize="none"
                 android:focusable="true"
                 android:gravity="start"
-                android:hint="חפש פריט"
+                android:hint="@string/item_search"
                 android:imeOptions="actionDone"
                 android:inputType="text"
                 android:scrollHorizontally="false"
@@ -117,7 +117,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="כמות"
+                        android:text="@string/item_quantity"
                         android:textColor="?attr/colorSecondary"
                         android:textSize="30sp" />
 
@@ -139,13 +139,12 @@
                             android:scaleType="fitCenter"
                             android:src="@drawable/ic_arrow_up"
                             app:tint="?attr/colorSecondary"
-                            android:contentDescription="@string/increase_quantity" />
+                            android:contentDescription="@string/item_increase_quantity" />
 
                         <TextView
                             android:id="@+id/tv_quantity"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="_"
                             android:textColor="?attr/colorSecondary"
                             android:textSize="28sp" />
 
@@ -157,7 +156,7 @@
                             android:scaleType="fitCenter"
                             android:src="@drawable/ic_arrow_down"
                             app:tint="?attr/colorSecondary"
-                            android:contentDescription="@string/decrease_quantity" />
+                            android:contentDescription="@string/item_decrease_quantity" />
 
                     </LinearLayout>
 
@@ -221,7 +220,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="10dp"
-                    android:text="סופרים זמינים"
+                    android:text="@string/supermarket_available"
                     android:textColor="?attr/colorPrimaryVariant"
                     android:textSize="32sp"
                     android:textStyle="bold" />
@@ -253,7 +252,7 @@
             android:layout_height="wrap_content"
             android:backgroundTint="?attr/colorPrimaryVariant"
             android:elevation="8dp"
-            android:text="הוסף"
+            android:text="@string/action_add"
             android:textColor="?attr/colorOnPrimary"
             android:textSize="40sp"
             android:textStyle="bold"

@@ -35,7 +35,7 @@
                 android:scaleType="fitCenter"
                 android:src="@drawable/ic_cancel"
                 app:tint="?attr/colorSecondary"
-                android:contentDescription="@string/cancel" />
+                android:contentDescription="@string/action_cancel" />
 
             <TextView
                 android:id="@+id/tv_list_name"
@@ -43,7 +43,6 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:gravity="center_vertical"
-                android:text="רשימה"
                 android:textColor="?attr/colorPrimary"
                 android:textSize="28sp"
                 android:visibility="invisible" />
@@ -54,7 +53,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="start"
-            android:text="ערוך"
+            android:text="@string/list_edit_label"
             android:textColor="?attr/colorSecondary"
             android:textSize="36sp"
             android:textStyle="bold" />
@@ -83,7 +82,6 @@
             android:id="@+id/tv_total"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="סך הכל: _ ש״ח"
             android:textColor="?attr/colorSecondary"
             android:textSize="24sp"
             android:textStyle="bold"
@@ -96,7 +94,7 @@
             android:layout_marginHorizontal="15dp"
             android:layout_marginVertical="10dp"
             android:backgroundTint="?attr/colorPrimaryVariant"
-            android:text="שמור"
+            android:text="@string/action_save"
             android:textColor="?attr/colorOnPrimary"
             android:textSize="36sp"
             android:textStyle="bold" />

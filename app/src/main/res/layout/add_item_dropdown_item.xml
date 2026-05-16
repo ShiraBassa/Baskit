@@ -30,7 +30,6 @@
                 android:gravity="start"
                 android:padding="4dp"
                 android:singleLine="true"
-                android:text="שם"
                 android:textColor="?attr/colorPrimaryVariant"
                 android:textSize="22sp" />
 
@@ -42,7 +41,7 @@
                 android:src="@drawable/ic_star"
                 android:visibility="gone"
                 app:tint="?attr/colorPrimary"
-                android:contentDescription="@string/suggested_item" />
+                android:contentDescription="@string/item_suggested" />
 
         </LinearLayout>
 

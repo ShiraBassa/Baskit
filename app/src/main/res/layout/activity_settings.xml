@@ -28,7 +28,7 @@
             android:scaleType="fitCenter"
             android:src="@drawable/ic_log_out"
             app:tint="?attr/colorSecondary"
-            android:contentDescription="@string/log_out" />
+            android:contentDescription="@string/auth_log_out" />
 
         <TextView
             android:id="@+id/tv_title"
@@ -38,7 +38,7 @@
             android:gravity="center"
             android:letterSpacing="0.02"
             android:paddingTop="45dp"
-            android:text="הגדרות"
+            android:text="@string/nav_settings"
             android:textColor="?attr/colorSecondary"
             android:textSize="40sp"
             android:textStyle="bold"
@@ -52,14 +52,14 @@
             android:scaleType="fitCenter"
             android:src="@drawable/ic_home"
             app:tint="?attr/colorSecondary"
-            android:contentDescription="@string/home" />
+            android:contentDescription="@string/nav_home" />
 
     </LinearLayout>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="שם משתמש"
+        android:text="@string/auth_username"
         android:textColor="?attr/colorPrimaryVariant"
         android:textSize="28sp"
         android:textStyle="bold"
@@ -95,7 +95,7 @@
             android:id="@+id/btn_change_username"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="שנה"
+            android:text="@string/action_change"
             android:textSize="20sp" />
 
     </LinearLayout>

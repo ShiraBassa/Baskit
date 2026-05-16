@@ -34,7 +34,7 @@
                 android:scaleType="fitCenter"
                 android:src="@drawable/ic_back"
                 app:tint="?attr/colorPrimary"
-                android:contentDescription="@string/back" />
+                android:contentDescription="@string/nav_back" />
 
             <TextView
                 android:id="@+id/tv_list_name"
@@ -42,7 +42,6 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:gravity="center_vertical"
-                android:text="רשימה"
                 android:textColor="?attr/colorPrimary"
                 android:textSize="28sp"
                 android:visibility="invisible" />
@@ -55,7 +54,7 @@
                 android:scaleType="fitCenter"
                 android:src="@drawable/ic_more"
                 app:tint="?attr/colorSecondary"
-                android:contentDescription="@string/more" />
+                android:contentDescription="@string/nav_more" />
 
         </LinearLayout>
 
@@ -64,7 +63,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:text="קטגוריה"
             android:textColor="?attr/colorPrimaryVariant"
             android:textSize="35sp"
             android:textStyle="bold"
@@ -98,7 +96,6 @@
             android:id="@+id/tv_total"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="סך הכל: _ ש״ח"
             android:textColor="?attr/colorPrimary"
             android:textSize="26sp"
             android:textStyle="bold"

@@ -32,7 +32,7 @@
                 android:scaleType="fitCenter"
                 android:src="@drawable/ic_settings"
                 app:tint="?attr/colorSecondary"
-                android:contentDescription="@string/settings" />
+                android:contentDescription="@string/nav_settings" />
 
         </LinearLayout>
 
@@ -42,7 +42,6 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:letterSpacing="0.02"
-            android:text="היי ___"
             android:textColor="?attr/colorPrimary"
             android:textSize="40sp"
             android:textStyle="bold" />
@@ -83,7 +82,7 @@
             android:layout_height="wrap_content"
             android:paddingHorizontal="32dp"
             android:paddingVertical="14dp"
-            android:text="צור רשימה"
+            android:text="@string/list_create"
             android:textAlignment="center"
             android:textColor="?attr/colorPrimary"
             android:textSize="28sp"

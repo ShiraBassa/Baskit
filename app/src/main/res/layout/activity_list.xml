@@ -27,7 +27,7 @@
             android:scaleType="fitCenter"
             android:src="@drawable/ic_back"
             app:tint="?attr/colorPrimary"
-            android:contentDescription="@string/back" />
+            android:contentDescription="@string/nav_back" />
 
         <TextView
             android:id="@+id/tv_list_name"
@@ -36,7 +36,6 @@
             android:layout_marginHorizontal="10dp"
             android:layout_weight="1"
             android:letterSpacing="0.02"
-            android:text="רשימה"
             android:textColor="?attr/colorPrimary"
             android:textSize="32sp"
             android:textStyle="bold"
@@ -54,7 +53,7 @@
                 android:scaleType="fitCenter"
                 android:src="@drawable/ic_share"
                 app:tint="?attr/colorPrimaryVariant"
-                android:contentDescription="@string/more" />
+                android:contentDescription="@string/nav_more" />
 
             <View
                 android:id="@+id/share_list_dot"
@@ -75,7 +74,7 @@
             android:scaleType="fitCenter"
             android:src="@drawable/ic_more"
             app:tint="?attr/colorSecondary"
-            android:contentDescription="@string/more" />
+            android:contentDescription="@string/nav_more" />
 
     </LinearLayout>
 

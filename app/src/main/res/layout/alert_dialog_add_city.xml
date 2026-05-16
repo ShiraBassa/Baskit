@@ -13,7 +13,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="12dp"
-        android:text="בחר עיר"
+        android:text="@string/city_choose"
         android:textColor="?attr/colorPrimaryVariant"
         android:textSize="22sp" />
 
@@ -37,7 +37,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:backgroundTint="?attr/colorPrimaryVariant"
-        android:text="הוסף"
+        android:text="@string/action_add"
         android:textColor="?attr/colorOnPrimary" />
 
 </LinearLayout>

@@ -21,7 +21,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="2dp"
-            android:text="חברה • 1 ליטר"
             android:textColor="?attr/colorPrimaryVariant"
             android:textSize="14sp" />
 
@@ -29,7 +28,6 @@
             android:id="@+id/tv_supermarket_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="סופרמרקט"
             android:textColor="?attr/colorPrimary"
             android:textSize="20sp"
             android:textStyle="bold" />
@@ -38,7 +36,6 @@
             android:id="@+id/tv_supermarket"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="(סניף)"
             android:textColor="?attr/colorPrimary"
             android:textSize="20sp" />
 
@@ -48,7 +45,6 @@
         android:id="@+id/tv_price"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="מחיר"
         android:textColor="?attr/colorPrimary"
         android:textSize="20sp"
         android:textStyle="bold" />

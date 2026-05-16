@@ -30,7 +30,7 @@
             android:scaleType="fitCenter"
             android:src="@drawable/ic_drag_handle"
             app:tint="?attr/colorSecondary"
-            android:contentDescription="@string/change_supermarket" />
+            android:contentDescription="@string/supermarket_change" />
 
         <Space
             android:layout_width="6dp"
@@ -44,7 +44,7 @@
             android:scaleType="fitCenter"
             android:src="@drawable/ic_check_box_unchecked"
             app:tint="?attr/colorSecondary"
-            android:contentDescription="@string/finish" />
+            android:contentDescription="@string/action_finish" />
 
         <Space
             android:layout_width="4dp"
@@ -58,7 +58,6 @@
             android:ellipsize="end"
             android:scrollHorizontally="false"
             android:singleLine="true"
-            android:text="מוצר"
             android:textColor="?attr/colorPrimaryVariant"
             android:textSize="18sp"
             android:textStyle="bold"
@@ -74,7 +73,6 @@
         android:id="@+id/tv_price"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="מחיר"
         android:textColor="?attr/colorPrimary"
         android:textSize="16sp"
         android:visibility="gone" />
@@ -102,13 +100,12 @@
             android:scaleType="fitCenter"
             android:src="@drawable/ic_arrow_up"
             app:tint="?attr/colorSecondary"
-            android:contentDescription="@string/increase_quantity" />
+            android:contentDescription="@string/item_increase_quantity" />
 
         <TextView
             android:id="@+id/tv_quantity"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="כמות"
             android:textColor="?attr/colorSecondary"
             android:textSize="18sp"
             android:textStyle="bold" />
@@ -121,7 +118,7 @@
             android:scaleType="fitCenter"
             android:src="@drawable/ic_arrow_down"
             app:tint="?attr/colorSecondary"
-            android:contentDescription="@string/decrease_quantity" />
+            android:contentDescription="@string/item_decrease_quantity" />
 
     </LinearLayout>
 

@@ -1,18 +1,68 @@
 <resources>
-    <string name="app_name">Baskit</string>
+    <!-- App -->
+    <string name="app_name" translatable="false">Baskit</string>
+    <string name="welcome_message">Welcome to\nBaskit🛒</string>
+    <string name="enter_details">Please enter your details in the fields above</string>
 
-    <string name="back">חזור</string>
-    <string name="more">עוד</string>
-    <string name="settings">הגדרות</string>
-    <string name="cancel">ביטול</string>
-    <string name="log_out">יציאה מהמשתמש</string>
-    <string name="home">בית</string>
-    <string name="suggested_item">פריט מוצע</string>
-    <string name="increase_quantity">העלאת כמות</string>
-    <string name="decrease_quantity">הקטנת כמות</string>
-    <string name="finish">סיים</string>
-    <string name="add_item">הוספת פריט</string>
-    <string name="plan_list">תכנון רשימה</string>
-    <string name="change_supermarket">החלפת סופר</string>
-    <string name="expand">הרחב</string>
+    <!-- Authentication -->
+    <string name="auth_sign_in_or_up">Sign In / Sign Up</string>
+    <string name="auth_email">Email</string>
+    <string name="auth_password">Password</string>
+    <string name="auth_username">Username</string>
+    <string name="name_label">Name</string>
+    <string name="auth_log_out">Log Out</string>
+
+    <!-- Common Actions -->
+    <string name="action_add">Add</string>
+    <string name="action_create">Create</string>
+    <string name="list_edit_label">Edit</string>
+    <string name="action_save">Save</string>
+    <string name="action_change">Change</string>
+    <string name="action_done">Done</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="list_share_label">Share</string>
+    <string name="action_copy_link">Copy Link</string>
+    <string name="action_finish">Finish</string>
+    <string name="action_expand">Expand</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_back">Back</string>
+    <string name="nav_more">More</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Lists -->
+    <string name="list_create">Create List</string>
+    <string name="list_duplicate">Duplicate List</string>
+    <string name="list_leave">Leave List</string>
+    <string name="list_remove">Delete List</string>
+    <string name="list_remove_items">Remove Items</string>
+    <string name="list_sort_label">Sort List</string>
+    <string name="list_sort_button">Sort ▼</string>
+    <string name="list_plan">Plan List</string>
+    <string name="list_change_name">Change Name</string>
+    <string name="list_requests">Requests</string>
+
+    <!-- Items -->
+    <string name="item_search">Search Item</string>
+    <string name="item_quantity">Quantity</string>
+    <string name="item_add">Add Item</string>
+    <string name="item_suggested">Suggested Item</string>
+    <string name="item_increase_quantity">Increase Quantity</string>
+    <string name="item_decrease_quantity">Decrease Quantity</string>
+
+    <!-- Supermarkets -->
+    <string name="supermarket_choose">Choose Supermarket</string>
+    <string name="supermarket_available">Available Supermarkets</string>
+    <string name="supermarket_change">Change Supermarket</string>
+    <string name="supermarkets">Supermarkets</string>
+
+    <!-- Locations -->
+    <string name="city_choose">Choose City</string>
+    <string name="cities">Cities</string>
+    <string name="section_choose">Choose Branch</string>
+
+    <!-- Misc -->
+    <string name="plus" translatable="false">+</string>
+    <string name="minus" translatable="false">-</string>
 </resources>

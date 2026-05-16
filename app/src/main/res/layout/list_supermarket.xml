@@ -24,14 +24,13 @@
             android:scaleType="fitCenter"
             android:src="@drawable/ic_arrow_up"
             app:tint="?attr/colorSecondary"
-            android:contentDescription="@string/expand" />
+            android:contentDescription="@string/action_expand" />
 
         <TextView
             android:id="@+id/tv_supermarket_name"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="סופר, סניף"
             android:textColor="?attr/colorSecondary"
             android:textSize="22sp"
             android:textStyle="bold" />

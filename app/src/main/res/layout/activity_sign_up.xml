@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="15dp"
         android:gravity="center"
-        android:text="ברוך הבא ל\nBaskit🛒"
+        android:text="@string/welcome_message"
         android:textColor="?attr/colorPrimary"
         android:textSize="42sp"
         android:textStyle="bold" />
@@ -23,7 +23,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="15dp"
         android:gravity="center"
-        android:text="אנא הכנס את פרטיך בשדות הנ״ל"
+        android:text="@string/enter_details"
         android:textColor="?attr/colorSecondary"
         android:textSize="26sp" />
 
@@ -37,7 +37,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="שם משתמש:"
+            android:text="@string/auth_username"
             android:textColor="?attr/colorPrimary"
             android:textSize="28sp"
             android:textStyle="bold"
@@ -88,7 +88,7 @@
         android:id="@+id/btn_submit"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="בוצע"
+        android:text="@string/action_done"
         android:textSize="32sp" />
 
 </LinearLayout>

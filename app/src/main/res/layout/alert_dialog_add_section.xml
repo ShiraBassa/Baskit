@@ -12,7 +12,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="בחר סופרמרקט"
+        android:text="@string/supermarket_choose"
         android:textColor="?attr/colorPrimaryVariant"
         android:textSize="22sp" />
 
@@ -32,7 +32,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="בחר מחלקה"
+        android:text="@string/section_choose"
         android:textColor="?attr/colorPrimaryVariant"
         android:textSize="22sp" />
 
@@ -56,7 +56,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:backgroundTint="?attr/colorPrimaryVariant"
-        android:text="הוסף"
+        android:text="@string/action_add"
         android:textColor="?attr/colorOnPrimary" />
 
 </LinearLayout>

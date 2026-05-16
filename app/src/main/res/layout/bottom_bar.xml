@@ -27,7 +27,7 @@
             android:scaleType="fitCenter"
             android:src="@drawable/ic_check"
             app:tint="?attr/colorOnContainerUnchecked"
-            android:contentDescription="@string/finish"
+            android:contentDescription="@string/action_finish"
             tools:ignore="PrivateResource" />
 
     </LinearLayout>
@@ -42,7 +42,7 @@
         android:scaleType="fitCenter"
         android:src="@drawable/ic_add"
         app:tint="?attr/colorPrimary"
-        android:contentDescription="@string/add_item" />
+        android:contentDescription="@string/item_add" />
 
     <LinearLayout
         android:layout_width="0dp"
@@ -61,7 +61,7 @@
             android:scaleType="fitCenter"
             android:src="@drawable/ic_plan"
             app:tint="?attr/colorSecondary"
-            android:contentDescription="@string/plan_list" />
+            android:contentDescription="@string/list_plan" />
 
     </LinearLayout>
 

@@ -20,7 +20,6 @@
             android:id="@+id/tv_list_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="רשימה"
             android:textColor="?attr/colorPrimary"
             android:textSize="32sp"
             android:textStyle="bold"
@@ -29,7 +28,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="שתף"
+            android:text="@string/list_share_label"
             android:textColor="?attr/colorPrimary"
             android:textSize="48sp"
             android:textStyle="bold" />
@@ -43,7 +42,7 @@
         android:backgroundTint="?attr/colorPrimaryVariant"
         android:paddingHorizontal="10dp"
         android:paddingVertical="5dp"
-        android:text="העתק קישור"
+        android:text="@string/action_copy_link"
         android:textColor="?attr/colorOnPrimary"
         android:textSize="24sp"
         android:textStyle="bold" />
@@ -59,7 +58,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="בקשות"
+            android:text="@string/list_requests"
             android:textColor="?attr/colorPrimaryVariant"
             android:textSize="24sp"
             android:textStyle="bold" />

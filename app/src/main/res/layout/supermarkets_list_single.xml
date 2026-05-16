@@ -12,7 +12,6 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="5dp"
         android:letterSpacing="0.02"
-        android:text="סופר"
         android:textColor="?attr/colorSecondary"
         android:textSize="24sp"
         android:textStyle="bold" />

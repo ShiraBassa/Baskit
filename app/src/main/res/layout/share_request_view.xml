@@ -18,7 +18,6 @@
             android:layout_weight="1"
             android:layout_height="wrap_content"
             android:gravity="center_vertical|start"
-            android:text="שם משתמש"
             android:textColor="?attr/colorPrimaryVariant"
             android:textSize="22sp"
             android:textStyle="bold"
@@ -43,7 +42,7 @@
                 android:layout_height="44dp"
                 android:layout_marginEnd="10dp"
                 android:backgroundTint="?attr/colorPrimary"
-                android:text="+"
+                android:text="@string/plus"
                 android:textColor="?attr/colorOnPrimary"
                 android:textSize="18sp" />
 
@@ -53,7 +52,7 @@
                 android:layout_width="44dp"
                 android:layout_height="44dp"
                 android:backgroundTint="?attr/colorTertiary"
-                android:text="-"
+                android:text="@string/minus"
                 android:textColor="?attr/colorOnPrimary"
                 android:textSize="18sp" />
 

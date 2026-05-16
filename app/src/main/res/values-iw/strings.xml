@@ -1,0 +1,63 @@
+<resources>
+    <!-- App -->
+    <string name="welcome_message">ברוך הבא ל\nBaskit🛒</string>
+    <string name="enter_details">אנא הכנס את פרטיך בשדות הנ״ל</string>
+
+    <!-- Authentication -->
+    <string name="auth_sign_in_or_up">היכנס / הירשם</string>
+    <string name="auth_email">אימייל</string>
+    <string name="auth_password">סיסמה</string>
+    <string name="auth_username">שם משתמש</string>
+    <string name="name_label">שם</string>
+    <string name="auth_log_out">יציאה מהמשתמש</string>
+
+    <!-- Common Actions -->
+    <string name="action_add">הוסף</string>
+    <string name="action_create">צור</string>
+    <string name="list_edit_label">ערוך</string>
+    <string name="action_save">שמור</string>
+    <string name="action_change">שנה</string>
+    <string name="action_done">בוצע</string>
+    <string name="action_cancel">ביטול</string>
+    <string name="list_share_label">שתף</string>
+    <string name="action_copy_link">העתק קישור</string>
+    <string name="action_finish">סיים</string>
+    <string name="action_expand">הרחב</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">בית</string>
+    <string name="nav_back">חזור</string>
+    <string name="nav_more">עוד</string>
+    <string name="nav_settings">הגדרות</string>
+
+    <!-- Lists -->
+    <string name="list_create">צור רשימה</string>
+    <string name="list_duplicate">שכפל רשימה</string>
+    <string name="list_leave">עזוב רשימה</string>
+    <string name="list_remove">מחק רשימה</string>
+    <string name="list_remove_items">מחק מוצרים</string>
+    <string name="list_sort_label">סידור רשימה</string>
+    <string name="list_sort_button">סדר ▼</string>
+    <string name="list_plan">תכנון רשימה</string>
+    <string name="list_change_name">שנה שם</string>
+    <string name="list_requests">בקשות</string>
+
+    <!-- Items -->
+    <string name="item_search">חפש פריט</string>
+    <string name="item_quantity">כמות</string>
+    <string name="item_add">הוספת פריט</string>
+    <string name="item_suggested">פריט מוצע</string>
+    <string name="item_increase_quantity">העלאת כמות</string>
+    <string name="item_decrease_quantity">הקטנת כמות</string>
+
+    <!-- Supermarkets -->
+    <string name="supermarket_choose">בחר סופרמרקט</string>
+    <string name="supermarket_available">סופרים זמינים</string>
+    <string name="supermarket_change">החלפת סופר</string>
+    <string name="supermarkets">סופרמרקטים</string>
+
+    <!-- Locations -->
+    <string name="city_choose">בחר עיר</string>
+    <string name="cities">ערים</string>
+    <string name="section_choose">בחר סניף</string>
+</resources>
