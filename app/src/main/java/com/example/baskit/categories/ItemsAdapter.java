@@ -7,7 +7,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -34,7 +33,6 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
         void updateItemCategory(Item item);
         void removeItemCategory(Item item);
         void updateCategory();
-        void removeCategory();
         default void collapseAllSupermarkets() {}
         default void expandAllSupermarkets() {}
     }
@@ -63,7 +61,6 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
         public final ImageButton btnDown;
         public final ImageButton btnCheckBox;
         public final ImageButton dragHandle;
-        public final LinearLayout loutQuantity;
         public ItemViewAlertDialog itemViewAlertDialog;
         public final View spacer;
 
@@ -77,7 +74,6 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
             btnDown = itemView.findViewById(R.id.btn_down);
             btnCheckBox = itemView.findViewById(R.id.check_box);
             tvPrice = itemView.findViewById(R.id.tv_price);
-            loutQuantity = itemView.findViewById(R.id.layout_quantity);
             dragHandle = itemView.findViewById(R.id.drag_handle);
             spacer = itemView.findViewById(R.id.spacer);
         }

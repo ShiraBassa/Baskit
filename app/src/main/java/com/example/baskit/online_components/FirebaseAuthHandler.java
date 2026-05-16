@@ -54,7 +54,6 @@ public class FirebaseAuthHandler
     public interface CreateListCallback
     {
         void onSuccess(List newList);
-        void onError(String message);
     }
 
     public static FirebaseAuthHandler getInstance()

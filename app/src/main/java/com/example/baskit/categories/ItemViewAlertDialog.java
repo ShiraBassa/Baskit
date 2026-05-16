@@ -54,20 +54,12 @@ public class ItemViewAlertDialog
     final ImageButton adBtnUp;
     final ImageButton adBtnDown;
     final LinearLayout adLayout;
-    final LinearLayout adLoutQuantity;
     final LinearLayout adLoutQuantityWhole;
-
-    final Activity activity;
-    final Context context;
-    ItemsAdapter.UpperClassFunctions upperClassFns;
 
     @SuppressLint({"InflateParams", "NotifyDataSetChanged", "SetTextI18n"})
     public ItemViewAlertDialog(Activity activity, Context context, ItemsAdapter.UpperClassFunctions upperClassFns, Item _item, boolean showQuantity)
     {
-        this.activity = activity;
-        this.context = context;
         this.item = _item.clone();
-        this.upperClassFns = upperClassFns;
         this.showQuantity = showQuantity;
 
         adLayout = (LinearLayout) activity.getLayoutInflater().inflate(R.layout.alert_dialog_item_view, null);
@@ -76,7 +68,6 @@ public class ItemViewAlertDialog
         adBtnUp = adLayout.findViewById(R.id.btn_up);
         adBtnDown = adLayout.findViewById(R.id.btn_down);
         adTvQuantity = adLayout.findViewById(R.id.tv_quantity);
-        adLoutQuantity = adLayout.findViewById(R.id.lout_info);
         adLoutQuantityWhole = adLayout.findViewById(R.id.lout_quantity_whole);
         recyclerSupermarkets = adLayout.findViewById(R.id.recycler_supermarket);
         adTvItemName = adLayout.findViewById(R.id.tv_item_name);
@@ -233,11 +224,6 @@ public class ItemViewAlertDialog
         });
     }
 
-    public void setUpperClassFns(ItemsAdapter.UpperClassFunctions upperClassFns)
-    {
-        this.upperClassFns = upperClassFns;
-    }
-
     @SuppressLint("SetTextI18n")
     public void show(Item _item)
     {
@@ -328,6 +314,7 @@ public class ItemViewAlertDialog
         adItemView.show();
     }
 
+    @SuppressWarnings("ExtractMethodRecommender")
     @SuppressLint("NotifyDataSetChanged")
     private void applyVariationFilter()
     {

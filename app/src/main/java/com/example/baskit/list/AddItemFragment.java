@@ -433,6 +433,7 @@ public class AddItemFragment extends DialogFragment
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
 
+            @SuppressWarnings("ExtractMethodRecommender")
             @Override
             public void afterTextChanged(android.text.Editable str) {
                 if (filterRunnable != null) searchItem.removeCallbacks(filterRunnable);
@@ -492,7 +493,7 @@ public class AddItemFragment extends DialogFragment
 
                             if (isSuggestion)
                             {
-                                suggestions.add(new ScoredItem(s, 0, true));
+                                suggestions.add(new ScoredItem(s, 0));
                             }
                         }
                     }
@@ -567,7 +568,7 @@ public class AddItemFragment extends DialogFragment
                                 }
                             }
 
-                            ScoredItem item = new ScoredItem(s, score, isSuggestion);
+                            ScoredItem item = new ScoredItem(s, score);
 
                             if (isSuggestion)
                             {
@@ -691,12 +692,11 @@ public class AddItemFragment extends DialogFragment
             {
                 final String item;
                 final int score;
-                final boolean isSuggestion;
-                ScoredItem(String item, int score, boolean isSuggestion)
+
+                ScoredItem(String item, int score)
                 {
                     this.item = item;
                     this.score = score;
-                    this.isSuggestion = isSuggestion;
                 }
             }
         });

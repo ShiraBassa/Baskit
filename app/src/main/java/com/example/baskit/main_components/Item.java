@@ -10,6 +10,7 @@ import com.google.firebase.database.IgnoreExtraProperties;
 import java.util.ArrayList;
 import java.util.Objects;
 
+@SuppressWarnings("unused")
 @IgnoreExtraProperties
 public class Item implements Cloneable
 {
@@ -70,6 +71,7 @@ public class Item implements Cloneable
         return company;
     }
 
+    @SuppressWarnings("unused")
     public void setCompany(String company)
     {
         this.company = company;
@@ -80,6 +82,7 @@ public class Item implements Cloneable
         return weight;
     }
 
+    @SuppressWarnings("unused")
     public void setWeight(Double weight)
     {
         this.weight = weight;
@@ -90,6 +93,7 @@ public class Item implements Cloneable
         return unit;
     }
 
+    @SuppressWarnings("unused")
     public void setUnit(String unit)
     {
         this.unit = unit;
@@ -145,6 +149,7 @@ public class Item implements Cloneable
         return supermarket;
     }
 
+    @SuppressWarnings("unused")
     public void setSupermarket(Supermarket supermarket)
     {
         this.supermarket = supermarket;
@@ -522,6 +527,7 @@ public class Item implements Cloneable
     }
 
 
+    @SuppressWarnings("unused")
     public static class ItemInfo
     {
         private String code;
@@ -544,6 +550,7 @@ public class Item implements Cloneable
             return code;
         }
 
+        @SuppressWarnings("unused")
         public void setCode(String code) {
             this.code = code;
         }
@@ -552,6 +559,7 @@ public class Item implements Cloneable
             return baseName;
         }
 
+        @SuppressWarnings("unused")
         public void setBaseName(String baseName) {
             this.baseName = baseName;
         }
@@ -560,6 +568,7 @@ public class Item implements Cloneable
             return company;
         }
 
+        @SuppressWarnings("unused")
         public void setCompany(String company) {
             this.company = company;
         }
@@ -585,6 +594,7 @@ public class Item implements Cloneable
             }
         }
 
+        @SuppressWarnings("unused")
         public void setWeight(Double weight) {
             this.weight = weight;
         }
@@ -593,6 +603,7 @@ public class Item implements Cloneable
             return unit;
         }
 
+        @SuppressWarnings("unused")
         public void setUnit(String unit)
         {
             this.unit = unit;
@@ -637,6 +648,7 @@ public class Item implements Cloneable
     }
 
 
+    @SuppressWarnings("unused")
     public static class ItemVariant
     {
         private Supermarket supermarket;
@@ -654,6 +666,7 @@ public class Item implements Cloneable
             return supermarket;
         }
 
+        @SuppressWarnings("unused")
         public void setSupermarket(Supermarket supermarket) {
             this.supermarket = supermarket;
         }
@@ -662,6 +675,7 @@ public class Item implements Cloneable
             return price;
         }
 
+        @SuppressWarnings("unused")
         public void setPrice(double price) {
             this.price = price;
         }
@@ -670,6 +684,7 @@ public class Item implements Cloneable
             return info;
         }
 
+        @SuppressWarnings("unused")
         public void setInfo(ItemInfo info) {
             this.info = info;
         }

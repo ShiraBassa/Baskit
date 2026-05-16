@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import com.example.baskit.main_components.Item.ItemVariant;
 
+@SuppressWarnings("unused")
 @IgnoreExtraProperties
 public class List implements SortableEntity
 {

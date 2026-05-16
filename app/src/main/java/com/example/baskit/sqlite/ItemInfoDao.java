@@ -7,6 +7,7 @@ import androidx.room.Query;
 
 import java.util.List;
 
+@SuppressWarnings("ALL")
 @Dao
 public interface ItemInfoDao
 {

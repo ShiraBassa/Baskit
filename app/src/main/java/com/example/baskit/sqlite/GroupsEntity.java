@@ -9,9 +9,9 @@ public class GroupsEntity
 {
     @PrimaryKey
     @NonNull
-    public String baseName;
+    public final String baseName;
 
-    public String structureJson;
+    public final String structureJson;
 
     public GroupsEntity(@NonNull String baseName, String structureJson)
     {
@@ -25,18 +25,8 @@ public class GroupsEntity
         return baseName;
     }
 
-    public void setBaseName(@NonNull String baseName)
-    {
-        this.baseName = baseName;
-    }
-
     public String getStructureJson()
     {
         return structureJson;
-    }
-
-    public void setStructureJson(String structureJson)
-    {
-        this.structureJson = structureJson;
     }
 }

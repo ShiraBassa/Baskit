@@ -20,7 +20,6 @@ import com.example.baskit.list.PlanListActivity;
 import com.example.baskit.list.SortListBottomSheetBuilder;
 import com.example.baskit.main_components.Category;
 import com.example.baskit.main_components.Item;
-import com.example.baskit.main_components.Item.ItemInfo;
 import com.example.baskit.main_components.List;
 import com.example.baskit.main_components.Item.ItemVariant;
 import com.example.baskit.main_components.Supermarket;
@@ -40,7 +39,6 @@ public class CategoryActivity extends MasterActivity
     Category category;
 
     Map<String, ArrayList<String>> groups;
-    Map<String, ItemInfo> infos;
     ArrayList<Supermarket> supermarkets;
 
     final FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
@@ -73,7 +71,6 @@ public class CategoryActivity extends MasterActivity
         }
 
         groups = apiHandler.getGroups();
-        infos = apiHandler.getItemInfos();
         supermarkets = apiHandler.getSupermarkets();
 
         init();
@@ -147,111 +144,91 @@ public class CategoryActivity extends MasterActivity
                                 public void onError() {}
                             });
 
-                            dbHandler.listenToCategory(list, categoryName, new FirebaseDBHandler.GetCategoryCallback()
+                            dbHandler.listenToCategory(list, categoryName, newCategory ->
                             {
-                                @Override
-                                public void onCategoryFetched(Category newCategory)
+                                category = newCategory;
+
+                                if (category == null || category.getItems() == null || category.getItems().isEmpty())
                                 {
-                                    category = newCategory;
-
-                                    if (category == null || category.getItems() == null || category.getItems().isEmpty())
+                                    if (!isFinishing())
                                     {
-                                        if (!isFinishing())
-                                        {
-                                            finish();
-                                        }
-                                        return;
+                                        finish();
                                     }
+                                    return;
+                                }
 
-                                    list.updateCategory(category);
-                                    tvCategoryName.setText(category.getName());
-                                    tvCategoryName.setVisibility(View.VISIBLE);
-                                    btnAddItem.setEnabled(true);
-                                    tvTotal.setText(Baskit.getTotalDisplayString(category.getTotal(), category.allPricesKnown(), true, false));
-                                    tvTotal.setVisibility(View.VISIBLE);
-                                    btnSortList.setEnabled(true);
+                                list.updateCategory(category);
+                                tvCategoryName.setText(category.getName());
+                                tvCategoryName.setVisibility(View.VISIBLE);
+                                btnAddItem.setEnabled(true);
+                                tvTotal.setText(Baskit.getTotalDisplayString(category.getTotal(), category.allPricesKnown(), true, false));
+                                tvTotal.setVisibility(View.VISIBLE);
+                                btnSortList.setEnabled(true);
 
-                                    if (addItemFragment == null)
+                                if (addItemFragment == null)
+                                {
+                                    if (groups != null && !groups.isEmpty())
                                     {
-                                        if (groups != null && !groups.isEmpty())
-                                        {
-                                            addItemFragment = new AddItemFragment(
-                                                    CategoryActivity.this,
-                                                    CategoryActivity.this,
-                                                    groups,
-                                                    list.toItemNames(),
-                                                    CategoryActivity.this::addItem,
-                                                    list.getItemSuggestions()
-                                            );
-                                        }
-                                        else
-                                        {
-                                            btnAddItem.setEnabled(false);
-                                        }
+                                        addItemFragment = new AddItemFragment(
+                                                CategoryActivity.this,
+                                                CategoryActivity.this,
+                                                groups,
+                                                list.toItemNames(),
+                                                CategoryActivity.this::addItem,
+                                                list.getItemSuggestions()
+                                        );
                                     }
-
-                                    runOnUiThread(() ->
+                                    else
                                     {
-                                        if (itemsAdapter == null)
-                                        {
-                                            itemsAdapter = new CategoryItemsAdapter(
-                                                    category,
-                                                    CategoryActivity.this,
-                                                    CategoryActivity.this,
-                                                    new ItemsAdapter.UpperClassFunctions()
+                                        btnAddItem.setEnabled(false);
+                                    }
+                                }
+
+                                runOnUiThread(() ->
+                                {
+                                    if (itemsAdapter == null)
+                                    {
+                                        itemsAdapter = new CategoryItemsAdapter(
+                                                category,
+                                                CategoryActivity.this,
+                                                CategoryActivity.this,
+                                                new ItemsAdapter.UpperClassFunctions()
+                                                {
+                                                    @Override
+                                                    public void updateItemCategory(Item item)
                                                     {
-                                                        @Override
-                                                        public void updateItemCategory(Item item)
+                                                        runWhenServerActive(() ->
                                                         {
-                                                            runWhenServerActive(() ->
-                                                            {
-                                                                category.removeVariants(item.getBaseName());
-                                                                category.addItem(item);
-                                                                dbHandler.updateCategory(list, category);
-                                                            });
-                                                        }
+                                                            category.removeVariants(item.getBaseName());
+                                                            category.addItem(item);
+                                                            dbHandler.updateCategory(list, category);
+                                                        });
+                                                    }
 
-                                                        @Override
-                                                        public void removeItemCategory(Item item)
-                                                        {
-                                                            if (category == null) return;
-                                                            runWhenServerActive(() -> dbHandler.removeItem(list, category, item));
-                                                        }
+                                                    @Override
+                                                    public void removeItemCategory(Item item)
+                                                    {
+                                                        if (category == null) return;
+                                                        runWhenServerActive(() -> dbHandler.removeItem(list, category, item));
+                                                    }
 
-                                                        @Override
-                                                        public void updateCategory()
-                                                        {
-                                                            if (category == null) return;
-                                                            runWhenServerActive(() -> dbHandler.updateCategory(list, category));
-                                                        }
+                                                    @Override
+                                                    public void updateCategory()
+                                                    {
+                                                        if (category == null) return;
+                                                        runWhenServerActive(() -> dbHandler.updateCategory(list, category));
+                                                    }
+                                                },
+                                                supermarkets
+                                        );
 
-                                                        @Override
-                                                        public void removeCategory()
-                                                        {
-                                                            runWhenServerActive(() ->
-                                                            {
-                                                                dbHandler.removeCategory(list, category);
-                                                                finish();
-                                                            });
-                                                        }
-                                                    },
-                                                    supermarkets
-                                            );
-
-                                            recyclerItems.setAdapter(itemsAdapter);
-                                        }
-                                        else
-                                        {
-                                            itemsAdapter.updateItems(new ArrayList<>(category.getItems()));
-                                        }
-                                    });
-                                }
-
-                                @Override
-                                public void onError()
-                                {
-                                    initialized = false;
-                                }
+                                        recyclerItems.setAdapter(itemsAdapter);
+                                    }
+                                    else
+                                    {
+                                        itemsAdapter.updateItems(new ArrayList<>(category.getItems()));
+                                    }
+                                });
                             });
                         });
                     }

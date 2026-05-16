@@ -46,14 +46,12 @@ public class ShareListAlertDialog
     final RecyclerView recyclerRequests;
 
     final Activity activity;
-    final Context context;
 
     @SuppressLint("InflateParams")
     public ShareListAlertDialog(List list, MasterActivity activity, Context context)
     {
         this.list = list;
         this.activity = activity;
-        this.context = context;
 
         adLayout = (LinearLayout) activity.getLayoutInflater().inflate(R.layout.alert_dialog_share_list, null);
         tvListName = adLayout.findViewById(R.id.tv_list_name);

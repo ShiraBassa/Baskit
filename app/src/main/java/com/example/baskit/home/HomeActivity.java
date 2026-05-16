@@ -38,7 +38,6 @@ import com.example.baskit.Baskit;
 import com.example.baskit.online_components.FirebaseAuthHandler;
 import com.example.baskit.online_components.FirebaseDBHandler;
 import com.example.baskit.login.LoginActivity;
-import com.example.baskit.main_components.List;
 import com.example.baskit.list.ListActivity;
 import com.example.baskit.main_components.User;
 import com.example.baskit.MasterActivity;
@@ -291,25 +290,12 @@ public class HomeActivity extends MasterActivity
             adBtnCreate.setActivated(false);
 
             runWhenServerActive(() ->
-                    authHandler.createList(adEtName.getText().toString(), HomeActivity.this, new FirebaseAuthHandler.CreateListCallback()
-                    {
-                        @Override
-                        public void onSuccess(List newList)
-                        {
-                            adCreateList.dismiss();
-                            Toast.makeText(HomeActivity.this,
-                                    "הרשימה " + newList.getName() + " נוצרה",
-                                    Toast.LENGTH_SHORT).show();
-                            openListScreen(newList.getId());
-                        }
-
-                        @Override
-                        public void onError(String message)
-                        {
-                            Toast.makeText(HomeActivity.this,
-                                    message,
-                                    Toast.LENGTH_SHORT).show();
-                        }
+                    authHandler.createList(adEtName.getText().toString(), HomeActivity.this, newList -> {
+                        adCreateList.dismiss();
+                        Toast.makeText(HomeActivity.this,
+                                "הרשימה " + newList.getName() + " נוצרה",
+                                Toast.LENGTH_SHORT).show();
+                        openListScreen(newList.getId());
                     }));
         });
     }
@@ -448,32 +434,6 @@ public class HomeActivity extends MasterActivity
         public int getItemCount()
         {
             return listNames.size();
-        }
-
-
-        public void add(List list, boolean notifyItemInserted)
-        {
-            listNames.add(list.getName());
-
-            if (notifyItemInserted)
-            {
-                this.notifyItemInserted(listNames.size()-1);
-            }
-        }
-
-        public void add(List list)
-        {
-            this.add(list, true);
-        }
-
-        public void remove(int position, boolean notifyItemRemoved)
-        {
-            listNames.remove(position);
-
-            if (notifyItemRemoved)
-            {
-                this.notifyItemRemoved(position);
-            }
         }
 
         @SuppressLint("NotifyDataSetChanged")

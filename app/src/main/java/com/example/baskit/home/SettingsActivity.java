@@ -175,7 +175,6 @@ public class SettingsActivity extends MasterActivity
                 new AddSupermarketAlertDialog(
                         SettingsActivity.this,
                         SettingsActivity.this,
-                        supermarketsAdapter,
                         new AddSupermarketAlertDialog.OnSubmit()
                         {
                             @SuppressLint("NotifyDataSetChanged")
@@ -296,7 +295,6 @@ public class SettingsActivity extends MasterActivity
                         SettingsActivity.this,
                         cities,
                         all_cities,
-                        citiesAdapter,
                         new AddCityAlertDialog.OnSubmit()
                         {
                             @SuppressLint("NotifyDataSetChanged")

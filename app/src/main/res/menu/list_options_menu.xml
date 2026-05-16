@@ -3,22 +3,22 @@
 
     <item
         android:id="@+id/action_rename"
-        android:title="שנה שם" />
+        android:title="@string/list_change_name" />
 
     <item
         android:id="@+id/action_duplicate"
-        android:title="שכפל רשימה" />
+        android:title="@string/list_duplicate" />
 
     <item
         android:id="@+id/action_delete_items"
-        android:title="מחק מוצרים" />
+        android:title="@string/list_remove_items" />
 
     <item
         android:id="@+id/action_delete_list"
-        android:title="מחק רשימה" />
+        android:title="@string/list_delete" />
 
     <item
         android:id="@+id/action_leave_list"
-        android:title="עזוב רשימה" />
+        android:title="@string/list_leave" />
 
 </menu>

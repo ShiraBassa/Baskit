@@ -85,15 +85,6 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
                 upperClassFns.updateCategory();
             }
 
-            @Override
-            public void removeCategory()
-            {
-                if (category.isEmpty())
-                {
-                    upperClassFns.removeCategory();
-                }
-            }
-
             @SuppressLint("NotifyDataSetChanged")
             @Override
             public void collapseAllSupermarkets()
@@ -242,7 +233,6 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
     {
         protected final TextView tvSupermarket;
         protected final ImageButton btnExpand;
-        protected final ImageButton dragHandle;
         protected final RecyclerView recyclerItems;
 
         public ViewHolder(View itemView)
@@ -252,7 +242,6 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
             tvSupermarket = itemView.findViewById(R.id.tv_supermarket_name);
             btnExpand = itemView.findViewById(R.id.btn_expand);
             recyclerItems = itemView.findViewById(R.id.recycler_items);
-            dragHandle = itemView.findViewById(R.id.drag_handle);
         }
     }
 
@@ -322,7 +311,7 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
         }
 
         ArrayList<Item> items = itemsBySupermarket.get(supermarket);
-        SupermarketItemsAdapter supermarketsAdapter = new SupermarketItemsAdapter(items, listener, activity, context, upperClassFns);
+        SupermarketItemsAdapter supermarketsAdapter = new SupermarketItemsAdapter(items, activity, context, upperClassFns);
 
         holder.recyclerItems.setLayoutManager(new LinearLayoutManager(holder.itemView.getContext()));
         holder.recyclerItems.setAdapter(supermarketsAdapter);
@@ -531,18 +520,14 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
 
     public static class SupermarketItemsAdapter extends ItemsAdapter
     {
-        private final OnItemMovedListener listener;
-
         public interface OnItemMovedListener
         {
             void onItemMoved(Item item, Supermarket from, Supermarket to);
         }
 
-        public SupermarketItemsAdapter(ArrayList<Item> items, OnItemMovedListener listener,
-                                       Activity activity, Context context, UpperClassFunctions upperClassFns)
+        public SupermarketItemsAdapter(ArrayList<Item> items, Activity activity, Context context, UpperClassFunctions upperClassFns)
         {
             super(items, upperClassFns, activity, context);
-            this.listener = listener;
         }
 
         @Override
@@ -621,33 +606,6 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
                 v.setTag(R.id.drag_from_supermarket, from);
 
                 return true;
-            });
-
-            holder.itemViewAlertDialog.setUpperClassFns(new UpperClassFunctions()
-            {
-                @Override
-                public void updateItemCategory(Item item)
-                {
-                    Supermarket to = item.getSupermarket();
-
-                    if (from != to)
-                    {
-                        listener.onItemMoved(item, from, to);
-                    }
-                    upperClassFns.updateItemCategory(item);
-                }
-
-                @Override
-                public void removeItemCategory(Item item)
-                {
-                    upperClassFns.removeItemCategory(item);
-                }
-
-                @Override
-                public void updateCategory() {}
-
-                @Override
-                public void removeCategory() {}
             });
         }
     }

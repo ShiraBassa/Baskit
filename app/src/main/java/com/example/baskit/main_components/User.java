@@ -4,6 +4,7 @@ import com.google.firebase.database.Exclude;
 
 import java.util.ArrayList;
 
+@SuppressWarnings("unused")
 public class User
 {
     protected String id = "";

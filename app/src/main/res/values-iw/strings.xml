@@ -29,17 +29,17 @@
 
     <!-- Lists -->
     <string name="list_create">צור רשימה</string>
-    <string name="list_duplicate">שכפל רשימה</string>
-    <string name="list_leave">עזוב רשימה</string>
-    <string name="list_remove">מחק רשימה</string>
-    <string name="list_remove_items">מחק מוצרים</string>
     <string name="list_sort_label">סידור רשימה</string>
     <string name="list_sort_button">סדר ▼</string>
     <string name="list_plan">תכנון רשימה</string>
-    <string name="list_change_name">שנה שם</string>
     <string name="list_requests">בקשות</string>
     <string name="list_edit_label">ערוך</string>
     <string name="list_share_label">שתף</string>
+    <string name="list_change_name">שנה שם</string>
+    <string name="list_remove_items">מחק מוצרים</string>
+    <string name="list_duplicate">שכפל רשימה</string>
+    <string name="list_delete">מחק רשימה</string>
+    <string name="list_leave">עזוב רשימה</string>
 
     <!-- Items -->
     <string name="item_search">חפש פריט</string>

@@ -30,17 +30,17 @@
 
     <!-- Lists -->
     <string name="list_create">Create List</string>
-    <string name="list_duplicate">Duplicate List</string>
-    <string name="list_leave">Leave List</string>
-    <string name="list_remove">Delete List</string>
-    <string name="list_remove_items">Remove Items</string>
     <string name="list_sort_label">Sort List</string>
     <string name="list_sort_button">Sort ▼</string>
     <string name="list_plan">Plan List</string>
-    <string name="list_change_name">Change Name</string>
     <string name="list_requests">Requests</string>
     <string name="list_edit_label">Edit</string>
     <string name="list_share_label">Share</string>
+    <string name="list_change_name">Change Name</string>
+    <string name="list_remove_items">Remove Items</string>
+    <string name="list_duplicate">Duplicate List</string>
+    <string name="list_delete">Delete List</string>
+    <string name="list_leave">Leave List</string>
 
     <!-- Items -->
     <string name="item_search">Search Item</string>

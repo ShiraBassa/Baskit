@@ -264,11 +264,6 @@ public abstract class MasterActivity extends AppCompatActivity
             return (int) (24 * activity.getResources().getDisplayMetrics().density);
         }
 
-        private int swipeThresholdPx()
-        {
-            return (int) (96 * activity.getResources().getDisplayMetrics().density);
-        }
-
         public boolean handle(MotionEvent ev)
         {
             View content = activity.findViewById(android.R.id.content);

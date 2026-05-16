@@ -19,19 +19,16 @@ import java.util.ArrayList;
 
 public class AddCityAlertDialog
 {
-    final ArrayList<String> all_cities;
     final ArrayList<String> city_choices;
     final ArrayList<String> unchosen_cities;
 
     final AlertDialog.Builder adb;
-    final CitiesListAdapter citiesListAdapter;
     final AlertDialog ad;
 
     final Button btnAdd;
     final Spinner spinnerCities;
     final LinearLayout adLayout;
 
-    final Activity activity;
     final Context context;
     final OnSubmit onSubmit;
 
@@ -46,15 +43,11 @@ public class AddCityAlertDialog
                               Context context,
                               ArrayList<String> city_choices,
                               ArrayList<String> all_cities,
-                              CitiesListAdapter citiesListAdapter,
                               OnSubmit onSubmit)
             throws IOException
     {
-        this.activity = activity;
         this.context = context;
         this.city_choices = city_choices;
-        this.citiesListAdapter = citiesListAdapter;
-        this.all_cities = all_cities;
         this.onSubmit = onSubmit;
 
         unchosen_cities = new ArrayList<>();

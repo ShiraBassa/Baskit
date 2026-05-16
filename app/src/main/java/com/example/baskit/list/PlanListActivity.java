@@ -13,7 +13,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -39,7 +38,6 @@ import java.util.Objects;
 
 public class PlanListActivity extends MasterActivity
 {
-    List originalList;
     List list;
     String listId;
     double oldTotal;
@@ -51,20 +49,15 @@ public class PlanListActivity extends MasterActivity
 
     int colorChosen;
 
-    Map<String, Map<String, Map<String, Double>>> allItems;
-    Map<String, ArrayList<String>> groups;
-
     final FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
     final APIHandler apiHandler = APIHandler.getInstance();
 
     PlanListItemsAdapter itemsAdapter;
-    LayoutInflater categoriesListInflater;
 
     ImageButton btnCancel;
     Button btnSave;
     TextView tvListName, tvTotal;
     RecyclerView recyclerItems;
-    LinearLayout categoriesListContainer;
 
     public interface OnItemMovedListener
     {
@@ -90,8 +83,6 @@ public class PlanListActivity extends MasterActivity
 
         createInit();
         uiInitialized = true;
-
-        groups = apiHandler.getGroups();
 
         resumeInit();
     }
@@ -132,9 +123,6 @@ public class PlanListActivity extends MasterActivity
         tvListName = findViewById(R.id.tv_list_name);
         tvTotal = findViewById(R.id.tv_total);
 
-        categoriesListContainer = findViewById(R.id.categories_container);
-        categoriesListInflater = LayoutInflater.from(this);
-
         setButtons();
     }
 
@@ -148,7 +136,6 @@ public class PlanListActivity extends MasterActivity
                     @Override
                     public void onListFetched(List newList)
                     {
-                        originalList = newList;
                         PlanListActivity.this.list = new List(newList);
 
                         oldTotal = list.getTotal();
@@ -193,10 +180,6 @@ public class PlanListActivity extends MasterActivity
                                     @Override
                                     public void updateCategory() {
                                         displayTotalDif();
-                                    }
-
-                                    @Override
-                                    public void removeCategory() {
                                     }
                                 },
                                 supermarkets,
@@ -321,15 +304,6 @@ public class PlanListActivity extends MasterActivity
                 public void updateCategory()
                 {
                     upperClassFns.updateCategory();
-                }
-
-                @Override
-                public void removeCategory()
-                {
-                    if (list == null || list.getCategories() == null || list.getCategories().isEmpty())
-                    {
-                        upperClassFns.removeCategory();
-                    }
                 }
 
                 @SuppressLint("NotifyDataSetChanged")

@@ -48,7 +48,6 @@ public class FirebaseDBHandler
     public interface GetCategoryCallback
     {
         void onCategoryFetched(Category newCategory);
-        void onError();
     }
 
     public interface GetListNamesListenerCallback
@@ -645,6 +644,7 @@ public class FirebaseDBHandler
         removeItem(list, category, item);
     }
 
+    @SuppressWarnings("ExtractMethodRecommender")
     public void sendJoinRequest(String listID, User user, Context context)
     {
         refLists.child(listID).child("requests").get().addOnCompleteListener(task ->

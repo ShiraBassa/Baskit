@@ -3,6 +3,6 @@
 
     <item
         android:id="@+id/action_delete_items"
-        android:title="מחק מוצרים" />
+        android:title="@string/list_remove_items" />
 
 </menu>

@@ -135,7 +135,6 @@ public class SignUpActivity extends MasterActivity
                         SignUpActivity.this,
                         cities,
                         all_cities,
-                        citiesAdapter,
                         new AddCityAlertDialog.OnSubmit()
                         {
                             @SuppressLint("NotifyDataSetChanged")
@@ -188,7 +187,6 @@ public class SignUpActivity extends MasterActivity
                 new AddSupermarketAlertDialog(
                         SignUpActivity.this,
                         SignUpActivity.this,
-                        supermarketsAdapter,
                         new AddSupermarketAlertDialog.OnSubmit()
                         {
                             @SuppressLint("NotifyDataSetChanged")

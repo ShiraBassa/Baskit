@@ -14,7 +14,6 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 
 import com.example.baskit.online_components.APIHandler;
-import com.example.baskit.online_components.FirebaseAuthHandler;
 import com.example.baskit.main_components.Supermarket;
 import com.example.baskit.MasterActivity;
 import com.example.baskit.R;
@@ -31,18 +30,15 @@ public class AddSupermarketAlertDialog
     Map<String, ArrayList<String>> choices;
     ArrayList<String> cities;
 
-    ArrayList<String> all_stores, unchosen_stores;
+    ArrayList<String> unchosen_stores;
     Map<String, ArrayList<String>> unchosen_branches;
     ArrayList<String> supermarkets;
     ArrayList<String> sections;
 
     final boolean runInBackground;
-
-    FirebaseAuthHandler authHandler;
     final APIHandler apiHandler = APIHandler.getInstance();
 
     AlertDialog.Builder adb;
-    final SupermarketsListAdapter supermarketsAdapter;
 
     LinearLayout adLayout;
     AlertDialog ad;
@@ -60,13 +56,11 @@ public class AddSupermarketAlertDialog
 
     public AddSupermarketAlertDialog(MasterActivity activity,
                                      Context context,
-                                     SupermarketsListAdapter supermarketsAdapter,
                                      OnSubmit onSubmit,
                                      boolean runInBackground)
     {
         this.activity = activity;
         this.context = context;
-        this.supermarketsAdapter = supermarketsAdapter;
         this.onSubmit = onSubmit;
         this.runInBackground = runInBackground;
 
@@ -88,14 +82,13 @@ public class AddSupermarketAlertDialog
 
     public AddSupermarketAlertDialog(MasterActivity activity,
                                      Context context,
-                                     SupermarketsListAdapter supermarketsAdapter,
                                      OnSubmit onSubmit,
                                      boolean runInBackground,
                                      ArrayList<String> cities,
                                      Map<String, ArrayList<String>> currentChoices)
             throws IOException
     {
-        this(activity, context, supermarketsAdapter, onSubmit, runInBackground);
+        this(activity, context, onSubmit, runInBackground);
         this.cities = cities;
         this.choices = currentChoices;
     }
@@ -103,8 +96,6 @@ public class AddSupermarketAlertDialog
         @SuppressLint("InflateParams")
         private void init()
     {
-        authHandler = FirebaseAuthHandler.getInstance();
-
         supermarkets = new ArrayList<>(unchosen_stores);
 
         adLayout = (LinearLayout) activity.getLayoutInflater()
@@ -125,8 +116,6 @@ public class AddSupermarketAlertDialog
 
     private void getAPIInfo() throws JSONException, IOException
     {
-        all_stores = apiHandler.getStores();
-
         unchosen_branches = new HashMap<>();
         unchosen_stores = new ArrayList<>();
 

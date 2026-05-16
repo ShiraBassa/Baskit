@@ -57,7 +57,6 @@ public class ListActivity extends MasterActivity
     final APIHandler apiHandler = APIHandler.getInstance();
     final FirebaseAuthHandler authHandler = FirebaseAuthHandler.getInstance();
 
-    LayoutInflater categoriesListInflater;
     AddItemFragment addItemFragment;
     ShareListAlertDialog shareAlertDialog;
 
@@ -129,7 +128,6 @@ public class ListActivity extends MasterActivity
 
         categoriesRecycler = findViewById(R.id.categories_container);
         categoriesRecycler.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this));
-        categoriesListInflater = LayoutInflater.from(this);
         categoryAdapter = new CategoryAdapter(
                 ListActivity.this,
                 listId,
@@ -273,28 +271,11 @@ public class ListActivity extends MasterActivity
                 else if (id == R.id.action_duplicate)
                 {
                     runWhenServerActive(() ->
-                            authHandler.duplicateList(list, new FirebaseAuthHandler.CreateListCallback()
-                            {
-                                @Override
-                                public void onSuccess(List newList)
-                                {
-                                    runOnUiThread(() ->
-                                            Toast.makeText(ListActivity.this,
-                                                    "הרשימה שוכפלה",
-                                                    Toast.LENGTH_SHORT).show()
-                                    );
-                                }
-
-                                @Override
-                                public void onError(String message)
-                                {
-                                    runOnUiThread(() ->
-                                            Toast.makeText(ListActivity.this,
-                                                    message,
-                                                    Toast.LENGTH_SHORT).show()
-                                    );
-                                }
-                            }));
+                            authHandler.duplicateList(list, newList -> runOnUiThread(() ->
+                                    Toast.makeText(ListActivity.this,
+                                            "הרשימה שוכפלה",
+                                            Toast.LENGTH_SHORT).show()
+                            )));
                 }
                 else if (id == R.id.action_delete_items)
                 {
