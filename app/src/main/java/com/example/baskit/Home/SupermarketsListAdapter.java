@@ -81,7 +81,7 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
                         @Override
                         public void onSectionClick(String clickedSupermarketName, String clickedSectionName)
                         {
-                            _onSectionClick(clickedSupermarketName, clickedSectionName);
+                            SupermarketsListAdapter.this.onSectionClick(clickedSupermarketName, clickedSectionName);
 
                             if (listener != null)
                             {
@@ -135,7 +135,7 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
         return selectedSectionName;
     }
 
-    private void _onSectionClick(String supermarketName, String sectionName)
+    private void onSectionClick(String supermarketName, String sectionName)
     {
         if (selectedSupermarketName != null && selectedSectionName != null &&
                 selectedSupermarketName.equals(supermarketName) &&
