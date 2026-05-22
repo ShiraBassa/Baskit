@@ -72,7 +72,7 @@ public class PlanListActivity extends MasterActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_plan_list);
 
-        colorChosen = Baskit.getAppColor(this, com.google.android.material.R.attr.colorPrimaryVariant);
+        colorChosen = Baskit.getAppColor(this, androidx.appcompat.R.attr.colorPrimary);
 
         listId = getIntent().getStringExtra("listId");
         categoryName = getIntent().getStringExtra("category");
@@ -357,8 +357,8 @@ public class PlanListActivity extends MasterActivity
                 this.upperClassFns.updateCategory();
             };
 
-            colorBase = Baskit.getAppColor(context, com.google.android.material.R.attr.colorOnBackground);
-            colorChosen = Baskit.getAppColor(context, com.google.android.material.R.attr.colorPrimaryVariant);
+            colorBase = Baskit.getAppColor(context, com.google.android.material.R.attr.colorOnSurface);
+            colorChosen = Baskit.getAppColor(context, androidx.appcompat.R.attr.colorPrimary);
 
             if (list == null || list.isEmpty())
             {
@@ -640,9 +640,9 @@ public class PlanListActivity extends MasterActivity
                 this.selectedSupermarketParent = selectedSupermarketParent;
                 this.onItemMovedListener = onItemMovedListener;
 
-                colorBase = Baskit.getAppColor(context, com.google.android.material.R.attr.colorOnBackground);
-                colorUnavailable = Baskit.getAppColor(context, com.google.android.material.R.attr.colorOnContainerUnchecked);
-                colorChosen = Baskit.getAppColor(context, com.google.android.material.R.attr.colorPrimaryVariant);
+                colorBase = Baskit.getAppColor(context, com.google.android.material.R.attr.colorOnSurface);
+                colorUnavailable = Baskit.getAppColor(context, com.google.android.material.R.attr.colorOutline);
+                colorChosen = Baskit.getAppColor(context, androidx.appcompat.R.attr.colorPrimary);
             }
 
             @Override
@@ -665,6 +665,7 @@ public class PlanListActivity extends MasterActivity
                 holder.tvPrice.setTextColor(colorBase);
                 holder.dragHandle.setColorFilter(colorBase);
                 holder.spacer.setBackgroundColor(colorBase);
+                holder.spacer.setAlpha(0.45f);
 
                 if (selectedSupermarketParent == supermarket)
                 {
@@ -672,6 +673,7 @@ public class PlanListActivity extends MasterActivity
                     holder.tvPrice.setTextColor(colorChosen);
                     holder.tvQuantity.setTextColor(colorChosen);
                     holder.spacer.setBackgroundColor(colorChosen);
+                    holder.spacer.setAlpha(1f);
                 }
                 else if (selectedSupermarketParent != null)
                 {
@@ -689,7 +691,9 @@ public class PlanListActivity extends MasterActivity
                         holder.tvName.setTextColor(colorUnavailable);
                         holder.tvQuantity.setTextColor(colorUnavailable);
                         holder.tvPrice.setTextColor(colorUnavailable);
-                        holder.spacer.setBackgroundColor(colorUnavailable);
+
+                        holder.spacer.setBackgroundColor(colorChosen);
+                        holder.spacer.setAlpha(0.25f);
                     }
                 }
                 else
@@ -697,7 +701,9 @@ public class PlanListActivity extends MasterActivity
                     holder.tvName.setTextColor(colorUnavailable);
                     holder.tvQuantity.setTextColor(colorUnavailable);
                     holder.tvPrice.setTextColor(colorUnavailable);
-                    holder.spacer.setBackgroundColor(colorUnavailable);
+
+                    holder.spacer.setBackgroundColor(colorChosen);
+                    holder.spacer.setAlpha(0.25f);
                 }
 
                 setItemButtons(holder, item);

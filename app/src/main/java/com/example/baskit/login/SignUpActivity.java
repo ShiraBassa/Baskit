@@ -49,6 +49,7 @@ public class SignUpActivity extends MasterActivity
     EditText etUsername;
     RecyclerView recyclerCities, recyclerSupermarkets;
     Button btnAddCity, btnRemoveCity, btnAddSupermarket, btnRemoveSupermarket, btnSubmit;
+    View loadingOverlay;
 
 
     @Override
@@ -73,12 +74,19 @@ public class SignUpActivity extends MasterActivity
         btnAddSupermarket = findViewById(R.id.btn_add_supermarket);
         btnRemoveSupermarket = findViewById(R.id.btn_remove_supermarket);
         recyclerSupermarkets = findViewById(R.id.recycler_supermarket);
+        loadingOverlay = findViewById(R.id.loading_overlay);
+        setLoading(true);
 
         cities = new ArrayList<>();
         choices = new HashMap<>();
+        updateSupermarketButtonState();
 
         runWhenServerActive(() ->
         {
+            if (isFinishing() || isDestroyed())
+            {
+                return;
+            }
             try
             {
                 all_cities = apiHandler.getAllCities();
@@ -87,6 +95,11 @@ public class SignUpActivity extends MasterActivity
 
                 runOnUiThread(() ->
                 {
+                    if (isFinishing() || isDestroyed())
+                    {
+                        return;
+                    }
+
                     LinearLayoutManager lmCities = new LinearLayoutManager(this);
                     lmCities.setAutoMeasureEnabled(true);
 
@@ -102,11 +115,22 @@ public class SignUpActivity extends MasterActivity
                     recyclerSupermarkets.setAdapter(supermarketsAdapter);
 
                     setButton();
+                    setLoading(false);
                 });
             }
             catch (IOException | JSONException e)
             {
                 Log.e("SignUpActivity", "Failed to load sign up data", e);
+
+                runOnUiThread(() ->
+                {
+                    if (isFinishing() || isDestroyed())
+                    {
+                        return;
+                    }
+
+                    setLoading(false);
+                });
             }
         });
     }
@@ -139,6 +163,7 @@ public class SignUpActivity extends MasterActivity
                         {
                             cities = city_choices;
                             citiesAdapter.notifyDataSetChanged();
+                            updateSupermarketButtonState();
                         }
                 ).show();
             } catch (IOException e) {
@@ -167,6 +192,7 @@ public class SignUpActivity extends MasterActivity
                 cities.remove(city);
                 citiesAdapter.updateData(cities);
                 citiesAdapter.notifyDataSetChanged();
+                updateSupermarketButtonState();
             }
         });
 
@@ -194,6 +220,7 @@ public class SignUpActivity extends MasterActivity
 
                             supermarketsAdapter.updateData(choices);
                             supermarketsAdapter.notifyDataSetChanged();
+                            updateSupermarketButtonState();
                         },
                         false,
                         cities,
@@ -238,7 +265,65 @@ public class SignUpActivity extends MasterActivity
 
                     supermarketsAdapter.updateData(choices);
                     supermarketsAdapter.notifyDataSetChanged();
+                    updateSupermarketButtonState();
                 }
+            }
+        });
+    }
+
+    private void updateSupermarketButtonState()
+    {
+        boolean hasCities = cities != null && !cities.isEmpty();
+        boolean hasSupermarkets = choices != null && !choices.isEmpty();
+
+        btnAddSupermarket.setEnabled(hasCities);
+        btnAddSupermarket.setAlpha(hasCities ? 1f : 0.5f);
+
+        btnRemoveCity.setEnabled(hasCities);
+        btnRemoveCity.setAlpha(hasCities ? 1f : 0.5f);
+
+        btnRemoveSupermarket.setEnabled(hasSupermarkets);
+        btnRemoveSupermarket.setAlpha(hasSupermarkets ? 1f : 0.5f);
+    }
+
+    private void setLoading(boolean loading)
+    {
+        runOnUiThread(() ->
+        {
+            btnAddCity.setEnabled(!loading);
+            btnSubmit.setEnabled(!loading);
+
+            if (loading)
+            {
+                btnAddSupermarket.setEnabled(false);
+                btnRemoveSupermarket.setEnabled(false);
+                btnRemoveCity.setEnabled(false);
+            }
+            else
+            {
+                updateSupermarketButtonState();
+            }
+
+            recyclerSupermarkets.setEnabled(!loading);
+            recyclerCities.setEnabled(!loading);
+            etUsername.setEnabled(!loading);
+
+            if (loadingOverlay != null)
+            {
+                loadingOverlay.setAlpha(loading ? 1f : 0f);
+                loadingOverlay.setVisibility(View.VISIBLE);
+
+                loadingOverlay.animate()
+                        .alpha(loading ? 1f : 0f)
+                        .setDuration(180)
+                        .withEndAction(() ->
+                        {
+                            if (!loading)
+                            {
+                                loadingOverlay.setVisibility(View.GONE);
+                            }
+                        })
+                        .start();
             }
         });
     }

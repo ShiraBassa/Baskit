@@ -1,77 +1,89 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="350dp"
-    android:layout_height="400dp"
-    android:background="?attr/colorSurface"
-    android:gravity="center"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="360dp"
+    android:layout_height="wrap_content"
+    android:background="?attr/backgroundColor"
+    android:gravity="top"
+    android:minHeight="420dp"
     android:orientation="vertical"
-    android:padding="10dp"
+    android:paddingBottom="18dp"
+    android:paddingHorizontal="22dp"
+    android:paddingTop="24dp"
     tools:ignore="Overdraw">
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="30dp"
-        android:gravity="center_horizontal|top"
+        android:layout_marginBottom="24dp"
+        android:gravity="top"
         android:orientation="vertical">
 
         <TextView
             android:id="@+id/tv_list_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="?attr/colorPrimary"
-            android:textSize="32sp"
-            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium"
+            android:letterSpacing="0"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="28sp"
+            android:textStyle="normal"
             android:visibility="invisible" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium"
+            android:letterSpacing="0"
             android:text="@string/list_share_label"
-            android:textColor="?attr/colorPrimary"
-            android:textSize="48sp"
-            android:textStyle="bold" />
+            android:textColor="?attr/colorSecondary"
+            android:textSize="34sp"
+            android:textStyle="normal" />
     </LinearLayout>
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_copy_link"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="30dp"
-        android:backgroundTint="?attr/colorPrimaryVariant"
-        android:paddingHorizontal="10dp"
-        android:paddingVertical="5dp"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_marginBottom="22dp"
+        android:fontFamily="sans-serif-medium"
         android:text="@string/action_copy_link"
+        android:textAllCaps="false"
         android:textColor="?attr/colorOnPrimary"
-        android:textSize="24sp"
-        android:textStyle="bold" />
+        android:textSize="17sp"
+        app:backgroundTint="?attr/colorPrimary"
+        app:cornerRadius="20dp"
+        app:elevation="0dp" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:gravity="center_horizontal|top"
+        android:gravity="top"
         android:orientation="vertical"
-        android:padding="10dp">
+        android:padding="0dp">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium"
+            android:letterSpacing="0"
             android:text="@string/list_requests"
-            android:textColor="?attr/colorPrimaryVariant"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="20sp"
+            android:textStyle="normal" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycler_requests"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
+            android:background="@android:color/transparent"
             android:clipToPadding="false"
-            android:paddingHorizontal="15dp"
-            android:paddingVertical="10dp"
-            android:scrollbars="vertical"
+            android:overScrollMode="never"
+            android:paddingTop="10dp"
+            android:scrollbars="none"
             tools:ignore="NestedWeights" />
     </LinearLayout>
 

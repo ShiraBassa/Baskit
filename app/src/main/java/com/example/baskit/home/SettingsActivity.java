@@ -56,6 +56,7 @@ public class SettingsActivity extends MasterActivity
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
+        setTheme(R.style.Theme_Baskit);
         setContentView(R.layout.activity_settings);
 
         loadingOverlay = new FrameLayout(this);
@@ -99,6 +100,7 @@ public class SettingsActivity extends MasterActivity
         etUsername = findViewById(R.id.et_username);
 
         etUsername.setText(authHandler.getUser().getName());
+        setLoading(true);
 
         runWhenServerActive(() ->
         {
@@ -126,6 +128,8 @@ public class SettingsActivity extends MasterActivity
                     recyclerCities.setLayoutManager(lmCities);
                     recyclerCities.setHasFixedSize(false);
                     recyclerCities.setAdapter(citiesAdapter);
+                    updateSupermarketButtonState();
+                    setLoading(false);
                 });
             }
             catch (IOException | JSONException e)
@@ -301,6 +305,7 @@ public class SettingsActivity extends MasterActivity
                                     SettingsActivity.this.runOnUiThread(() ->
                                     {
                                         citiesAdapter.notifyDataSetChanged();
+                                        updateSupermarketButtonState();
                                         setLoading(false);
                                     });
                                 }
@@ -349,11 +354,27 @@ public class SettingsActivity extends MasterActivity
                                 cities.remove(city);
                                 citiesAdapter.updateData(cities);
                                 citiesAdapter.notifyDataSetChanged();
+                                updateSupermarketButtonState();
                                 setLoading(false);
                             }
                         }));
             }
         });
+    }
+
+    private void updateSupermarketButtonState()
+    {
+        boolean hasCities = cities != null && !cities.isEmpty();
+        boolean hasSupermarkets = choices != null && !choices.isEmpty();
+
+        btnAddSupermarket.setEnabled(hasCities);
+        btnAddSupermarket.setAlpha(hasCities ? 1f : 0.5f);
+
+        btnRemoveCity.setEnabled(hasCities);
+        btnRemoveCity.setAlpha(hasCities ? 1f : 0.5f);
+
+        btnRemoveSupermarket.setEnabled(hasSupermarkets);
+        btnRemoveSupermarket.setAlpha(hasSupermarkets ? 1f : 0.5f);
     }
 
     @SuppressWarnings("CallToPrintStackTrace")
@@ -447,10 +468,18 @@ public class SettingsActivity extends MasterActivity
     {
         runOnUiThread(() ->
         {
-            btnAddSupermarket.setEnabled(!loading);
-            btnRemoveSupermarket.setEnabled(!loading);
             btnAddCity.setEnabled(!loading);
-            btnRemoveCity.setEnabled(!loading);
+
+            if (loading)
+            {
+                btnAddSupermarket.setEnabled(false);
+                btnRemoveSupermarket.setEnabled(false);
+                btnRemoveCity.setEnabled(false);
+            }
+            else
+            {
+                updateSupermarketButtonState();
+            }
 
             recyclerSupermarkets.setEnabled(!loading);
             recyclerCities.setEnabled(!loading);
@@ -460,7 +489,20 @@ public class SettingsActivity extends MasterActivity
 
             if (loadingOverlay != null)
             {
-                loadingOverlay.setVisibility(loading ? View.VISIBLE : View.GONE);
+                loadingOverlay.setAlpha(loading ? 1f : 0f);
+                loadingOverlay.setVisibility(View.VISIBLE);
+
+                loadingOverlay.animate()
+                        .alpha(loading ? 1f : 0f)
+                        .setDuration(180)
+                        .withEndAction(() ->
+                        {
+                            if (!loading)
+                            {
+                                loadingOverlay.setVisibility(View.GONE);
+                            }
+                        })
+                        .start();
             }
         });
     }

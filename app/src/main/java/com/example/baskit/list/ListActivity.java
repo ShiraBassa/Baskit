@@ -327,6 +327,8 @@ public class ListActivity extends MasterActivity
         btnSortList.setAlpha(1f);
         btnPlan.setAlpha(1f);
         btnFinished.setAlpha(1f);
+        btnFinished.setImageAlpha(255);
+        btnPlan.setImageAlpha(255);
 
         if (addItemFragment == null)
         {
@@ -384,6 +386,8 @@ public class ListActivity extends MasterActivity
             btnSortList.setAlpha(0.5f);
             btnPlan.setAlpha(0.5f);
             btnFinished.setAlpha(0.5f);
+            btnFinished.setImageAlpha(120);
+            btnPlan.setImageAlpha(120);
         }
     }
 

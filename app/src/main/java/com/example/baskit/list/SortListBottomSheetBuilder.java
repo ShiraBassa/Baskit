@@ -104,7 +104,7 @@ public class SortListBottomSheetBuilder
                     TextView name = supermarketView.findViewById(R.id.tv_supermarket);
                     TextView price = supermarketView.findViewById(R.id.tv_price);
 
-                    name.setText("- " + sm);
+                    name.setText(sm.toString());
                     price.setText(
                             Baskit.getTotalDisplayString(
                                     total,
@@ -114,12 +114,26 @@ public class SortListBottomSheetBuilder
                             )
                     );
 
+                    boolean allPricesKnownForSm = Boolean.TRUE.equals(allKnown.get(sm));
+
+                    if (!allPricesKnownForSm)
+                    {
+                        price.setAlpha(0.72f);
+                        name.setAlpha(0.78f);
+                    }
+                    else
+                    {
+                        price.setAlpha(1f);
+                        name.setAlpha(1f);
+                    }
+
                     supermarketView.setOnClickListener(v ->
                     {
                         listener.onApplySupermarket(sm);
                         dialog.dismiss();
                     });
 
+                    supermarketView.setClipToOutline(false);
                     supermarketContainer.addView(supermarketView);
                 }
             });

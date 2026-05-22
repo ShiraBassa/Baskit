@@ -146,18 +146,9 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
 
         boolean isSelected = selectedVariant != null && selectedVariant.equals(variant);
 
-        if (isSelected)
-        {
-            holder.itemView.setBackgroundColor(
-                    Baskit.getAppColor(context, com.google.android.material.R.attr.colorSecondaryContainer)
-            );
-        }
-        else
-        {
-            holder.itemView.setBackgroundColor(
-                    Baskit.getAppColor(context, com.google.android.material.R.attr.colorSurface)
-            );
-        }
+        holder.itemView.setSelected(isSelected);
+        holder.itemView.setActivated(isSelected);
+        holder.itemView.refreshDrawableState();
 
         holder.itemView.setOnClickListener(v ->
         {
@@ -168,8 +159,15 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
 
             if (selectedVariant != null && selectedVariant.equals(clickedVariant))
             {
+                ItemVariant previous = selectedVariant;
                 selectedVariant = null;
-                notifyDataSetChanged();
+
+                int previousIndex = itemVariants.indexOf(previous);
+
+                if (previousIndex != -1)
+                {
+                    notifyItemChanged(previousIndex);
+                }
 
                 if (listener != null)
                 {
@@ -178,8 +176,17 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
                 return;
             }
 
+            ItemVariant previous = selectedVariant;
             selectedVariant = clickedVariant;
-            notifyDataSetChanged();
+
+            int previousIndex = itemVariants.indexOf(previous);
+
+            if (previousIndex != -1)
+            {
+                notifyItemChanged(previousIndex);
+            }
+
+            notifyItemChanged(pos);
 
             if (listener != null)
             {

@@ -2,9 +2,10 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:gravity="top|center_horizontal"
+    android:gravity="top"
+    android:backgroundTint="?attr/backgroundColor"
     android:orientation="vertical"
-    android:padding="10dp">
+    android:padding="0dp">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_supermarket"
@@ -12,6 +13,8 @@
         android:layout_height="wrap_content"
         android:clipToPadding="false"
         android:nestedScrollingEnabled="false"
-        android:scrollbars="none" />
+        android:scrollbars="none"
+        android:overScrollMode="never"
+        android:padding="0dp" />
 
 </LinearLayout>

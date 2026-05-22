@@ -637,7 +637,7 @@ public class Item implements Cloneable
             {
                 str += getWeightStr();
 
-                if (unit != null && !unit.isEmpty() && !unit.equals("יחידות"))
+                if (unit != null && !unit.isEmpty()  && !unit.equals("לא ידוע"))
                 {
                     str += " " + unit;
                 }

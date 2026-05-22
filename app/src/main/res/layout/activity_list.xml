@@ -4,55 +4,74 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
+    android:gravity="top"
     android:orientation="vertical"
-    android:paddingHorizontal="10dp"
+    android:paddingHorizontal="20dp"
     tools:context=".list.ListActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/colorSurface"
-        android:elevation="4dp"
+        android:background="?attr/backgroundColor"
+        android:elevation="0dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingHorizontal="10dp"
-        android:paddingVertical="16dp">
+        android:paddingVertical="18dp"
+        android:clipChildren="false"
+        android:clipToPadding="false">
 
-        <ImageButton
-            android:id="@+id/btn_back"
-            android:layout_width="45dp"
-            android:layout_height="45dp"
-            android:background="@null"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ic_back"
-            app:tint="?attr/colorPrimary"
-            android:contentDescription="@string/nav_back" />
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            app:cardBackgroundColor="?attr/colorSurface"
+            app:cardCornerRadius="18dp"
+            app:cardElevation="0dp"
+            app:strokeColor="?attr/colorOutline"
+            app:strokeWidth="0.7dp">
+
+            <ImageButton
+                android:id="@+id/btn_back"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:background="@android:color/transparent"
+                android:padding="12dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_back"
+                app:tint="?attr/colorOnSurface"
+                android:contentDescription="@string/nav_back" />
+        </com.google.android.material.card.MaterialCardView>
 
         <TextView
             android:id="@+id/tv_list_name"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="10dp"
+            android:layout_marginHorizontal="16dp"
             android:layout_weight="1"
-            android:letterSpacing="0.02"
-            android:textColor="?attr/colorPrimary"
-            android:textSize="32sp"
-            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium"
+            android:letterSpacing="0"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="30sp"
+            android:textStyle="normal"
             android:visibility="invisible" />
 
-        <FrameLayout
-            android:layout_width="45dp"
-            android:layout_height="45dp">
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            app:cardBackgroundColor="?attr/colorSurface"
+            app:cardCornerRadius="18dp"
+            app:cardElevation="0dp"
+            app:strokeColor="?attr/colorOutline"
+            app:strokeWidth="0.7dp">
 
             <ImageButton
                 android:id="@+id/btn_share"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@null"
+                android:background="@android:color/transparent"
+                android:padding="12dp"
                 android:scaleType="fitCenter"
                 android:src="@drawable/ic_share"
-                app:tint="?attr/colorPrimaryVariant"
+                app:tint="?attr/colorOnSurface"
                 android:contentDescription="@string/nav_more" />
 
             <View
@@ -64,17 +83,28 @@
                 android:background="@drawable/share_list_dot"
                 android:visibility="gone" />
 
-        </FrameLayout>
+        </com.google.android.material.card.MaterialCardView>
 
-        <ImageButton
-            android:id="@+id/btn_more"
-            android:layout_width="45dp"
-            android:layout_height="45dp"
-            android:background="@null"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ic_more"
-            app:tint="?attr/colorSecondary"
-            android:contentDescription="@string/nav_more" />
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            app:cardBackgroundColor="?attr/colorSurface"
+            app:cardCornerRadius="18dp"
+            app:cardElevation="0dp"
+            app:strokeColor="?attr/colorOutline"
+            app:strokeWidth="0.7dp">
+
+            <ImageButton
+                android:id="@+id/btn_more"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@android:color/transparent"
+                android:padding="12dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_more"
+                app:tint="?attr/colorOnSurface"
+                android:contentDescription="@string/nav_more" />
+        </com.google.android.material.card.MaterialCardView>
 
     </LinearLayout>
 
@@ -82,7 +112,8 @@
         layout="@layout/btn_sort_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="10dp" />
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="4dp" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/categories_container"
@@ -91,7 +122,9 @@
         android:layout_weight="1"
         android:paddingTop="10dp"
         android:paddingBottom="10dp"
-        android:clipToPadding="false" />
+        android:clipToPadding="false"
+        android:background="@android:color/transparent"
+        android:overScrollMode="never" />
 
     <!-- Total Text -->
     <TextView
@@ -99,9 +132,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="20dp"
-        android:textColor="?attr/colorPrimary"
-        android:textSize="22sp"
-        android:textStyle="bold"
+        android:fontFamily="sans-serif-medium"
+        android:textColor="?attr/colorOnSurface"
+        android:textSize="20sp"
+        android:textStyle="normal"
         android:visibility="invisible" />
 
     <!-- Bottom Bar -->

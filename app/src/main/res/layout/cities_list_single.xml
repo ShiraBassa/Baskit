@@ -3,24 +3,26 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="8dp"
+    android:layout_marginBottom="12dp"
+    android:background="@drawable/bg_selectable_surface"
+    android:stateListAnimator="@null"
     android:clipChildren="false"
     android:clipToPadding="false"
-    android:elevation="4dp"
     android:foreground="?attr/selectableItemBackground"
     android:gravity="center_vertical|start"
+    android:minHeight="64dp"
     android:orientation="horizontal"
-    android:outlineAmbientShadowColor="?attr/colorSecondary"
-    android:outlineSpotShadowColor="?attr/colorSecondary"
-    android:padding="8dp"
+    android:paddingHorizontal="18dp"
+    android:paddingVertical="14dp"
+    android:elevation="1dp"
     tools:targetApi="28">
 
     <TextView
         android:id="@+id/tv_city"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="5dp"
-        android:textColor="?attr/colorSecondary"
-        android:textSize="22sp"
-        android:textStyle="bold" />
+        android:textColor="?attr/colorOnSurface"
+        android:textSize="19sp"
+        android:textStyle="normal"
+        android:fontFamily="sans-serif-medium" />
 </LinearLayout>

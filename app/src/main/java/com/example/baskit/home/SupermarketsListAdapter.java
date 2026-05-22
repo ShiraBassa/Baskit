@@ -197,15 +197,11 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
         public void onBindViewHolder(@NonNull SectionsListAdapter.ViewHolder holder, int position)
         {
             String sectionName = sections.get(position);
+            boolean isSelected = sectionName.equals(selectedSection)
+                    && supermarketName.equals(selectedSupermarket);
 
-            if (sectionName.equals(selectedSection) && supermarketName.equals(selectedSupermarket))
-            {
-                holder.itemView.setBackgroundColor(Baskit.getAppColor(context, com.google.android.material.R.attr.colorSecondaryContainer));
-            }
-            else
-            {
-                holder.itemView.setBackgroundColor(Baskit.getAppColor(context, com.google.android.material.R.attr.colorSurface));
-            }
+            holder.itemView.setActivated(isSelected);
+            holder.itemView.setSelected(isSelected);
 
             holder.itemView.setOnClickListener(v -> {
                 int adapterPos = holder.getAdapterPosition();
@@ -214,9 +210,10 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
                     return;
                 }
 
+                int previousPosition = selectedPosition;
+
                 if (selectedPosition == adapterPos)
                 {
-                    // Deselect if the same item is clicked
                     selectedPosition = RecyclerView.NO_POSITION;
                 }
                 else
@@ -224,8 +221,11 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
                     selectedPosition = adapterPos;
                 }
 
-                // Refresh all items to reset backgrounds
-                notifyDataSetChanged();
+                if (previousPosition != RecyclerView.NO_POSITION)
+                    notifyItemChanged(previousPosition);
+
+                if (selectedPosition != RecyclerView.NO_POSITION)
+                    notifyItemChanged(selectedPosition);
 
                 if (listener != null)
                 {

@@ -4,36 +4,57 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="12dp"
-    android:gravity="end|top"
-    android:orientation="vertical"
-    android:paddingHorizontal="6dp">
+    android:layout_marginBottom="14dp"
+    android:background="?attr/colorSurface"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:elevation="0dp"
+    android:foreground="?attr/selectableItemBackground"
+    android:gravity="top"
+    android:minHeight="72dp"
+    android:padding="16dp"
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp"
-        android:gravity="center_vertical|start"
+        android:layout_marginBottom="12dp"
+        android:gravity="top"
         android:orientation="horizontal">
 
-        <ImageButton
-            android:id="@+id/btn_expand"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:background="@null"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ic_arrow_up"
-            app:tint="?attr/colorSecondary"
-            android:contentDescription="@string/action_expand" />
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:layout_marginEnd="12dp"
+            app:cardBackgroundColor="?attr/backgroundColor"
+            app:cardCornerRadius="14dp"
+            app:cardElevation="0dp"
+            app:strokeColor="?attr/colorOutline"
+            app:strokeWidth="0.6dp">
+
+            <ImageButton
+                android:id="@+id/btn_expand"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@android:color/transparent"
+                android:contentDescription="@string/action_expand"
+                android:padding="8dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_arrow_up"
+                app:tint="?attr/colorSecondary" />
+
+        </com.google.android.material.card.MaterialCardView>
 
         <TextView
             android:id="@+id/tv_supermarket_name"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="?attr/colorSecondary"
-            android:textSize="22sp"
-            android:textStyle="bold" />
+            android:fontFamily="sans-serif-medium"
+            android:letterSpacing="0"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="21sp"
+            android:textStyle="normal" />
 
     </LinearLayout>
 
@@ -41,13 +62,14 @@
         android:id="@+id/recycler_items"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:clipChildren="true"
-        android:clipToPadding="true"
-        android:nestedScrollingEnabled="true"
-        android:overScrollMode="always"
-        android:paddingTop="8dp"
-        android:paddingEnd="5dp"
-        android:paddingBottom="8dp"
+        android:background="@android:color/transparent"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:nestedScrollingEnabled="false"
+        android:overScrollMode="never"
+        android:paddingTop="4dp"
+        android:paddingBottom="2dp"
+        android:scrollbars="none"
         tools:ignore="RtlSymmetry" />
 
 </LinearLayout>

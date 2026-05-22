@@ -27,9 +27,10 @@ public class Baskit extends Application
     public static final Supermarket UNASSIGNED_SUPERMARKET = new Supermarket("לא נבחר", "");
 
     private static Baskit instance;
+
     public static final MutableLiveData<Boolean> onlineLive = new MutableLiveData<>(true);
     public static final MutableLiveData<Boolean> serverAliveLive = new MutableLiveData<>(true);
-
+    public static final MutableLiveData<Boolean> serverCheckingLive = new MutableLiveData<>(false);
     private final android.os.Handler serverHandler = new android.os.Handler(android.os.Looper.getMainLooper());
     private final java.util.concurrent.ExecutorService serverBg = java.util.concurrent.Executors.newSingleThreadExecutor();
     private boolean serverPollingRunning = false;
@@ -80,6 +81,7 @@ public class Baskit extends Application
             else
             {
                 stopServerPolling();
+                serverCheckingLive.postValue(false);
                 serverAliveLive.postValue(false);
             }
         });
@@ -282,6 +284,8 @@ public class Baskit extends Application
                 {
                     boolean up;
 
+                    serverCheckingLive.postValue(true);
+
                     try
                     {
                         up = com.example.baskit.online_components.APIHandler.getInstance().isServerActive();
@@ -292,6 +296,7 @@ public class Baskit extends Application
                     }
 
                     serverAliveLive.postValue(up);
+                    serverCheckingLive.postValue(false);
 
                     serverHandler.postDelayed(this, 5000);
                 });
@@ -310,6 +315,7 @@ public class Baskit extends Application
             serverHandler.removeCallbacks(serverPollingRunnable);
         }
 
+        serverCheckingLive.postValue(false);
         serverPollingRunnable = null;
     }
 }

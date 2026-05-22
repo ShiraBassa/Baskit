@@ -2,29 +2,40 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="15dp"
-    android:orientation="horizontal">
+    android:layout_marginBottom="8dp"
+    android:background="?attr/colorSurface"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:elevation="0dp"
+    android:foreground="?attr/selectableItemBackground"
+    android:gravity="center_vertical"
+    android:minHeight="58dp"
+    android:orientation="horizontal"
+    android:paddingHorizontal="18dp"
+    android:paddingVertical="14dp">
 
     <TextView
         android:id="@+id/tv_supermarket"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="5dp"
+        android:layout_marginEnd="12dp"
         android:layout_weight="1"
         android:ellipsize="end"
-        android:letterSpacing="0.02"
+        android:fontFamily="sans-serif-medium"
+        android:letterSpacing="0"
         android:maxLines="1"
-        android:textColor="?attr/colorPrimaryVariant"
-        android:textSize="18sp"
-        android:textStyle="bold" />
+        android:textColor="?attr/colorOnSurface"
+        android:textSize="17sp"
+        android:textStyle="normal" />
 
     <TextView
         android:id="@+id/tv_price"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:letterSpacing="0.01"
+        android:fontFamily="sans-serif-medium"
+        android:letterSpacing="0"
         android:textColor="?attr/colorPrimary"
-        android:textSize="18sp"
-        android:textStyle="bold" />
+        android:textSize="17sp"
+        android:textStyle="normal" />
 
 </LinearLayout>

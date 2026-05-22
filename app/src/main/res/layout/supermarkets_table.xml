@@ -1,69 +1,99 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:gravity="center_horizontal|top"
+    android:gravity="top"
     android:orientation="vertical"
-    android:padding="10dp">
+    android:backgroundTint="?attr/backgroundColor"
+    android:paddingTop="4dp">
 
     <TextView
         android:id="@+id/tv_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp"
-        android:letterSpacing="0.02"
+        android:layout_marginBottom="18dp"
+        android:fontFamily="sans-serif-medium"
+        android:letterSpacing="0"
         android:text="@string/supermarkets"
-        android:textColor="?attr/colorPrimaryVariant"
-        android:textSize="36sp"
-        android:textStyle="bold"
+        android:textColor="?attr/colorOnSurface"
+        android:textSize="28sp"
+        android:textStyle="normal"
         tools:ignore="DuplicateIncludedIds" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
+        android:clipToPadding="false"
+        android:elevation="1dp"
+        android:gravity="top"
+        android:layout_marginBottom="12dp"
         android:orientation="vertical"
+        android:outlineAmbientShadowColor="#12000000"
+        android:outlineSpotShadowColor="#12000000"
+        android:padding="18dp"
         tools:ignore="DuplicateIncludedIds">
 
         <include
             layout="@layout/supermarkets_list"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="5dp" />
+            android:layout_marginBottom="18dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center"
+            android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:padding="5dp"
             tools:ignore="DuplicateIncludedIds">
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_add_supermarket"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
-                android:backgroundTint="?attr/colorPrimary"
-                android:elevation="4dp"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:fontFamily="sans-serif-medium"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:lineSpacingExtra="0dp"
+                android:padding="0dp"
                 android:text="@string/plus"
-                android:textColor="@android:color/white"
-                android:textSize="24sp" />
+                android:textAllCaps="false"
+                android:textColor="?attr/colorOnPrimary"
+                android:textSize="28sp"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                app:backgroundTint="?attr/colorPrimary"
+                app:cornerRadius="20dp"
+                app:elevation="1dp" />
 
             <Space
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_remove_supermarket"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
-                android:backgroundTint="?attr/colorTertiary"
-                android:elevation="4dp"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:fontFamily="sans-serif-medium"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:lineSpacingExtra="0dp"
+                android:padding="0dp"
                 android:text="@string/minus"
-                android:textColor="@android:color/white"
-                android:textSize="24sp" />
+                android:textAllCaps="false"
+                android:textColor="?attr/colorOnPrimary"
+                android:textSize="28sp"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                app:backgroundTint="?attr/colorSecondary"
+                app:cornerRadius="20dp"
+                app:elevation="1dp" />
 
         </LinearLayout>
 

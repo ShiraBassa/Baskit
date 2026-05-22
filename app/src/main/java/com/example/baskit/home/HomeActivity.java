@@ -43,6 +43,7 @@ import com.example.baskit.main_components.User;
 import com.example.baskit.MasterActivity;
 import com.example.baskit.R;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
 
 import org.json.JSONException;
 
@@ -69,6 +70,7 @@ public class HomeActivity extends MasterActivity
     TextView tvTitle;
     RecyclerView listsRecycler;
     GridAdapter listsGridAdapter;
+    MaterialCardView emptyListsContainer;
 
     private final ActivityResultLauncher<Intent> loginLauncher =
             registerForActivityResult(
@@ -191,6 +193,10 @@ public class HomeActivity extends MasterActivity
                         if (listsGridAdapter != null)
                         {
                             listsGridAdapter.updateList(listNames);
+
+                            boolean isEmpty = listNames.isEmpty();
+                            listsRecycler.setVisibility(isEmpty ? android.view.View.GONE : android.view.View.VISIBLE);
+                            emptyListsContainer.setVisibility(isEmpty ? android.view.View.VISIBLE : android.view.View.GONE);
                         }
                     })));
         }
@@ -235,6 +241,7 @@ public class HomeActivity extends MasterActivity
         setButtons();
 
         listsRecycler = findViewById(R.id.lists_grid);
+        emptyListsContainer = findViewById(R.id.empty_lists_container);
         listsRecycler.setLayoutManager(new GridLayoutManager(this, Baskit.HOME_GRID_NUM_BOXES));
 
         listsGridAdapter = new GridAdapter(this, new ArrayList<>(), position -> openListScreen(user.getListIDs().get(position)));
@@ -247,6 +254,10 @@ public class HomeActivity extends MasterActivity
                     if (listsGridAdapter != null)
                     {
                         listsGridAdapter.updateList(listNames);
+
+                        boolean isEmpty = listNames.isEmpty();
+                        listsRecycler.setVisibility(isEmpty ? android.view.View.GONE : android.view.View.VISIBLE);
+                        emptyListsContainer.setVisibility(isEmpty ? android.view.View.VISIBLE : android.view.View.GONE);
                     }
                 })));
 
@@ -256,6 +267,10 @@ public class HomeActivity extends MasterActivity
                     if (listsGridAdapter != null)
                     {
                         listsGridAdapter.updateList(listNames);
+
+                        boolean isEmpty = listNames.isEmpty();
+                        listsRecycler.setVisibility(isEmpty ? android.view.View.GONE : android.view.View.VISIBLE);
+                        emptyListsContainer.setVisibility(isEmpty ? android.view.View.VISIBLE : android.view.View.GONE);
                     }
                 })));
     }
@@ -346,20 +361,25 @@ public class HomeActivity extends MasterActivity
                     super.onMeasure(widthMeasureSpec, widthMeasureSpec);
                 }
             };
-            button.setCornerRadius(28);
+
+            button.setCornerRadius(34);
 
             button.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
                     getAppColor(context, com.google.android.material.R.attr.colorSurface)));
 
-            button.setStrokeWidth(8);
+            button.setStrokeWidth(3);
             button.setStrokeColor(android.content.res.ColorStateList.valueOf(
-                    getAppColor(context, android.R.attr.colorPrimary)
+                    getAppColor(context, com.google.android.material.R.attr.colorSecondary)
             ));
+            button.setAlpha(0.98f);
 
-            button.setTextColor(getAppColor(context, com.google.android.material.R.attr.colorSecondary));
+            button.setElevation(1f);
+            button.setStateListAnimator(null);
 
-            button.setTypeface(Typeface.DEFAULT_BOLD);
-            button.setTextSize(24f);
+            button.setTextColor(getAppColor(context, androidx.appcompat.R.attr.colorPrimary));
+
+            button.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+            button.setTextSize(20f);
             button.setSingleLine(false);
             button.setHorizontallyScrolling(false);
             button.setAutoSizeTextTypeUniformWithConfiguration(
@@ -374,20 +394,23 @@ public class HomeActivity extends MasterActivity
 
             button.setGravity(Gravity.CENTER);
             button.setTextAlignment(android.view.View.TEXT_ALIGNMENT_CENTER);
-            int pad = (int) (12 * parent.getContext().getResources().getDisplayMetrics().density);
-            button.setPadding(pad, pad, pad, pad);
+            int horizontalPad = (int) (18 * parent.getContext().getResources().getDisplayMetrics().density);
+            int verticalPad = (int) (22 * parent.getContext().getResources().getDisplayMetrics().density);
+            button.setPadding(horizontalPad, verticalPad, horizontalPad, verticalPad);
+            button.setRippleColor(android.content.res.ColorStateList.valueOf(0x1E145C43));
 
-            button.setRippleColor(android.content.res.ColorStateList.valueOf(
-                    getAppColor(context, com.google.android.material.R.attr.colorSecondary)
-            ));
+            int margin = (int) (8 * parent.getContext().getResources().getDisplayMetrics().density);
+                RecyclerView.LayoutParams params = new RecyclerView.LayoutParams(
+                        RecyclerView.LayoutParams.MATCH_PARENT,
+                        RecyclerView.LayoutParams.WRAP_CONTENT
+                );
+                params.setMargins(margin, margin, margin, margin);
+                button.setLayoutParams(params);
 
-            int margin = (int) (12 * parent.getContext().getResources().getDisplayMetrics().density);
-            RecyclerView.LayoutParams params = new RecyclerView.LayoutParams(
-                    RecyclerView.LayoutParams.MATCH_PARENT,
-                    RecyclerView.LayoutParams.WRAP_CONTENT
-            );
-            params.setMargins(margin, margin, margin, margin);
-            button.setLayoutParams(params);
+            button.setInsetTop(0);
+            button.setInsetBottom(0);
+            button.setMinHeight(0);
+            button.setMinimumHeight(0);
 
             return new GridAdapter.GridViewHolder(button);
         }

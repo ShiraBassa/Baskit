@@ -3,16 +3,20 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="4dp"
+    android:layout_marginBottom="8dp"
+    android:background="@drawable/bg_selectable_surface"
+    android:clickable="true"
+    android:focusable="true"
+    android:stateListAnimator="@null"
     android:clipChildren="false"
     android:clipToPadding="false"
-    android:elevation="5dp"
     android:foreground="?attr/selectableItemBackground"
     android:gravity="center_vertical"
+    android:minHeight="58dp"
     android:orientation="horizontal"
-    android:outlineAmbientShadowColor="?attr/colorSecondary"
-    android:outlineSpotShadowColor="?attr/colorSecondary"
-    android:padding="8dp"
+    android:paddingHorizontal="20dp"
+    android:paddingVertical="13dp"
+    android:elevation="0dp"
     tools:targetApi="28">
 
     <TextView
@@ -20,7 +24,8 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:textColor="?attr/colorSecondary"
-        android:textSize="20sp"
-        android:textStyle="bold" />
+        android:fontFamily="sans-serif-medium"
+        android:textColor="?attr/colorOnSurface"
+        android:textSize="17sp"
+        android:textStyle="normal" />
 </LinearLayout>

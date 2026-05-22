@@ -3,41 +3,58 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="?attr/colorSurface"
-    android:gravity="center"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="?attr/backgroundColor"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:gravity="top"
     android:orientation="vertical"
-    android:padding="20dp"
+    android:paddingHorizontal="22dp"
+    android:paddingTop="22dp"
+    android:paddingBottom="16dp"
     tools:ignore="Overdraw">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp"
+        android:layout_marginBottom="10dp"
+        android:fontFamily="sans-serif-medium"
         android:text="@string/city_choose"
-        android:textColor="?attr/colorPrimaryVariant"
-        android:textSize="22sp" />
+        android:textColor="?attr/colorOnSurface"
+        android:textSize="20sp" />
 
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="20dp"
+        android:layout_marginBottom="18dp"
         android:backgroundTint="?attr/colorSurface"
-        android:elevation="4dp">
+        app:cardCornerRadius="20dp"
+        app:cardElevation="0dp"
+        app:cardUseCompatPadding="false">
 
         <Spinner
             android:id="@+id/spinner_cities"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:minHeight="56dp"
+            android:paddingHorizontal="12dp"
+            android:popupBackground="?attr/colorSurface" />
 
     </androidx.cardview.widget.CardView>
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_add"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:backgroundTint="?attr/colorPrimaryVariant"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:backgroundTint="?attr/colorPrimary"
+        android:elevation="0dp"
+        android:fontFamily="sans-serif-medium"
         android:text="@string/action_add"
-        android:textColor="?attr/colorOnPrimary" />
+        android:textAllCaps="false"
+        android:textColor="?attr/colorOnPrimary"
+        android:textSize="17sp"
+        android:textStyle="normal"
+        app:cornerRadius="20dp"
+        app:rippleColor="?attr/colorOnPrimary" />
 
 </LinearLayout>

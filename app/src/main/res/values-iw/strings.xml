@@ -1,7 +1,7 @@
 <resources>
     <!-- App -->
-    <string name="welcome_message">ברוך הבא ל\nBaskit🛒</string>
-    <string name="enter_details">אנא הכנס את פרטיך בשדות הנ״ל</string>
+    <string name="welcome_message">ברוך הבא ל Baskit🛒</string>
+    <string name="enter_details">אנא הכנס את פרטיך בשדות אלו</string>
 
     <!-- Authentication -->
     <string name="auth_sign_in_or_up">היכנס / הירשם</string>
@@ -36,7 +36,7 @@
     <string name="nav_settings">הגדרות</string>
 
     <!-- Lists -->
-    <string name="list_create">צור רשימה</string>
+    <string name="list_create">צור רשימה +</string>
     <string name="list_sort_label">סידור רשימה</string>
     <string name="list_sort_button">סדר ▼</string>
     <string name="list_plan">תכנון רשימה</string>
@@ -51,6 +51,8 @@
     <string name="list_request_sent">הבקשה נשלחה. מחכה לתשובה...</string>
     <string name="list_already_member">אתה כבר נמצא ברשימה זו</string>
     <string name="list_invitation_label">הזמנה לרשימה</string>
+    <string name="list_no_lists">אין עדיין רשימות</string>
+    <string name="list_create_your_first">צור את רשימת הקניות הראשונה שלך כדי להתחיל</string>
 
     <!-- Items -->
     <string name="item_search">חפש פריט</string>
@@ -75,6 +77,7 @@
 
     <!-- Messages -->
     <string name="msg_loading">עדיין טוען מידע...</string>
+    <string name="loading">טוען...</string>
     <string name="msg_general_error">קרתה שגיאה. נסה שוב</string>
     <string name="msg_added_to_category">נוסף לקטגוריה: </string>
     <string name="msg_list_duplicated">הרשימה שוכפלה</string>

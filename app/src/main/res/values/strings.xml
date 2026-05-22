@@ -1,8 +1,8 @@
 <resources>
     <!-- App -->
     <string name="app_name" translatable="false">Baskit</string>
-    <string name="welcome_message">Welcome to\nBaskit🛒</string>
-    <string name="enter_details">Please enter your details in the fields above</string>
+    <string name="welcome_message">Welcome to Baskit🛒</string>
+    <string name="enter_details">Please enter your details in the fields below</string>
 
     <!-- Authentication -->
     <string name="auth_sign_in_or_up">Sign In / Sign Up</string>
@@ -37,7 +37,7 @@
     <string name="nav_settings">Settings</string>
 
     <!-- Lists -->
-    <string name="list_create">Create List</string>
+    <string name="list_create">Create List +</string>
     <string name="list_sort_label">Sort List</string>
     <string name="list_sort_button">Sort ▼</string>
     <string name="list_plan">Plan List</string>
@@ -52,6 +52,8 @@
     <string name="list_request_sent">The request was sent. Waiting for response...</string>
     <string name="list_already_member">You are already in this list</string>
     <string name="list_invitation_label">List Invite</string>
+    <string name="list_no_lists">No lists yet</string>
+    <string name="list_create_your_first">Create your first shopping list to get started</string>
 
     <!-- Items -->
     <string name="item_search">Search Item</string>
@@ -80,6 +82,7 @@
 
     <!-- Messages -->
     <string name="msg_loading">Still loading info...</string>
+    <string name="loading">Loading...</string>
     <string name="msg_general_error">An error occurred. Please try again</string>
     <string name="msg_added_to_category">Added to category: </string>
     <string name="msg_list_duplicated">The list was duplicated</string>

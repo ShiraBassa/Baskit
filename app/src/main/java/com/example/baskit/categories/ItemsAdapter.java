@@ -97,25 +97,25 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
         holder.itemView.setOnDragListener(null);
 
         holder.tvName.setText(item.getDecodedName());
-        holder.tvName.setTextColor(Baskit.getAppColor(context, android.R.attr.colorPrimary));
 
         int quantity = item.getQuantity();
         holder.tvQuantity.setText(String.valueOf(quantity));
-        holder.tvQuantity.setTextColor(Baskit.getAppColor(context, com.google.android.material.R.attr.colorSecondary));
 
         if (quantity == 1)
         {
-            holder.btnDown.setColorFilter(Baskit.getAppColor(context, com.google.android.material.R.attr.colorTertiary));
+            holder.btnDown.setColorFilter(Baskit.getAppColor(context, androidx.appcompat.R.attr.colorError));
+            holder.btnDown.setAlpha(0.92f);
         }
         else
         {
-            holder.btnDown.setColorFilter(Baskit.getAppColor(context, com.google.android.material.R.attr.colorSecondary));
+            holder.btnDown.setColorFilter(Baskit.getAppColor(context, android.R.attr.colorPrimary));
+            holder.btnDown.setAlpha(1f);
         }
 
         if (!item.isUnassignedToSupermarket())
         {
             holder.tvPrice.setText(Baskit.getTotalDisplayString(item.getTotal(), item.isPriceKnown(), false, false));
-            holder.tvPrice.setTextColor(Baskit.getAppColor(context, android.R.attr.colorPrimary));
+            holder.tvPrice.setTextColor(Baskit.getAppColor(context, androidx.appcompat.R.attr.colorPrimary));
             holder.tvPrice.setVisibility(View.VISIBLE);
         }
         else
@@ -126,12 +126,12 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
         if (item.isChecked())
         {
             holder.btnCheckBox.setImageResource(R.drawable.ic_check_box_checked);
-            holder.itemView.setAlpha(0.5f);
+            holder.itemView.setAlpha(0.58f);
         }
         else
         {
             holder.btnCheckBox.setImageResource(R.drawable.ic_check_box_unchecked);
-            holder.itemView.setAlpha(1f);
+            holder.itemView.setAlpha(0.98f);
         }
 
         setItemButtons(holder, item);
@@ -152,7 +152,8 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
 
             item.setQuantity(item.raiseQuantity());
             holder.tvQuantity.setText(String.valueOf(item.getQuantity()));
-            holder.btnDown.setColorFilter(Baskit.getAppColor(context, com.google.android.material.R.attr.colorSecondary));
+            holder.btnDown.setColorFilter(Baskit.getAppColor(context, android.R.attr.colorPrimary));
+            holder.btnDown.setAlpha(1f);
 
             upperClassFns.updateItemCategory(item);
         });
@@ -177,7 +178,8 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
             {
                 if (quantity == 1)
                 {
-                    holder.btnDown.setColorFilter(Baskit.getAppColor(context, com.google.android.material.R.attr.colorTertiary));
+                    holder.btnDown.setColorFilter(Baskit.getAppColor(context, androidx.appcompat.R.attr.colorError));
+                    holder.btnDown.setAlpha(0.92f);
                 }
 
                 holder.tvQuantity.setText(String.valueOf(item.getQuantity()));
@@ -192,12 +194,12 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
             if (item.isChecked())
             {
                 holder.btnCheckBox.setImageResource(R.drawable.ic_check_box_checked);
-                holder.itemView.setAlpha(0.5f);
+                holder.itemView.setAlpha(0.58f);
             }
             else
             {
                 holder.btnCheckBox.setImageResource(R.drawable.ic_check_box_unchecked);
-                holder.itemView.setAlpha(1f);
+                holder.itemView.setAlpha(0.98f);
             }
 
             upperClassFns.updateItemCategory(item);

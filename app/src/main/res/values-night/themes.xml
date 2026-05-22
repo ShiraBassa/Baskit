@@ -25,7 +25,7 @@
         <item name="colorError">@color/destructive_night</item>
 
         <!-- Outline, borders, dividers -->
-        <item name="colorOutline">@color/primary_night</item>
+        <item name="colorOutline">#12D7BD98</item>
 
         <!-- Accents -->
         <item name="colorTertiary">@color/destructive_night</item>

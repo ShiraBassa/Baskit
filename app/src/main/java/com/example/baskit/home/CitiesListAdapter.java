@@ -55,27 +55,27 @@ public class CitiesListAdapter extends RecyclerView.Adapter<CitiesListAdapter.Vi
     {
         String city = cities.get(position);
         holder.tvCity.setText(city);
-
-        holder.itemView.setBackgroundColor(
-                selectedPosition == position
-                        ? Baskit.getAppColor(context, com.google.android.material.R.attr.colorSecondaryContainer)
-                        : Baskit.getAppColor(context, com.google.android.material.R.attr.colorSurface)
-        );
+        holder.itemView.setActivated(selectedPosition == position);
+        holder.itemView.setSelected(selectedPosition == position);
 
         holder.itemView.setOnClickListener(v ->
         {
+            int previousPosition = selectedPosition;
+
             if (selectedPosition == position)
             {
-                Baskit.getAppColor(context, com.google.android.material.R.attr.colorSurface);
                 selectedPosition = RecyclerView.NO_POSITION;
             }
             else
             {
-                Baskit.getAppColor(context, com.google.android.material.R.attr.colorSecondaryContainer);
                 selectedPosition = position;
             }
 
-            notifyDataSetChanged();
+            if (previousPosition != RecyclerView.NO_POSITION)
+                notifyItemChanged(previousPosition);
+
+            if (selectedPosition != RecyclerView.NO_POSITION)
+                notifyItemChanged(selectedPosition);
         });
     }
 

@@ -54,6 +54,14 @@ public abstract class MasterActivity extends AppCompatActivity
 
         Baskit.serverAliveLive.observe(this, isUp ->
         {
+            Boolean checking = Baskit.serverCheckingLive.getValue();
+
+            if (checking != null && checking)
+            {
+                dialogs.hideServerDown();
+                return;
+            }
+
             if (isUp == null) return;
 
             if (!isUp)
@@ -98,12 +106,10 @@ public abstract class MasterActivity extends AppCompatActivity
 
         if (Baskit.isLayoutLeft())
         {
-            // LTR: forward = from right to left
             overridePendingTransition(R.anim.push_in_right, R.anim.push_out_left);
         }
         else
         {
-            // RTL: forward = from left to right
             overridePendingTransition(R.anim.push_in_left, R.anim.push_out_right);
         }
     }
@@ -115,12 +121,10 @@ public abstract class MasterActivity extends AppCompatActivity
 
         if (Baskit.isLayoutLeft())
         {
-            // LTR: forward = from right to left
             overridePendingTransition(R.anim.push_in_right, R.anim.push_out_left);
         }
         else
         {
-            // RTL: forward = from left to right
             overridePendingTransition(R.anim.push_in_left, R.anim.push_out_right);
         }
     }
@@ -138,12 +142,10 @@ public abstract class MasterActivity extends AppCompatActivity
         super.finish();
         if (Baskit.isLayoutLeft())
         {
-            // LTR: back = to right
             overridePendingTransition(R.anim.pop_in_left, R.anim.pop_out_right);
         }
         else
         {
-            // RTL: back = to left (mirror)
             overridePendingTransition(R.anim.pop_in_right, R.anim.pop_out_left);
         }
     }
@@ -252,7 +254,6 @@ public abstract class MasterActivity extends AppCompatActivity
         private boolean dragging = false;
         public boolean swipeFinishing = false;
         private android.view.VelocityTracker velocityTracker;
-        private android.graphics.drawable.GradientDrawable edgeShadow;
 
         public EdgeSwipeHandler(Activity activity)
         {
@@ -286,33 +287,17 @@ public abstract class MasterActivity extends AppCompatActivity
 
                     content.animate().cancel();
                     content.setLayerType(View.LAYER_TYPE_NONE, null);
-                    content.setElevation(0f);
-                    content.setTranslationZ(0f);
+                    content.setTranslationX(0f);
+                    content.setTranslationY(0f);
 
                     content.setAlpha(1f);
                     View root = (View) content.getParent();
-                    android.util.TypedValue bgValue = new android.util.TypedValue();
-                    activity.getTheme().resolveAttribute(android.R.attr.colorBackground, bgValue, true);
-                    root.setBackgroundColor(bgValue.data);
-
-                    // Shadow orientation: LTR = LEFT_RIGHT, RTL = RIGHT_LEFT
-                    edgeShadow = new android.graphics.drawable.GradientDrawable(
-                            Baskit.isLayoutLeft()
-                                    ? android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT
-                                    : android.graphics.drawable.GradientDrawable.Orientation.RIGHT_LEFT,
-                            new int[]{0x33000000, 0x00000000}); // soft shadow gradient
-
-                    // Set initial bounds for shadow at edge of content
-                    int shadowWidth = (int)(16 * activity.getResources().getDisplayMetrics().density);
-                    if (Baskit.isLayoutLeft())
+                    if (root != null)
                     {
-                        edgeShadow.setBounds(0, 0, shadowWidth, content.getHeight());
+                        root.setAlpha(1f);
                     }
-                    else
-                    {
-                        edgeShadow.setBounds(content.getWidth() - shadowWidth, 0, content.getWidth(), content.getHeight());
-                    }
-                    content.getOverlay().add(edgeShadow);
+
+                    content.getOverlay().clear();
 
                     downX = ev.getX();
                     downY = ev.getY();
@@ -333,17 +318,12 @@ public abstract class MasterActivity extends AppCompatActivity
                     float dx = ev.getX() - downX;
                     float dy = ev.getY() - downY;
 
-                    if (Math.abs(dy) > Math.abs(dx))
-                    {
-                        // Do not kill the gesture entirely; just ignore this move
-                        return false;
-                    }
+                    if (Math.abs(dy) > Math.abs(dx)) return false;
 
-                    downY = ev.getY(); // keep Y updated to reduce false vertical cancels
+                    downY = ev.getY();
 
                     boolean isLTR = Baskit.isLayoutLeft();
 
-                    // Allow back-and-forth dragging, but block "pushing" past edge
                     if (isLTR && dx < 0) dx = 0;
                     if (!isLTR && dx > 0) dx = 0;
 
@@ -355,7 +335,6 @@ public abstract class MasterActivity extends AppCompatActivity
 
                     float width = content.getWidth();
 
-                    // Clamp movement so it doesn't go too far, with subtle resistance near edges
                     if (Baskit.isLayoutLeft())
                     {
                         float progressRaw = dx / width;
@@ -378,48 +357,9 @@ public abstract class MasterActivity extends AppCompatActivity
                     root2.setTranslationX(parallax);
                     content.setPivotX(Baskit.isLayoutLeft() ? 0 : content.getWidth()); // anchor movement visually from edge (more natural)
 
-                    // Update shadow bounds to stick to moving edge of content
-                    if (edgeShadow != null)
-                    {
-                        int shadowWidth2 = (int)((12 + 6 * progress) * activity.getResources().getDisplayMetrics().density);
-
-                        if (Baskit.isLayoutLeft())
-                        {
-                            // LTR: shadow on LEFT edge of content
-                            edgeShadow.setBounds(
-                                    0,
-                                    0,
-                                    shadowWidth2,
-                                    content.getHeight());
-                        }
-                        else
-                        {
-                            // RTL: shadow on RIGHT edge of content
-                            edgeShadow.setBounds(
-                                    content.getWidth() - shadowWidth2,
-                                    0,
-                                    content.getWidth(),
-                                    content.getHeight());
-                        }
-                    }
-
-                    // Enable real shadow rendering
-                    float velocity = 0f;
-                    if (velocityTracker != null) {
-                        velocityTracker.computeCurrentVelocity(1000);
-                        velocity = Math.abs(velocityTracker.getXVelocity());
-                    }
-                    float velocityFactor = Math.min(1f, velocity / 2000f);
-
-                    float dynamicZ = 10f + (14f * progress) + (10f * velocityFactor);
-
-                    content.setTranslationZ(dynamicZ);
-                    content.setElevation(6f);
-
-                    // Ensure shadow is not clipped
                     content.setClipToOutline(false);
-
-                    // No scaling: keep content at normal size for clean motion
+                    content.setAlpha(1f);
+                    root2.setAlpha(1f);
 
                     return true;
 
@@ -435,7 +375,8 @@ public abstract class MasterActivity extends AppCompatActivity
                     content.animate().cancel();
 
                     float vx = 0f;
-                    if (velocityTracker != null) {
+                    if (velocityTracker != null)
+                    {
                         velocityTracker.computeCurrentVelocity(1000);
                         vx = velocityTracker.getXVelocity();
                     }
@@ -460,57 +401,52 @@ public abstract class MasterActivity extends AppCompatActivity
                     {
                         swipeFinishing = true;
 
-                        // Smooth finish animation from current position
                         float remaining = isLTR2 ? (width2 - currentTx) : (-width2 - currentTx);
                         Math.max(80, Math.min(180, Math.abs(remaining) / width2 * 180));
                         float duration;
                         float target = isLTR2 ? width2 : -width2;
 
-                        // Slight velocity boost for snappier finish
                         duration = Math.max(60, Math.min(160, Math.abs(remaining) / width2 * 160));
 
                         content.animate()
                                 .translationX(target)
                                 .setDuration((long) duration)
-                                .withEndAction(() -> {
-                                    // content.setTranslationX(0); // REMOVE visual jump before finish
+                                .withEndAction(() ->
+                                {
                                     content.setLayerType(View.LAYER_TYPE_NONE, null);
-                                    content.setElevation(0f);
-                                    content.setTranslationZ(0f);
+                                    content.setTranslationX(0f);
+                                    content.setTranslationY(0f);
                                     content.setAlpha(1f);
                                     View root3 = (View) content.getParent();
+                                    root3.setAlpha(1f);
                                     root3.setTranslationX(0);
+                                    root3.setTranslationY(0f);
+                                    root3.setBackground(null);
+                                    root3.setAlpha(1f);
 
-                                    if (edgeShadow != null)
-                                    {
-                                        content.getOverlay().remove(edgeShadow);
-                                        edgeShadow = null;
-                                    }
-
+                                    content.animate().cancel();
+                                    root3.animate().cancel();
                                     activity.finish();
                                 })
                                 .start();
                     }
                     else
                     {
-                        // Snap-back animation with slightly faster, more responsive duration
                         float duration = Math.max(60, Math.min(160, Math.abs(currentTx) / width2 * 160));
                         content.animate()
                                 .translationX(0)
                                 .setDuration((long) duration)
                                 .withEndAction(() -> {
                                     content.setLayerType(View.LAYER_TYPE_NONE, null);
-                                    content.setElevation(0f);
-                                    content.setTranslationZ(0f);
+                                    content.setTranslationX(0f);
+                                    content.setTranslationY(0f);
                                     content.setAlpha(1f);
                                     View root3 = (View) content.getParent();
+                                    root3.setAlpha(1f);
                                     root3.setTranslationX(0);
-
-                                    if (edgeShadow != null)
-                                    {
-                                        content.getOverlay().remove(edgeShadow);
-                                        edgeShadow = null;
-                                    }
+                                    root3.setTranslationY(0f);
+                                    root3.setBackground(null);
+                                    root3.setAlpha(1f);
                                 })
                                 .start();
                     }

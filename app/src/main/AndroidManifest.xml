@@ -19,32 +19,32 @@
         <activity
             android:name=".list.PlanListActivity"
             android:exported="false"
-            android:screenOrientation="fullSensor"
+            android:screenOrientation="portrait"
             tools:ignore="DiscouragedApi" />
         <activity
             android:name=".login.SignUpActivity"
             android:exported="false"
-            android:screenOrientation="fullSensor"
+            android:screenOrientation="portrait"
             tools:ignore="DiscouragedApi" />
         <activity
             android:name=".categories.CategoryActivity"
             android:exported="false"
-            android:screenOrientation="fullSensor"
+            android:screenOrientation="portrait"
             tools:ignore="DiscouragedApi" />
         <activity
             android:name=".list.ListActivity"
             android:exported="false"
-            android:screenOrientation="fullSensor"
+            android:screenOrientation="portrait"
             tools:ignore="DiscouragedApi" />
         <activity
             android:name=".home.SettingsActivity"
             android:exported="false"
-            android:screenOrientation="fullSensor"
+            android:screenOrientation="portrait"
             tools:ignore="DiscouragedApi" />
         <activity
             android:name=".home.HomeActivity"
             android:exported="true"
-            android:screenOrientation="fullSensor"
+            android:screenOrientation="portrait"
             tools:ignore="DiscouragedApi">
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
@@ -61,7 +61,7 @@
         <activity
             android:name=".login.LoginActivity"
             android:exported="true"
-            android:screenOrientation="fullSensor"
+            android:screenOrientation="portrait"
             tools:ignore="DiscouragedApi">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

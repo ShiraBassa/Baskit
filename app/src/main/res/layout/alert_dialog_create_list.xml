@@ -2,51 +2,70 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="350dp"
-    android:layout_height="400dp"
-    android:background="?attr/colorSurface"
-    android:gravity="center"
+    android:layout_width="360dp"
+    android:layout_height="wrap_content"
+    android:background="?attr/backgroundColor"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:gravity="top"
     android:orientation="vertical"
-    android:padding="12dp"
+    android:paddingHorizontal="22dp"
+    android:paddingTop="22dp"
+    android:paddingBottom="16dp"
     tools:ignore="Overdraw">
 
     <!-- Title and Cancel -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="30dp"
-        android:gravity="center_vertical|start"
-        android:orientation="vertical">
+        android:layout_marginBottom="22dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
-        <ImageButton
-            android:id="@+id/btn_cancel"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginBottom="8dp"
-            android:background="@null"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ic_cancel"
-            app:tint="?attr/colorPrimaryVariant"
-            android:contentDescription="@string/action_cancel" />
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginEnd="12dp"
+            app:cardBackgroundColor="?attr/colorSurface"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:strokeColor="?attr/colorOutline"
+            app:strokeWidth="0.7dp">
+
+            <ImageButton
+                android:id="@+id/btn_cancel"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@android:color/transparent"
+                android:contentDescription="@string/action_cancel"
+                android:padding="10dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_cancel"
+                app:tint="?attr/colorOnSurface" />
+
+        </com.google.android.material.card.MaterialCardView>
 
         <TextView
             android:id="@+id/tv_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="start|center_vertical"
+            android:letterSpacing="0"
+            android:textAlignment="viewStart"
             android:text="@string/list_create"
-            android:textAlignment="center"
-            android:textColor="?attr/colorPrimary"
-            android:textSize="42sp"
-            android:textStyle="bold" />
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="28sp"
+            android:textStyle="normal" />
     </LinearLayout>
 
     <!-- EditText Input -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginBottom="30dp"
+        android:layout_marginBottom="18dp"
         android:layout_weight="1"
-        android:gravity="center_horizontal|top"
+        android:gravity="top"
         android:orientation="vertical">
 
         <EditText
@@ -54,29 +73,34 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:autofillHints=""
-            android:gravity="start"
+            android:background="@drawable/bg_selectable_surface"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="start|center_vertical"
             android:hint="@string/name_label"
             android:inputType="textPersonName"
-            android:padding="12dp"
+            android:minHeight="58dp"
+            android:paddingHorizontal="18dp"
+            android:paddingVertical="14dp"
             android:singleLine="true"
-            android:textColor="?attr/colorPrimaryVariant"
-            android:textColorHint="?attr/colorPrimaryVariant"
-            android:textSize="36sp"
-            android:textStyle="bold" />
+            android:textColor="?attr/colorOnSurface"
+            android:textColorHint="?attr/colorOutline"
+            android:textSize="18sp"
+            android:textStyle="normal" />
     </LinearLayout>
 
     <!-- Create Button -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_save_name"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:backgroundTint="?attr/colorPrimaryVariant"
-        android:paddingHorizontal="20dp"
-        android:paddingVertical="12dp"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:backgroundTint="?attr/colorPrimary"
+        android:elevation="0dp"
+        android:fontFamily="sans-serif-medium"
+        android:textAllCaps="false"
         android:text="@string/action_create"
         android:textColor="?attr/colorOnPrimary"
-        android:textSize="38sp"
-        android:textStyle="bold"
-        app:cornerRadius="12dp"
-        app:iconGravity="textStart" />
+        android:textSize="17sp"
+        android:textStyle="normal"
+        app:cornerRadius="20dp"
+        app:rippleColor="?attr/colorOnPrimary" />
 </LinearLayout>

@@ -4,64 +4,109 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:backgroundTint="?attr/colorSurface"
-    android:elevation="8dp"
-    android:gravity="center"
+    android:background="?attr/backgroundColor"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:elevation="0dp"
+    android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:padding="15dp">
+    android:paddingHorizontal="20dp"
+    android:paddingTop="10dp"
+    android:paddingBottom="18dp">
 
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:gravity="start">
+        android:gravity="start"
+        android:orientation="horizontal"
+        android:clipChildren="false"
+        android:clipToPadding="false">
 
-        <ImageButton
-            android:id="@+id/btn_finished"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:clickable="true"
-            android:focusable="true"
-            android:enabled="false"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ic_check"
-            app:tint="?attr/colorOnContainerUnchecked"
-            android:contentDescription="@string/action_finish"
-            tools:ignore="PrivateResource" />
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            app:cardBackgroundColor="?attr/colorSurface"
+            app:cardCornerRadius="18dp"
+            app:cardElevation="0dp"
+            app:strokeColor="?attr/colorOutline"
+            app:strokeWidth="0.8dp">
+
+            <ImageButton
+                android:id="@+id/btn_finished"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:background="@android:color/transparent"
+                android:clickable="true"
+                android:focusable="true"
+                android:enabled="false"
+                android:padding="12dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_check"
+                app:tint="?attr/colorOutline"
+                android:contentDescription="@string/action_finish"
+                tools:ignore="PrivateResource" />
+
+        </com.google.android.material.card.MaterialCardView>
 
     </LinearLayout>
 
-    <ImageButton
-        android:id="@+id/btn_add_item"
-        android:layout_width="70dp"
-        android:layout_height="70dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:clickable="true"
-        android:focusable="true"
-        android:scaleType="fitCenter"
-        android:src="@drawable/ic_add"
-        app:tint="?attr/colorPrimary"
-        android:contentDescription="@string/item_add" />
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:layout_marginHorizontal="12dp"
+        app:cardBackgroundColor="?attr/colorPrimary"
+        app:cardCornerRadius="28dp"
+        app:cardElevation="0dp">
+
+        <ImageButton
+            android:id="@+id/btn_add_item"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:background="@android:color/transparent"
+            android:clickable="true"
+            android:focusable="true"
+            android:padding="18dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_add"
+            app:tint="?attr/colorOnPrimary"
+            android:contentDescription="@string/item_add" />
+
+    </com.google.android.material.card.MaterialCardView>
 
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:gravity="end">
+        android:gravity="end"
+        android:orientation="horizontal"
+        android:clipChildren="false"
+        android:clipToPadding="false">
 
-        <ImageButton
-            android:id="@+id/btn_plan"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:clickable="false"
-            android:focusable="true"
-            android:enabled="false"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ic_plan"
-            app:tint="?attr/colorSecondary"
-            android:contentDescription="@string/list_plan" />
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            app:cardBackgroundColor="?attr/colorSurface"
+            app:cardCornerRadius="18dp"
+            app:cardElevation="0dp"
+            app:strokeColor="?attr/colorOutline"
+            app:strokeWidth="0.8dp">
+
+            <ImageButton
+                android:id="@+id/btn_plan"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:background="@android:color/transparent"
+                android:clickable="false"
+                android:focusable="true"
+                android:enabled="false"
+                android:padding="12dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_plan"
+                app:tint="?attr/colorSecondary"
+                android:contentDescription="@string/list_plan" />
+
+        </com.google.android.material.card.MaterialCardView>
 
     </LinearLayout>
 

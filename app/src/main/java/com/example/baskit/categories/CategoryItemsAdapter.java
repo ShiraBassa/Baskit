@@ -269,9 +269,9 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
         {
             holder.tvSupermarket.setText(supermarket.toString());
             holder.tvSupermarket.setTextColor(
-                    Baskit.getAppColor(context, android.R.attr.colorPrimary)
+                    Baskit.getAppColor(context, androidx.appcompat.R.attr.colorPrimary)
             );
-            holder.tvSupermarket.setAlpha(1f);
+            holder.tvSupermarket.setAlpha(0.96f);
         }
         else
         {
@@ -290,9 +290,9 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
             {
                 holder.tvSupermarket.setText(supermarket.toString());
                 holder.tvSupermarket.setTextColor(
-                        Baskit.getAppColor(context, android.R.attr.colorPrimary)
+                        Baskit.getAppColor(context, androidx.appcompat.R.attr.colorPrimary)
                 );
-                holder.tvSupermarket.setAlpha(1f);
+                holder.tvSupermarket.setAlpha(0.96f);
             }
             else if (isSingleSectionCurrently(supermarket))
             {
@@ -323,13 +323,13 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
 
         if (ifFinishedSupermarket(Objects.requireNonNull(items)))
         {
-            holder.tvSupermarket.setAlpha(0.5f);
-            holder.btnExpand.setAlpha(0.5f);
+            holder.tvSupermarket.setAlpha(0.55f);
+            holder.btnExpand.setAlpha(0.55f);
         }
         else
         {
-            holder.tvSupermarket.setAlpha(1f);
-            holder.btnExpand.setAlpha(1f);
+            holder.tvSupermarket.setAlpha(0.96f);
+            holder.btnExpand.setAlpha(0.92f);
         }
 
         holder.btnExpand.setOnClickListener(v ->
@@ -385,7 +385,8 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
                     if (!containsSupermarket(draggedItem, supermarkets.get(position)))
                     {
                         holder.itemView.setBackgroundColor(
-                                Baskit.getAppColor(context, android.R.attr.colorError, 75));
+                                Baskit.getAppColor(context, com.google.android.material.R.attr.colorErrorContainer));
+                        holder.itemView.setAlpha(0.92f);
                     }
                     break;
 
@@ -407,6 +408,7 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
                     if (containsSupermarket(draggedItem, supermarkets.get(position)))
                     {
                         holder.itemView.setBackgroundColor(getAppColor(context, com.google.android.material.R.attr.colorSecondaryContainer));
+                        holder.itemView.setAlpha(0.96f);
                     }
 
                     break;
@@ -415,6 +417,7 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
                     if (containsSupermarket(draggedItem, supermarkets.get(position)))
                     {
                         holder.itemView.setBackgroundColor(Color.TRANSPARENT);
+                        holder.itemView.setAlpha(1f);
                     }
 
                     break;
@@ -451,6 +454,7 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
 
                     upperClassFns.expandAllSupermarkets();
                     holder.itemView.setBackgroundColor(Color.TRANSPARENT);
+                    holder.itemView.setAlpha(1f);
 
                     break;
             }

@@ -14,10 +14,10 @@
     <color name="primary">@color/evergreen</color>
     <color name="primary_variant">@color/dark_teal</color>
 
-    <color name="secondary">@color/rich_mahogany</color>
+    <color name="secondary">#A17B58</color>
     <color name="secondary_variant">@color/tan</color>
 
-    <color name="surface">@color/background</color>
+    <color name="surface">#FBF6F0</color>
 
     <!-- ❗ Destructive -->
     <color name="destructive">@color/deep_crimson</color>
@@ -26,20 +26,20 @@
 
     <!-- 📝 Text Colors -->
     <color name="on_primary">@color/white_smoke</color>
-    <color name="on_secondary">@color/white_smoke</color>
-    <color name="on_surface">@color/dark_teal</color>
-    <color name="on_background">@color/black</color>
+    <color name="on_secondary">#FFF8F2</color>
+    <color name="on_surface">#5A4534</color>
+    <color name="on_background">#6A5644</color>
 
     <!-- 💡 States -->
     <color name="unchecked">#808080</color>
 
-    <color name="background">@color/white_smoke</color>
+    <color name="background">#F6EFE7</color>
 
 
     <color name="primary_night">#145C43</color>
     <color name="primary_variant_night">@color/dark_teal</color>
 
-    <color name="secondary_night">#6A3A1A</color>
+    <color name="secondary_night">#8C725B</color>
     <color name="secondary_variant_night">#A88F6C</color>
 
     <color name="surface_night">#121917</color>
@@ -51,8 +51,8 @@
 
     <!-- 📝 Text Colors -->
     <color name="on_primary_night">#F7F5F3</color>
-    <color name="on_secondary_night">#AAB3AF</color>
-    <color name="on_surface_night">@color/primary_variant_night</color>
+    <color name="on_secondary_night">#F3ECE4</color>
+    <color name="on_surface_night">#D9C2AA</color>
     <color name="on_background_night">#DDD6CC</color>
 
     <!-- 💡 States -->

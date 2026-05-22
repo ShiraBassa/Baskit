@@ -14,6 +14,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.baskit.Baskit;
 import com.example.baskit.online_components.APIHandler;
 import com.example.baskit.main_components.Item;
 import com.example.baskit.main_components.Item.ItemInfo;
@@ -472,7 +473,54 @@ public class ItemViewAlertDialog
                     chip.setText(w);
                     chip.setCheckable(true);
                     chip.setClickable(true);
-                    chip.setChipStrokeWidth(2f);
+                    chip.setChipStrokeWidth(1.2f);
+                    chip.setChipCornerRadius(30f);
+                    chip.setTextSize(15f);
+                    chip.setEnsureMinTouchTargetSize(true);
+
+                    int colorSurface = Baskit.getAppColor(context, com.google.android.material.R.attr.colorSurface);
+                    int colorPrimary = Baskit.getAppColor(context, androidx.appcompat.R.attr.colorPrimary);
+                    int colorOnSurface = Baskit.getAppColor(context, com.google.android.material.R.attr.colorOnSurface);
+                    int colorOnPrimary = Baskit.getAppColor(context, com.google.android.material.R.attr.colorOnPrimary);
+                    int colorOutline = Baskit.getAppColor(context, com.google.android.material.R.attr.colorOutline);
+
+                    android.content.res.ColorStateList bgStates = new android.content.res.ColorStateList(
+                            new int[][]{
+                                    new int[]{android.R.attr.state_checked},
+                                    new int[]{}
+                            },
+                            new int[]{
+                                    colorPrimary,
+                                    colorSurface
+                            }
+                    );
+
+                    android.content.res.ColorStateList textStates = new android.content.res.ColorStateList(
+                            new int[][]{
+                                    new int[]{android.R.attr.state_checked},
+                                    new int[]{}
+                            },
+                            new int[]{
+                                    colorOnPrimary,
+                                    colorOnSurface
+                            }
+                    );
+
+                    android.content.res.ColorStateList strokeStates = new android.content.res.ColorStateList(
+                            new int[][]{
+                                    new int[]{android.R.attr.state_checked},
+                                    new int[]{}
+                            },
+                            new int[]{
+                                    colorPrimary,
+                                    colorOutline
+                            }
+                    );
+
+                    chip.setChipBackgroundColor(bgStates);
+                    chip.setTextColor(textStates);
+                    chip.setChipStrokeColor(strokeStates);
+
                     chip.setOnCheckedChangeListener((buttonView, isChecked) -> applyVariationFilter.run());
                     chipGroupWeights.addView(chip);
                 }
@@ -491,7 +539,54 @@ public class ItemViewAlertDialog
                     chip.setText(c);
                     chip.setCheckable(true);
                     chip.setClickable(true);
-                    chip.setChipStrokeWidth(2f);
+                    chip.setChipStrokeWidth(1.2f);
+                    chip.setChipCornerRadius(30f);
+                    chip.setTextSize(15f);
+                    chip.setEnsureMinTouchTargetSize(true);
+
+                    int colorSurface = Baskit.getAppColor(context, com.google.android.material.R.attr.colorSurface);
+                    int colorPrimary = Baskit.getAppColor(context, androidx.appcompat.R.attr.colorPrimary);
+                    int colorOnSurface = Baskit.getAppColor(context, com.google.android.material.R.attr.colorOnSurface);
+                    int colorOnPrimary = Baskit.getAppColor(context, com.google.android.material.R.attr.colorOnPrimary);
+                    int colorOutline = Baskit.getAppColor(context, com.google.android.material.R.attr.colorOutline);
+
+                    android.content.res.ColorStateList bgStates = new android.content.res.ColorStateList(
+                            new int[][]{
+                                    new int[]{android.R.attr.state_checked},
+                                    new int[]{}
+                            },
+                            new int[]{
+                                    colorPrimary,
+                                    colorSurface
+                            }
+                    );
+
+                    android.content.res.ColorStateList textStates = new android.content.res.ColorStateList(
+                            new int[][]{
+                                    new int[]{android.R.attr.state_checked},
+                                    new int[]{}
+                            },
+                            new int[]{
+                                    colorOnPrimary,
+                                    colorOnSurface
+                            }
+                    );
+
+                    android.content.res.ColorStateList strokeStates = new android.content.res.ColorStateList(
+                            new int[][]{
+                                    new int[]{android.R.attr.state_checked},
+                                    new int[]{}
+                            },
+                            new int[]{
+                                    colorPrimary,
+                                    colorOutline
+                            }
+                    );
+
+                    chip.setChipBackgroundColor(bgStates);
+                    chip.setTextColor(textStates);
+                    chip.setChipStrokeColor(strokeStates);
+
                     chip.setOnCheckedChangeListener((buttonView, isChecked) -> applyVariationFilter.run());
                     chipGroupCompanies.addView(chip);
                 }

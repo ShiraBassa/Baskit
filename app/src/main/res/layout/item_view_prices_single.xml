@@ -3,10 +3,18 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="8dp"
-    android:elevation="2dp"
+    android:background="@drawable/bg_selectable_surface"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:elevation="0dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground"
     android:gravity="center_vertical"
-    android:orientation="horizontal"
-    android:padding="12dp">
+    android:minHeight="62dp"
+    android:paddingHorizontal="18dp"
+    android:paddingVertical="14dp"
+    android:orientation="horizontal">
 
     <LinearLayout
         android:layout_width="0dp"
@@ -20,24 +28,28 @@
             android:id="@+id/tv_variation"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="2dp"
-            android:textColor="?attr/colorPrimaryVariant"
-            android:textSize="14sp" />
+            android:alpha="0.72"
+            android:fontFamily="sans-serif"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="12sp" />
 
         <TextView
             android:id="@+id/tv_supermarket_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="?attr/colorPrimary"
-            android:textSize="20sp"
-            android:textStyle="bold" />
+            android:fontFamily="sans-serif-medium"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="18sp"
+            android:textStyle="normal" />
 
         <TextView
             android:id="@+id/tv_supermarket"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="?attr/colorPrimary"
-            android:textSize="20sp" />
+            android:alpha="0.82"
+            android:fontFamily="sans-serif"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="15sp" />
 
     </LinearLayout>
 
@@ -45,8 +57,9 @@
         android:id="@+id/tv_price"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:fontFamily="sans-serif-medium"
         android:textColor="?attr/colorPrimary"
-        android:textSize="20sp"
-        android:textStyle="bold" />
+        android:textSize="18sp"
+        android:textStyle="normal" />
 
 </LinearLayout>

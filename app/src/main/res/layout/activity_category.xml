@@ -4,20 +4,26 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
+    android:background="?attr/backgroundColor"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:gravity="top"
     android:orientation="vertical"
-    android:paddingHorizontal="10dp"
+    android:paddingHorizontal="14dp"
+    android:paddingTop="10dp"
     tools:context=".categories.CategoryActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?attr/colorSurface"
-        android:elevation="4dp"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         android:gravity="center_horizontal|top"
         android:orientation="vertical"
-        android:paddingHorizontal="10dp"
-        android:paddingVertical="16dp">
+        android:paddingBottom="18dp"
+        android:paddingHorizontal="14dp"
+        android:paddingTop="14dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -27,13 +33,14 @@
 
             <ImageButton
                 android:id="@+id/btn_back"
-                android:layout_width="45dp"
-                android:layout_height="45dp"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
                 android:layout_marginEnd="10dp"
-                android:background="@null"
+                android:background="@drawable/bg_selectable_surface"
+                android:padding="9dp"
                 android:scaleType="fitCenter"
                 android:src="@drawable/ic_back"
-                app:tint="?attr/colorPrimary"
+                app:tint="?attr/colorOnSurface"
                 android:contentDescription="@string/nav_back" />
 
             <TextView
@@ -41,19 +48,21 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:fontFamily="sans-serif-medium"
                 android:gravity="center_vertical"
-                android:textColor="?attr/colorPrimary"
-                android:textSize="28sp"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="22sp"
                 android:visibility="invisible" />
 
             <ImageButton
                 android:id="@+id/btn_more"
-                android:layout_width="45dp"
-                android:layout_height="45dp"
-                android:background="@null"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:background="@drawable/bg_selectable_surface"
+                android:padding="9dp"
                 android:scaleType="fitCenter"
                 android:src="@drawable/ic_more"
-                app:tint="?attr/colorSecondary"
+                app:tint="?attr/colorOnSurface"
                 android:contentDescription="@string/nav_more" />
 
         </LinearLayout>
@@ -63,9 +72,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:textColor="?attr/colorPrimaryVariant"
-            android:textSize="35sp"
-            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium"
+            android:letterSpacing="0"
+            android:paddingTop="10dp"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="32sp"
+            android:textStyle="normal"
             android:visibility="invisible" />
 
     </LinearLayout>
@@ -74,12 +86,15 @@
         layout="@layout/btn_sort_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="10dp" />
+        android:layout_marginBottom="8dp"
+        android:layout_marginTop="12dp" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         android:gravity="center"
         android:orientation="vertical">
 
@@ -89,16 +104,21 @@
             android:layout_height="0dp"
             android:layout_weight="1"
             android:clipToPadding="false"
+            android:overScrollMode="never"
+            android:paddingBottom="12dp"
             android:scrollbars="vertical"
             tools:ignore="NestedWeights" />
 
         <TextView
             android:id="@+id/tv_total"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="?attr/colorPrimary"
-            android:textSize="26sp"
-            android:textStyle="bold"
+            android:gravity="start"
+            android:fontFamily="sans-serif-medium"
+            android:paddingVertical="10dp"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="20sp"
+            android:textStyle="normal"
             android:visibility="invisible" />
 
     </LinearLayout>
