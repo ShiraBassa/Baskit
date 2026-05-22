@@ -10,7 +10,6 @@ import com.example.baskit.main_components.Item.ItemVariant;
 import com.example.baskit.main_components.Supermarket;
 import com.example.baskit.sqlite.AppDatabase;
 import com.example.baskit.sqlite.GroupsEntity;
-import com.example.baskit.sqlite.ItemCategory;
 import com.example.baskit.sqlite.ItemInfoEntity;
 import com.example.baskit.sqlite.ItemPricesEntity;
 
@@ -37,7 +36,6 @@ import java.util.concurrent.Executors;
 public class APIHandler
 {
     private Map<String, Map<String, Map<String, Double>>> cachedItemPrices = null;
-    private Map<String, String> cachedItemCategories = new HashMap<>();
     private Map<String, ArrayList<String>> cachedGroups = new HashMap<>();
     private Map<String, ItemInfo> cachedItemInfos = new HashMap<>();
 
@@ -101,7 +99,6 @@ public class APIHandler
     public void reset() throws JSONException, IOException
     {
         cachedItemPrices = null;
-        cachedItemCategories = null;
         cachedGroups = null;
         cachedItemInfos = null;
 
@@ -199,7 +196,6 @@ public class APIHandler
         }
         catch (Exception e)
         {
-            //noinspection CallToPrintStackTrace
             e.printStackTrace();
             return false;
         }
@@ -210,11 +206,10 @@ public class APIHandler
         supermarkets = getUpdatedSupermarkets();
 
         cachedItemPrices = loadItemPricesFromDB();
-        cachedItemCategories = loadCategoriesFromDB();
         cachedGroups = loadGroupsFromDB();
         cachedItemInfos = loadItemInfosFromDB();
 
-        if (cachedItemPrices.isEmpty() || cachedItemCategories.isEmpty() || cachedGroups.isEmpty() || cachedItemInfos.isEmpty())
+        if (cachedItemPrices.isEmpty() || cachedGroups.isEmpty() || cachedItemInfos.isEmpty())
         {
             try
             {
@@ -266,22 +261,6 @@ public class APIHandler
         return result;
     }
 
-    private Map<String, String> loadCategoriesFromDB()
-    {
-        List<ItemCategory> dbCategories = AppDatabase.getDatabase(Baskit.getContext())
-                .itemCategoryDao()
-                .getAll();
-
-        Map<String, String> categories = new HashMap<>();
-
-        for (ItemCategory category : dbCategories)
-        {
-            categories.put(category.getItemCode(), category.getCategory());
-        }
-
-        return categories;
-    }
-
     private Map<String, ArrayList<String>> loadGroupsFromDB()
     {
         List<GroupsEntity> dbGroups =
@@ -320,10 +299,16 @@ public class APIHandler
 
         for (ItemInfoEntity entity : dbInfos)
         {
-            result.put(
+            ItemInfo info = new ItemInfo(
                     entity.itemCode,
-                    new ItemInfo(entity.itemCode, entity.baseName, entity.company, entity.weight, entity.unit)
+                    entity.baseName,
+                    entity.company,
+                    entity.weight,
+                    entity.unit,
+                    entity.category
             );
+
+            result.put(entity.itemCode, info);
         }
 
         return result;
@@ -334,12 +319,10 @@ public class APIHandler
         try
         {
             var pricesFuture = networkExecutor.submit(this::getItemPricesFromAPI);
-            var categoriesFuture = networkExecutor.submit(this::getCategoriesFromAPI);
             var groupsFuture = networkExecutor.submit(this::getGroupsFromAPI);
             var infosFuture = networkExecutor.submit(this::getItemInfosFromAPI);
 
             Map<String, Map<String, Map<String, Double>>> freshItemPrices = pricesFuture.get();
-            Map<String, String> freshCategories = categoriesFuture.get();
             Map<String, ArrayList<String>> freshGroups = groupsFuture.get();
             Map<String, ItemInfo> freshItemInfos = infosFuture.get();
 
@@ -347,12 +330,6 @@ public class APIHandler
             {
                 cachedItemPrices = new HashMap<>(freshItemPrices);
                 saveItemPricesToDB(freshItemPrices);
-            }
-
-            if (freshCategories != null && !freshCategories.isEmpty())
-            {
-                cachedItemCategories = new HashMap<>(freshCategories);
-                saveCategoriesToDB(freshCategories);
             }
 
             if (freshGroups != null && !freshGroups.isEmpty())
@@ -410,27 +387,6 @@ public class APIHandler
         });
     }
 
-    private void saveCategoriesToDB(Map<String, String> categories)
-    {
-        dbExecutor.execute(() ->
-        {
-            AppDatabase db = AppDatabase.getDatabase(Baskit.getContext());
-            db.itemCategoryDao().clearAll();
-
-            List<ItemCategory> list = new ArrayList<>();
-
-            for (Map.Entry<String, String> entry : categories.entrySet())
-            {
-                list.add(new ItemCategory(entry.getKey(), entry.getValue()));
-            }
-
-            if (!list.isEmpty())
-            {
-                db.itemCategoryDao().insertAll(list);
-            }
-        });
-    }
-
     private void saveGroupsToDB(Map<String, ArrayList<String>> groups)
     {
         dbExecutor.execute(() ->
@@ -476,6 +432,7 @@ public class APIHandler
                 entity.company = info.getCompany();
                 entity.weight = info.getWeight();
                 entity.unit = info.getUnit();
+                entity.category = info.getCategory();
 
                 list.add(entity);
             }
@@ -524,25 +481,6 @@ public class APIHandler
         }
 
         return items;
-    }
-
-    public Map<String, String> getCategoriesFromAPI() throws IOException, JSONException
-    {
-        String raw = getRaw("/categories");
-        if (raw == null) return new HashMap<>();
-        JSONObject categoriesJson = new JSONObject(raw);
-        Map<String, String> categories = new HashMap<>();
-
-        Iterator<String> keys = categoriesJson.keys();
-
-        while (keys.hasNext())
-        {
-            String code = keys.next();
-            String category = categoriesJson.getString(code);
-            categories.put(code, category);
-        }
-
-        return categories;
     }
 
     private Map<String, ArrayList<String>> getGroupsFromAPI()
@@ -595,6 +533,7 @@ public class APIHandler
                 String baseName = obj.optString("name", "");
                 String company = obj.optString("company", "");
                 String unit = obj.optString("unit", "");
+                String category = obj.optString("category", "");
 
                 double weight = 0;
 
@@ -607,7 +546,16 @@ public class APIHandler
                     catch (Exception ignored) {}
                 }
 
-                infos.put(itemCode, new ItemInfo(itemCode, baseName, company, weight, unit));
+                ItemInfo info = new ItemInfo(
+                        itemCode,
+                        baseName,
+                        company,
+                        weight,
+                        unit,
+                        category
+                );
+
+                infos.put(itemCode, info);
             }
         }
         catch (Exception e)
@@ -729,7 +677,7 @@ public class APIHandler
 
         return result;
     }
-    
+
     public ItemInfo getItemInfo(String itemCode)
     {
         if (itemCode == null || itemCode.isEmpty() || cachedItemInfos == null || cachedItemInfos.isEmpty()) return null;
@@ -747,7 +695,7 @@ public class APIHandler
 
         return cachedGroups.get(base);
     }
-    
+
     public Map<String, ArrayList<String>> getGroups()
     {
         return cachedGroups;
@@ -769,7 +717,14 @@ public class APIHandler
 
         for (String code : group)
         {
-            String category = cachedItemCategories.get(code);
+            ItemInfo info = cachedItemInfos.get(code);
+
+            if (info == null)
+            {
+                continue;
+            }
+
+            String category = info.getCategory();
 
             if (category != null && !category.isEmpty())
             {
@@ -798,11 +753,16 @@ public class APIHandler
 
         if (itemCode != null && !itemCode.isEmpty())
         {
-            itemCategory = cachedItemCategories.get(itemCode); // Try cache first
+            ItemInfo cachedInfo = cachedItemInfos.get(itemCode);
 
-            if (itemCategory != null && !itemCategory.isEmpty())
+            if (cachedInfo != null)
             {
-                return itemCategory;
+                itemCategory = cachedInfo.getCategory();
+
+                if (itemCategory != null && !itemCategory.isEmpty())
+                {
+                    return itemCategory;
+                }
             }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
@@ -829,19 +789,24 @@ public class APIHandler
 
         // If not in cache -> try the server
         String raw = getRaw(endpoint);
+
+        if (raw == null || raw.isEmpty())
+        {
+            return null;
+        }
+
         JSONObject obj = new JSONObject(raw);
         itemCategory = obj.optString("category", null);
 
-        // Update the cache
-        cachedItemCategories.put(itemCode, itemCategory);
+        // Update embedded item info cache
+        ItemInfo info = cachedItemInfos.get(itemCode);
+
+        if (info != null)
+        {
+            info.setCategory(itemCategory);
+        }
 
         String finalItemCategory = itemCategory;
-        dbExecutor.execute(() ->
-        {
-            AppDatabase db = AppDatabase.getDatabase(Baskit.getContext());
-            ItemCategory entity = new ItemCategory(Objects.requireNonNull(itemCode), finalItemCategory);
-            db.itemCategoryDao().insert(entity);
-        });
 
         return itemCategory;
     }

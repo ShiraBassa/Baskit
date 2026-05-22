@@ -4,6 +4,7 @@ import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
+import androidx.room.Update;
 
 import java.util.List;
 
@@ -19,6 +20,9 @@ public interface ItemInfoDao
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(List<ItemInfoEntity> entities);
+
+    @Update
+    void update(ItemInfoEntity entity);
 
     @Query("DELETE FROM item_infos")
     void clearAll();

@@ -14,5 +14,6 @@ public class ItemInfoEntity
     public String company;
     public double weight;
     public String unit;
+    public String category;
     public String baseName;
 }

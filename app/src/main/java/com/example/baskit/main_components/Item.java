@@ -23,6 +23,7 @@ public class Item implements Cloneable
     protected String company;
     protected Double weight;
     protected String unit;
+    protected String category = "לא ידוע";
 
     @Exclude
     private static final String ID_PREFIX = "item_";
@@ -51,6 +52,7 @@ public class Item implements Cloneable
         this.company = item.getCompany();
         this.weight = item.getWeight();
         this.unit = item.getUnit();
+        this.category = item.getCategory();
     }
 
     public Item(String baseName, int quantity)
@@ -97,6 +99,17 @@ public class Item implements Cloneable
     public void setUnit(String unit)
     {
         this.unit = unit;
+    }
+
+    public String getCategory()
+    {
+        return category;
+    }
+
+    @SuppressWarnings("unused")
+    public void setCategory(String category)
+    {
+        this.category = category;
     }
 
     public String getBaseName()
@@ -261,6 +274,7 @@ public class Item implements Cloneable
         this.company = info.getCompany();
         this.weight = info.getWeight();
         this.unit = info.getUnit();
+        this.category = info.getCategory();
         setId(info.getCode());
     }
 
@@ -412,7 +426,9 @@ public class Item implements Cloneable
             }
         }
 
-        if (this.supermarket == supermarket && Objects.requireNonNull(cheapestVariant).getPrice() == price)
+        if (cheapestVariant != null &&
+                this.supermarket == supermarket &&
+                cheapestVariant.getPrice() == price)
         {
             return ogVariant;
         }
@@ -443,8 +459,9 @@ public class Item implements Cloneable
         Double safeWeight = (weight != null) ? weight : 0.0;
         String safeCompany = (company != null) ? company : "";
         String safeUnit = (unit != null) ? unit : "";
+        String safeCategory = (category != null) ? category : "לא ידוע";
 
-        return new ItemInfo(getAbsoluteId(), baseName, safeCompany, safeWeight, safeUnit);
+        return new ItemInfo(getAbsoluteId(), baseName, safeCompany, safeWeight, safeUnit, safeCategory);
     }
 
     @Exclude
@@ -535,15 +552,16 @@ public class Item implements Cloneable
         private String company;
         private Double weight;
         private String unit;
+        private String category;
 
-        public ItemInfo(String code, String baseName,
-                        String company, Double weight, String unit)
+        public ItemInfo(String code, String baseName, String company, Double weight, String unit, String category)
         {
             this.code = code;
             this.baseName = baseName;
             this.company = company;
             this.weight = weight;
             this.unit = unit;
+            this.category = category;
         }
 
         public String getCode() {
@@ -609,6 +627,17 @@ public class Item implements Cloneable
             this.unit = unit;
         }
 
+        public String getCategory()
+        {
+            return category;
+        }
+
+        @SuppressWarnings("unused")
+        public void setCategory(String category)
+        {
+            this.category = category;
+        }
+
         @Override
         public boolean equals(Object obj)
         {
@@ -617,16 +646,17 @@ public class Item implements Cloneable
 
             ItemInfo other = (ItemInfo) obj;
 
-            return baseName.equals(other.baseName) &&
-                    company.equals(other.company) &&
-                    weight.equals(other.weight) &&
-                    unit.equals(other.unit);
+            return Objects.equals(baseName, other.baseName) &&
+                    Objects.equals(company, other.company) &&
+                    Objects.equals(weight, other.weight) &&
+                    Objects.equals(unit, other.unit) &&
+                    Objects.equals(category, other.category);
         }
 
         @Override
         public int hashCode()
         {
-            return java.util.Objects.hash(baseName, company, weight, unit);
+            return java.util.Objects.hash(baseName, company, weight, unit, category);
         }
 
         public String getFullMeasureStr()
