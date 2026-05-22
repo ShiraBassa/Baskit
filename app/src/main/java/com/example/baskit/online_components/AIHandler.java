@@ -10,6 +10,10 @@ import com.google.ai.client.generativeai.GenerativeModel;
 import com.google.ai.client.generativeai.type.GenerateContentResponse;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import kotlin.Result;
@@ -21,17 +25,23 @@ public class AIHandler
 {
     private final GenerativeModel gemini;
     private static AIHandler instance;
+    private final AtomicBoolean requestRunning = new AtomicBoolean(false);
 
 
     private AIHandler()
     {
+        if (BuildConfig.Gemini_API_Key == null ||
+                BuildConfig.Gemini_API_Key.isBlank())
+        {
+            throw new IllegalStateException("Gemini API key missing");
+        }
         gemini = new GenerativeModel(
                 "gemini-2.5-flash",
                 BuildConfig.Gemini_API_Key
         );
     }
 
-    public static AIHandler getInstance()
+    public static synchronized AIHandler getInstance()
     {
         if (instance == null)
         {
@@ -43,14 +53,37 @@ public class AIHandler
 
     public void getListSuggestions(String listName, Activity activity, Consumer<ArrayList<String>> onGeminiResult)
     {
+        if (onGeminiResult == null)
+        {
+            return;
+        }
+
+        if (listName == null || listName.isBlank())
+        {
+            onGeminiResult.accept(new ArrayList<>());
+            return;
+        }
+
+        if (activity != null && (activity.isFinishing() || activity.isDestroyed()))
+        {
+            onGeminiResult.accept(new ArrayList<>());
+            return;
+        }
+
         String prompt = createListSuggestionsPrompt(listName);
 
         sendTextPrompt(activity, prompt, result ->
         {
-            ArrayList<String> suggestions = new ArrayList<>();
+            Set<String> uniqueSuggestions = new LinkedHashSet<>();
 
             try
             {
+                if (result == null)
+                {
+                    onGeminiResult.accept(new ArrayList<>());
+                    return;
+                }
+
                 String normalized = result.trim();
                 String cleaned = normalized.replace("'", "").replace("\\", "").replaceAll("[^\\p{L}\\p{N}, ]", "").trim();
                 String[] items = cleaned.split(",");
@@ -61,8 +94,18 @@ public class AIHandler
 
                     if (!trimmed.isEmpty())
                     {
-                        suggestions.add(trimmed);
+                        if (trimmed.length() <= 50)
+                        {
+                            uniqueSuggestions.add(trimmed);
+                        }
                     }
+                }
+
+                ArrayList<String> suggestions = new ArrayList<>(uniqueSuggestions);
+
+                if (suggestions.size() > 10)
+                {
+                    suggestions = new ArrayList<>(suggestions.subList(0, 10));
                 }
 
                 onGeminiResult.accept(suggestions);
@@ -79,6 +122,10 @@ public class AIHandler
 
     public String createListSuggestionsPrompt(String listName)
     {
+        if (listName == null)
+        {
+            listName = "";
+        }
         return "אני יוצרת רשימות קניות לסופר כאשר לכל רשימה יש את השם שלה. " +
                 "קבל שם רשימה ולפיו תציע לי עד 10 מוצרים בסיסיים הקשורים בה. " +
                 "אם שם הרשימה לא מאפשר להציע מוצרים בסיסיים נאותים, תחזיר תשובה ריקה. " +
@@ -88,8 +135,32 @@ public class AIHandler
 
     public void sendTextPrompt(Activity activity, String prompt, Consumer<String> callback)
     {
+        if (callback == null)
+        {
+            return;
+        }
+
+        if (prompt == null || prompt.isBlank())
+        {
+            failedRequest(activity, callback);
+            return;
+        }
+
+        if (activity != null && (activity.isFinishing() || activity.isDestroyed()))
+        {
+            failedRequest(activity, callback);
+            return;
+        }
+
+        if (!requestRunning.compareAndSet(false, true))
+        {
+            failedRequest(activity, callback);
+            return;
+        }
+
         new Thread(() ->
         {
+            Thread.currentThread().setName("GeminiRequest");
             try
             {
                 try
@@ -103,6 +174,14 @@ public class AIHandler
 
                         @Override
                         public void resumeWith(@NonNull Object result) {
+                            requestRunning.set(false);
+
+                            if (activity != null &&
+                                    (activity.isFinishing() || activity.isDestroyed()))
+                            {
+                                return;
+                            }
+
                             try {
                                 if (result instanceof Result.Failure) {
                                     Throwable error = ((Result.Failure) result).exception;
@@ -142,6 +221,7 @@ public class AIHandler
                                     callback.accept(finalText);
                                 }
                             } catch (Exception e) {
+                                requestRunning.set(false);
                                 Log.e("AI", "Resume crash prevented", e);
                                 failedRequest(activity, callback);
                             }
@@ -150,12 +230,14 @@ public class AIHandler
                 }
                 catch (Exception e)
                 {
+                    requestRunning.set(false);
                     Log.e("AI", "Gemini crashed before callback", e);
                     failedRequest(activity, callback);
                 }
             }
             catch (Throwable t)
             {
+                requestRunning.set(false);
                 Log.e("AI", "Critical AI crash prevented", t);
                 failedRequest(activity, callback);
             }
@@ -165,9 +247,19 @@ public class AIHandler
 
     private void failedRequest(Activity activity, Consumer<String> callback)
     {
+        requestRunning.set(false);
+
+        if (callback == null)
+        {
+            return;
+        }
+
         if (activity != null)
         {
-            activity.runOnUiThread(() -> callback.accept(""));
+            if (!activity.isFinishing() && !activity.isDestroyed())
+            {
+                activity.runOnUiThread(() -> callback.accept(""));
+            }
         }
         else
         {

@@ -31,6 +31,7 @@ import com.example.baskit.main_components.Item;
 import com.example.baskit.main_components.List;
 import com.example.baskit.main_components.Item.ItemVariant;
 import com.example.baskit.main_components.Supermarket;
+import com.google.firebase.database.ValueEventListener;
 import com.example.baskit.MasterActivity;
 import com.example.baskit.R;
 
@@ -49,6 +50,8 @@ public class ListActivity extends MasterActivity
     boolean initialized = true;
     boolean listListenerAttached = false;
     boolean uiInitialized = false;
+
+    ValueEventListener listListener;
 
     Map<String, ArrayList<String>> groups;
     Map<String, Category> categories;
@@ -146,11 +149,14 @@ public class ListActivity extends MasterActivity
 
         runWhenServerActive(() ->
         {
+            if (isFinishing() || isDestroyed())
+            {
+                return;
+            }
             if (!listListenerAttached)
             {
                 listListenerAttached = true;
-
-                dbHandler.listenToList(listId, new FirebaseDBHandler.GetListCallback()
+                listListener = dbHandler.listenToList(listId, new FirebaseDBHandler.GetListCallback()
                 {
                     @Override
                     public void onListFetched(List newList)
@@ -170,6 +176,20 @@ public class ListActivity extends MasterActivity
                 });
             }
         });
+    }
+
+    @Override
+    protected void onDestroy()
+    {
+        super.onDestroy();
+
+        if (listListener != null && listId != null)
+        {
+            dbHandler.removeListListener(listId, listListener);
+            listListener = null;
+        }
+
+        listListenerAttached = false;
     }
 
     private void setButtons()
@@ -462,6 +482,10 @@ public class ListActivity extends MasterActivity
             ListActivity.this.list.setId(listId);
         }
 
+        if (tvListName == null || tvTotal == null)
+        {
+            return;
+        }
         tvListName.setText(
                 ListActivity.this.list.getName() != null && !ListActivity.this.list.getName().isBlank()
                         ? ListActivity.this.list.getName()
@@ -730,6 +754,8 @@ public class ListActivity extends MasterActivity
 
         private final Context context;
 
+        private String lastDataSignature = "";
+
         CategoryAdapter(Context context, String listId, ArrayList<Category> categories)
         {
             this.context = context;
@@ -766,6 +792,13 @@ public class ListActivity extends MasterActivity
         @Override
         public void onBindViewHolder(CategoryAdapter.ViewHolder holder, int position)
         {
+            if (categories == null ||
+                    position < 0 ||
+                    position >= categories.size())
+            {
+                return;
+            }
+
             Category category = categories.get(position);
 
             String categoryName = category.getName();
@@ -812,6 +845,11 @@ public class ListActivity extends MasterActivity
                 return;
             }
             holder.itemView.setOnClickListener(v -> {
+                if (category.getName() == null || category.getName().isBlank())
+                {
+                    return;
+                }
+
                 Intent intent = new Intent(context, CategoryActivity.class);
                 intent.putExtra("listId", listId);
                 intent.putExtra("categoryName", category.getName());
@@ -828,8 +866,49 @@ public class ListActivity extends MasterActivity
         @SuppressLint("NotifyDataSetChanged")
         void update(ArrayList<Category> newData)
         {
-            this.categories = newData != null ? newData : new ArrayList<>();
+            ArrayList<Category> safeData =
+                    newData != null ? newData : new ArrayList<>();
+
+            String newSignature = buildDataSignature(safeData);
+
+            if (newSignature.equals(lastDataSignature))
+            {
+                return;
+            }
+
+            lastDataSignature = newSignature;
+            this.categories = safeData;
+
             notifyDataSetChanged();
+        }
+
+        private String buildDataSignature(ArrayList<Category> data)
+        {
+            if (data == null)
+            {
+                return "";
+            }
+
+            StringBuilder builder = new StringBuilder();
+
+            for (Category category : data)
+            {
+                if (category == null)
+                {
+                    continue;
+                }
+
+                builder.append(category.getName())
+                        .append('|')
+                        .append(category.isFinished())
+                        .append('|')
+                        .append(category.countUnchecked())
+                        .append('|')
+                        .append(category.getTotal())
+                        .append(';');
+            }
+
+            return builder.toString();
         }
     }
 }

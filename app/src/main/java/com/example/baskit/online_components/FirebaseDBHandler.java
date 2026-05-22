@@ -22,12 +22,18 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseException;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.GenericTypeIndicator;
+import com.google.firebase.database.MutableData;
+import com.google.firebase.database.Transaction;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.database.Query;
 
 import org.json.JSONException;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
 
 public class FirebaseDBHandler
@@ -49,7 +55,7 @@ public class FirebaseDBHandler
     }
 
 
-    public static FirebaseDBHandler getInstance()
+    public static synchronized FirebaseDBHandler getInstance()
     {
         if (instance == null)
         {
@@ -59,9 +65,13 @@ public class FirebaseDBHandler
         return instance;
     }
 
-    public void listenToUserName(User user, Consumer<String> callback)
+    public ValueEventListener listenToUserName(User user, Consumer<String> callback)
     {
-        refUsers.child(user.getId()).child("name").addValueEventListener(new ValueEventListener()
+        if (user == null || callback == null || user.getId() == null)
+        {
+            return null;
+        }
+        ValueEventListener listener = new ValueEventListener()
         {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot)
@@ -73,7 +83,7 @@ public class FirebaseDBHandler
                     new_name = snapshot.getValue(String.class);
                 }
 
-                if (new_name == null || !new_name.equals(user.getName()))
+                if (!Objects.equals(new_name, user.getName()))
                 {
                     callback.accept(new_name);
                 }
@@ -81,12 +91,21 @@ public class FirebaseDBHandler
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {}
-        });
+        };
+
+        refUsers.child(user.getId()).child("name").addValueEventListener(listener);
+
+        return listener;
     }
 
-    public void listenToListNames(User user, Consumer<ArrayList<String>> callback)
+    public ValueEventListener listenToListNames(User user, Consumer<ArrayList<String>> callback)
     {
-        refUsers.child(user.getId()).child("listIDs").addValueEventListener(new ValueEventListener()
+        if (user == null || callback == null || user.getId() == null)
+        {
+            callback.accept(new ArrayList<>());
+            return null;
+        }
+        ValueEventListener listener = new ValueEventListener()
         {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot)
@@ -106,6 +125,10 @@ public class FirebaseDBHandler
                 ArrayList<String> listNames;
 
                 user.setListIDs(listIDs);
+                if (listIDs != null)
+                {
+                    listIDs.removeIf(id -> id == null || id.isBlank());
+                }
 
                 if (listIDs == null)
                 {
@@ -114,31 +137,46 @@ public class FirebaseDBHandler
                     return;
                 }
 
-                // Listen to name changes for each list
-                for (String listId : listIDs)
-                {
-                    refLists.child(listId).child("name").addValueEventListener(new ValueEventListener()
-                    {
-                        @Override
-                        public void onDataChange(@NonNull DataSnapshot nameSnapshot)
-                        {
-                            getListNames(user, listNames1 -> callback.accept(new ArrayList<>(listNames1)));
-                        }
+                Set<String> uniqueListIDs = new HashSet<>(listIDs);
 
-                        @Override
-                        public void onCancelled(@NonNull DatabaseError error) {}
-                    });
+                for (String listId : uniqueListIDs)
+                {
+                    if (listId == null || listId.isBlank())
+                    {
+                        continue;
+                    }
+                    refLists.child(listId)
+                            .child("name")
+                            .get()
+                            .addOnCompleteListener(task ->
+                            {
+                                if (!task.isSuccessful())
+                                {
+                                    return;
+                                }
+
+                                getListNames(user, listNames1 ->
+                                        callback.accept(new ArrayList<>(listNames1)));
+                            });
                 }
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {}
-        });
+        };
+
+        refUsers.child(user.getId()).child("listIDs").addValueEventListener(listener);
+
+        return listener;
     }
 
-    public void listenToList(String listId, GetListCallback callback)
+    public ValueEventListener listenToList(String listId, GetListCallback callback)
     {
-        refLists.child(listId).addValueEventListener(new ValueEventListener()
+        if (listId == null || listId.isBlank() || callback == null)
+        {
+            return null;
+        }
+        ValueEventListener listener = new ValueEventListener()
         {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot)
@@ -152,7 +190,10 @@ public class FirebaseDBHandler
 
                 try
                 {
-                    callback.onListFetched(list);
+                    if (callback != null)
+                    {
+                        callback.onListFetched(list);
+                    }
                 }
                 catch (JSONException | IOException e)
                 {
@@ -162,12 +203,20 @@ public class FirebaseDBHandler
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {}
-        });
+        };
+
+        refLists.child(listId).addValueEventListener(listener);
+
+        return listener;
     }
 
-    public void listenToCategory(List list, String categoryName, Consumer<Category> callback)
+    public ValueEventListener listenToCategory(List list, String categoryName, Consumer<Category> callback)
     {
-        refLists.child(list.getId()).child("categories").child(categoryName).addValueEventListener(new ValueEventListener()
+        if (list == null || categoryName == null || callback == null)
+        {
+            return null;
+        }
+        ValueEventListener listener = new ValueEventListener()
         {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot)
@@ -179,6 +228,11 @@ public class FirebaseDBHandler
                 }
 
                 String catName = snapshot.getKey();
+
+                if (catName == null)
+                {
+                    catName = Baskit.UNKNOWN_CATEGORY;
+                }
                 Category newCategory = new Category(catName);
 
                 ArrayList<Item> items = new ArrayList<>();
@@ -196,45 +250,141 @@ public class FirebaseDBHandler
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {}
-        });
+        };
+
+        refLists.child(list.getId())
+                .child("categories")
+                .child(categoryName)
+                .addValueEventListener(listener);
+
+        return listener;
     }
 
-    public void listenForRequests(List list, Consumer<ArrayList<Request>> callback)
+    public ValueEventListener listenForRequests(List list, Consumer<ArrayList<Request>> callback)
     {
-        refLists.child(list.getId()).child("requests")
-                .addValueEventListener(new ValueEventListener()
+        if (list == null || callback == null || list.getId() == null)
+        {
+            callback.accept(new ArrayList<>());
+            return null;
+        }
+
+        ValueEventListener listener = new ValueEventListener()
+        {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot)
+            {
+                ArrayList<Request> updatedRequests;
+                try {
+                    updatedRequests = snapshot.getValue(
+                            new GenericTypeIndicator<>() {
+                            });
+                } catch (DatabaseException e) {
+                    updatedRequests = new ArrayList<>();
+                }
+
+                if (updatedRequests == null)
                 {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot)
-                    {
-                        ArrayList<Request> updatedRequests;
-                        try {
-                            updatedRequests = snapshot.getValue(
-                                    new GenericTypeIndicator<>() {
-                                    });
-                        } catch (DatabaseException e) {
-                            updatedRequests = new ArrayList<>();
-                        }
+                    updatedRequests = new ArrayList<>();
+                    callback.accept(updatedRequests);
+                    return;
+                }
 
-                        if (updatedRequests == null)
-                        {
-                            updatedRequests = new ArrayList<>();
-                            callback.accept(updatedRequests);
-                            return;
-                        }
+                updatedRequests.removeIf(Objects::isNull);
 
-                        list.setRequests(updatedRequests);
-                        callback.accept(updatedRequests);
-                    }
+                list.setRequests(updatedRequests);
+                callback.accept(updatedRequests);
+            }
 
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {}
-                });
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {}
+        };
+
+        refLists.child(list.getId())
+                .child("requests")
+                .addValueEventListener(listener);
+
+        return listener;
+    }
+
+    public void removeUserNameListener(User user,
+                                       ValueEventListener listener)
+    {
+        if (user == null ||
+                user.getId() == null ||
+                user.getId().isBlank() ||
+                listener == null)
+        {
+            return;
+        }
+
+        refUsers.child(user.getId())
+                .child("name")
+                .removeEventListener(listener);
+    }
+
+    public void removeListNamesListener(User user,
+                                        ValueEventListener listener)
+    {
+        if (user == null ||
+                user.getId() == null ||
+                user.getId().isBlank() ||
+                listener == null)
+        {
+            return;
+        }
+
+        refUsers.child(user.getId())
+                .child("listIDs")
+                .removeEventListener(listener);
+    }
+
+    public void removeListListener(String listId, ValueEventListener listener)
+    {
+        if (listId == null || listId.isBlank() || listener == null)
+        {
+            return;
+        }
+
+        refLists.child(listId).removeEventListener(listener);
+    }
+
+    public void removeCategoryListener(String listId,
+                                       String categoryName,
+                                       ValueEventListener listener)
+    {
+        if (listId == null || listId.isBlank() ||
+                categoryName == null || categoryName.isBlank() ||
+                listener == null)
+        {
+            return;
+        }
+
+        refLists.child(listId)
+                .child("categories")
+                .child(categoryName)
+                .removeEventListener(listener);
+    }
+
+    public void removeRequestsListener(String listId,
+                                       ValueEventListener listener)
+    {
+        if (listId == null || listId.isBlank() || listener == null)
+        {
+            return;
+        }
+
+        refLists.child(listId)
+                .child("requests")
+                .removeEventListener(listener);
     }
 
     public void changeUserName(User user, String username)
     {
-        if (user.getName().equals(username))
+        if (user == null || username == null || username.isBlank())
+        {
+            return;
+        }
+        if (Objects.equals(user.getName(), username))
         {
             return;
         }
@@ -244,7 +394,15 @@ public class FirebaseDBHandler
 
     public void getListNames(User user, Consumer<ArrayList<String>> callback)
     {
+        if (user == null || callback == null)
+        {
+            return;
+        }
         ArrayList<String> listIDs = user.getListIDs();
+        if (listIDs != null)
+        {
+            listIDs.removeIf(id -> id == null || id.isBlank());
+        }
 
         if (listIDs == null || listIDs.isEmpty())
         {
@@ -258,6 +416,17 @@ public class FirebaseDBHandler
 
         for (String listID : listIDs)
         {
+            if (listID == null || listID.isBlank())
+            {
+                completed[0]++;
+
+                if (completed[0] == listIDs.size())
+                {
+                    callback.accept(finalListNames);
+                }
+
+                continue;
+            }
             refLists.child(listID).get().addOnCompleteListener(task ->
             {
                 completed[0]++;
@@ -305,6 +474,10 @@ public class FirebaseDBHandler
 
     public void getList(String listId, GetListCallback callback)
     {
+        if (listId == null || listId.isBlank() || callback == null)
+        {
+            return;
+        }
         refLists.child(listId).get().addOnCompleteListener(task ->
         {
             if (task.isSuccessful())
@@ -335,6 +508,10 @@ public class FirebaseDBHandler
 
     public void removeList(String listId)
     {
+        if (listId == null || listId.isBlank())
+        {
+            return;
+        }
         refLists.child(listId).get().addOnCompleteListener(task ->
         {
             if (task.isSuccessful() && task.getResult().exists())
@@ -358,37 +535,52 @@ public class FirebaseDBHandler
 
     public void removeList(List list)
     {
+        if (list == null || list.getId() == null)
+        {
+            return;
+        }
         ArrayList<String> userIDs = list.getUserIDs();
-
+        if (userIDs == null)
+        {
+            userIDs = new ArrayList<>();
+        }
         for (String userID : userIDs)
         {
-            refUsers.child(userID).child("listIDs").get().addOnCompleteListener(task ->
+            if (userID == null || userID.isBlank())
             {
-                if (task.isSuccessful())
-                {
-                    ArrayList<String> listIDs;
-                    try {
-                        listIDs = task.getResult().getValue(new GenericTypeIndicator<>() {
-                        });
-                    } catch (DatabaseException e) {
-                        listIDs = new ArrayList<>();
-                    }
-
-                    if (listIDs != null && listIDs.contains(list.getId()))
+                continue;
+            }
+            refUsers.child(userID)
+                    .child("listIDs")
+                    .runTransaction(new Transaction.Handler()
                     {
-                        listIDs.remove(list.getId());
+                        @NonNull
+                        @Override
+                        public Transaction.Result doTransaction(@NonNull MutableData currentData)
+                        {
+                            ArrayList<String> updatedListIDs = currentData.getValue(
+                                    new GenericTypeIndicator<>() {
+                                    }
+                            );
 
-                        if (listIDs.isEmpty())
-                        {
-                            refUsers.child(userID).child("listIDs").removeValue();
+                            if (updatedListIDs == null)
+                            {
+                                updatedListIDs = new ArrayList<>();
+                            }
+
+                            updatedListIDs.removeIf(id ->
+                                    Objects.equals(id, list.getId()));
+
+                            currentData.setValue(updatedListIDs);
+
+                            return Transaction.success(currentData);
                         }
-                        else
-                        {
-                            refUsers.child(userID).child("listIDs").setValue(listIDs);
-                        }
-                    }
-                }
-            });
+
+                        @Override
+                        public void onComplete(DatabaseError error,
+                                               boolean committed,
+                                               DataSnapshot currentData) {}
+                    });
         }
 
         refLists.child(list.getId()).removeValue();
@@ -396,14 +588,54 @@ public class FirebaseDBHandler
 
     public void addList(List list, User user)
     {
+        if (list == null || user == null ||
+                list.getId() == null || user.getId() == null)
+        {
+            return;
+        }
         refLists.child(list.getId()).setValue(list);
 
-        user.addList(list.getId());
-        refUsers.child(user.getId()).child("listIDs").setValue(user.getListIDs());
+        refUsers.child(user.getId())
+                .child("listIDs")
+                .runTransaction(new Transaction.Handler()
+                {
+                    @NonNull
+                    @Override
+                    public Transaction.Result doTransaction(@NonNull MutableData currentData)
+                    {
+                        ArrayList<String> updatedListIDs = currentData.getValue(
+                                new GenericTypeIndicator<>() {
+                                }
+                        );
+
+                        if (updatedListIDs == null)
+                        {
+                            updatedListIDs = new ArrayList<>();
+                        }
+
+                        if (!updatedListIDs.contains(list.getId()))
+                        {
+                            updatedListIDs.add(list.getId());
+                        }
+
+                        currentData.setValue(updatedListIDs);
+
+                        return Transaction.success(currentData);
+                    }
+
+                    @Override
+                    public void onComplete(DatabaseError error,
+                                           boolean committed,
+                                           DataSnapshot currentData) {}
+                });
     }
 
     public void updateList(List list)
     {
+        if (list == null || list.getCategories() == null)
+        {
+            return;
+        }
         for (Category category : list.getCategories().values())
         {
             updateCategory(list, category);
@@ -412,6 +644,10 @@ public class FirebaseDBHandler
 
     public void finishList(List list)
     {
+        if (list == null || list.getCategories() == null)
+        {
+            return;
+        }
         for (Category category : list.getCategories().values())
         {
             finishCategory(list, category);
@@ -420,6 +656,10 @@ public class FirebaseDBHandler
 
     public void removeItems(String listID)
     {
+        if (listID == null || listID.isBlank())
+        {
+            return;
+        }
         refLists.child(listID)
                 .child("categories")
                 .removeValue();
@@ -437,25 +677,78 @@ public class FirebaseDBHandler
         String listID = list.getId();
         String userID = user.getId();
 
-        ArrayList<String> userIDs = list.getUserIDs();
-        ArrayList<String> listIDs = user.getListIDs();
+        refLists.child(listID)
+                .child("userIDs")
+                .runTransaction(new Transaction.Handler()
+                {
+                    @NonNull
+                    @Override
+                    public Transaction.Result doTransaction(@NonNull MutableData currentData)
+                    {
+                        ArrayList<String> updatedUserIDs = currentData.getValue(
+                                new GenericTypeIndicator<>() {
+                                }
+                        );
 
-        if (userIDs != null)
-        {
-            userIDs.remove(userID);
-        }
+                        if (updatedUserIDs == null)
+                        {
+                            updatedUserIDs = new ArrayList<>();
+                        }
 
-        if (listIDs != null)
-        {
-            listIDs.remove(listID);
-        }
+                        updatedUserIDs.removeIf(id ->
+                                Objects.equals(id, userID));
 
-        refLists.child(listID).child("userIDs").setValue(userIDs != null ? userIDs : new ArrayList<>());
-        refUsers.child(userID).child("listIDs").setValue(listIDs != null ? listIDs : new ArrayList<>());
+                        currentData.setValue(updatedUserIDs);
+
+                        return Transaction.success(currentData);
+                    }
+
+                    @Override
+                    public void onComplete(DatabaseError error,
+                                           boolean committed,
+                                           DataSnapshot currentData) {}
+                });
+
+        refUsers.child(userID)
+                .child("listIDs")
+                .runTransaction(new Transaction.Handler()
+                {
+                    @NonNull
+                    @Override
+                    public Transaction.Result doTransaction(@NonNull MutableData currentData)
+                    {
+                        ArrayList<String> updatedListIDs = currentData.getValue(
+                                new GenericTypeIndicator<>() {
+                                }
+                        );
+
+                        if (updatedListIDs == null)
+                        {
+                            updatedListIDs = new ArrayList<>();
+                        }
+
+                        updatedListIDs.removeIf(id ->
+                                Objects.equals(id, listID));
+
+                        currentData.setValue(updatedListIDs);
+
+                        return Transaction.success(currentData);
+                    }
+
+                    @Override
+                    public void onComplete(DatabaseError error,
+                                           boolean committed,
+                                           DataSnapshot currentData) {}
+                });
     }
 
     public void renameList(String listID, String newName)
     {
+        if (listID == null || listID.isBlank() ||
+                newName == null || newName.isBlank())
+        {
+            return;
+        }
         refLists.child(listID)
                 .child("name")
                 .setValue(newName);
@@ -468,14 +761,23 @@ public class FirebaseDBHandler
 
     private List parseListSnapshot(String listId, DataSnapshot snapshot)
     {
+        if (snapshot == null)
+        {
+            return new List();
+        }
         List list = new List();
         list.setId(listId);
-        list.setName(snapshot.child("name").getValue(String.class));
+        String listName = snapshot.child("name").getValue(String.class);
+        list.setName(listName != null ? listName : "");
 
         // userIDs
         ArrayList<String> userIDs = new ArrayList<>();
         for (DataSnapshot child : snapshot.child("userIDs").getChildren())
         {
+            if (child == null)
+            {
+                continue;
+            }
             String uid = child.getValue(String.class);
             if (uid != null) userIDs.add(uid);
         }
@@ -503,6 +805,10 @@ public class FirebaseDBHandler
         for (DataSnapshot catSnap : snapshot.child("categories").getChildren())
         {
             String catName = catSnap.getKey();
+            if (catName == null || catName.isBlank())
+            {
+                catName = Baskit.UNKNOWN_CATEGORY;
+            }
             Category cat = new Category(catName);
 
             Boolean finished = catSnap.child("finished").getValue(Boolean.class);
@@ -515,6 +821,10 @@ public class FirebaseDBHandler
 
             for (DataSnapshot itemSnap : itemsSnap.getChildren())
             {
+                if (itemSnap == null)
+                {
+                    continue;
+                }
                 Item item = itemSnap.getValue(Item.class);
                 if (item != null)
                 {
@@ -531,11 +841,17 @@ public class FirebaseDBHandler
 
     public String getUniqueId()
     {
-        return refLists.push().getKey();
+        String key = refLists.push().getKey();
+        return key != null ? key : String.valueOf(System.currentTimeMillis());
     }
 
     public void addCategory(List list, Category category)
     {
+        if (list == null || category == null ||
+                list.getId() == null || category.getName() == null)
+        {
+            return;
+        }
         list.addCategory(category);
 
         DatabaseReference categoryRef = refLists
@@ -548,6 +864,11 @@ public class FirebaseDBHandler
 
     public void removeCategory(List list, Category category)
     {
+        if (list == null || category == null ||
+                list.getId() == null || category.getName() == null)
+        {
+            return;
+        }
         refLists.child(list.getId())
                 .child("categories")
                 .child(category.getName())
@@ -563,6 +884,10 @@ public class FirebaseDBHandler
 
     public void finishCategory(List list, Category category)
     {
+        if (list == null || category == null)
+        {
+            return;
+        }
         for (Item item : new ArrayList<>(category.getItems()))
         {
             if (item.isChecked())
@@ -575,25 +900,102 @@ public class FirebaseDBHandler
         {
             removeCategory(list, category);
         }
-
     }
 
     public void addItem(List list, String category_name, Item item, DBCallback callback)
     {
-        list.getCategory(category_name).addItem(item);
+        if (list == null || category_name == null || item == null)
+        {
+            if (callback != null)
+            {
+                callback.onFailure(new IllegalArgumentException("Invalid addItem arguments"));
+            }
+            return;
+        }
+        Category category = list.getCategory(category_name);
+
+        if (category == null)
+        {
+            if (callback != null)
+            {
+                callback.onFailure(new IllegalStateException("Category missing"));
+            }
+            return;
+        }
 
         refLists.child(list.getId())
                 .child("categories")
                 .child(category_name)
                 .child("items")
-                .setValue(list.getCategory(category_name).getItems())
-                .addOnSuccessListener(aVoid ->
+                .runTransaction(new Transaction.Handler()
                 {
-                    if (callback != null) callback.onComplete();
-                })
-                .addOnFailureListener(e ->
-                {
-                    if (callback != null) callback.onFailure(e);
+                    @NonNull
+                    @Override
+                    public Transaction.Result doTransaction(@NonNull MutableData currentData)
+                    {
+                        ArrayList<Item> updatedItems;
+
+                        try
+                        {
+                            updatedItems = currentData.getValue(
+                                    new GenericTypeIndicator<>() {
+                                    }
+                            );
+                        }
+                        catch (DatabaseException e)
+                        {
+                            updatedItems = new ArrayList<>();
+                        }
+
+                        if (updatedItems == null)
+                        {
+                            updatedItems = new ArrayList<>();
+                        }
+
+                        boolean alreadyExists = false;
+
+                        for (Item existingItem : updatedItems)
+                        {
+                            if (existingItem == null ||
+                                    existingItem.getAbsoluteId() == null ||
+                                    item.getAbsoluteId() == null)
+                            {
+                                continue;
+                            }
+
+                            if (Objects.equals(
+                                    existingItem.getAbsoluteId(),
+                                    item.getAbsoluteId()))
+                            {
+                                alreadyExists = true;
+                                break;
+                            }
+                        }
+
+                        if (!alreadyExists)
+                        {
+                            updatedItems.add(item);
+                        }
+
+                        currentData.setValue(updatedItems);
+
+                        return Transaction.success(currentData);
+                    }
+
+                    @Override
+                    public void onComplete(DatabaseError error,
+                                           boolean committed,
+                                           DataSnapshot currentData)
+                    {
+                        if (committed && callback != null)
+                        {
+                            callback.onComplete();
+                        }
+                        else if (error != null && callback != null)
+                        {
+                            callback.onFailure(error.toException());
+                        }
+                    }
                 });
     }
 
@@ -604,28 +1006,84 @@ public class FirebaseDBHandler
 
     public void removeItem(List list, Category category, String itemName)
     {
-        category.removeItem(itemName);
+        if (list == null || category == null || itemName == null)
+        {
+            return;
+        }
+
         refLists.child(list.getId())
                 .child("categories")
                 .child(category.getName())
                 .child("items")
-                .setValue(category.getItems());
+                .runTransaction(new Transaction.Handler()
+                {
+                    @NonNull
+                    @Override
+                    public Transaction.Result doTransaction(@NonNull MutableData currentData)
+                    {
+                        ArrayList<Item> updatedItems;
 
-        if (category.isEmpty())
-        {
-            removeCategory(list, category);
-        }
+                        try
+                        {
+                            updatedItems = currentData.getValue(
+                                    new GenericTypeIndicator<>() {
+                                    }
+                            );
+                        }
+                        catch (DatabaseException e)
+                        {
+                            updatedItems = new ArrayList<>();
+                        }
+
+                        if (updatedItems == null)
+                        {
+                            updatedItems = new ArrayList<>();
+                        }
+
+                        updatedItems.removeIf(existingItem ->
+                                existingItem != null &&
+                                        Objects.equals(
+                                                existingItem.getBaseName(),
+                                                itemName
+                                        ));
+
+                        currentData.setValue(updatedItems);
+
+                        return Transaction.success(currentData);
+                    }
+
+                    @Override
+                    public void onComplete(DatabaseError error,
+                                           boolean committed,
+                                           DataSnapshot currentData)
+                    {
+                        if (committed &&
+                                (currentData == null || !currentData.hasChildren()))
+                        {
+                            removeCategory(list, category);
+                        }
+                    }
+                });
     }
 
     public void removeItem(List list, String categoryName, Item item)
     {
         Category category = list.getCategory(categoryName);
+        if (category == null)
+        {
+            return;
+        }
         removeItem(list, category, item);
     }
 
     @SuppressWarnings("ExtractMethodRecommender")
     public void sendJoinRequest(String listID, User user, Context context)
     {
+        if (listID == null || listID.isBlank() ||
+                user == null || context == null)
+        {
+            return;
+        }
         refLists.child(listID).child("requests").get().addOnCompleteListener(task ->
         {
             if (!task.isSuccessful())
@@ -654,9 +1112,17 @@ public class FirebaseDBHandler
             }
 
             String userID = user.getId();
+            if (userID == null || userID.isBlank())
+            {
+                return;
+            }
 
             for (Request r : safeRequests)
             {
+                if (r == null || r.getUserID() == null)
+                {
+                    continue;
+                }
                 if (r.getUserID().equals(userID))
                 {
                     new Handler(Looper.getMainLooper()).post(() ->
@@ -668,7 +1134,6 @@ public class FirebaseDBHandler
                 }
             }
 
-            ArrayList<Request> finalSafeRequests = safeRequests;
             refLists.child(listID).child("userIDs").get().addOnCompleteListener(taskTwo ->
             {
                 if (!taskTwo.isSuccessful())
@@ -702,26 +1167,120 @@ public class FirebaseDBHandler
                     return;
                 }
 
-                finalSafeRequests.add(new Request(user));
-                refLists.child(listID).child("requests").setValue(finalSafeRequests);
+                refLists.child(listID)
+                        .child("requests")
+                        .runTransaction(new Transaction.Handler()
+                        {
+                            @NonNull
+                            @Override
+                            public Transaction.Result doTransaction(@NonNull MutableData currentData)
+                            {
+                                ArrayList<Request> updatedRequests;
 
-                new Handler(Looper.getMainLooper()).post(() ->
-                        Toast.makeText(context,
-                                Baskit.getAppStr(R.string.list_request_sent),
-                                Toast.LENGTH_SHORT).show()
-                );
+                                try
+                                {
+                                    updatedRequests = currentData.getValue(
+                                            new GenericTypeIndicator<>() {
+                                            }
+                                    );
+                                }
+                                catch (DatabaseException e)
+                                {
+                                    updatedRequests = new ArrayList<>();
+                                }
+
+                                if (updatedRequests == null)
+                                {
+                                    updatedRequests = new ArrayList<>();
+                                }
+
+                                boolean alreadyExists = false;
+
+                                for (Request existingRequest : updatedRequests)
+                                {
+                                    if (existingRequest == null ||
+                                            existingRequest.getUserID() == null)
+                                    {
+                                        continue;
+                                    }
+
+                                    if (Objects.equals(existingRequest.getUserID(), userID))
+                                    {
+                                        alreadyExists = true;
+                                        break;
+                                    }
+                                }
+
+                                if (!alreadyExists)
+                                {
+                                    updatedRequests.add(new Request(user));
+                                }
+
+                                currentData.setValue(updatedRequests);
+
+                                return Transaction.success(currentData);
+                            }
+
+                            @Override
+                            public void onComplete(DatabaseError error,
+                                                   boolean committed,
+                                                   DataSnapshot currentData)
+                            {
+                                if (committed)
+                                {
+                                    new Handler(Looper.getMainLooper()).post(() ->
+                                            Toast.makeText(context,
+                                                    Baskit.getAppStr(R.string.list_request_sent),
+                                                    Toast.LENGTH_SHORT).show()
+                                    );
+                                }
+                            }
+                        });
             });
         });
     }
 
     public void acceptRequest(List list, Request request)
     {
+        if (list == null || request == null || request.getUserID() == null)
+        {
+            return;
+        }
         removeRequest(list, request);
 
-        list.addUser(request.getUserID());
         refLists.child(list.getId())
                 .child("userIDs")
-                .setValue(list.getUserIDs());
+                .runTransaction(new Transaction.Handler()
+                {
+                    @NonNull
+                    @Override
+                    public Transaction.Result doTransaction(@NonNull MutableData currentData)
+                    {
+                        ArrayList<String> userIDs = currentData.getValue(
+                                new GenericTypeIndicator<>() {
+                                }
+                        );
+
+                        if (userIDs == null)
+                        {
+                            userIDs = new ArrayList<>();
+                        }
+
+                        if (!userIDs.contains(request.getUserID()))
+                        {
+                            userIDs.add(request.getUserID());
+                        }
+
+                        currentData.setValue(userIDs);
+
+                        return Transaction.success(currentData);
+                    }
+
+                    @Override
+                    public void onComplete(DatabaseError error,
+                                           boolean committed,
+                                           DataSnapshot currentData) {}
+                });
 
         refUsers.child(request.getUserID())
                 .child("listIDs")
@@ -743,29 +1302,102 @@ public class FirebaseDBHandler
                             listIDs = new ArrayList<>();
                         }
 
-                        if (!listIDs.contains(list.getId()))
-                        {
-                            listIDs.add(list.getId());
-                        }
-
                         refUsers.child(request.getUserID())
                                 .child("listIDs")
-                                .setValue(listIDs);
+                                .runTransaction(new Transaction.Handler()
+                                {
+                                    @NonNull
+                                    @Override
+                                    public Transaction.Result doTransaction(@NonNull MutableData currentData)
+                                    {
+                                        ArrayList<String> updatedListIDs = currentData.getValue(
+                                                new GenericTypeIndicator<>() {
+                                                }
+                                        );
+
+                                        if (updatedListIDs == null)
+                                        {
+                                            updatedListIDs = new ArrayList<>();
+                                        }
+
+                                        if (!updatedListIDs.contains(list.getId()))
+                                        {
+                                            updatedListIDs.add(list.getId());
+                                        }
+
+                                        currentData.setValue(updatedListIDs);
+
+                                        return Transaction.success(currentData);
+                                    }
+
+                                    @Override
+                                    public void onComplete(DatabaseError error,
+                                                           boolean committed,
+                                                           DataSnapshot currentData) {}
+                                });
                     }
                 });
     }
 
     public void declineRequest(List list, Request request)
     {
+        if (list == null || request == null)
+        {
+            return;
+        }
         removeRequest(list, request);
     }
 
     private void removeRequest(List list, Request request)
     {
-        list.removeRequest(request);
+        if (list == null || request == null ||
+                list.getId() == null || request.getUserID() == null)
+        {
+            return;
+        }
 
         refLists.child(list.getId())
                 .child("requests")
-                .setValue(list.getRequests());
+                .runTransaction(new Transaction.Handler()
+                {
+                    @NonNull
+                    @Override
+                    public Transaction.Result doTransaction(@NonNull MutableData currentData)
+                    {
+                        ArrayList<Request> updatedRequests;
+
+                        try
+                        {
+                            updatedRequests = currentData.getValue(
+                                    new GenericTypeIndicator<>() {
+                                    }
+                            );
+                        }
+                        catch (DatabaseException e)
+                        {
+                            updatedRequests = new ArrayList<>();
+                        }
+
+                        if (updatedRequests == null)
+                        {
+                            updatedRequests = new ArrayList<>();
+                        }
+
+                        String requestUserId = request.getUserID();
+
+                        updatedRequests.removeIf(existingRequest ->
+                                existingRequest != null &&
+                                        Objects.equals(existingRequest.getUserID(), requestUserId));
+
+                        currentData.setValue(updatedRequests);
+
+                        return Transaction.success(currentData);
+                    }
+
+                    @Override
+                    public void onComplete(DatabaseError error,
+                                           boolean committed,
+                                           DataSnapshot currentData) {}
+                });
     }
 }

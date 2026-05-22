@@ -32,11 +32,15 @@ import com.example.baskit.R;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
+import com.google.firebase.database.ValueEventListener;
+
 public class ShareListAlertDialog
 {
     final List list;
 
     final FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
+
+    ValueEventListener requestsListener;
 
     final ShareListRequestsAdapter requestsAdapter;
     final AlertDialog ad;
@@ -96,7 +100,7 @@ public class ShareListAlertDialog
         recyclerRequests.setLayoutManager(new LinearLayoutManager(context));
         recyclerRequests.setAdapter(requestsAdapter);
 
-        dbHandler.listenForRequests(list, updatedRequests ->
+        requestsListener = dbHandler.listenForRequests(list, updatedRequests ->
         {
             if (activity == null || activity.isFinishing() || activity.isDestroyed())
             {
@@ -192,6 +196,12 @@ public class ShareListAlertDialog
 
     public void dismiss()
     {
+        if (requestsListener != null && list != null)
+        {
+            dbHandler.removeRequestsListener(list.getId(), requestsListener);
+            requestsListener = null;
+        }
+
         if (ad != null && ad.isShowing())
         {
             ad.dismiss();
@@ -267,9 +277,25 @@ public class ShareListAlertDialog
             );
             holder.tvUsername.setVisibility(View.VISIBLE);
 
-            holder.btnAccept.setOnClickListener(v -> upperClassFns.acceptRequest(request));
+            holder.btnAccept.setOnClickListener(v ->
+            {
+                if (holder.getBindingAdapterPosition() == RecyclerView.NO_POSITION)
+                {
+                    return;
+                }
 
-            holder.btnDecline.setOnClickListener(v -> upperClassFns.declineRequest(request));
+                upperClassFns.acceptRequest(request);
+            });
+
+            holder.btnDecline.setOnClickListener(v ->
+            {
+                if (holder.getBindingAdapterPosition() == RecyclerView.NO_POSITION)
+                {
+                    return;
+                }
+
+                upperClassFns.declineRequest(request);
+            });
         }
 
         @Override

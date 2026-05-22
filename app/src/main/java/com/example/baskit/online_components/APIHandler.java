@@ -24,6 +24,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Collections;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import okhttp3.*;
 
@@ -52,10 +54,11 @@ public class APIHandler
 
     private static String firebaseToken;
     private static APIHandler instance;
+    private final AtomicBoolean preloadRunning = new AtomicBoolean(false);
 
     private APIHandler() {}
 
-    public static APIHandler getInstance()
+    public static synchronized APIHandler getInstance()
     {
         if (instance == null)
         {
@@ -65,7 +68,7 @@ public class APIHandler
         return instance;
     }
 
-    public void resetInstance()
+    public synchronized void resetInstance()
     {
         firebaseToken = null;
         instance = null;
@@ -107,6 +110,17 @@ public class APIHandler
 
     private String getRaw(String endpoint) throws IOException
     {
+        if (endpoint == null || endpoint.isBlank())
+        {
+            return null;
+        }
+
+        if (firebaseToken == null || firebaseToken.isBlank())
+        {
+            Log.e("API", "Missing Firebase token");
+            return null;
+        }
+
         Request request = new Request.Builder()
                 .url(Baskit.SERVER_URL + endpoint)
                 .addHeader("FirebaseToken", firebaseToken)
@@ -134,6 +148,21 @@ public class APIHandler
 
     private void postRaw(String endpoint, String body) throws IOException
     {
+        if (endpoint == null || endpoint.isBlank())
+        {
+            throw new IOException("Endpoint missing");
+        }
+
+        if (body == null)
+        {
+            body = "{}";
+        }
+
+        if (firebaseToken == null || firebaseToken.isBlank())
+        {
+            throw new IOException("Firebase token missing");
+        }
+
         Request request = new Request.Builder()
                 .url(Baskit.SERVER_URL + endpoint)
                 .addHeader("FirebaseToken", firebaseToken)
@@ -148,11 +177,19 @@ public class APIHandler
 
     private Map<String, Map<String, Double>> parsePriceResponse(String response) throws JSONException
     {
+        if (response == null || response.isBlank())
+        {
+            return new HashMap<>();
+        }
         JSONObject json = new JSONObject(response);
         Map<String, Map<String, Double>> result = new HashMap<>();
 
         for (Iterator<String> it = json.keys(); it.hasNext();)
         {
+            if (!it.hasNext())
+            {
+                continue;
+            }
             String store = it.next();
             JSONObject branches = json.getJSONObject(store);
             Map<String, Double> branchMap = new HashMap<>();
@@ -160,7 +197,24 @@ public class APIHandler
             for (Iterator<String> iter = branches.keys(); iter.hasNext();)
             {
                 String branch = iter.next();
-                branchMap.put(branch, branches.getDouble(branch));
+                if (branch == null)
+                {
+                    continue;
+                }
+                double price;
+                try
+                {
+                    price = branches.getDouble(branch);
+                }
+                catch (Exception e)
+                {
+                    continue;
+                }
+                if (Double.isNaN(price) || Double.isInfinite(price))
+                {
+                    continue;
+                }
+                branchMap.put(branch, price);
             }
 
             result.put(store, branchMap);
@@ -172,6 +226,10 @@ public class APIHandler
     @SuppressWarnings("CallToPrintStackTrace")
     public boolean login(String firebaseToken)
     {
+        if (firebaseToken == null || firebaseToken.isBlank())
+        {
+            return false;
+        }
         APIHandler.firebaseToken = firebaseToken;
 
         try
@@ -203,6 +261,10 @@ public class APIHandler
 
     public void preload() throws JSONException, IOException
     {
+        if (!preloadRunning.compareAndSet(false, true))
+        {
+            return;
+        }
         supermarkets = getUpdatedSupermarkets();
 
         cachedItemPrices = loadItemPricesFromDB();
@@ -241,6 +303,7 @@ public class APIHandler
                 Log.e("API load new data", Objects.requireNonNull(e.getMessage()));
             }
         }
+        preloadRunning.set(false);
     }
 
     private Map<String, Map<String, Map<String, Double>>> loadItemPricesFromDB()
@@ -249,10 +312,19 @@ public class APIHandler
                 .itemPricesDao()
                 .getAll();
 
+        if (dbItems == null)
+        {
+            return new HashMap<>();
+        }
         Map<String, Map<String, Map<String, Double>>> result = new HashMap<>();
 
         for (ItemPricesEntity entity : dbItems)
         {
+            if (entity == null || entity.itemCode == null ||
+                    entity.store == null || entity.branch == null)
+            {
+                continue;
+            }
             result.computeIfAbsent(entity.itemCode, k -> new HashMap<>())
                     .computeIfAbsent(entity.store, k -> new HashMap<>())
                     .put(entity.branch, entity.price);
@@ -268,10 +340,18 @@ public class APIHandler
                         .groupDao()
                         .getAll();
 
+        if (dbGroups == null)
+        {
+            return new HashMap<>();
+        }
         Map<String, ArrayList<String>> groups = new HashMap<>();
 
         for (GroupsEntity group : dbGroups)
         {
+            if (group == null || group.getBaseName() == null)
+            {
+                continue;
+            }
             ArrayList<String> codes = new ArrayList<>();
             try
             {
@@ -295,10 +375,18 @@ public class APIHandler
                 .itemInfoDao()
                 .getAll();
 
+        if (dbInfos == null)
+        {
+            return new HashMap<>();
+        }
         Map<String, ItemInfo> result = new HashMap<>();
 
         for (ItemInfoEntity entity : dbInfos)
         {
+            if (entity == null || entity.itemCode == null)
+            {
+                continue;
+            }
             ItemInfo info = new ItemInfo(
                     entity.itemCode,
                     entity.baseName,
@@ -447,13 +535,20 @@ public class APIHandler
     public void updateSupermarkets() throws JSONException, IOException
     {
         Map<String, ArrayList<String>> branches = getChoices();
+        if (branches == null)
+        {
+            this.supermarkets = new ArrayList<>();
+            return;
+        }
         this.supermarkets = Supermarket.getSupermarketsFromStrings(branches);
     }
 
     public ArrayList<Supermarket> getUpdatedSupermarkets() throws JSONException, IOException
     {
         updateSupermarkets();
-        return getSupermarkets();
+        return getSupermarkets() != null
+                ? getSupermarkets()
+                : new ArrayList<>();
     }
 
     private Map<String, Map<String, Map<String, Double>>> getItemPricesFromAPI()
@@ -569,7 +664,10 @@ public class APIHandler
     public ArrayList<String> getAllCities() throws IOException, JSONException
     {
         String citiesRaw = getRaw("/all_cities");
-
+        if (citiesRaw == null || citiesRaw.isBlank())
+        {
+            return new ArrayList<>();
+        }
         JSONArray citiesJson = new JSONArray(citiesRaw);
         ArrayList<String> cities = new ArrayList<>();
 
@@ -584,7 +682,10 @@ public class APIHandler
     public ArrayList<String> getCities() throws IOException, JSONException
     {
         String citiesRaw = getRaw("/cities");
-
+        if (citiesRaw == null || citiesRaw.isBlank())
+        {
+            return new ArrayList<>();
+        }
         JSONArray citiesJson = new JSONArray(citiesRaw);
         ArrayList<String> cities = new ArrayList<>();
 
@@ -599,6 +700,10 @@ public class APIHandler
     public ArrayList<String> getStores() throws IOException, JSONException
     {
         String storesRaw = getRaw("/stores");
+        if (storesRaw == null || storesRaw.isBlank())
+        {
+            return new ArrayList<>();
+        }
         JSONArray storesJson = new JSONArray(storesRaw);
         ArrayList<String> stores = new ArrayList<>();
 
@@ -613,6 +718,10 @@ public class APIHandler
     private Map<String, ArrayList<String>> getChoices() throws IOException, JSONException
     {
         String branchesRaw = getRaw("/choices");
+        if (branchesRaw == null || branchesRaw.isBlank())
+        {
+            return new HashMap<>();
+        }
         JSONObject branchesJson = new JSONObject(branchesRaw);
         Map<String, ArrayList<String>> branchesMap = new HashMap<>();
 
@@ -635,6 +744,10 @@ public class APIHandler
     public Map<String, ArrayList<String>> getAllBranches(ArrayList<String> cities)
             throws IOException, JSONException
     {
+        if (cities != null)
+        {
+            cities.removeIf(city -> city == null || city.isBlank());
+        }
         StringBuilder endpoint = new StringBuilder("/all_branches");
 
         if (cities != null && !cities.isEmpty())
@@ -656,6 +769,10 @@ public class APIHandler
         }
 
         String raw = getRaw(endpoint.toString());
+        if (raw == null || raw.isBlank())
+        {
+            return new HashMap<>();
+        }
         JSONObject json = new JSONObject(raw);
 
         Map<String, ArrayList<String>> result = new HashMap<>();
@@ -686,7 +803,9 @@ public class APIHandler
 
     public Map<String, ItemInfo> getItemInfos()
     {
-        return cachedItemInfos;
+        return cachedItemInfos != null
+                ? cachedItemInfos
+                : new HashMap<>();
     }
 
     public ArrayList<String> getGroup(String base)
@@ -698,7 +817,9 @@ public class APIHandler
 
     public Map<String, ArrayList<String>> getGroups()
     {
-        return cachedGroups;
+        return cachedGroups != null
+                ? cachedGroups
+                : new HashMap<>();
     }
 
     private String getItemCategoryByName(String name)
@@ -737,7 +858,9 @@ public class APIHandler
 
     public ArrayList<Supermarket> getSupermarkets()
     {
-        return supermarkets;
+        return supermarkets != null
+                ? supermarkets
+                : new ArrayList<>();
     }
 
     public String getItemCategory(Item item) throws IOException, JSONException
@@ -821,6 +944,10 @@ public class APIHandler
 
     public Map<String, Map<String, Double>> getItemPricesByCode(String itemCode) throws IOException, JSONException
     {
+        if (itemCode == null || itemCode.isBlank())
+        {
+            return new HashMap<>();
+        }
         Map<String, Map<String, Double>> prices = cachedItemPrices.get(itemCode);
 
         if (prices != null && !prices.isEmpty())
@@ -834,12 +961,21 @@ public class APIHandler
             endpoint = "/item_prices?"
                     + "item_code=" + URLEncoder.encode(itemCode, StandardCharsets.UTF_8);
         }
-
+        if (endpoint == null)
+        {
+            return new HashMap<>();
+        }
         return parsePriceResponse(getRaw(endpoint));
     }
 
     public void setCities(ArrayList<String> cities) throws IOException, JSONException
     {
+        if (cities == null)
+        {
+            cities = new ArrayList<>();
+        }
+
+        cities.removeIf(city -> city == null || city.isBlank());
         JSONArray jsonArray = new JSONArray(cities);  // convert ArrayList<String> to JSONArray
         JSONObject body = new JSONObject().put("cities", jsonArray);
 
@@ -848,10 +984,18 @@ public class APIHandler
 
     public void setBranches(Map<String, ArrayList<String>> branches) throws IOException, JSONException
     {
+        if (branches == null)
+        {
+            branches = new HashMap<>();
+        }
         JSONObject body = new JSONObject();
 
         for (Map.Entry<String, ArrayList<String>> entry : branches.entrySet())
         {
+            if (entry == null || entry.getKey() == null || entry.getValue() == null)
+            {
+                continue;
+            }
             JSONArray arr = new JSONArray(entry.getValue()); // convert ArrayList to JSONArray
             body.put(entry.getKey(), arr); // now it will serialize as ["a","b","c"]
         }
@@ -861,8 +1005,16 @@ public class APIHandler
 
     public boolean singleSectionInSupermarkets(Supermarket supermarket)
     {
+        if (supermarket == null || supermarkets == null)
+        {
+            return true;
+        }
         for (Supermarket sm : supermarkets)
         {
+            if (sm == null)
+            {
+                continue;
+            }
             if (!sm.equals(supermarket) && sm.getSupermarket().equals(supermarket.getSupermarket()))
             {
                 return false;
@@ -884,12 +1036,21 @@ public class APIHandler
         String itemName = item.getBaseName();
         if (itemName == null || itemName.isEmpty()) return variants;
 
+        if (cachedGroups == null || cachedItemPrices == null || cachedItemInfos == null)
+        {
+            return variants;
+        }
+
         ArrayList<String> groupCodes = cachedGroups.get(itemName);
 
         if (groupCodes == null || groupCodes.isEmpty()) return variants;
 
         for (String code : groupCodes)
         {
+            if (code == null)
+            {
+                continue;
+            }
             Map<String, Map<String, Double>> supermarkets = cachedItemPrices.get(code);
             if (supermarkets == null) continue;
 
@@ -908,13 +1069,17 @@ public class APIHandler
                     if (section == null || price == null) continue;
 
                     Supermarket sm = new Supermarket(supermarketName, section);
+                    ItemInfo info = cachedItemInfos.get(code);
 
+                    if (info == null)
+                    {
+                        continue;
+                    }
                     variants.add(
                             new ItemVariant(
                                     sm,
                                     price,
-                                    cachedItemInfos.get(code)
-
+                                    info
                             )
                     );
                 }
@@ -935,6 +1100,10 @@ public class APIHandler
 
         for (Item item : items)
         {
+            if (item == null)
+            {
+                continue;
+            }
             String itemName = item.getBaseName();
             if (itemName == null || itemName.isEmpty()) continue;
 

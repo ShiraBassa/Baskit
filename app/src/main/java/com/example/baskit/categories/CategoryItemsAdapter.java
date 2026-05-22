@@ -21,6 +21,7 @@ import androidx.annotation.RequiresApi;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.DiffUtil;
 
 import com.example.baskit.online_components.APIHandler;
 import com.example.baskit.Baskit;
@@ -48,7 +49,7 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
     private Map<String, Integer> supermarketSectionCounts;
 
     private boolean draggable = false;
-
+    private String lastItemsSignature = "";
     private static final Supermarket unassigned_supermarket = Baskit.UNASSIGNED_SUPERMARKET;
 
     private final Activity activity;
@@ -127,9 +128,19 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
             {
                 return;
             }
-            if (from != null && itemsBySupermarket.get(from) != null)
+
+            String draggedId = draggedItem.getAbsoluteId();
+
+            for (Map.Entry<Supermarket, ArrayList<Item>> entry : itemsBySupermarket.entrySet())
             {
-                Objects.requireNonNull(itemsBySupermarket.get(from)).remove(draggedItem);
+                if (entry == null || entry.getValue() == null)
+                {
+                    continue;
+                }
+
+                entry.getValue().removeIf(existingItem ->
+                        existingItem != null &&
+                                Objects.equals(existingItem.getAbsoluteId(), draggedId));
             }
 
             if (to == unassigned_supermarket)
@@ -149,14 +160,67 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
 
             Objects.requireNonNull(itemsBySupermarket.get(to)).add(draggedItem);
             draggedItem.setChecked(false);
+            ArrayList<Supermarket> oldSupermarkets =
+                    new ArrayList<>(supermarkets);
+
             rebuildDisplaySupermarkets();
-            notifyDataSetChanged();
+
+            DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(
+                    new SupermarketDiffCallback(oldSupermarkets, supermarkets)
+            );
+
+            diffResult.dispatchUpdatesTo(CategoryItemsAdapter.this);
 
             this.upperClassFns.updateItemCategory(draggedItem);
         };
 
         restart();
         sortByExisting();
+    }
+
+    private static class SupermarketDiffCallback extends DiffUtil.Callback
+    {
+        private final ArrayList<Supermarket> oldList;
+        private final ArrayList<Supermarket> newList;
+
+        public SupermarketDiffCallback(ArrayList<Supermarket> oldList,
+                                       ArrayList<Supermarket> newList)
+        {
+            this.oldList = oldList != null ? oldList : new ArrayList<>();
+            this.newList = newList != null ? newList : new ArrayList<>();
+        }
+
+        @Override
+        public int getOldListSize()
+        {
+            return oldList.size();
+        }
+
+        @Override
+        public int getNewListSize()
+        {
+            return newList.size();
+        }
+
+        @Override
+        public boolean areItemsTheSame(int oldItemPosition,
+                                       int newItemPosition)
+        {
+            Supermarket oldItem = oldList.get(oldItemPosition);
+            Supermarket newItem = newList.get(newItemPosition);
+
+            return Objects.equals(oldItem, newItem);
+        }
+
+        @Override
+        public boolean areContentsTheSame(int oldItemPosition,
+                                          int newItemPosition)
+        {
+            Supermarket oldItem = oldList.get(oldItemPosition);
+            Supermarket newItem = newList.get(newItemPosition);
+
+            return Objects.equals(oldItem, newItem);
+        }
     }
 
     private void restart()
@@ -247,6 +311,46 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
         this.supermarkets = result;
     }
 
+    private String buildItemsSignature(ArrayList<Item> items)
+    {
+        if (items == null)
+        {
+            return "";
+        }
+
+        StringBuilder builder = new StringBuilder();
+
+        for (Item item : items)
+        {
+            if (item == null)
+            {
+                continue;
+            }
+
+            builder.append(item.getAbsoluteId())
+                    .append('|')
+                    .append(item.getBaseName())
+                    .append('|')
+                    .append(item.getQuantity())
+                    .append('|')
+                    .append(item.isChecked())
+                    .append('|');
+
+            Supermarket supermarket = item.getSupermarket();
+
+            if (supermarket != null)
+            {
+                builder.append(supermarket.toString());
+            }
+
+            builder.append('|')
+                    .append(item.getPrice())
+                    .append(';');
+        }
+
+        return builder.toString();
+    }
+
     @SuppressLint("NotifyDataSetChanged")
     private void sortByExisting()
     {
@@ -254,6 +358,18 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
         {
             return;
         }
+
+        if (itemsBySupermarket != null)
+        {
+            for (ArrayList<Item> supermarketItems : itemsBySupermarket.values())
+            {
+                if (supermarketItems != null)
+                {
+                    supermarketItems.clear();
+                }
+            }
+        }
+
         for (Item item : category.getItems())
         {
             if (item == null)
@@ -284,8 +400,18 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
             }
         }
 
+        ArrayList<Supermarket> oldSupermarkets =
+                new ArrayList<>(supermarkets != null
+                        ? supermarkets
+                        : new ArrayList<>());
+
         rebuildDisplaySupermarkets();
-        notifyDataSetChanged();
+
+        DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(
+                new SupermarketDiffCallback(oldSupermarkets, supermarkets)
+        );
+
+        diffResult.dispatchUpdatesTo(this);
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder
@@ -294,6 +420,10 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
         protected final ImageButton btnExpand;
         protected final RecyclerView recyclerItems;
 
+        protected SupermarketItemsAdapter adapter;
+
+        protected ItemTouchHelper itemTouchHelper;
+
         public ViewHolder(View itemView)
         {
             super(itemView);
@@ -301,6 +431,7 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
             tvSupermarket = itemView.findViewById(R.id.tv_supermarket_name);
             btnExpand = itemView.findViewById(R.id.btn_expand);
             recyclerItems = itemView.findViewById(R.id.recycler_items);
+            recyclerItems.setLayoutManager(new LinearLayoutManager(itemView.getContext()));
         }
     }
 
@@ -311,7 +442,50 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.list_supermarket, parent, false);
 
-        return new ViewHolder(view);
+        ViewHolder holder = new ViewHolder(view);
+
+        holder.adapter = new SupermarketItemsAdapter(
+                new ArrayList<>(),
+                activity,
+                context,
+                upperClassFns
+        );
+
+        holder.recyclerItems.setAdapter(holder.adapter);
+
+        holder.itemTouchHelper = new ItemTouchHelper(
+                new ItemTouchHelper.SimpleCallback(
+                        ItemTouchHelper.UP | ItemTouchHelper.DOWN,
+                        0)
+                {
+                    @Override
+                    public boolean isLongPressDragEnabled()
+                    {
+                        return draggable;
+                    }
+
+                    @Override
+                    public boolean isItemViewSwipeEnabled()
+                    {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean onMove(@NonNull RecyclerView recyclerView,
+                                          @NonNull RecyclerView.ViewHolder viewHolder,
+                                          @NonNull RecyclerView.ViewHolder target)
+                    {
+                        return draggable;
+                    }
+
+                    @Override
+                    public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder,
+                                         int direction) {}
+                });
+
+        holder.itemTouchHelper.attachToRecyclerView(holder.recyclerItems);
+
+        return holder;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -386,10 +560,10 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
         {
             items = new ArrayList<>();
         }
-        SupermarketItemsAdapter supermarketsAdapter = new SupermarketItemsAdapter(items, activity, context, upperClassFns);
-
-        holder.recyclerItems.setLayoutManager(new LinearLayoutManager(holder.itemView.getContext()));
-        holder.recyclerItems.setAdapter(supermarketsAdapter);
+        if (holder.adapter != null)
+        {
+            holder.adapter.updateItems(items);
+        }
 
         Boolean expanded = expandedStates.get(supermarket);
         boolean isExpanded = expanded == null || expanded;
@@ -417,33 +591,6 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
             notifyItemChanged(position);
         });
 
-        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(
-                ItemTouchHelper.UP | ItemTouchHelper.DOWN, 0) {
-            @Override
-            public boolean isLongPressDragEnabled()
-            {
-                return draggable;
-            }
-
-            @Override
-            public boolean isItemViewSwipeEnabled()
-            {
-                return false;
-            }
-
-            @Override
-            public boolean onMove(@NonNull RecyclerView recyclerView,
-                                  @NonNull RecyclerView.ViewHolder viewHolder,
-                                  @NonNull RecyclerView.ViewHolder target)
-            {
-                return draggable;
-            }
-
-            @Override
-            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {}
-        });
-
-        itemTouchHelper.attachToRecyclerView(holder.recyclerItems);
 
         if (!draggable) return;
 
@@ -600,11 +747,19 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
 
     public void updateItems(ArrayList<Item> newItems)
     {
-        if (newItems == null)
+        ArrayList<Item> safeItems =
+                newItems != null ? newItems : new ArrayList<>();
+
+        String newSignature = buildItemsSignature(safeItems);
+
+        if (newSignature.equals(lastItemsSignature))
         {
-            newItems = new ArrayList<>();
+            return;
         }
-        this.category.setItemsFromFlat(newItems);
+
+        lastItemsSignature = newSignature;
+
+        this.category.setItemsFromFlat(safeItems);
 
         restart();
         sortByExisting();
@@ -639,9 +794,79 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
             void onItemMoved(Item item, Supermarket from, Supermarket to);
         }
 
+        private static class ItemDiffCallback extends DiffUtil.Callback
+        {
+            private final ArrayList<Item> oldList;
+            private final ArrayList<Item> newList;
+
+            public ItemDiffCallback(ArrayList<Item> oldList,
+                                    ArrayList<Item> newList)
+            {
+                this.oldList = oldList != null ? oldList : new ArrayList<>();
+                this.newList = newList != null ? newList : new ArrayList<>();
+            }
+
+            @Override
+            public int getOldListSize()
+            {
+                return oldList.size();
+            }
+
+            @Override
+            public int getNewListSize()
+            {
+                return newList.size();
+            }
+
+            @Override
+            public boolean areItemsTheSame(int oldItemPosition,
+                                           int newItemPosition)
+            {
+                Item oldItem = oldList.get(oldItemPosition);
+                Item newItem = newList.get(newItemPosition);
+
+                if (oldItem == null || newItem == null)
+                {
+                    return false;
+                }
+
+                return Objects.equals(
+                        oldItem.getAbsoluteId(),
+                        newItem.getAbsoluteId()
+                );
+            }
+
+            @Override
+            public boolean areContentsTheSame(int oldItemPosition,
+                                              int newItemPosition)
+            {
+                Item oldItem = oldList.get(oldItemPosition);
+                Item newItem = newList.get(newItemPosition);
+
+                return Objects.equals(oldItem, newItem);
+            }
+        }
+
         public SupermarketItemsAdapter(ArrayList<Item> items, Activity activity, Context context, UpperClassFunctions upperClassFns)
         {
             super(items, upperClassFns, activity, context);
+        }
+
+        public void updateItems(ArrayList<Item> newItems)
+        {
+            ArrayList<Item> safeNewItems =
+                    newItems != null ? newItems : new ArrayList<>();
+
+            ArrayList<Item> oldItems = new ArrayList<>(this.items);
+
+            DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(
+                    new ItemDiffCallback(oldItems, safeNewItems)
+            );
+
+            this.items.clear();
+            this.items.addAll(safeNewItems);
+
+            diffResult.dispatchUpdatesTo(this);
         }
 
         @Override

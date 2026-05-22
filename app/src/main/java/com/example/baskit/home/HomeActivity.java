@@ -42,6 +42,7 @@ import com.example.baskit.list.ListActivity;
 import com.example.baskit.main_components.User;
 import com.example.baskit.MasterActivity;
 import com.example.baskit.R;
+import com.google.firebase.database.ValueEventListener;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 
@@ -58,6 +59,9 @@ public class HomeActivity extends MasterActivity
 
     FirebaseAuthHandler authHandler;
     final FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
+
+    ValueEventListener userNameListener;
+    ValueEventListener listNamesListener;
 
     AlertDialog.Builder adb;
 
@@ -237,7 +241,7 @@ public class HomeActivity extends MasterActivity
             return;
         }
 
-        dbHandler.listenToUserName(user, username ->
+        userNameListener = dbHandler.listenToUserName(user, username ->
         {
             if (isFinishing() || isDestroyed())
             {
@@ -284,7 +288,7 @@ public class HomeActivity extends MasterActivity
                 })));
 
         runWhenServerActive(() ->
-                dbHandler.listenToListNames(user, listNames -> runOnUiThread(() ->
+                listNamesListener = dbHandler.listenToListNames(user, listNames -> runOnUiThread(() ->
                 {
                     if (listsGridAdapter != null)
                     {
@@ -323,6 +327,27 @@ public class HomeActivity extends MasterActivity
 
             adCreateList.show();
         });
+    }
+
+    @Override
+    protected void onDestroy()
+    {
+        super.onDestroy();
+
+        if (user != null)
+        {
+            if (userNameListener != null)
+            {
+                dbHandler.removeUserNameListener(user, userNameListener);
+                userNameListener = null;
+            }
+
+            if (listNamesListener != null)
+            {
+                dbHandler.removeListNamesListener(user, listNamesListener);
+                listNamesListener = null;
+            }
+        }
     }
 
     @SuppressLint("InflateParams")

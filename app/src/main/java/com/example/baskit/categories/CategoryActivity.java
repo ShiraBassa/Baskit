@@ -29,6 +29,8 @@ import com.google.android.material.snackbar.Snackbar;
 
 import org.json.JSONException;
 
+import com.google.firebase.database.ValueEventListener;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
@@ -45,6 +47,9 @@ public class CategoryActivity extends MasterActivity
     final APIHandler apiHandler = APIHandler.getInstance();
 
     boolean initialized = true;
+
+    ValueEventListener listListener;
+    ValueEventListener categoryListener;
 
     AddItemFragment addItemFragment;
     RecyclerView recyclerItems;
@@ -109,55 +114,62 @@ public class CategoryActivity extends MasterActivity
         final String categoryName = getIntent().getStringExtra("categoryName");
 
         runWhenServerActive(() ->
-                dbHandler.getList(listId, new FirebaseDBHandler.GetListCallback()
+                listListener = dbHandler.listenToList(listId, new FirebaseDBHandler.GetListCallback()
                 {
                     @Override
                     public void onListFetched(List newList)
                     {
-                        CategoryActivity.this.list = newList;
-
+                        if (isFinishing() || isDestroyed())
+                        {
+                            return;
+                        }
                         if (newList == null)
                         {
-                            finish();
+                            if (!isFinishing())
+                            {
+                                finish();
+                            }
                             return;
                         }
 
-                        runWhenServerActive(() ->
+                        list = newList;
+
+                        runOnUiThread(() ->
                         {
-                            dbHandler.listenToList(listId, new FirebaseDBHandler.GetListCallback()
-                            {
-                                @Override
-                                public void onListFetched(List newList)
-                                {
-                                    if (newList == null)
-                                    {
-                                        finish();
-                                        return;
-                                    }
+                            tvListName.setText(list.getName());
+                            tvListName.setVisibility(View.VISIBLE);
+                        });
 
-                                    list = newList;
-                                    tvListName.setText(list.getName());
-                                    tvListName.setVisibility(View.VISIBLE);
+                        if (categoryListener != null)
+                        {
+                            dbHandler.removeCategoryListener(listId, categoryName, categoryListener);
+                        }
+
+                        categoryListener = dbHandler.listenToCategory(list, categoryName, newCategory ->
+                        {
+                            if (isFinishing() || isDestroyed())
+                            {
+                                return;
+                            }
+                            category = newCategory;
+
+                            if (category == null || category.getItems() == null || category.getItems().isEmpty())
+                            {
+                                if (!isFinishing())
+                                {
+                                    finish();
                                 }
+                                return;
+                            }
 
-                                @Override
-                                public void onError() {}
-                            });
+                            list.updateCategory(category);
 
-                            dbHandler.listenToCategory(list, categoryName, newCategory ->
+                            runOnUiThread(() ->
                             {
-                                category = newCategory;
-
-                                if (category == null || category.getItems() == null || category.getItems().isEmpty())
+                                if (isFinishing() || isDestroyed())
                                 {
-                                    if (!isFinishing())
-                                    {
-                                        finish();
-                                    }
                                     return;
                                 }
-
-                                list.updateCategory(category);
                                 tvCategoryName.setText(category.getName());
                                 tvCategoryName.setVisibility(View.VISIBLE);
                                 btnAddItem.setEnabled(true);
@@ -184,63 +196,62 @@ public class CategoryActivity extends MasterActivity
                                     }
                                 }
 
-                                runOnUiThread(() ->
+                                if (itemsAdapter == null)
                                 {
-                                    if (itemsAdapter == null)
-                                    {
-                                        itemsAdapter = new CategoryItemsAdapter(
-                                                category,
-                                                CategoryActivity.this,
-                                                CategoryActivity.this,
-                                                new ItemsAdapter.UpperClassFunctions()
+                                    itemsAdapter = new CategoryItemsAdapter(
+                                            category,
+                                            CategoryActivity.this,
+                                            CategoryActivity.this,
+                                            new ItemsAdapter.UpperClassFunctions()
+                                            {
+                                                @Override
+                                                public void updateItemCategory(Item item)
                                                 {
-                                                    @Override
-                                                    public void updateItemCategory(Item item)
-                                                    {
-                                                        runProtectedRequest(
-                                                                "update_item_category_" + item.getAbsoluteId(),
-                                                                null,
-                                                                () ->
-                                                                {
-                                                                    category.removeVariants(item.getBaseName());
-                                                                    category.addItem(item);
-                                                                    dbHandler.updateCategory(list, category);
-                                                                }
-                                                        );
-                                                    }
+                                                    runProtectedRequest(
+                                                            "update_item_category_" + item.getAbsoluteId(),
+                                                            null,
+                                                            () ->
+                                                            {
+                                                                category.removeVariants(item.getBaseName());
+                                                                category.addItem(item);
+                                                                dbHandler.updateCategory(list, category);
+                                                            }
+                                                    );
+                                                }
 
-                                                    @Override
-                                                    public void removeItemCategory(Item item)
-                                                    {
-                                                        if (category == null) return;
-                                                        runProtectedRequest(
-                                                                "remove_item_" + item.getAbsoluteId(),
-                                                                null,
-                                                                () -> dbHandler.removeItem(list, category, item)
-                                                        );
-                                                    }
+                                                @Override
+                                                public void removeItemCategory(Item item)
+                                                {
+                                                    if (category == null) return;
 
-                                                    @Override
-                                                    public void updateCategory()
-                                                    {
-                                                        if (category == null) return;
-                                                        runProtectedRequest(
-                                                                "update_category_" + category.getName(),
-                                                                null,
-                                                                () -> dbHandler.updateCategory(list, category)
-                                                        );
-                                                    }
-                                                },
-                                                supermarkets
-                                        );
+                                                    runProtectedRequest(
+                                                            "remove_item_" + item.getAbsoluteId(),
+                                                            null,
+                                                            () -> dbHandler.removeItem(list, category, item)
+                                                    );
+                                                }
 
-                                        recyclerItems.setAdapter(itemsAdapter);
-                                    }
-                                    else
-                                    {
-                                        itemsAdapter.updateItems(new ArrayList<>(category.getItems()));
-                                    }
-                                });
+                                                @Override
+                                                public void updateCategory()
+                                                {
+                                                    if (category == null) return;
+
+                                                    runProtectedRequest(
+                                                            "update_category_" + category.getName(),
+                                                            null,
+                                                            () -> dbHandler.updateCategory(list, category)
+                                                    );
+                                                }
+                                            },
+                                            supermarkets
+                                    );
+
+                                    recyclerItems.setAdapter(itemsAdapter);
+                                }
+                                else
+                                {
+                                    itemsAdapter.updateItems(new ArrayList<>(category.getItems()));
+                                }
                             });
                         });
                     }
@@ -251,6 +262,29 @@ public class CategoryActivity extends MasterActivity
                         initialized = false;
                     }
                 }));
+    }
+
+    @Override
+    protected void onDestroy()
+    {
+        super.onDestroy();
+
+        String listId = getIntent().getStringExtra("listId");
+        String categoryName = getIntent().getStringExtra("categoryName");
+
+        if (listListener != null && listId != null)
+        {
+            dbHandler.removeListListener(listId, listListener);
+            listListener = null;
+        }
+
+        if (categoryListener != null &&
+                listId != null &&
+                categoryName != null)
+        {
+            dbHandler.removeCategoryListener(listId, categoryName, categoryListener);
+            categoryListener = null;
+        }
     }
 
     private void setButtons()

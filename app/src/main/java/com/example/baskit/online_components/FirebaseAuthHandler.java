@@ -27,6 +27,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class FirebaseAuthHandler
 {
@@ -38,6 +39,7 @@ public class FirebaseAuthHandler
     private final AIHandler aiHandler = AIHandler.getInstance();
 
     private static FirebaseAuthHandler instance;
+    private final AtomicBoolean authRunning = new AtomicBoolean(false);
 
     public enum ErrorType
     {
@@ -60,7 +62,7 @@ public class FirebaseAuthHandler
     }
 
 
-    public static FirebaseAuthHandler getInstance()
+    public static synchronized FirebaseAuthHandler getInstance()
     {
         if (instance == null)
         {
@@ -70,7 +72,7 @@ public class FirebaseAuthHandler
         return instance;
     }
 
-    public static void resetInstance()
+    public static synchronized void resetInstance()
     {
         user = null;
         instance = null;
@@ -79,12 +81,31 @@ public class FirebaseAuthHandler
 
     private void postSuccess(AuthCallback callback)
     {
+        authRunning.set(false);
+
+        if (callback == null)
+        {
+            return;
+        }
         new Handler(Looper.getMainLooper()).post(callback::onAuthSuccess);
     }
 
     private void postError(AuthCallback callback, String msg, ErrorType type)
     {
-        new Handler(Looper.getMainLooper()).post(() -> callback.onAuthError(msg, type));
+        authRunning.set(false);
+
+        if (callback == null)
+        {
+            return;
+        }
+
+        final String finalMsg =
+                (msg == null || msg.isBlank())
+                        ? Baskit.getAppStr(R.string.msg_general_error)
+                        : msg;
+
+        new Handler(Looper.getMainLooper()).post(() ->
+                callback.onAuthError(finalMsg, type));
     }
 
     private void postError(AuthCallback callback, ErrorType type)
@@ -94,6 +115,16 @@ public class FirebaseAuthHandler
 
     public void checkCurrUser(AuthCallback callback)
     {
+        if (callback == null)
+        {
+            return;
+        }
+
+        if (!authRunning.compareAndSet(false, true))
+        {
+            return;
+        }
+
         FirebaseUser currUser = refAuth.getCurrentUser();
 
         if (currUser == null)
@@ -131,6 +162,10 @@ public class FirebaseAuthHandler
                             if (snapshot.exists()) //There is info about the current user in the firebase
                             {
                                 user = snapshot.getValue(User.class); // Unwrap the info
+                                if (user == null)
+                                {
+                                    user = new User(currUser.getUid(), currUser.getEmail());
+                                }
 
                                 // Get the session token
                                 currUser.getIdToken(false).addOnCompleteListener(taskTwo ->
@@ -139,6 +174,13 @@ public class FirebaseAuthHandler
                                     {
                                         String token = taskTwo.getResult().getToken();
 
+                                        if (token == null || token.isBlank())
+                                        {
+                                            postError(callback, ErrorType.GENERAL);
+                                            return;
+                                        }
+
+                                        FirebaseAuthHandler.token = token;
                                         ArrayList<String> listIDs = user.getListIDs();
 
                                         // There are lists
@@ -150,6 +192,7 @@ public class FirebaseAuthHandler
                                             if (!listIDs.isEmpty())
                                             {
                                                 listIDs.removeIf(Objects::isNull); // Remove the null object lists (no actual list, not referring to an empty list but to a broken one)
+                                                listIDs.removeIf(String::isBlank);
                                                 user.setListIDs(listIDs);
 
                                                 // Update the firebase
@@ -167,11 +210,18 @@ public class FirebaseAuthHandler
                                         // Login to the server
                                         new Thread(() ->
                                         {
+                                            Thread.currentThread().setName("FirebaseAuthLogin");
                                             boolean ok = apiHandler.login(token);
                                             new Handler(Looper.getMainLooper()).post(() ->
                                             {
-                                                if (ok) callback.onAuthSuccess();
-                                                else callback.onAuthError(ErrorType.SERVER);
+                                                if (ok)
+                                                {
+                                                    postSuccess(callback);
+                                                }
+                                                else
+                                                {
+                                                    postError(callback, ErrorType.SERVER);
+                                                }
                                             });
                                         }).start();
                                     }
@@ -191,8 +241,15 @@ public class FirebaseAuthHandler
                                     {
                                         token = taskTwo.getResult().getToken();
 
+                                        if (token == null || token.isBlank())
+                                        {
+                                            postError(callback, ErrorType.GENERAL);
+                                            return;
+                                        }
+
                                         new Thread(() ->
                                         {
+                                            Thread.currentThread().setName("FirebaseAuthRegister");
                                             boolean loginSuccess = apiHandler.login(FirebaseAuthHandler.token);
 
                                             if (!loginSuccess)
@@ -243,6 +300,28 @@ public class FirebaseAuthHandler
 
     public void signInOrSignUp(String email, String password, AuthCallback callback)
     {
+        if (callback == null)
+        {
+            return;
+        }
+
+        if (email == null || email.isBlank())
+        {
+            postError(callback, Baskit.getAppStr(R.string.auth_invalid_email), ErrorType.EMAIL);
+            return;
+        }
+
+        if (password == null || password.isBlank())
+        {
+            postError(callback, Baskit.getAppStr(R.string.auth_weak_password), ErrorType.PASSWORD);
+            return;
+        }
+
+        if (!authRunning.compareAndSet(false, true))
+        {
+            return;
+        }
+
         refAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(task ->
                 {
@@ -263,9 +342,15 @@ public class FirebaseAuthHandler
                             if (taskTwo.isSuccessful())
                             {
                                 token = taskTwo.getResult().getToken();
+                                if (token == null || token.isBlank())
+                                {
+                                    postError(callback, ErrorType.GENERAL);
+                                    return;
+                                }
 
                                 new Thread(() ->
                                 {
+                                    Thread.currentThread().setName("FirebaseRegister");
                                     boolean loginSuccess = apiHandler.login(FirebaseAuthHandler.token);
 
                                     if (!loginSuccess)
@@ -350,6 +435,10 @@ public class FirebaseAuthHandler
 
     private void signIn(String email, String password, AuthCallback callback)
     {
+        if (callback == null)
+        {
+            return;
+        }
         refAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(task ->
                 {
@@ -393,9 +482,14 @@ public class FirebaseAuthHandler
                                         if (taskTwo.isSuccessful())
                                         {
                                             token = taskTwo.getResult().getToken();
-
+                                            if (token == null || token.isBlank())
+                                            {
+                                                postError(callback, ErrorType.GENERAL);
+                                                return;
+                                            }
                                             new Thread(() ->
                                             {
+                                                Thread.currentThread().setName("FirebaseSignIn");
                                                 boolean ok = apiHandler.login(FirebaseAuthHandler.token);
 
                                                 if (!ok)
@@ -422,9 +516,14 @@ public class FirebaseAuthHandler
                                         if(taskTwo.isSuccessful())
                                         {
                                             token = taskTwo.getResult().getToken();
-
+                                            if (token == null || token.isBlank())
+                                            {
+                                                postError(callback, ErrorType.GENERAL);
+                                                return;
+                                            }
                                             new Thread(() ->
                                             {
+                                                Thread.currentThread().setName("FirebaseSignInCreateUser");
                                                 boolean loginSuccess = apiHandler.login(FirebaseAuthHandler.token);
 
                                                 if (!loginSuccess)
@@ -465,23 +564,41 @@ public class FirebaseAuthHandler
     public void logOut()
     {
         refAuth.signOut();
+        token = null;
         resetInstance();
         apiHandler.resetInstance();
     }
 
     public void changeUserName(String username)
     {
+        if (user == null || username == null || username.isBlank())
+        {
+            return;
+        }
         dbHandler.changeUserName(user, username);
         user.setName(username);
     }
 
     public void createList(String name, Activity activity, Consumer<List> callback)
     {
+        if (user == null)
+        {
+            return;
+        }
+
+        if (name == null || name.isBlank())
+        {
+            return;
+        }
+
         List list = new List(dbHandler.getUniqueId(), name);
         list.addUser(user.getId());
 
         aiHandler.getListSuggestions(list.getName(), activity, suggestions -> {
-            list.setItemSuggestions(suggestions);
+            final ArrayList<String> finalSuggestions =
+                    suggestions != null ? suggestions : new ArrayList<>();
+
+            list.setItemSuggestions(finalSuggestions);
             dbHandler.addList(list, user);
 
             if (callback != null)
@@ -494,9 +611,17 @@ public class FirebaseAuthHandler
 
     public void duplicateList(List list, Consumer<List> callback)
     {
+        if (user == null || list == null)
+        {
+            return;
+        }
         List listNew = new List(dbHandler.getUniqueId(), list.getName() + " חדש");
         listNew.addUser(user.getId());
         listNew.setItemSuggestions(list.getItemSuggestions());
+        if (list.getItemSuggestions() == null)
+        {
+            listNew.setItemSuggestions(new ArrayList<>());
+        }
         listNew.setCategories(list.getCategories());
 
         dbHandler.addList(listNew, user);
