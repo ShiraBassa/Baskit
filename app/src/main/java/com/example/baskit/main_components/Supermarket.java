@@ -20,13 +20,13 @@ public class Supermarket implements Cloneable
 
     public Supermarket(String supermarket)
     {
-        this.supermarket = supermarket;
+        this.supermarket = supermarket != null ? supermarket : "";
     }
 
     public Supermarket(String supermarket, String section)
     {
-        this.supermarket = supermarket;
-        this.section = section;
+        this.supermarket = supermarket != null ? supermarket : "";
+        this.section = section != null ? section : "";
     }
 
     public String getSupermarket()
@@ -36,7 +36,9 @@ public class Supermarket implements Cloneable
 
     public void setSupermarket(String supermarket)
     {
-        this.supermarket = Baskit.encodeKey(supermarket);
+        this.supermarket = supermarket != null
+                ? Baskit.encodeKey(supermarket)
+                : "";
     }
 
     public String getSection()
@@ -46,19 +48,25 @@ public class Supermarket implements Cloneable
 
     public void setSection(String section)
     {
-        this.section = Baskit.encodeKey(section);
+        this.section = section != null
+                ? Baskit.encodeKey(section)
+                : "";
     }
 
     @Exclude
     public String getDecodedSupermarket()
     {
-        return Baskit.decodeKey(supermarket);
+        return supermarket != null
+                ? Baskit.decodeKey(supermarket)
+                : "";
     }
 
     @Exclude
     public String getDecodedSection()
     {
-        return Baskit.decodeKey(section);
+        return section != null
+                ? Baskit.decodeKey(section)
+                : "";
     }
 
     @Exclude
@@ -66,10 +74,24 @@ public class Supermarket implements Cloneable
     {
         ArrayList<Supermarket> supermarkets = new ArrayList<>();
 
+        if (supermarketStrings == null)
+        {
+            return supermarkets;
+        }
+
         for (String supermarketName : supermarketStrings.keySet())
         {
+            if (supermarketName == null)
+            {
+                continue;
+            }
+
             for (String sectionName : Objects.requireNonNull(supermarketStrings.get(supermarketName)))
             {
+                if (sectionName == null)
+                {
+                    continue;
+                }
                 supermarkets.add(new Supermarket(supermarketName, sectionName));
             }
         }
@@ -82,10 +104,24 @@ public class Supermarket implements Cloneable
     {
         Map<String, ArrayList<String>> supermarketsStrings = new HashMap<>();
 
+        if (supermarkets == null)
+        {
+            return supermarketsStrings;
+        }
+
         for (Supermarket supermarket : supermarkets)
         {
+            if (supermarket == null)
+            {
+                continue;
+            }
             String supermarketName = supermarket.getSupermarket();
             String sectionName = supermarket.getSection();
+
+            if (supermarketName == null || sectionName == null)
+            {
+                continue;
+            }
 
             if (!supermarketsStrings.containsKey(supermarketName))
             {
@@ -102,7 +138,7 @@ public class Supermarket implements Cloneable
     @Override
     public String toString()
     {
-        if (section.isEmpty())
+        if (section == null || section.isEmpty())
         {
             return getDecodedSupermarket();
         }
@@ -120,7 +156,7 @@ public class Supermarket implements Cloneable
         }
         catch (CloneNotSupportedException e)
         {
-            throw new AssertionError();
+            throw new AssertionError(e);
         }
     }
 
@@ -131,8 +167,8 @@ public class Supermarket implements Cloneable
         if (obj == null || getClass() != obj.getClass()) return false;
 
         Supermarket other = (Supermarket) obj;
-        return supermarket.equals(other.supermarket) &&
-                section.equals(other.section);
+        return Objects.equals(supermarket, other.supermarket) &&
+                Objects.equals(section, other.section);
     }
 
     @Override

@@ -705,14 +705,14 @@ public class APIHandler
     {
         if (name == null || name.isEmpty() || cachedGroups == null || cachedGroups.isEmpty())
         {
-            return null;
+            return Baskit.UNKNOWN_CATEGORY;
         }
 
         ArrayList<String> group = cachedGroups.get(name);
 
         if (group == null || group.isEmpty())
         {
-            return null;
+            return Baskit.UNKNOWN_CATEGORY;
         }
 
         for (String code : group)
@@ -732,7 +732,7 @@ public class APIHandler
             }
         }
 
-        return null;
+        return Baskit.UNKNOWN_CATEGORY;
     }
 
     public ArrayList<Supermarket> getSupermarkets()
@@ -742,12 +742,15 @@ public class APIHandler
 
     public String getItemCategory(Item item) throws IOException, JSONException
     {
-        if (item == null) return null;
+        if (item == null) return Baskit.UNKNOWN_CATEGORY;
 
         String itemCode = item.getAbsoluteId();
         String itemName = item.getDecodedName();
         if ((itemCode == null  || itemCode.isEmpty()) &&
-                (itemName == null || itemName.isEmpty())) return null;
+                (itemName == null || itemName.isEmpty()))
+        {
+            return Baskit.UNKNOWN_CATEGORY;
+        }
 
         String endpoint = "", itemCategory;
 
@@ -792,11 +795,16 @@ public class APIHandler
 
         if (raw == null || raw.isEmpty())
         {
-            return null;
+            return Baskit.UNKNOWN_CATEGORY;
         }
 
         JSONObject obj = new JSONObject(raw);
-        itemCategory = obj.optString("category", null);
+        itemCategory = obj.optString("category", Baskit.UNKNOWN_CATEGORY);
+
+        if (itemCategory == null || itemCategory.isBlank())
+        {
+            itemCategory = Baskit.UNKNOWN_CATEGORY;
+        }
 
         // Update embedded item info cache
         ItemInfo info = cachedItemInfos.get(itemCode);

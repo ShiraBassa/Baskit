@@ -23,7 +23,7 @@ public class Item implements Cloneable
     protected String company;
     protected Double weight;
     protected String unit;
-    protected String category = "לא ידוע";
+    protected String category = Baskit.UNKNOWN_CATEGORY;
 
     @Exclude
     private static final String ID_PREFIX = "item_";
@@ -43,6 +43,10 @@ public class Item implements Cloneable
 
     public Item(Item item)
     {
+        if (item == null)
+        {
+            return;
+        }
         setId(item.getId());
         setBaseName(item.getBaseName());
         this.price = item.getPrice();
@@ -119,7 +123,9 @@ public class Item implements Cloneable
 
     public void setBaseName(String baseName)
     {
-        this.baseName = Baskit.encodeKey(baseName);
+        this.baseName = baseName != null
+                ? Baskit.encodeKey(baseName)
+                : "";
     }
 
     public double getPrice() {
@@ -127,6 +133,12 @@ public class Item implements Cloneable
     }
 
     public void setPrice(double price) {
+        if (Double.isNaN(price) || Double.isInfinite(price))
+        {
+            this.price = 0.0;
+            return;
+        }
+
         this.price = price;
     }
 
@@ -135,7 +147,7 @@ public class Item implements Cloneable
     }
 
     public void setQuantity(int quantity) {
-        this.quantity = quantity;
+        this.quantity = Math.max(quantity, 0);
     }
 
     public boolean isChecked() {
@@ -153,6 +165,10 @@ public class Item implements Cloneable
 
     public void setId(String id)
     {
+        if (id == null)
+        {
+            return;
+        }
         if (id.isEmpty()) return;
         this.id = isFullId(id) ? id : getFullId(id);
     }
@@ -171,24 +187,38 @@ public class Item implements Cloneable
     @Exclude
     public String getDecodedName()
     {
-        return Baskit.decodeKey(this.baseName);
+        return baseName != null
+                ? Baskit.decodeKey(this.baseName)
+                : "";
     }
 
     @Exclude
     public double getTotal()
     {
-        return Math.round(this.price * this.quantity * 100.0) / 100.0;
+        double total = this.price * this.quantity;
+
+        if (Double.isNaN(total) || Double.isInfinite(total))
+        {
+            return 0.0;
+        }
+
+        return Math.round(total * 100.0) / 100.0;
     }
 
     @Exclude
     public static boolean isFullId(String id)
     {
-        return id.startsWith(ID_PREFIX);
+        return id != null && id.startsWith(ID_PREFIX);
     }
 
     @Exclude
     public String getAbsoluteId()
     {
+        if (id == null)
+        {
+            return "";
+        }
+
         return isFullId(id) ? id.substring(ID_PREFIX.length()) : id;
     }
 
@@ -201,12 +231,23 @@ public class Item implements Cloneable
     @Exclude
     public int raiseQuantity()
     {
+        if (quantity == Integer.MAX_VALUE)
+        {
+            return quantity;
+        }
+
         return ++quantity;
     }
 
     @Exclude
     public int lowerQuantity()
     {
+        if (quantity <= 0)
+        {
+            quantity = 0;
+            return quantity;
+        }
+
         return --quantity;
     }
 
@@ -214,7 +255,7 @@ public class Item implements Cloneable
     @Override
     public String toString()
     {
-        return getBaseName();
+        return baseName != null ? getBaseName() : "";
     }
 
     @Exclude
@@ -271,6 +312,10 @@ public class Item implements Cloneable
     @Exclude
     public void fillInfo(ItemInfo info)
     {
+        if (info == null)
+        {
+            return;
+        }
         this.company = info.getCompany();
         this.weight = info.getWeight();
         this.unit = info.getUnit();
@@ -281,6 +326,10 @@ public class Item implements Cloneable
     @Exclude
     public void fillVariant(ItemVariant variant)
     {
+        if (variant == null)
+        {
+            return;
+        }
         fillInfo(variant.getInfo());
         this.price = variant.getPrice();
         this.supermarket = variant.getSupermarket();
@@ -300,11 +349,19 @@ public class Item implements Cloneable
 
         for (ItemVariant variant : variants)
         {
+            if (variant == null || variant.getInfo() == null)
+            {
+                continue;
+            }
             if (!isVariantOf(variant)) continue;
 
             ItemInfo info = variant.getInfo();
 
             double currPrice = variant.getPrice();
+            if (Double.isNaN(currPrice) || Double.isInfinite(currPrice))
+            {
+                continue;
+            }
             if (currPrice == 0.0) continue;
 
             if (cheapestVariant == null)
@@ -387,10 +444,18 @@ public class Item implements Cloneable
 
         for (ItemVariant variant : variants)
         {
+            if (variant == null || variant.getInfo() == null)
+            {
+                continue;
+            }
             if (!isVariantOf(variant, supermarket)) continue;
 
             ItemInfo info = variant.getInfo();
             double currPrice = variant.getPrice();
+            if (Double.isNaN(currPrice) || Double.isInfinite(currPrice))
+            {
+                continue;
+            }
 
             if (cheapestVariant == null)
             {
@@ -456,18 +521,23 @@ public class Item implements Cloneable
     @Exclude
     public ItemInfo getInfo()
     {
+        String safeBaseName = baseName != null ? baseName : "";
         Double safeWeight = (weight != null) ? weight : 0.0;
         String safeCompany = (company != null) ? company : "";
         String safeUnit = (unit != null) ? unit : "";
-        String safeCategory = (category != null) ? category : "לא ידוע";
+        String safeCategory = (category != null) ? category : Baskit.UNKNOWN_CATEGORY;
 
-        return new ItemInfo(getAbsoluteId(), baseName, safeCompany, safeWeight, safeUnit, safeCategory);
+        return new ItemInfo(getAbsoluteId(), safeBaseName, safeCompany, safeWeight, safeUnit, safeCategory);
     }
 
     @Exclude
     public ItemVariant getVariant()
     {
-        return new ItemVariant(supermarket, price, getInfo());
+        double safePrice = (Double.isNaN(price) || Double.isInfinite(price))
+                ? 0.0
+                : price;
+
+        return new ItemVariant(supermarket, safePrice, getInfo());
     }
 
     @Exclude
@@ -539,8 +609,13 @@ public class Item implements Cloneable
     @Exclude
     public boolean isIdenticalVariantOf(ItemVariant variant)
     {
-        return variant.getInfo().equals(getInfo()) &&
-                variant.getSupermarket().equals(supermarket);
+        if (variant == null || variant.getInfo() == null)
+        {
+            return false;
+        }
+
+        return Objects.equals(variant.getInfo(), getInfo()) &&
+                Objects.equals(variant.getSupermarket(), supermarket);
     }
 
 
@@ -646,6 +721,11 @@ public class Item implements Cloneable
 
             ItemInfo other = (ItemInfo) obj;
 
+            if (baseName == null && other.baseName == null)
+            {
+                return true;
+            }
+
             return Objects.equals(baseName, other.baseName) &&
                     Objects.equals(company, other.company) &&
                     Objects.equals(weight, other.weight) &&
@@ -667,7 +747,7 @@ public class Item implements Cloneable
             {
                 str += getWeightStr();
 
-                if (unit != null && !unit.isEmpty()  && !unit.equals("לא ידוע"))
+                if (unit != null && !unit.isBlank() && !unit.equals(Baskit.UNKNOWN_CATEGORY))
                 {
                     str += " " + unit;
                 }
@@ -728,8 +808,8 @@ public class Item implements Cloneable
             ItemVariant other = (ItemVariant) obj;
 
             return Double.compare(other.price, price) == 0 &&
-                    supermarket.equals(other.supermarket) &&
-                    info.equals(other.info);
+                    Objects.equals(supermarket, other.supermarket) &&
+                    Objects.equals(info, other.info);
         }
 
         @Override

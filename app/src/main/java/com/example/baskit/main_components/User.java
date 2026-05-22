@@ -16,8 +16,8 @@ public class User
 
     public User(String id, String email)
     {
-        this.id = id;
-        this.email = email;
+        this.id = id != null ? id : "";
+        this.email = email != null ? email : "";
     }
 
     public String getId() {
@@ -25,7 +25,7 @@ public class User
     }
 
     public void setId(String id) {
-        this.id = id;
+        this.id = id != null ? id : "";
     }
 
     public String getEmail() {
@@ -33,7 +33,7 @@ public class User
     }
 
     public void setEmail(String email) {
-        this.email = email;
+        this.email = email != null ? email : "";
     }
 
     public String getName() {
@@ -41,31 +41,43 @@ public class User
     }
 
     public void setName(String name) {
-        this.name = name;
+        this.name = name != null ? name : "";
     }
 
     public ArrayList<String> getListIDs() {
+        if (listIDs == null)
+        {
+            listIDs = new ArrayList<>();
+        }
         return listIDs;
     }
 
     public void setListIDs(ArrayList<String> lists) {
-        this.listIDs = lists;
+        this.listIDs = lists != null ? lists : new ArrayList<>();
     }
 
     @Exclude
     public void addList(String listId)
     {
+        if (listId == null)
+        {
+            return;
+        }
         if (listIDs == null)
         {
             listIDs = new ArrayList<>();
         }
-
         listIDs.add(listId);
     }
 
     @Exclude
     public void removeList(String listId)
     {
+        if (listId == null || listIDs == null)
+        {
+            return;
+        }
+
         listIDs.remove(listId);
     }
 }

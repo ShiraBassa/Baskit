@@ -25,6 +25,7 @@ public class Baskit extends Application
     public static final String SERVER_URL = "https://baskit-ac3x.onrender.com";
     public static final int HOME_GRID_NUM_BOXES = 2;
     public static final Supermarket UNASSIGNED_SUPERMARKET = new Supermarket("לא נבחר", "");
+    public static final String UNKNOWN_CATEGORY = "לא ידוע";
 
     private static Baskit instance;
 
