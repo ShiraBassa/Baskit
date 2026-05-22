@@ -13,13 +13,19 @@ import android.content.Context;
 import android.content.Intent;
 import androidx.appcompat.app.AlertDialog;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 public abstract class MasterActivity extends AppCompatActivity
 {
     private ConnectionDialogs dialogs;
     private EdgeSwipeHandler swipeHandler;
 
-    private Runnable pendingAction;
+    private final java.util.Queue<Runnable> pendingActions = new java.util.concurrent.ConcurrentLinkedQueue<>();
     private final java.util.concurrent.ExecutorService bg = java.util.concurrent.Executors.newSingleThreadExecutor();
+    private final Set<String> runningRequests =
+            Collections.synchronizedSet(new HashSet<>());
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState)
@@ -44,11 +50,7 @@ public abstract class MasterActivity extends AppCompatActivity
 
                 if (isFinishing() || isDestroyed()) return;
 
-                if (pendingAction != null)
-                {
-                    pendingAction.run();
-                    pendingAction = null;
-                }
+                flushPendingActions();
             }
         });
 
@@ -72,11 +74,7 @@ public abstract class MasterActivity extends AppCompatActivity
             {
                 dialogs.hideServerDown();
 
-                if (pendingAction != null)
-                {
-                    pendingAction.run();
-                    pendingAction = null;
-                }
+                flushPendingActions();
             }
         });
 
@@ -97,6 +95,9 @@ public abstract class MasterActivity extends AppCompatActivity
 
         dialogs.hideOffline();
         dialogs.hideServerDown();
+        pendingActions.clear();
+        runningRequests.clear();
+        bg.shutdownNow();
     }
 
     @Override
@@ -162,7 +163,83 @@ public abstract class MasterActivity extends AppCompatActivity
         }
         else
         {
-            pendingAction = () -> bg.execute(action);
+            pendingActions.add(() -> bg.execute(action));
+        }
+    }
+
+    public void runProtectedRequest(
+            String key,
+            View triggerView,
+            Runnable action
+    )
+    {
+        if (key == null || action == null) return;
+
+        synchronized (runningRequests)
+        {
+            if (runningRequests.contains(key))
+            {
+                return;
+            }
+
+            runningRequests.add(key);
+        }
+
+        if (triggerView != null)
+        {
+            triggerView.setEnabled(false);
+        }
+
+        runWhenServerActive(() ->
+        {
+            try
+            {
+                action.run();
+            }
+            finally
+            {
+                runOnUiThread(() ->
+                {
+                    if (isDestroyed() || isFinishing()) return;
+
+                    synchronized (runningRequests)
+                    {
+                        runningRequests.remove(key);
+                    }
+
+                    if (triggerView != null)
+                    {
+                        triggerView.setEnabled(true);
+                    }
+                });
+            }
+        });
+    }
+
+    private synchronized void flushPendingActions()
+    {
+        Boolean online = Baskit.onlineLive.getValue();
+        Boolean serverUp = Baskit.serverAliveLive.getValue();
+
+        if (online == null || !online || serverUp == null || !serverUp)
+        {
+            return;
+        }
+
+        Runnable task;
+
+        while ((task = pendingActions.poll()) != null)
+        {
+            Boolean stillOnline = Baskit.onlineLive.getValue();
+            Boolean stillServerUp = Baskit.serverAliveLive.getValue();
+
+            if (stillOnline == null || !stillOnline || stillServerUp == null || !stillServerUp)
+            {
+                pendingActions.add(task);
+                return;
+            }
+
+            task.run();
         }
     }
 
@@ -196,8 +273,21 @@ public abstract class MasterActivity extends AppCompatActivity
             this.context = context;
         }
 
+        private boolean canShowDialog()
+        {
+            if (!(context instanceof Activity))
+            {
+                return false;
+            }
+
+            Activity activity = (Activity) context;
+
+            return !activity.isFinishing() && !activity.isDestroyed();
+        }
+
         public void showOffline()
         {
+            if (!canShowDialog()) return;
             if (offlineDialog == null || !offlineDialog.isShowing())
             {
                 offlineDialog = new AlertDialog.Builder(context)
@@ -221,6 +311,7 @@ public abstract class MasterActivity extends AppCompatActivity
 
         public void showServerDown()
         {
+            if (!canShowDialog()) return;
             if (serverDownDialog == null || !serverDownDialog.isShowing())
             {
                 serverDownDialog = new AlertDialog.Builder(context)

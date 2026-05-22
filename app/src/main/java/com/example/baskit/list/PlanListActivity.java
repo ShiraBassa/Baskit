@@ -46,7 +46,7 @@ public class PlanListActivity extends MasterActivity
     String categoryName;
 
     boolean initialized = true;
-    final boolean listListenerAttached = false;
+    boolean listListenerAttached = false;
     boolean uiInitialized = false;
 
     int colorChosen;
@@ -101,7 +101,7 @@ public class PlanListActivity extends MasterActivity
             resumeInit();
         }
 
-        if (!initialized && tvTotal != null && list != null)
+        if (!initialized && !isFinishing() && !isDestroyed() && tvTotal != null && list != null)
         {
             tvTotal.setText(Baskit.getTotalDisplayString(list.getTotal(), list.allPricesKnown(), true, true));
             tvTotal.setVisibility(View.VISIBLE);
@@ -139,18 +139,31 @@ public class PlanListActivity extends MasterActivity
                     @Override
                     public void onListFetched(List newList)
                     {
+                        if (isFinishing() || isDestroyed())
+                        {
+                            return;
+                        }
+
+                        if (newList == null)
+                        {
+                            runOnUiThread(() ->
+                            {
+                                Toast.makeText(
+                                        PlanListActivity.this,
+                                        Baskit.getAppStr(R.string.msg_general_error),
+                                        Toast.LENGTH_SHORT
+                                ).show();
+
+                                finish();
+                            });
+                            return;
+                        }
+
                         PlanListActivity.this.list = new List(newList);
 
                         oldTotal = list.getTotal();
                         tvTotal.setText(Baskit.getTotalDisplayString(list.getTotal(), true, false, false));
                         tvTotal.setVisibility(View.VISIBLE);
-
-                        if (newList == null)
-                        {
-                            Toast.makeText(PlanListActivity.this, Baskit.getAppStr(R.string.msg_general_error), Toast.LENGTH_SHORT).show();
-                            finish();
-                            return;
-                        }
 
                         String title = newList.getName();
 
@@ -190,18 +203,34 @@ public class PlanListActivity extends MasterActivity
                         );
 
                         recyclerItems.setAdapter(itemsAdapter);
+                        listListenerAttached = true;
+                        initialized = false;
                     }
 
                     @Override
                     public void onError()
                     {
-                        initialized = false;
+                        if (isFinishing() || isDestroyed())
+                        {
+                            return;
+                        }
+
+                        runOnUiThread(() ->
+                                Toast.makeText(
+                                        PlanListActivity.this,
+                                        Baskit.getAppStr(R.string.msg_general_error),
+                                        Toast.LENGTH_SHORT
+                                ).show());
                     }
                 }));
     }
 
     private void displayTotalDif()
     {
+        if (list == null || tvTotal == null)
+        {
+            return;
+        }
         double priceDif = list.getTotal() - oldTotal;
         String priceStr = Baskit.getTotalDisplayString(list.getTotal(), true, false, false);
         String difStr = Baskit.getTotalDisplayString(priceDif, true, false, false);
@@ -242,7 +271,11 @@ public class PlanListActivity extends MasterActivity
     {
         if (list != null)
         {
-            dbHandler.updateList(list);
+            runProtectedRequest(
+                    "update_plan_list_" + list.getId(),
+                    btnSave,
+                    () -> dbHandler.updateList(list)
+            );
         }
 
         super.finish();
@@ -250,8 +283,19 @@ public class PlanListActivity extends MasterActivity
 
     private void setButtons()
     {
-        btnCancel.setOnClickListener(v -> finish());
-        btnSave.setOnClickListener(v -> finish());
+        btnCancel.setOnClickListener(v ->
+                runProtectedRequest(
+                        "close_plan",
+                        btnCancel,
+                        () -> runOnUiThread(this::finish)
+                ));
+
+        btnSave.setOnClickListener(v ->
+                runProtectedRequest(
+                        "save_plan",
+                        btnSave,
+                        () -> runOnUiThread(this::finish)
+                ));
     }
 
 
@@ -374,6 +418,7 @@ public class PlanListActivity extends MasterActivity
             itemsBySupermarket = new HashMap<>();
             expandedStates = new HashMap<>();
             supermarketSectionCounts = new HashMap<>();
+            supermarkets = new ArrayList<>();
 
             for (Supermarket supermarket : baseSupermarkets)
             {
@@ -392,8 +437,18 @@ public class PlanListActivity extends MasterActivity
             ArrayList<Supermarket> result = new ArrayList<>();
             supermarketSectionCounts.clear();
 
+            if (itemsBySupermarket == null)
+            {
+                this.supermarkets = result;
+                return;
+            }
+
             for (Supermarket sm : itemsBySupermarket.keySet())
             {
+                if (sm == null)
+                {
+                    continue;
+                }
                 ArrayList<Item> list = itemsBySupermarket.get(sm);
 
                 if (sm == unassigned_supermarket && (list == null || list.isEmpty()))
@@ -436,6 +491,10 @@ public class PlanListActivity extends MasterActivity
 
             for (Item item : sourceItems)
             {
+                if (item == null)
+                {
+                    continue;
+                }
                 Supermarket supermarket = item.getSupermarket();
                 ArrayList<Item> targetList;
 
@@ -483,7 +542,7 @@ public class PlanListActivity extends MasterActivity
             }
             else
             {
-                item.setPrice(0.0);
+                item.setUnchosen();
             }
         }
 
@@ -517,6 +576,10 @@ public class PlanListActivity extends MasterActivity
         @Override
         public void onBindViewHolder(@NonNull ViewHolder holder, @SuppressLint("RecyclerView") int position)
         {
+            if (position < 0 || position >= supermarkets.size())
+            {
+                return;
+            }
             Supermarket supermarket = supermarkets.get(position);
 
             if (supermarket == unassigned_supermarket)
@@ -562,6 +625,10 @@ public class PlanListActivity extends MasterActivity
             }
 
             ArrayList<Item> items = itemsBySupermarket.get(supermarket);
+            if (items == null)
+            {
+                items = new ArrayList<>();
+            }
 
             SupermarketItemsAdapterPlan supermarketsAdapter =
                     new SupermarketItemsAdapterPlan(items, activity, context, upperClassFns, supermarket, selectedSupermarket, listener);
@@ -584,7 +651,7 @@ public class PlanListActivity extends MasterActivity
             {
                 if (supermarket != unassigned_supermarket && baseSupermarkets.contains(supermarket))
                 {
-                    if (selectedSupermarket == supermarket)
+                    if (Objects.equals(selectedSupermarket, supermarket))
                     {
                         selectedSupermarket = null;
                     }
@@ -651,6 +718,10 @@ public class PlanListActivity extends MasterActivity
                 super.onBindViewHolder(holder, position);
 
                 Item item = items.get(position);
+                if (item == null)
+                {
+                    return;
+                }
 
                 holder.dragHandle.setImageResource(R.drawable.ic_add_simple);
 
@@ -723,11 +794,23 @@ public class PlanListActivity extends MasterActivity
                 holder.tvName.setOnClickListener(null);
                 holder.tvName.setActivated(false);
 
-                holder.dragHandle.setOnClickListener(v -> onItemMovedListener.accept(item, supermarket, selectedSupermarketParent));
+                holder.dragHandle.setOnClickListener(v ->
+                {
+                    if (onItemMovedListener == null || selectedSupermarketParent == null)
+                    {
+                        return;
+                    }
+
+                    onItemMovedListener.accept(item, supermarket, selectedSupermarketParent);
+                });
             }
 
             private void showItemPriceDif(ViewHolder holder, Item item, double newPrice)
             {
+                if (holder == null || item == null)
+                {
+                    return;
+                }
                 double priceDif = newPrice - item.getTotal();
 
                 String priceStr = Baskit.getTotalDisplayString(newPrice, true, false, false);
@@ -788,7 +871,8 @@ public class PlanListActivity extends MasterActivity
 
                     if (variant != null)
                     {
-                        return variant.getPrice();
+                        double price = variant.getPrice();
+                        return Double.isNaN(price) ? 0.0 : price;
                     }
                 }
 

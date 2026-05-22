@@ -249,7 +249,7 @@ public class Baskit extends Application
 
     public static boolean isValidUserName(String username, boolean showError)
     {
-        boolean valid = !username.isBlank();
+        boolean valid = username != null && !username.isBlank();
 
         if (!valid && showError)
         {

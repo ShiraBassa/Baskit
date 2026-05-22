@@ -99,7 +99,10 @@ public class SettingsActivity extends MasterActivity
         btnChangeUsername = findViewById(R.id.btn_change_username);
         etUsername = findViewById(R.id.et_username);
 
-        etUsername.setText(authHandler.getUser().getName());
+        if (authHandler.getUser() != null)
+        {
+            etUsername.setText(authHandler.getUser().getName());
+        }
         setLoading(true);
 
         runWhenServerActive(() ->
@@ -115,6 +118,10 @@ public class SettingsActivity extends MasterActivity
 
                 runOnUiThread(() ->
                 {
+                    if (isFinishing() || isDestroyed())
+                    {
+                        return;
+                    }
                     LinearLayoutManager lmSupermarkets = new LinearLayoutManager(this);
                     lmSupermarkets.setAutoMeasureEnabled(true);
 
@@ -135,6 +142,22 @@ public class SettingsActivity extends MasterActivity
             catch (IOException | JSONException e)
             {
                 Log.e("SettingsActivity", "Failed to load settings data", e);
+
+                runOnUiThread(() ->
+                {
+                    if (isFinishing() || isDestroyed())
+                    {
+                        return;
+                    }
+
+                    setLoading(false);
+
+                    Toast.makeText(
+                            SettingsActivity.this,
+                            Baskit.getAppStr(R.string.msg_general_error),
+                            Toast.LENGTH_SHORT
+                    ).show();
+                });
             }
         });
 
@@ -143,28 +166,68 @@ public class SettingsActivity extends MasterActivity
 
     private void setButtons()
     {
-        btnHome.setOnClickListener(view -> finish());
+        btnHome.setOnClickListener(view ->
+                runProtectedRequest(
+                        "close_settings",
+                        btnHome,
+                        () -> runOnUiThread(this::finish)
+                ));
 
-        btnLogOut.setOnClickListener(view -> {
-            authHandler.logOut();
+        btnLogOut.setOnClickListener(view ->
+                runProtectedRequest(
+                        "logout",
+                        btnLogOut,
+                        () ->
+                        {
+                            authHandler.logOut();
 
-            Intent intent = new Intent(SettingsActivity.this, LoginActivity.class);
-            intent.putExtra("fromLogout", true);
+                            runOnUiThread(() ->
+                            {
+                                if (isFinishing() || isDestroyed())
+                                {
+                                    return;
+                                }
 
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
-        });
+                                Intent intent = new Intent(SettingsActivity.this, LoginActivity.class);
+                                intent.putExtra("fromLogout", true);
 
-        btnChangeUsername.setOnClickListener(v -> {
-            String username = etUsername.getText().toString();
+                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                startActivity(intent);
+                            });
+                        }
+                ));
+
+        btnChangeUsername.setOnClickListener(v ->
+        {
+            String username = etUsername.getText().toString().trim();
 
             if (!Baskit.isValidUserName(username, true))
             {
                 return;
             }
 
-            runWhenServerActive(() -> authHandler.changeUserName(username));
-            Toast.makeText(SettingsActivity.this, Baskit.getAppStr(R.string.msg_username_changed) + username, Toast.LENGTH_SHORT).show();
+            runProtectedRequest(
+                    "change_username",
+                    btnChangeUsername,
+                    () ->
+                    {
+                        authHandler.changeUserName(username);
+
+                        runOnUiThread(() ->
+                        {
+                            if (isFinishing() || isDestroyed())
+                            {
+                                return;
+                            }
+
+                            Toast.makeText(
+                                    SettingsActivity.this,
+                                    Baskit.getAppStr(R.string.msg_username_changed) + username,
+                                    Toast.LENGTH_SHORT
+                            ).show();
+                        });
+                    }
+            );
         });
 
         btnAddSupermarket.setOnClickListener(v ->
@@ -192,6 +255,10 @@ public class SettingsActivity extends MasterActivity
                                             choices = Supermarket.getStringsFromSupermarkets(apiHandler.getUpdatedSupermarkets());
                                             cities = apiHandler.getCities();
 
+                                            if (isFinishing() || isDestroyed())
+                                            {
+                                                return;
+                                            }
                                             SettingsActivity.this.runOnUiThread(() ->
                                             {
                                                 supermarketsAdapter.updateData(choices);
@@ -206,6 +273,7 @@ public class SettingsActivity extends MasterActivity
                                         catch (Exception e)
                                         {
                                             Log.e("SettingsActivity", "Full refresh after add failed", e);
+                                            SettingsActivity.this.runOnUiThread(() -> setLoading(false));
                                         }
                                     }).start()));
                         },
@@ -219,64 +287,61 @@ public class SettingsActivity extends MasterActivity
                 throw new RuntimeException(e);
             }
         });
-
-        btnRemoveSupermarket.setOnClickListener(new View.OnClickListener()
+        btnRemoveSupermarket.setOnClickListener(v ->
         {
-            @SuppressLint("NotifyDataSetChanged")
-            @Override
-            public void onClick(View v)
+            if (supermarketsAdapter == null)
             {
-                if (supermarketsAdapter == null)
-                {
-                    return;
-                }
-
-                String supermarketName = supermarketsAdapter.getSelectedSupermarketName();
-                String sectionName = supermarketsAdapter.getSelectedSectionName();
-
-                if (supermarketName == null || sectionName == null)
-                {
-                    return;
-                }
-
-                if (!Baskit.isOnline(SettingsActivity.this))
-                {
-                    return;
-                }
-
-                setLoading(true);
-
-                new Thread(() ->
-                        removeSupermarketSection(
-                                new Supermarket(supermarketName, sectionName),
-                                () ->
-                                        new Thread(() ->
-                                        {
-                                            try
-                                            {
-                                                apiHandler.reset();
-
-                                                choices = Supermarket.getStringsFromSupermarkets(apiHandler.getUpdatedSupermarkets());
-                                                cities = apiHandler.getCities();
-
-                                                runOnUiThread(() ->
-                                                {
-                                                    supermarketsAdapter.updateData(choices);
-                                                    supermarketsAdapter.notifyDataSetChanged();
-
-                                                    citiesAdapter.updateData(cities);
-                                                    citiesAdapter.notifyDataSetChanged();
-
-                                                    setLoading(false);
-                                                });
-                                            }
-                                            catch (Exception e)
-                                            {
-                                                Log.e("SettingsActivity", "Full refresh after remove failed", e);
-                                                runOnUiThread(() -> setLoading(false));
-                                            }
-                                        }).start())).start();
+                return;
             }
+
+            String supermarketName = supermarketsAdapter.getSelectedSupermarketName();
+            String sectionName = supermarketsAdapter.getSelectedSectionName();
+
+            if (supermarketName == null || sectionName == null)
+            {
+                return;
+            }
+
+            setLoading(true);
+
+            runProtectedRequest(
+                    "remove_supermarket_" + supermarketName + "_" + sectionName,
+                    btnRemoveSupermarket,
+                    () -> removeSupermarketSection(
+                            new Supermarket(supermarketName, sectionName),
+                            () ->
+                            {
+                                try
+                                {
+                                    apiHandler.reset();
+
+                                    choices = Supermarket.getStringsFromSupermarkets(apiHandler.getUpdatedSupermarkets());
+                                    cities = apiHandler.getCities();
+
+                                    runOnUiThread(() ->
+                                    {
+                                        if (isFinishing() || isDestroyed())
+                                        {
+                                            return;
+                                        }
+
+                                        supermarketsAdapter.updateData(choices);
+                                        supermarketsAdapter.notifyDataSetChanged();
+
+                                        citiesAdapter.updateData(cities);
+                                        citiesAdapter.notifyDataSetChanged();
+
+                                        setLoading(false);
+                                    });
+                                }
+                                catch (Exception e)
+                                {
+                                    Log.e("SettingsActivity", "Full refresh after remove failed", e);
+
+                                    runOnUiThread(() -> setLoading(false));
+                                }
+                            })
+            );
         });
 
         btnAddCity.setOnClickListener(v ->
@@ -302,6 +367,10 @@ public class SettingsActivity extends MasterActivity
                                 {
                                     apiHandler.setCities(city_choices);
 
+                                    if (isFinishing() || isDestroyed())
+                                    {
+                                        return;
+                                    }
                                     SettingsActivity.this.runOnUiThread(() ->
                                     {
                                         citiesAdapter.notifyDataSetChanged();
@@ -325,40 +394,44 @@ public class SettingsActivity extends MasterActivity
                 throw new RuntimeException(e);
             }
         });
-
-        btnRemoveCity.setOnClickListener(new View.OnClickListener()
+        btnRemoveCity.setOnClickListener(v ->
         {
-            @SuppressLint("NotifyDataSetChanged")
-            @Override
-            public void onClick(View v)
+            if (citiesAdapter == null)
             {
-                if (citiesAdapter == null)
-                {
-                    return;
-                }
-
-                String city = citiesAdapter.getSelectedCity();
-
-                if (city == null || city.isEmpty())
-                {
-                    return;
-                }
-
-                setLoading(true);
-
-                removeCity(city, () ->
-                        runOnUiThread(() ->
-                        {
-                            if (cities != null)
-                            {
-                                cities.remove(city);
-                                citiesAdapter.updateData(cities);
-                                citiesAdapter.notifyDataSetChanged();
-                                updateSupermarketButtonState();
-                                setLoading(false);
-                            }
-                        }));
+                return;
             }
+
+            String city = citiesAdapter.getSelectedCity();
+
+            if (city == null || city.isBlank())
+            {
+                return;
+            }
+
+            setLoading(true);
+
+            runProtectedRequest(
+                    "remove_city_" + city,
+                    btnRemoveCity,
+                    () -> removeCity(city, () ->
+                            runOnUiThread(() ->
+                            {
+                                if (isFinishing() || isDestroyed())
+                                {
+                                    return;
+                                }
+
+                                if (cities != null)
+                                {
+                                    cities.remove(city);
+                                    citiesAdapter.updateData(cities);
+                                    citiesAdapter.notifyDataSetChanged();
+                                    updateSupermarketButtonState();
+                                }
+
+                                setLoading(false);
+                            }))
+            );
         });
     }
 
@@ -388,6 +461,10 @@ public class SettingsActivity extends MasterActivity
 
                 if (!cities.contains(city))
                 {
+                    if (onComplete != null)
+                    {
+                        new Handler(Looper.getMainLooper()).post(onComplete);
+                    }
                     return;
                 }
 
@@ -416,11 +493,18 @@ public class SettingsActivity extends MasterActivity
             String supermarketName = supermarket.getSupermarket();
             String sectionName = supermarket.getSection();
 
-            if (!branches.containsKey(supermarketName) || branches.get(supermarketName) == null) {
-                branches.put(supermarketName, new ArrayList<>());
+            ArrayList<String> sections = branches.get(supermarketName);
+
+            if (sections == null)
+            {
+                sections = new ArrayList<>();
+                branches.put(supermarketName, sections);
             }
 
-            Objects.requireNonNull(branches.get(supermarketName)).add(sectionName);
+            if (!sections.contains(sectionName))
+            {
+                sections.add(sectionName);
+            }
             apiHandler.setBranches(branches);
             apiHandler.updateSupermarkets();
             apiHandler.reset();
@@ -441,6 +525,10 @@ public class SettingsActivity extends MasterActivity
         try
         {
             Map<String, ArrayList<String>> branches = Supermarket.getStringsFromSupermarkets(apiHandler.getUpdatedSupermarkets());
+            if (branches == null)
+            {
+                return;
+            }
             String supermarketName = supermarket.getSupermarket();
             Objects.requireNonNull(branches.get(supermarketName)).remove(supermarket.getSection());
 
@@ -468,6 +556,10 @@ public class SettingsActivity extends MasterActivity
     {
         runOnUiThread(() ->
         {
+            if (isFinishing() || isDestroyed())
+            {
+                return;
+            }
             btnAddCity.setEnabled(!loading);
 
             if (loading)

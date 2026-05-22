@@ -42,6 +42,18 @@
     </androidx.cardview.widget.CardView>
 
     <TextView
+        android:id="@+id/tv_empty"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="18dp"
+        android:gravity="center"
+        android:text="@string/msg_no_available_supermarkets"
+        android:textColor="?attr/colorOnSurface"
+        android:textSize="15sp"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:fontFamily="sans-serif-medium"

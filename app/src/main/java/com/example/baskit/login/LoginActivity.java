@@ -38,7 +38,14 @@ public class LoginActivity extends MasterActivity implements FirebaseAuthHandler
         signUpLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result ->
-                        finishLogin());
+                {
+                    if (isFinishing() || isDestroyed())
+                    {
+                        return;
+                    }
+
+                    finishLogin();
+                });
 
         authHandler = FirebaseAuthHandler.getInstance();
 
@@ -54,9 +61,22 @@ public class LoginActivity extends MasterActivity implements FirebaseAuthHandler
                         @Override
                         public void onAuthSuccess()
                         {
+                            if (isFinishing() || isDestroyed())
+                            {
+                                return;
+                            }
+
                             User user = authHandler.getUser();
 
-                            if (user.getName().isEmpty())
+                            if (user == null)
+                            {
+                                startLogin();
+                                return;
+                            }
+
+                            String userName = user.getName();
+
+                            if (userName == null || userName.isBlank())
                             {
                                 signUpLauncher.launch(new Intent(LoginActivity.this, SignUpActivity.class));
                             }
@@ -69,6 +89,10 @@ public class LoginActivity extends MasterActivity implements FirebaseAuthHandler
                         @Override
                         public void onAuthError(String msg, FirebaseAuthHandler.ErrorType type)
                         {
+                            if (isFinishing() || isDestroyed())
+                            {
+                                return;
+                            }
                             if (type == FirebaseAuthHandler.ErrorType.SERVER)
                             {
                                 runWhenServerActive(() ->
@@ -92,17 +116,23 @@ public class LoginActivity extends MasterActivity implements FirebaseAuthHandler
 
     private void setButtons()
     {
-        btnSubmit.setOnClickListener(view -> {
+        btnSubmit.setOnClickListener(view ->
+        {
+            if (isFinishing() || isDestroyed())
+            {
+                return;
+            }
+
             boolean focused = false;
 
             disableButtons();
             etEmail.setError(null);
             etPassword.setError(null);
 
-            String email = etEmail.getText().toString();
+            String email = etEmail.getText().toString().trim();
             String password = etPassword.getText().toString();
 
-            if (email.isEmpty())
+            if (email.isBlank())
             {
                 enableButtons();
                 etEmail.setError(Baskit.getAppStr(R.string.auth_enter_email));
@@ -110,7 +140,7 @@ public class LoginActivity extends MasterActivity implements FirebaseAuthHandler
                 focused = true;
             }
 
-            if (password.isEmpty())
+            if (password.isBlank())
             {
                 enableButtons();
                 etPassword.setError(Baskit.getAppStr(R.string.auth_enter_password));
@@ -121,10 +151,13 @@ public class LoginActivity extends MasterActivity implements FirebaseAuthHandler
                 }
             }
 
-            if (!email.isEmpty() && !password.isEmpty())
+            if (!email.isBlank() && !password.isBlank())
             {
-                runWhenServerActive(() ->
-                        authHandler.signInOrSignUp(email, password, LoginActivity.this));
+                runProtectedRequest(
+                        "login_submit",
+                        btnSubmit,
+                        () -> authHandler.signInOrSignUp(email, password, LoginActivity.this)
+                );
             }
         });
 
@@ -143,6 +176,10 @@ public class LoginActivity extends MasterActivity implements FirebaseAuthHandler
 
     private void disableButtons()
     {
+        if (isFinishing() || isDestroyed())
+        {
+            return;
+        }
         etEmail.setEnabled(false);
         etPassword.setEnabled(false);
         btnSubmit.setEnabled(false);
@@ -150,6 +187,10 @@ public class LoginActivity extends MasterActivity implements FirebaseAuthHandler
 
     private void enableButtons()
     {
+        if (isFinishing() || isDestroyed())
+        {
+            return;
+        }
         etEmail.setEnabled(true);
         etPassword.setEnabled(true);
         btnSubmit.setEnabled(true);
@@ -157,13 +198,17 @@ public class LoginActivity extends MasterActivity implements FirebaseAuthHandler
 
     private void startLogin()
     {
+        if (isFinishing() || isDestroyed())
+        {
+            return;
+        }
         setContentView(R.layout.activity_login);
         init();
     }
 
     private void finishLogin()
     {
-        if (!homeStarted)
+        if (!homeStarted && !isFinishing() && !isDestroyed())
         {
             homeStarted = true;
             boolean fromLink = getIntent().getBooleanExtra("fromLink", false);
@@ -175,7 +220,9 @@ public class LoginActivity extends MasterActivity implements FirebaseAuthHandler
             }
             else
             {
-                startActivity(new Intent(LoginActivity.this, HomeActivity.class));
+                Intent homeIntent = new Intent(LoginActivity.this, HomeActivity.class);
+                homeIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(homeIntent);
             }
 
             finish();
@@ -185,9 +232,21 @@ public class LoginActivity extends MasterActivity implements FirebaseAuthHandler
     @Override
     public void onAuthSuccess()
     {
+        if (isFinishing() || isDestroyed())
+        {
+            return;
+        }
         User user = authHandler.getUser();
 
-        if (!Baskit.isValidUserName(user.getName(), true))
+        if (user == null)
+        {
+            enableButtons();
+            return;
+        }
+
+        String userName = user.getName();
+
+        if (userName == null || !Baskit.isValidUserName(userName, true))
         {
             signUpLauncher.launch(new Intent(LoginActivity.this, SignUpActivity.class));
         }
@@ -200,6 +259,10 @@ public class LoginActivity extends MasterActivity implements FirebaseAuthHandler
     @Override
     public void onAuthError(String msg, FirebaseAuthHandler.ErrorType type)
     {
+        if (isFinishing() || isDestroyed())
+        {
+            return;
+        }
         if (type == FirebaseAuthHandler.ErrorType.SERVER)
         {
             runWhenServerActive(() ->
@@ -224,6 +287,10 @@ public class LoginActivity extends MasterActivity implements FirebaseAuthHandler
                 break;
         }
 
+        if (etEmail == null || etPassword == null || btnSubmit == null)
+        {
+            return;
+        }
         enableButtons();
     }
 }

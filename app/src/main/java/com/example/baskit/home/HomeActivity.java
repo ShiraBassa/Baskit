@@ -137,8 +137,11 @@ public class HomeActivity extends MasterActivity
 
             if ("https".equals(scheme) && "www.baskit.com".equals(host) && "/joinlist".equals(path) && inviteCode != null)
             {
+                user = authHandler.getUser();
+
                 setContentView(R.layout.activity_home);
                 init();
+
                 Intent loginIntent = new Intent(this, LoginActivity.class);
                 loginIntent.putExtra("fromLink", true);
                 loginLauncher.launch(loginIntent);
@@ -190,11 +193,13 @@ public class HomeActivity extends MasterActivity
             runWhenServerActive(() ->
                     dbHandler.getListNames(user, listNames -> runOnUiThread(() ->
                     {
+                        if (isFinishing() || isDestroyed()) return;
+
                         if (listsGridAdapter != null)
                         {
-                            listsGridAdapter.updateList(listNames);
+                            listsGridAdapter.updateList(listNames != null ? listNames : new ArrayList<>());
 
-                            boolean isEmpty = listNames.isEmpty();
+                            boolean isEmpty = (listNames == null || listNames.isEmpty());
                             listsRecycler.setVisibility(isEmpty ? android.view.View.GONE : android.view.View.VISIBLE);
                             emptyListsContainer.setVisibility(isEmpty ? android.view.View.VISIBLE : android.view.View.GONE);
                         }
@@ -223,7 +228,7 @@ public class HomeActivity extends MasterActivity
 
         if (user != null)
         {
-            tvTitle.setText("היי " + user.getName());
+            tvTitle.setText(Baskit.getAppStr(R.string.hello) + " " + user.getName());
         }
         else
         {
@@ -232,9 +237,26 @@ public class HomeActivity extends MasterActivity
             return;
         }
 
-        dbHandler.listenToUserName(user, username -> {
+        dbHandler.listenToUserName(user, username ->
+        {
+            if (isFinishing() || isDestroyed())
+            {
+                return;
+            }
+
+            if (username == null || username.isBlank())
+            {
+                return;
+            }
+
             user.setName(username);
-            tvTitle.setText(Baskit.getAppStr(R.string.hello) + " " + authHandler.getUser().getName());
+
+            User currentUser = authHandler.getUser();
+
+            if (currentUser != null)
+            {
+                tvTitle.setText(Baskit.getAppStr(R.string.hello) + " " + currentUser.getName());
+            }
         });
 
         createAddListAlertDialog();
@@ -253,9 +275,9 @@ public class HomeActivity extends MasterActivity
                 {
                     if (listsGridAdapter != null)
                     {
-                        listsGridAdapter.updateList(listNames);
+                        listsGridAdapter.updateList(listNames != null ? listNames : new ArrayList<>());
 
-                        boolean isEmpty = listNames.isEmpty();
+                        boolean isEmpty = (listNames == null || listNames.isEmpty());
                         listsRecycler.setVisibility(isEmpty ? android.view.View.GONE : android.view.View.VISIBLE);
                         emptyListsContainer.setVisibility(isEmpty ? android.view.View.VISIBLE : android.view.View.GONE);
                     }
@@ -266,9 +288,9 @@ public class HomeActivity extends MasterActivity
                 {
                     if (listsGridAdapter != null)
                     {
-                        listsGridAdapter.updateList(listNames);
+                        listsGridAdapter.updateList(listNames != null ? listNames : new ArrayList<>());
 
-                        boolean isEmpty = listNames.isEmpty();
+                        boolean isEmpty = (listNames == null || listNames.isEmpty());
                         listsRecycler.setVisibility(isEmpty ? android.view.View.GONE : android.view.View.VISIBLE);
                         emptyListsContainer.setVisibility(isEmpty ? android.view.View.VISIBLE : android.view.View.GONE);
                     }
@@ -277,10 +299,28 @@ public class HomeActivity extends MasterActivity
 
     private void setButtons()
     {
-        btnSettings.setOnClickListener(view -> startActivity(new Intent(HomeActivity.this, SettingsActivity.class)));
+        btnSettings.setOnClickListener(view ->
+                runProtectedRequest(
+                        "open_settings",
+                        btnSettings,
+                        () -> runOnUiThread(() ->
+                                startActivity(new Intent(HomeActivity.this, SettingsActivity.class)))
+                ));
 
-        btnCreateList.setOnClickListener(view -> {
+        btnCreateList.setOnClickListener(view ->
+        {
+            if (adCreateList == null || adCreateList.isShowing())
+            {
+                return;
+            }
+
             adEtName.setText("");
+
+            if (isFinishing() || isDestroyed())
+            {
+                return;
+            }
+
             adCreateList.show();
         });
     }
@@ -302,18 +342,51 @@ public class HomeActivity extends MasterActivity
 
         adBtnCreate.setOnClickListener(v ->
         {
-            adBtnCreate.setActivated(false);
+            String listName = adEtName.getText().toString().trim();
 
-            runWhenServerActive(() ->
-                    authHandler.createList(adEtName.getText().toString(), HomeActivity.this, newList -> {
-                        adCreateList.dismiss();
-                        openListScreen(newList.getId());
-                    }));
+            if (listName.isBlank())
+            {
+                Toast.makeText(
+                        HomeActivity.this,
+                        Baskit.getAppStr(R.string.msg_enter_list_name),
+                        Toast.LENGTH_SHORT
+                ).show();
+                return;
+            }
+
+            runProtectedRequest(
+                    "create_list",
+                    adBtnCreate,
+                    () -> authHandler.createList(listName, HomeActivity.this, newList ->
+                    {
+                        runOnUiThread(() ->
+                        {
+                            if (isFinishing() || isDestroyed())
+                            {
+                                return;
+                            }
+
+                            if (adCreateList != null && adCreateList.isShowing())
+                            {
+                                adCreateList.dismiss();
+                            }
+
+                            if (newList != null && newList.getId() != null)
+                            {
+                                openListScreen(newList.getId());
+                            }
+                        });
+                    })
+            );
         });
     }
 
     private void openListScreen(String listID)
     {
+        if (listID == null || listID.isBlank())
+        {
+            return;
+        }
         Intent intent = new Intent(HomeActivity.this, ListActivity.class);
         intent.putExtra("listId", listID);
 
@@ -322,8 +395,29 @@ public class HomeActivity extends MasterActivity
 
     private void sendJoinRequest(String invitationCode)
     {
-        String listId = new String(Base64.decode(invitationCode, Base64.NO_WRAP), StandardCharsets.UTF_8);
-        dbHandler.sendJoinRequest(listId, user, HomeActivity.this);
+        if (invitationCode == null || invitationCode.isBlank() || user == null)
+        {
+            return;
+        }
+
+        try
+        {
+            String listId = new String(
+                    Base64.decode(invitationCode, Base64.NO_WRAP),
+                    StandardCharsets.UTF_8
+            );
+
+            if (listId.isBlank())
+            {
+                return;
+            }
+
+            dbHandler.sendJoinRequest(listId, user, HomeActivity.this);
+        }
+        catch (Exception e)
+        {
+            Log.e("HomeActivity", "Failed decoding invitation code", e);
+        }
     }
 
 
@@ -429,7 +523,13 @@ public class HomeActivity extends MasterActivity
         @Override
         public void onBindViewHolder(@NonNull GridAdapter.GridViewHolder holder, int position)
         {
-            holder.button.setText(listNames.get(position));
+            String listName = listNames.get(position);
+
+            holder.button.setText(
+                    listName != null && !listName.isBlank()
+                            ? listName
+                            : Baskit.getAppStr(R.string.unnamed_list)
+            );
 
             holder.button.setOnClickListener(v ->
             {
@@ -460,7 +560,12 @@ public class HomeActivity extends MasterActivity
         public void updateList(ArrayList<String> newList)
         {
             this.listNames.clear();
-            this.listNames.addAll(newList);
+
+            if (newList != null)
+            {
+                this.listNames.addAll(newList);
+            }
+
             notifyDataSetChanged();
         }
     }

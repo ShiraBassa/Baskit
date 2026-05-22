@@ -197,26 +197,38 @@ public class CategoryActivity extends MasterActivity
                                                     @Override
                                                     public void updateItemCategory(Item item)
                                                     {
-                                                        runWhenServerActive(() ->
-                                                        {
-                                                            category.removeVariants(item.getBaseName());
-                                                            category.addItem(item);
-                                                            dbHandler.updateCategory(list, category);
-                                                        });
+                                                        runProtectedRequest(
+                                                                "update_item_category_" + item.getAbsoluteId(),
+                                                                null,
+                                                                () ->
+                                                                {
+                                                                    category.removeVariants(item.getBaseName());
+                                                                    category.addItem(item);
+                                                                    dbHandler.updateCategory(list, category);
+                                                                }
+                                                        );
                                                     }
 
                                                     @Override
                                                     public void removeItemCategory(Item item)
                                                     {
                                                         if (category == null) return;
-                                                        runWhenServerActive(() -> dbHandler.removeItem(list, category, item));
+                                                        runProtectedRequest(
+                                                                "remove_item_" + item.getAbsoluteId(),
+                                                                null,
+                                                                () -> dbHandler.removeItem(list, category, item)
+                                                        );
                                                     }
 
                                                     @Override
                                                     public void updateCategory()
                                                     {
                                                         if (category == null) return;
-                                                        runWhenServerActive(() -> dbHandler.updateCategory(list, category));
+                                                        runProtectedRequest(
+                                                                "update_category_" + category.getName(),
+                                                                null,
+                                                                () -> dbHandler.updateCategory(list, category)
+                                                        );
                                                     }
                                                 },
                                                 supermarkets
@@ -243,7 +255,12 @@ public class CategoryActivity extends MasterActivity
 
     private void setButtons()
     {
-        btnFinished.setOnClickListener(view -> runWhenServerActive(() -> dbHandler.finishCategory(list, category)));
+        btnFinished.setOnClickListener(view ->
+                runProtectedRequest(
+                        "finish_category_" + (category != null ? category.getName() : "null"),
+                        btnFinished,
+                        () -> dbHandler.finishCategory(list, category)
+                ));
 
         btnBack.setOnClickListener(view -> finish());
 
@@ -291,7 +308,12 @@ public class CategoryActivity extends MasterActivity
                 if (id == R.id.action_delete_items)
                 {
                     list.removeCategory(category);
-                    runWhenServerActive(() -> dbHandler.removeCategory(list, category));
+                    runProtectedRequest(
+                            "remove_category_" + (category != null ? category.getName() : "null"),
+                            btnMore,
+                            () -> dbHandler.removeCategory(list, category)
+                    );
+
                     finish();
                     return true;
                 }
@@ -342,13 +364,15 @@ public class CategoryActivity extends MasterActivity
                 throw new RuntimeException(e);
             }
 
-            if (list.hasCategory(categoryName))
+            if (!list.hasCategory(categoryName))
             {
                 runWhenServerActive(() -> dbHandler.addCategory(list, new Category(categoryName)));
             }
 
-            runWhenServerActive(() ->
-                    dbHandler.addItem(list, categoryName, item, new FirebaseDBHandler.DBCallback()
+            runProtectedRequest(
+                    "add_item_" + item.getAbsoluteId(),
+                    btnAddItem,
+                    () -> dbHandler.addItem(list, categoryName, item, new FirebaseDBHandler.DBCallback()
                     {
                         @Override
                         public void onComplete()
@@ -372,7 +396,11 @@ public class CategoryActivity extends MasterActivity
                                     snackbar.getView().setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
 
                                     snackbar.setAction(Baskit.getAppStr(R.string.action_cancel), v ->
-                                            runWhenServerActive(() -> dbHandler.removeItem(list, categoryName, item)));
+                                                    runProtectedRequest(
+                                                            "undo_add_item_" + item.getAbsoluteId(),
+                                                            null,
+                                                            () -> dbHandler.removeItem(list, categoryName, item)
+                                                    ));
 
                                     snackbar.setAnchorView(btnAddItem);
                                     snackbar.show();
@@ -393,7 +421,8 @@ public class CategoryActivity extends MasterActivity
                                 Toast.makeText(CategoryActivity.this, Baskit.getAppStr(R.string.msg_general_error), Toast.LENGTH_SHORT).show();
                             });
                         }
-                    }));
+                    })
+            );
         }).start();
     }
 
@@ -424,7 +453,11 @@ public class CategoryActivity extends MasterActivity
                                 )
                         );
 
-                        runWhenServerActive(() -> dbHandler.updateCategory(list, category));
+                        runProtectedRequest(
+                                "update_category_cheapest_" + category.getName(),
+                                btnSortList,
+                                () -> dbHandler.updateCategory(list, category)
+                        );
                         itemsAdapter.updateItems(new ArrayList<>(category.getItems()));
                     }
 
@@ -443,7 +476,11 @@ public class CategoryActivity extends MasterActivity
                                 )
                         );
 
-                        runWhenServerActive(() -> dbHandler.updateCategory(list, category));
+                        runProtectedRequest(
+                                "update_category_supermarket_" + category.getName(),
+                                btnSortList,
+                                () -> dbHandler.updateCategory(list, category)
+                        );
                         itemsAdapter.updateItems(new ArrayList<>(category.getItems()));
                     }
                 }

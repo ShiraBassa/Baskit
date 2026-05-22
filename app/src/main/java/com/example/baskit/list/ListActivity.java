@@ -95,7 +95,7 @@ public class ListActivity extends MasterActivity
             resumeInit();
         }
 
-        if (!initialized && tvTotal != null && list != null)
+        if (!initialized && !isFinishing() && !isDestroyed() && tvTotal != null && list != null)
         {
             tvTotal.setText(Baskit.getTotalDisplayString(list.getTotal(), list.allPricesKnown(), true, true));
             tvTotal.setVisibility(View.VISIBLE);
@@ -155,6 +155,10 @@ public class ListActivity extends MasterActivity
                     @Override
                     public void onListFetched(List newList)
                     {
+                        if (isFinishing() || isDestroyed())
+                        {
+                            return;
+                        }
                         refreshWithNewList(newList);
                     }
 
@@ -170,10 +174,26 @@ public class ListActivity extends MasterActivity
 
     private void setButtons()
     {
-        btnBack.setOnClickListener(view -> finish());
+        btnBack.setOnClickListener(view ->
+                runProtectedRequest(
+                        "close_list",
+                        btnBack,
+                        () -> runOnUiThread(this::finish)
+                ));
 
-        btnFinished.setOnClickListener(view -> runWhenServerActive(() ->
-                dbHandler.finishList(list)));
+        btnFinished.setOnClickListener(view ->
+        {
+            if (list == null)
+            {
+                return;
+            }
+
+            runProtectedRequest(
+                    "finish_list_" + list.getId(),
+                    btnFinished,
+                    () -> dbHandler.finishList(list)
+            );
+        });
 
         btnAddItem.setOnClickListener(view ->
         {
@@ -183,39 +203,99 @@ public class ListActivity extends MasterActivity
                 return;
             }
 
+            if (list == null)
+            {
+                Toast.makeText(ListActivity.this, Baskit.getAppStr(R.string.msg_loading), Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             addItemFragment.updateData(list.toItemNames());
             addItemFragment.show(getSupportFragmentManager(), "AddItemFragment");
         });
 
-        btnShare.setOnClickListener(v -> {
-            if (shareAlertDialog != null)
-            {
-                shareAlertDialog.show();
-            }
-            else
+        btnShare.setOnClickListener(v ->
+        {
+            if (shareAlertDialog == null)
             {
                 Toast.makeText(ListActivity.this, Baskit.getAppStr(R.string.msg_loading), Toast.LENGTH_SHORT).show();
+                return;
             }
-        });
 
-        btnSortList.setOnClickListener(v -> {
-            if (!list.getRemainedItems().isEmpty())
+            if (isFinishing() || isDestroyed())
             {
-                try
-                {
-                    showSortBottomSheet();
-                }
-                catch (JSONException | IOException e)
-                {
-                    throw new RuntimeException(e);
-                }
+                return;
             }
+
+            shareAlertDialog.show();
         });
 
-        btnPlan.setOnClickListener(v -> {
-            Intent intent = new Intent(ListActivity.this, PlanListActivity.class);
-            intent.putExtra("listId", list.getId());
-            startActivity(intent);
+        btnSortList.setOnClickListener(v ->
+        {
+            if (list == null || list.getRemainedItems().isEmpty())
+            {
+                return;
+            }
+
+            runProtectedRequest(
+                    "sort_list_preview_" + list.getId(),
+                    btnSortList,
+                    () ->
+                    {
+                        try
+                        {
+                            runOnUiThread(() ->
+                            {
+                                if (isFinishing() || isDestroyed())
+                                {
+                                    return;
+                                }
+
+                                try
+                                {
+                                    showSortBottomSheet();
+                                }
+                                catch (JSONException | IOException e)
+                                {
+                                    android.util.Log.e("ListActivity", "Failed showing sort sheet", e);
+
+                                    Toast.makeText(
+                                            ListActivity.this,
+                                            Baskit.getAppStr(R.string.msg_general_error),
+                                            Toast.LENGTH_SHORT
+                                    ).show();
+                                }
+                            });
+                        }
+                        catch (Exception e)
+                        {
+                            android.util.Log.e("ListActivity", "Sort request failed", e);
+                        }
+                    }
+            );
+        });
+
+        btnPlan.setOnClickListener(v ->
+        {
+            if (list == null || list.getId() == null)
+            {
+                return;
+            }
+
+            runProtectedRequest(
+                    "open_plan_" + list.getId(),
+                    btnPlan,
+                    () -> runOnUiThread(() ->
+                    {
+                        if (isFinishing() || isDestroyed())
+                        {
+                            return;
+                        }
+
+                        Intent intent = new Intent(ListActivity.this, PlanListActivity.class);
+                        intent.putExtra("listId", list.getId());
+                        startActivity(intent);
+                    })
+            );
         });
 
         btnMore.setOnClickListener(v -> {
@@ -249,9 +329,17 @@ public class ListActivity extends MasterActivity
 
                         if (!newName.isEmpty())
                         {
-                            list.setName(newName);
-                            runWhenServerActive(() -> dbHandler.renameList(list, newName));
-                            dialog.dismiss();
+                            runProtectedRequest(
+                                    "rename_list_" + list.getId(),
+                                    btnSave,
+                                    () ->
+                                    {
+                                        list.setName(newName);
+                                        dbHandler.renameList(list, newName);
+
+                                        runOnUiThread(dialog::dismiss);
+                                    }
+                            );
                         }
                         else
                         {
@@ -265,30 +353,84 @@ public class ListActivity extends MasterActivity
                 }
                 else if (id == R.id.action_duplicate)
                 {
-                    runWhenServerActive(() ->
-                            authHandler.duplicateList(list, newList -> runOnUiThread(() ->
-                                    Toast.makeText(ListActivity.this,
-                                            Baskit.getAppStr(R.string.msg_list_duplicated),
-                                            Toast.LENGTH_SHORT).show()
-                            )));
+                    runProtectedRequest(
+                            "duplicate_list_" + list.getId(),
+                            null,
+                            () -> authHandler.duplicateList(list, newList ->
+                                    runOnUiThread(() ->
+                                    {
+                                        if (isFinishing() || isDestroyed())
+                                        {
+                                            return;
+                                        }
+
+                                        Toast.makeText(
+                                                ListActivity.this,
+                                                Baskit.getAppStr(R.string.msg_list_duplicated),
+                                                Toast.LENGTH_SHORT
+                                        ).show();
+                                    }))
+                    );
                 }
                 else if (id == R.id.action_delete_items)
                 {
-                    list.removeAllItems();
-                    runWhenServerActive(() -> dbHandler.removeItems(list));
+                    runProtectedRequest(
+                            "remove_items_" + list.getId(),
+                            null,
+                            () ->
+                            {
+                                list.removeAllItems();
+                                dbHandler.removeItems(list);
+                            }
+                    );
                 }
                 else if (id == R.id.action_delete_list)
                 {
-                    runWhenServerActive(() -> dbHandler.removeList(listId));
-                    authHandler.getUser().removeList(listId);
-                    finish();
+                    runProtectedRequest(
+                            "delete_list_" + listId,
+                            null,
+                            () ->
+                            {
+                                dbHandler.removeList(listId);
+
+                                if (authHandler.getUser() != null)
+                                {
+                                    authHandler.getUser().removeList(listId);
+                                }
+
+                                runOnUiThread(() ->
+                                {
+                                    if (!isFinishing() && !isDestroyed())
+                                    {
+                                        finish();
+                                    }
+                                });
+                            }
+                    );
                 }
                 else if (id == R.id.action_leave_list)
                 {
-                    runWhenServerActive(() -> dbHandler.leaveList(list, authHandler.getUser()));
-                    authHandler.getUser().removeList(listId);
+                    runProtectedRequest(
+                            "leave_list_" + listId,
+                            null,
+                            () ->
+                            {
+                                dbHandler.leaveList(list, authHandler.getUser());
 
-                    finish();
+                                if (authHandler.getUser() != null)
+                                {
+                                    authHandler.getUser().removeList(listId);
+                                }
+
+                                runOnUiThread(() ->
+                                {
+                                    if (!isFinishing() && !isDestroyed())
+                                    {
+                                        finish();
+                                    }
+                                });
+                            }
+                    );
                 }
 
                 return true;
@@ -300,6 +442,11 @@ public class ListActivity extends MasterActivity
 
     private void refreshWithNewList(List newList)
     {
+        if (isFinishing() || isDestroyed())
+        {
+            return;
+        }
+
         ListActivity.this.list = newList;
 
         // The list is null
@@ -315,7 +462,11 @@ public class ListActivity extends MasterActivity
             ListActivity.this.list.setId(listId);
         }
 
-        tvListName.setText(ListActivity.this.list.getName());
+        tvListName.setText(
+                ListActivity.this.list.getName() != null && !ListActivity.this.list.getName().isBlank()
+                        ? ListActivity.this.list.getName()
+                        : Baskit.getAppStr(R.string.unnamed_list)
+        );
         tvListName.setVisibility(View.VISIBLE);
         tvTotal.setText(Baskit.getTotalDisplayString(list.getTotal(), list.allPricesKnown(), true, true));
         tvTotal.setVisibility(View.VISIBLE);
@@ -393,6 +544,11 @@ public class ListActivity extends MasterActivity
 
     public void addItem(Item item)
     {
+        if (item == null || list == null)
+        {
+            return;
+        }
+
         if (groups == null)
         {
             if (addItemFragment != null) addItemFragment.endProgressBar();
@@ -400,17 +556,38 @@ public class ListActivity extends MasterActivity
             return;
         }
 
-        new Thread(() ->
+        Thread addItemThread = new Thread(() ->
         {
             String categoryName;
 
             try
             {
                 categoryName = apiHandler.getItemCategory(item);
+
+                if (categoryName != null)
+                {
+                    categoryName = categoryName.trim();
+                }
             }
             catch (IOException | JSONException e)
             {
-                throw new RuntimeException(e);
+                android.util.Log.e("ListActivity", "Failed resolving category", e);
+
+                runOnUiThread(() ->
+                {
+                    if (addItemFragment != null)
+                    {
+                        addItemFragment.endProgressBar();
+                    }
+
+                    Toast.makeText(
+                            ListActivity.this,
+                            Baskit.getAppStr(R.string.msg_general_error),
+                            Toast.LENGTH_SHORT
+                    ).show();
+                });
+
+                return;
             }
 
             if (categoryName == null || categoryName.isEmpty())
@@ -421,54 +598,72 @@ public class ListActivity extends MasterActivity
                 return;
             }
 
-            runWhenServerActive(() ->
-            {
-                if (list.hasCategory(categoryName))
-                {
-                    dbHandler.addCategory(list, new Category(categoryName));
-                }
-
-                dbHandler.addItem(list, categoryName, item, new FirebaseDBHandler.DBCallback()
-                {
-                    @Override
-                    public void onComplete()
+            final String finalCategoryName = categoryName;
+            runProtectedRequest(
+                    "add_item_" + item.getAbsoluteId(),
+                    btnAddItem,
+                    () ->
                     {
-                        runOnUiThread(() ->
+                        if (!list.hasCategory(finalCategoryName))
                         {
-                            if (addItemFragment != null)
-                            {
-                                addItemFragment.endProgressBar();
-                                addItemFragment.dismiss();
+                            dbHandler.addCategory(list, new Category(finalCategoryName));
+                        }
 
-                                addItemFragment = new AddItemFragment(
-                                        ListActivity.this,
-                                        ListActivity.this,
-                                        groups,
-                                        list.toItemNames(),
-                                        ListActivity.this::addItem,
-                                        list.getItemSuggestions()
-                                );
-                                addItemFragment.show(getSupportFragmentManager(), "AddItemFragment");
+                        dbHandler.addItem(list, finalCategoryName, item, new FirebaseDBHandler.DBCallback()
+                        {
+                            @Override
+                            public void onComplete()
+                            {
+                                if (isFinishing() || isDestroyed())
+                                {
+                                    return;
+                                }
+                                runOnUiThread(() ->
+                                {
+                                    if (addItemFragment != null)
+                                    {
+                                        addItemFragment.endProgressBar();
+                                        addItemFragment.dismiss();
+
+                                        addItemFragment = new AddItemFragment(
+                                                ListActivity.this,
+                                                ListActivity.this,
+                                                groups,
+                                                list.toItemNames(),
+                                                ListActivity.this::addItem,
+                                                list.getItemSuggestions()
+                                        );
+                                        addItemFragment.show(getSupportFragmentManager(), "AddItemFragment");
+                                    }
+                                });
+                            }
+
+                            @Override
+                            public void onFailure(Exception e)
+                            {
+                                android.util.Log.e("ListActivity", "Failed adding item", e);
+
+                                if (isFinishing() || isDestroyed())
+                                {
+                                    return;
+                                }
+                                runOnUiThread(() ->
+                                {
+                                    if (addItemFragment != null)
+                                    {
+                                        addItemFragment.endProgressBar();
+                                        addItemFragment.dismiss();
+                                    }
+                                    Toast.makeText(ListActivity.this, Baskit.getAppStr(R.string.msg_general_error), Toast.LENGTH_SHORT).show();
+                                });
                             }
                         });
                     }
+            );
+        });
 
-                    @Override
-                    public void onFailure(Exception e)
-                    {
-                        runOnUiThread(() ->
-                        {
-                            if (addItemFragment != null)
-                            {
-                                addItemFragment.endProgressBar();
-                                addItemFragment.dismiss();
-                            }
-                            Toast.makeText(ListActivity.this, Baskit.getAppStr(R.string.msg_general_error), Toast.LENGTH_SHORT).show();
-                        });
-                    }
-                });
-            });
-        }).start();
+        addItemThread.setName("ListAddItem");
+        addItemThread.start();
     }
 
 
@@ -496,7 +691,11 @@ public class ListActivity extends MasterActivity
                                         true
                                 )
                         );
-                        runWhenServerActive(() -> dbHandler.updateList(list));
+                        runProtectedRequest(
+                                "sort_cheapest_" + list.getId(),
+                                btnSortList,
+                                () -> dbHandler.updateList(list)
+                        );
                     }
 
                     @Override
@@ -512,7 +711,11 @@ public class ListActivity extends MasterActivity
                                         true
                                 )
                         );
-                        runWhenServerActive(() -> dbHandler.updateList(list));
+                        runProtectedRequest(
+                                "sort_supermarket_" + list.getId() + "_" + sm,
+                                btnSortList,
+                                () -> dbHandler.updateList(list)
+                        );
                     }
                 }
         );
@@ -565,7 +768,14 @@ public class ListActivity extends MasterActivity
         {
             Category category = categories.get(position);
 
-            String text = "- " + category.getName();
+            String categoryName = category.getName();
+
+            if (categoryName == null || categoryName.isBlank())
+            {
+                categoryName = Baskit.getAppStr(R.string.unnamed_category);
+            }
+
+            String text = "- " + categoryName;
             SpannableString spannable = new SpannableString(text);
 
             spannable.setSpan(
@@ -597,6 +807,10 @@ public class ListActivity extends MasterActivity
                 holder.tvName.setAlpha(0.5f);
             }
 
+            if (category == null)
+            {
+                return;
+            }
             holder.itemView.setOnClickListener(v -> {
                 Intent intent = new Intent(context, CategoryActivity.class);
                 intent.putExtra("listId", listId);
@@ -614,7 +828,7 @@ public class ListActivity extends MasterActivity
         @SuppressLint("NotifyDataSetChanged")
         void update(ArrayList<Category> newData)
         {
-            this.categories = newData;
+            this.categories = newData != null ? newData : new ArrayList<>();
             notifyDataSetChanged();
         }
     }

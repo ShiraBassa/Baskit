@@ -8,6 +8,7 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -46,7 +47,7 @@ public class ShareListAlertDialog
     final Button btnCopyLink;
     final RecyclerView recyclerRequests;
 
-    final Activity activity;
+    final MasterActivity activity;
 
     @SuppressLint("InflateParams")
     public ShareListAlertDialog(List list, MasterActivity activity, Context context)
@@ -64,13 +65,31 @@ public class ShareListAlertDialog
             @Override
             public void acceptRequest(Request request)
             {
-                activity.runWhenServerActive(() -> dbHandler.acceptRequest(list, request));
+                if (request == null || list == null)
+                {
+                    return;
+                }
+
+                activity.runProtectedRequest(
+                        "accept_request_" + request.getUserID(),
+                        null,
+                        () -> dbHandler.acceptRequest(list, request)
+                );
             }
 
             @Override
             public void declineRequest(Request request)
             {
-                activity.runWhenServerActive(() -> dbHandler.declineRequest(list, request));
+                if (request == null || list == null)
+                {
+                    return;
+                }
+
+                activity.runProtectedRequest(
+                        "decline_request_" + request.getUserID(),
+                        null,
+                        () -> dbHandler.declineRequest(list, request)
+                );
             }
         });
 
@@ -79,8 +98,22 @@ public class ShareListAlertDialog
 
         dbHandler.listenForRequests(list, updatedRequests ->
         {
-            if (activity.isFinishing() || activity.isDestroyed()) return;
-            requestsAdapter.updateRequests(updatedRequests);
+            if (activity == null || activity.isFinishing() || activity.isDestroyed())
+            {
+                return;
+            }
+
+            activity.runOnUiThread(() ->
+            {
+                if (activity.isFinishing() || activity.isDestroyed())
+                {
+                    return;
+                }
+
+                requestsAdapter.updateRequests(
+                        updatedRequests != null ? updatedRequests : new ArrayList<>()
+                );
+            });
         });
 
         adb = new androidx.appcompat.app.AlertDialog.Builder(context);
@@ -92,7 +125,19 @@ public class ShareListAlertDialog
 
     private void setButton()
     {
-        btnCopyLink.setOnClickListener(v -> copyLink(createLink()));
+        btnCopyLink.setOnClickListener(v ->
+        {
+            if (activity == null || activity.isFinishing() || activity.isDestroyed())
+            {
+                return;
+            }
+
+            activity.runProtectedRequest(
+                    "copy_invite_link_" + (list != null ? list.getId() : "unknown"),
+                    btnCopyLink,
+                    () -> copyLink(createLink())
+            );
+        });
     }
 
     public void show()
@@ -100,7 +145,18 @@ public class ShareListAlertDialog
         if (activity == null || activity.isFinishing() || activity.isDestroyed()) return;
         if (list == null) return;
 
-        tvListName.setText(list.getName());
+        String listName = list.getName();
+
+        tvListName.setText(
+                listName != null && !listName.isBlank()
+                        ? listName
+                        : Baskit.getAppStr(R.string.unnamed_list)
+        );
+
+        if (ad.isShowing())
+        {
+            return;
+        }
 
         ad.show();
     }
@@ -123,12 +179,24 @@ public class ShareListAlertDialog
         }
 
         ClipboardManager clipboard = (ClipboardManager) activity.getSystemService(CLIPBOARD_SERVICE);
+        if (clipboard == null)
+        {
+            Toast.makeText(activity, Baskit.getAppStr(R.string.msg_general_error), Toast.LENGTH_SHORT).show();
+            return;
+        }
         ClipData clip = ClipData.newPlainText(Baskit.getAppStr(R.string.list_invitation_label), link);
         clipboard.setPrimaryClip(clip);
 
         Toast.makeText(activity, Baskit.getAppStr(R.string.msg_link_copied), Toast.LENGTH_SHORT).show();
     }
 
+    public void dismiss()
+    {
+        if (ad != null && ad.isShowing())
+        {
+            ad.dismiss();
+        }
+    }
 
     public static class ShareListRequestsAdapter extends RecyclerView.Adapter<ShareListRequestsAdapter.ViewHolder>
     {
@@ -144,7 +212,9 @@ public class ShareListAlertDialog
 
         public ShareListRequestsAdapter(List list, UpperClassFunctions upperClassFns)
         {
-            this.requests = list.getRequests();
+            this.requests = list != null && list.getRequests() != null
+                    ? list.getRequests()
+                    : new ArrayList<>();
             this.upperClassFns = upperClassFns;
         }
 
@@ -177,9 +247,24 @@ public class ShareListAlertDialog
         @Override
         public void onBindViewHolder(@NonNull ViewHolder holder, int position)
         {
-            Request request = requests.get(position);
+            if (position < 0 || position >= requests.size())
+            {
+                return;
+            }
 
-            holder.tvUsername.setText(request.getUsername());
+            Request request = requests.get(position);
+            if (request == null)
+            {
+                return;
+            }
+
+            String username = request.getUsername();
+
+            holder.tvUsername.setText(
+                    username != null && !username.isBlank()
+                            ? username
+                            : Baskit.getAppStr(R.string.unknown_user)
+            );
             holder.tvUsername.setVisibility(View.VISIBLE);
 
             holder.btnAccept.setOnClickListener(v -> upperClassFns.acceptRequest(request));
@@ -196,7 +281,7 @@ public class ShareListAlertDialog
         @SuppressLint("NotifyDataSetChanged")
         public void updateRequests(ArrayList<Request> newRequests)
         {
-            this.requests = newRequests;
+            this.requests = newRequests != null ? newRequests : new ArrayList<>();
             notifyDataSetChanged();
         }
     }

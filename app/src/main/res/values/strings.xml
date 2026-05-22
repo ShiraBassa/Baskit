@@ -90,7 +90,13 @@
     <string name="msg_link_copied">The link has been copied!</string>
     <string name="msg_select_supermarket_and_section">Please choose a supermarket and a section</string>
     <string name="msg_select_city">Please choose a city</string>
+    <string name="msg_no_available_cities">All available cities were already added</string>
+    <string name="msg_no_available_supermarkets">All available supermarkets were already added</string>
     <string name="msg_enter_name">Please enter a name</string>
+    <string name="msg_enter_list_name">Please enter a list name</string>
+    <string name="unnamed_list">Unnamed List</string>
+    <string name="unnamed_category">Unnamed Category</string>
+    <string name="unknown_user">Unknown User</string>
     <string name="msg_connect_to_wifi">Please connect to WiFi</string>
     <string name="msg_try_again">Please try again later</string>
 

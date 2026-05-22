@@ -9,6 +9,7 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.ProgressBar;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -37,6 +38,7 @@ public class ItemViewAlertDialog
     final ArrayList<ItemInfo> currentVariations = new ArrayList<>();
 
     final boolean showQuantity;
+    private static final int MAX_QUANTITY = 999;
 
     final APIHandler apiHandler = APIHandler.getInstance();
 
@@ -56,6 +58,7 @@ public class ItemViewAlertDialog
     final ImageButton adBtnDown;
     final LinearLayout adLayout;
     final LinearLayout adLoutQuantityWhole;
+    final ProgressBar adProgressLoading;
 
     @SuppressLint({"InflateParams", "NotifyDataSetChanged", "SetTextI18n"})
     public ItemViewAlertDialog(Activity activity, Context context, ItemsAdapter.UpperClassFunctions upperClassFns, Item _item, boolean showQuantity)
@@ -70,12 +73,16 @@ public class ItemViewAlertDialog
         adBtnDown = adLayout.findViewById(R.id.btn_down);
         adTvQuantity = adLayout.findViewById(R.id.tv_quantity);
         adLoutQuantityWhole = adLayout.findViewById(R.id.lout_quantity_whole);
+        adProgressLoading = adLayout.findViewById(R.id.progress_loading);
         recyclerSupermarkets = adLayout.findViewById(R.id.recycler_supermarket);
         adTvItemName = adLayout.findViewById(R.id.tv_item_name);
         chipGroupWeights = adLayout.findViewById(R.id.chip_group_weights);
         chipGroupCompanies = adLayout.findViewById(R.id.chip_group_units);
 
-        new Thread(() ->
+        adProgressLoading.setVisibility(View.VISIBLE);
+        recyclerSupermarkets.setVisibility(View.INVISIBLE);
+
+        Thread loadingThread = new Thread(() ->
         {
             ArrayList<ItemInfo> variations = new ArrayList<>();
             try
@@ -133,11 +140,20 @@ public class ItemViewAlertDialog
                         }
                     }
                 }
-                catch (Exception ignored) {}
+                catch (Exception e)
+                {
+                    Log.e("ItemViewAlertDialog", "Failed loading prices", e);
+                }
             }
 
             activity.runOnUiThread(() ->
             {
+                if (activity.isFinishing() || activity.isDestroyed())
+                {
+                    return;
+                }
+                adProgressLoading.setVisibility(View.GONE);
+                recyclerSupermarkets.setVisibility(View.VISIBLE);
                 currentVariations.clear();
                 currentVariations.addAll(variations);
                 new VariationsManager(currentVariations,
@@ -190,7 +206,10 @@ public class ItemViewAlertDialog
                     }
                 }
             });
-        }).start();
+        });
+
+        loadingThread.setName("ItemViewLoader");
+        loadingThread.start();
 
         adb = new AlertDialog.Builder(context);
         adb.setView(adLayout);
@@ -203,7 +222,13 @@ public class ItemViewAlertDialog
             adItemView.dismiss();
         });
 
-        adBtnUp.setOnClickListener(view -> {
+        adBtnUp.setOnClickListener(view ->
+        {
+            if (item.getQuantity() >= MAX_QUANTITY)
+            {
+                return;
+            }
+
             adTvQuantity.setText(Integer.toString(item.raiseQuantity()));
             adBtnDown.setVisibility(View.VISIBLE);
         });
@@ -228,7 +253,17 @@ public class ItemViewAlertDialog
     @SuppressLint("SetTextI18n")
     public void show(Item _item)
     {
+        if (_item == null)
+        {
+            return;
+        }
+
         this.item = _item.clone();
+
+        if (item == null)
+        {
+            return;
+        }
 
         if (pricesAdapter != null)
         {
@@ -254,8 +289,48 @@ public class ItemViewAlertDialog
         }
 
         variants.clear();
+
+        if (allVariants.isEmpty())
+        {
+            if (pricesAdapter != null)
+            {
+                pricesAdapter.setSelectedPosition(-1);
+                pricesAdapter.notifyDataSetChanged();
+            }
+        }
+
         variants.addAll(allVariants);
-        variants.sort(Comparator.comparingDouble(ItemVariant::getPrice));
+        adProgressLoading.setVisibility(View.GONE);
+        recyclerSupermarkets.setVisibility(View.VISIBLE);
+        variants.sort((a, b) ->
+        {
+            double priceA = a != null ? a.getPrice() : Double.MAX_VALUE;
+            double priceB = b != null ? b.getPrice() : Double.MAX_VALUE;
+
+            if (Double.isNaN(priceA)) priceA = Double.MAX_VALUE;
+            if (Double.isNaN(priceB)) priceB = Double.MAX_VALUE;
+
+            return Double.compare(priceA, priceB);
+        });
+
+        boolean selectedVariantStillExists = false;
+
+        if (item != null)
+        {
+            for (ItemVariant variant : variants)
+            {
+                if (item.isIdenticalVariantOf(variant))
+                {
+                    selectedVariantStillExists = true;
+                    break;
+                }
+            }
+        }
+
+        if (!selectedVariantStillExists && pricesAdapter != null)
+        {
+            pricesAdapter.setSelectedPosition(-1);
+        }
 
         applyVariationFilter();
 
@@ -312,6 +387,28 @@ public class ItemViewAlertDialog
             }
         }
 
+        if (adItemView.isShowing())
+        {
+            return;
+        }
+
+        Context dialogContext = adItemView.getContext();
+
+        if (dialogContext instanceof Activity)
+        {
+            Activity dialogActivity = (Activity) dialogContext;
+
+            if (dialogActivity.isFinishing() || dialogActivity.isDestroyed())
+            {
+                return;
+            }
+        }
+
+        if (showQuantity)
+        {
+            adLoutQuantityWhole.setVisibility(View.VISIBLE);
+        }
+
         adItemView.show();
     }
 
@@ -319,6 +416,10 @@ public class ItemViewAlertDialog
     @SuppressLint("NotifyDataSetChanged")
     private void applyVariationFilter()
     {
+        if (chipGroupWeights == null || chipGroupCompanies == null)
+        {
+            return;
+        }
         java.util.Set<String> selectedWeights = new java.util.HashSet<>();
         java.util.Set<String> selectedCompanies = new java.util.HashSet<>();
 
@@ -342,8 +443,10 @@ public class ItemViewAlertDialog
 
             ItemInfo info = r.getInfo();
 
+            String fullMeasure = info.getFullMeasureStr();
+
             boolean weightMatch = selectedWeights.isEmpty() ||
-                    selectedWeights.contains(info.getFullMeasureStr());
+                    (fullMeasure != null && selectedWeights.contains(fullMeasure));
 
             boolean companyMatch = selectedCompanies.isEmpty() ||
                     (info.getCompany() != null && selectedCompanies.contains(info.getCompany()));
@@ -368,7 +471,12 @@ public class ItemViewAlertDialog
 
             if (companyMatch && info.getWeight() != null && info.getWeight() > 0)
             {
-                availableWeights.add(info.getFullMeasureStr());
+                String fullMeasure = info.getFullMeasureStr();
+
+                if (fullMeasure != null)
+                {
+                    availableWeights.add(fullMeasure);
+                }
             }
         }
 
@@ -382,7 +490,8 @@ public class ItemViewAlertDialog
 
             boolean weightMatch =
                     selectedWeights.isEmpty() ||
-                    selectedWeights.contains(info.getFullMeasureStr());
+                            (info.getFullMeasureStr() != null &&
+                                    selectedWeights.contains(info.getFullMeasureStr()));
 
             if (weightMatch && info.getCompany() != null && !info.getCompany().isEmpty())
             {
@@ -406,12 +515,49 @@ public class ItemViewAlertDialog
             chip.setAlpha(enabled ? 1f : 0.3f);
         }
 
-        variants.sort(Comparator.comparingDouble(ItemVariant::getPrice));
-        if (pricesAdapter != null) {
+        variants.sort((a, b) ->
+        {
+            double priceA = a != null ? a.getPrice() : Double.MAX_VALUE;
+            double priceB = b != null ? b.getPrice() : Double.MAX_VALUE;
+
+            if (Double.isNaN(priceA)) priceA = Double.MAX_VALUE;
+            if (Double.isNaN(priceB)) priceB = Double.MAX_VALUE;
+
+            return Double.compare(priceA, priceB);
+        });
+
+        boolean selectedVariantStillExists = false;
+
+        if (item != null)
+        {
+            for (ItemVariant variant : variants)
+            {
+                if (item.isIdenticalVariantOf(variant))
+                {
+                    selectedVariantStillExists = true;
+                    break;
+                }
+            }
+        }
+
+        if (!selectedVariantStillExists && pricesAdapter != null)
+        {
+            pricesAdapter.setSelectedPosition(-1);
+        }
+
+        if (pricesAdapter != null)
+        {
             pricesAdapter.notifyDataSetChanged();
         }
     }
 
+    public void dismiss()
+    {
+        if (adItemView != null && adItemView.isShowing())
+        {
+            adItemView.dismiss();
+        }
+    }
 
     public static class VariationsManager
     {
@@ -456,7 +602,12 @@ public class ItemViewAlertDialog
             {
                 if (info.getWeight() != null && info.getWeight() > 0)
                 {
-                    weights.add(info.getFullMeasureStr());
+                    String fullMeasure = info.getFullMeasureStr();
+
+                    if (fullMeasure != null)
+                    {
+                        weights.add(fullMeasure);
+                    }
                 }
 
                 if (info.getCompany() != null && !info.getCompany().isEmpty())

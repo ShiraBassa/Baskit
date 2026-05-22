@@ -151,6 +151,7 @@ public class AddItemFragment extends DialogFragment
         }
 
         selectedItem = null;
+        endProgressBar();
         searchItem.setText("");
         infoLayout.setVisibility(View.INVISIBLE);
         tvQuantity.setText("");
@@ -188,6 +189,11 @@ public class AddItemFragment extends DialogFragment
         super.onDestroyView();
         fragmentView = null;
         recyclerSupermarkets = null;
+        chipGroupWeights = null;
+        chipGroupCompanies = null;
+        progressBar = null;
+        searchItem = null;
+        btnAddItem = null;
         pricesAdapter = null;
     }
 
@@ -287,6 +293,11 @@ public class AddItemFragment extends DialogFragment
                 }
 
                 String decoded = Baskit.decodeKey(filteredResults.get(position));
+
+                if (decoded == null)
+                {
+                    decoded = filteredResults.get(position);
+                }
                 boolean isSuggestion = false;
 
                 if (position < filteredIsSuggestion.size()) {
@@ -634,10 +645,17 @@ public class AddItemFragment extends DialogFragment
                     {
                         adapter.notifyDataSetChanged();
                     }
-                    catch (Exception ignored) {}
+                    catch (Exception e)
+                    {
+                        android.util.Log.e("AddItemFragment", "Dropdown refresh failed", e);
+                    }
 
                     searchItem.post(() ->
                     {
+                        if (!isAdded() || fragmentView == null || searchItem == null)
+                        {
+                            return;
+                        }
                         try
                         {
                             if (searchItem.hasFocus()) {
@@ -678,7 +696,10 @@ public class AddItemFragment extends DialogFragment
                                     searchItem.showDropDown();
                                 }
                             }
-                            catch (Exception ignored) {}
+                            catch (Exception e2)
+                            {
+                                android.util.Log.e("AddItemFragment", "Fallback dropdown show failed", e2);
+                            }
                         }
                     });
                 };
@@ -711,6 +732,10 @@ public class AddItemFragment extends DialogFragment
             }
 
             selectedItem = new Item(clickedName);
+            if (selectedItem == null)
+            {
+                return;
+            }
             selectedItem.setQuantity(1);
             tvQuantity.setText("1");
             btnDown.setVisibility(View.INVISIBLE);
@@ -755,11 +780,23 @@ public class AddItemFragment extends DialogFragment
                         variations.add(info);
                     }
                 }
-                catch (Exception ignored) {}
+                catch (Exception e)
+                {
+                    android.util.Log.e("AddItemFragment", "Failed loading variation", e);
+                }
+            }
+
+            if (!isAdded() || activity.isFinishing() || activity.isDestroyed())
+            {
+                return;
             }
 
             activity.runOnUiThread(() ->
             {
+                if (!isAdded() || chipGroupWeights == null || chipGroupCompanies == null)
+                {
+                    return;
+                }
                 currentVariations.clear();
                 currentVariations.addAll(variations);
                 new VariationsManager(currentVariations,
@@ -774,6 +811,11 @@ public class AddItemFragment extends DialogFragment
 
     private void applyVariationFilter()
     {
+        if (!isAdded() || chipGroupWeights == null || chipGroupCompanies == null)
+        {
+            return;
+        }
+
         java.util.Set<String> selectedWeights = new java.util.HashSet<>();
         java.util.Set<String> selectedCompanies = new java.util.HashSet<>();
 
@@ -793,8 +835,10 @@ public class AddItemFragment extends DialogFragment
 
         for (ItemInfo info : currentVariations)
         {
+            String fullMeasure = info.getFullMeasureStr();
+
             boolean weightMatch = selectedWeights.isEmpty() ||
-                    selectedWeights.contains(info.getFullMeasureStr());
+                    (fullMeasure != null && selectedWeights.contains(fullMeasure));
 
             boolean companyMatch = selectedCompanies.isEmpty() ||
                     (info.getCompany() != null && selectedCompanies.contains(info.getCompany()));
@@ -842,7 +886,12 @@ public class AddItemFragment extends DialogFragment
 
             if (companyMatch && info.getWeight() > 0)
             {
-                availableWeights.add(info.getFullMeasureStr());
+                String fullMeasure = info.getFullMeasureStr();
+
+                if (fullMeasure != null)
+                {
+                    availableWeights.add(fullMeasure);
+                }
             }
         }
 
@@ -850,8 +899,10 @@ public class AddItemFragment extends DialogFragment
 
         for (ItemInfo info : currentVariations)
         {
+            String fullMeasure = info.getFullMeasureStr();
+
             boolean weightMatch = selectedWeights.isEmpty() ||
-                    selectedWeights.contains(info.getFullMeasureStr());
+                    (fullMeasure != null && selectedWeights.contains(fullMeasure));
 
             if (weightMatch && info.getCompany() != null && !info.getCompany().isEmpty())
             {
@@ -886,6 +937,7 @@ public class AddItemFragment extends DialogFragment
     private void hideKeyboard()
     {
         if (activity == null) return;
+        if (!isAdded()) return;
 
         activity.runOnUiThread(() ->
         {
@@ -912,10 +964,26 @@ public class AddItemFragment extends DialogFragment
 
         btnAddItem.setOnClickListener(v ->
         {
-            if (selectedItem != null)
+            if (selectedItem == null)
             {
-                startProgressBar();
+                return;
+            }
+
+            if (progressBar != null && progressBar.getVisibility() == View.VISIBLE)
+            {
+                return;
+            }
+
+            startProgressBar();
+
+            try
+            {
                 addItemConsumer.accept(selectedItem);
+            }
+            catch (Exception e)
+            {
+                android.util.Log.e("AddItemFragment", "Failed adding item", e);
+                endProgressBar();
             }
         });
 
@@ -948,7 +1016,10 @@ public class AddItemFragment extends DialogFragment
     {
         if (variations == null || variations.isEmpty())
         {
-            recyclerSupermarkets.setAdapter(null);
+            if (recyclerSupermarkets != null)
+            {
+                recyclerSupermarkets.setAdapter(null);
+            }
             return;
         }
 
@@ -990,14 +1061,35 @@ public class AddItemFragment extends DialogFragment
                         }
                     }
                 }
-                catch (Exception ignored) {}
+                catch (Exception e)
+                {
+                    android.util.Log.e("AddItemFragment", "Failed loading supermarket prices", e);
+                }
             }
 
             // Sort variants by price (cheapest first)
-            variants.sort(Comparator.comparingDouble(ItemVariant::getPrice));
+            variants.sort((a, b) ->
+            {
+                double priceA = a != null ? a.getPrice() : Double.MAX_VALUE;
+                double priceB = b != null ? b.getPrice() : Double.MAX_VALUE;
+
+                if (Double.isNaN(priceA)) priceA = Double.MAX_VALUE;
+                if (Double.isNaN(priceB)) priceB = Double.MAX_VALUE;
+
+                return Double.compare(priceA, priceB);
+            });
+
+            if (!isAdded() || activity.isFinishing() || activity.isDestroyed())
+            {
+                return;
+            }
 
             activity.runOnUiThread(() ->
             {
+                if (!isAdded() || recyclerSupermarkets == null)
+                {
+                    return;
+                }
                 pricesAdapter = new ItemViewPricesAdapter(
                         context,
                         variants,
@@ -1031,6 +1123,10 @@ public class AddItemFragment extends DialogFragment
     {
         if (progressBar != null)
         {
+            if (!isAdded())
+            {
+                return;
+            }
             progressBar.setVisibility(View.VISIBLE);
             btnAddItem.setClickable(false);
             btnCancel.setClickable(false);
@@ -1041,9 +1137,34 @@ public class AddItemFragment extends DialogFragment
 
     public void endProgressBar()
     {
+        if (!isAdded())
+        {
+            return;
+        }
+
         if (progressBar != null)
         {
             progressBar.setVisibility(View.INVISIBLE);
+        }
+
+        if (btnAddItem != null)
+        {
+            btnAddItem.setClickable(true);
+        }
+
+        if (btnCancel != null)
+        {
+            btnCancel.setClickable(true);
+        }
+
+        if (btnUp != null)
+        {
+            btnUp.setClickable(true);
+        }
+
+        if (btnDown != null)
+        {
+            btnDown.setClickable(true);
         }
     }
 

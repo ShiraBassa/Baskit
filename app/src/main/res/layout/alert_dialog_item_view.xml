@@ -175,6 +175,14 @@
             android:paddingHorizontal="10dp"
             tools:ignore="NestedWeights">
 
+            <ProgressBar
+                android:id="@+id/progress_loading"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_marginBottom="18dp"
+                android:indeterminate="true"
+                android:visibility="gone" />
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

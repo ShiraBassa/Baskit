@@ -85,7 +85,13 @@
     <string name="msg_link_copied">הקישור הועתק!</string>
     <string name="msg_select_supermarket_and_section">נא לבחור סופר וסניף</string>
     <string name="msg_select_city">נא לבחור עיר</string>
+    <string name="msg_no_available_cities">כל הערים הזמינות כבר נוספו</string>
+    <string name="msg_no_available_supermarkets">כל הסופרמרקטים הזמינים כבר נוספו</string>
     <string name="msg_enter_name">נא להזין שם</string>
+    <string name="msg_enter_list_name">נא להזין שם לרשימה</string>
+    <string name="unnamed_list">רשימה ללא שם</string>
+    <string name="unnamed_category">קטגוריה ללא שם</string>
+    <string name="unknown_user">משתמש לא ידוע</string>
     <string name="msg_connect_to_wifi">נא התחבר ל-WiFi או לרשת סלולרית</string>
     <string name="msg_try_again">אנא נסה שוב מאוחר יותר</string>
 

@@ -137,18 +137,35 @@ public class SignUpActivity extends MasterActivity
 
     private void setButton()
     {
-        btnSubmit.setOnClickListener(v -> {
-            username = etUsername.getText().toString();
-
-            if (Baskit.isValidUserName(username, true))
+        btnSubmit.setOnClickListener(v ->
+        {
+            if (isFinishing() || isDestroyed())
             {
-                submit();
+                return;
             }
+
+            username = etUsername.getText().toString().trim();
+
+            if (!Baskit.isValidUserName(username, true))
+            {
+                return;
+            }
+
+            runProtectedRequest(
+                    "signup_submit",
+                    btnSubmit,
+                    this::submit
+            );
         });
 
         btnAddCity.setOnClickListener(v ->
         {
             if (cities == null)
+            {
+                return;
+            }
+
+            if (all_cities == null || all_cities.isEmpty())
             {
                 return;
             }
@@ -166,8 +183,10 @@ public class SignUpActivity extends MasterActivity
                             updateSupermarketButtonState();
                         }
                 ).show();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+            }
+            catch (IOException e)
+            {
+                Log.e("SignUpActivity", "Failed opening city dialog", e);
             }
         });
 
@@ -203,6 +222,11 @@ public class SignUpActivity extends MasterActivity
                 return;
             }
 
+            if (cities == null || cities.isEmpty())
+            {
+                return;
+            }
+
             try
             {
                 new AddSupermarketAlertDialog(
@@ -229,7 +253,7 @@ public class SignUpActivity extends MasterActivity
             }
             catch (IOException e)
             {
-                throw new RuntimeException(e);
+                Log.e("SignUpActivity", "Failed opening supermarket dialog", e);
             }
         });
 
@@ -290,6 +314,10 @@ public class SignUpActivity extends MasterActivity
     {
         runOnUiThread(() ->
         {
+            if (isFinishing() || isDestroyed())
+            {
+                return;
+            }
             btnAddCity.setEnabled(!loading);
             btnSubmit.setEnabled(!loading);
 
@@ -331,34 +359,77 @@ public class SignUpActivity extends MasterActivity
     @SuppressWarnings("CallToPrintStackTrace")
     private void submit()
     {
+        if (isFinishing() || isDestroyed())
+        {
+            return;
+        }
+
         user = authHandler.getUser();
+
+        if (user == null)
+        {
+            setLoading(false);
+            return;
+        }
+
         user.setName(username);
+
+        setLoading(true);
 
         refUsers.child(user.getId()).setValue(user)
                 .addOnCompleteListener(taskDB ->
-                        new Thread(() ->
+                {
+                    if (!taskDB.isSuccessful())
+                    {
+                        runOnUiThread(() ->
                         {
-                            try
+                            if (isFinishing() || isDestroyed())
                             {
-                                apiHandler.setCities(cities);
-                            }
-                            catch (IOException | JSONException e)
-                            {
-                                throw new RuntimeException(e);
+                                return;
                             }
 
-                            try
+                            setLoading(false);
+                        });
+
+                        return;
+                    }
+
+                    Thread submitThread = new Thread(() ->
+                    {
+                        try
+                        {
+                            apiHandler.setCities(cities != null ? cities : new ArrayList<>());
+                        }
+                        catch (IOException | JSONException e)
+                        {
+                            Log.e("SignUpActivity", "Failed saving cities", e);
+                        }
+
+                        try
+                        {
+                            apiHandler.setBranches(choices != null ? choices : new HashMap<>());
+                            apiHandler.updateSupermarkets();
+                            apiHandler.reset();
+                        }
+                        catch (IOException | JSONException e)
+                        {
+                            Log.e("SignUpActivity", "Failed updating supermarkets", e);
+                        }
+
+                        runOnUiThread(() ->
+                        {
+                            if (isFinishing() || isDestroyed())
                             {
-                                apiHandler.setBranches(choices);
-                                apiHandler.updateSupermarkets();
-                                apiHandler.reset();
-                            }
-                            catch (IOException | JSONException e)
-                            {
-                                e.printStackTrace();
+                                return;
                             }
 
+                            setLoading(false);
                             finish();
-                        }).start());
+                        });
+                    });
+
+                    submitThread.setName("SignUpSubmit");
+                    submitThread.start();
+                });
     }
 }

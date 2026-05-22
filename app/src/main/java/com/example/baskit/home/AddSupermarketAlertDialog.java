@@ -10,6 +10,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.Toast;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
 
@@ -46,6 +47,7 @@ public class AddSupermarketAlertDialog
     AlertDialog ad;
     Button btnAdd;
     Spinner spinnerSupermarkets, spinnerSections;
+    TextView tvEmpty;
 
     final Activity activity;
     final Context context;
@@ -100,6 +102,7 @@ public class AddSupermarketAlertDialog
         spinnerSupermarkets = adLayout.findViewById(R.id.spinner_supermarkets);
         spinnerSections = adLayout.findViewById(R.id.spinner_sections);
         btnAdd = adLayout.findViewById(R.id.btn_add);
+        tvEmpty = adLayout.findViewById(R.id.tv_empty);
 
         adb = new AlertDialog.Builder(context);
         adb.setView(adLayout);
@@ -108,7 +111,7 @@ public class AddSupermarketAlertDialog
         setSpinners();
         setButton();
 
-        ad.show();
+        show();
     }
 
     private void getAPIInfo() throws JSONException, IOException
@@ -164,6 +167,28 @@ public class AddSupermarketAlertDialog
 
     private void setSpinners()
     {
+        if (supermarkets == null || supermarkets.isEmpty())
+        {
+            spinnerSupermarkets.setVisibility(View.GONE);
+            spinnerSections.setVisibility(View.GONE);
+            btnAdd.setEnabled(false);
+
+            if (tvEmpty != null)
+            {
+                tvEmpty.setVisibility(View.VISIBLE);
+            }
+
+            return;
+        }
+
+        spinnerSupermarkets.setVisibility(View.VISIBLE);
+        spinnerSections.setVisibility(View.VISIBLE);
+
+        if (tvEmpty != null)
+        {
+            tvEmpty.setVisibility(View.GONE);
+        }
+
         ArrayAdapter<String> supermarketAdapter =
                 new ArrayAdapter<>(context,
                         android.R.layout.simple_spinner_dropdown_item,
@@ -210,46 +235,103 @@ public class AddSupermarketAlertDialog
     {
         btnAdd.setOnClickListener(v ->
         {
-            String supermarketName = (String) spinnerSupermarkets.getSelectedItem();
-            String sectionName = (String) spinnerSections.getSelectedItem();
+            btnAdd.setEnabled(false);
 
-            if (supermarketName == null || sectionName == null)
+            try
             {
-                Toast.makeText(context, Baskit.getAppStr(R.string.msg_select_supermarket_and_section), Toast.LENGTH_SHORT).show();
-                return;
-            }
+                String supermarketName = (String) spinnerSupermarkets.getSelectedItem();
+                String sectionName = (String) spinnerSections.getSelectedItem();
 
-            Supermarket supermarket = new Supermarket(supermarketName, sectionName);
-
-            if (runInBackground)
-            {
-                ad.dismiss();
-
-                new Thread(() ->
+                if (supermarketName == null || supermarketName.isBlank() ||
+                        sectionName == null || sectionName.isBlank())
                 {
-                    try
+                    Toast.makeText(context, Baskit.getAppStr(R.string.msg_select_supermarket_and_section), Toast.LENGTH_SHORT).show();
+                    btnAdd.setEnabled(true);
+                    return;
+                }
+
+                Supermarket supermarket = new Supermarket(supermarketName, sectionName);
+
+                if (runInBackground)
+                {
+                    dismiss();
+
+                    Thread submitThread = new Thread(() ->
+                    {
+                        try
+                        {
+                            if (onSubmit != null)
+                            {
+                                onSubmit.accept(supermarket);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Log.e("AddSupermarketAlertDialog", "Failed submitting supermarket", e);
+
+                            activity.runOnUiThread(() ->
+                            {
+                                if (activity.isFinishing() || activity.isDestroyed())
+                                {
+                                    return;
+                                }
+
+                                Toast.makeText(context, Baskit.getAppStr(R.string.msg_general_error), Toast.LENGTH_SHORT).show();
+                            });
+                        }
+                    });
+
+                    submitThread.setName("AddSupermarketSubmit");
+                    submitThread.start();
+                }
+                else
+                {
+                    if (onSubmit != null)
                     {
                         onSubmit.accept(supermarket);
                     }
-                    catch (Exception e)
-                    {
-                        activity.runOnUiThread(() ->
-                                Toast.makeText(context, Baskit.getAppStr(R.string.msg_general_error), Toast.LENGTH_SHORT).show());
-                    }
-                }).start();
+
+                    dismiss();
+                }
             }
-            else
+            catch (Exception e)
             {
-                try
-                {
-                    onSubmit.accept(supermarket);
-                    ad.dismiss();
-                }
-                catch (Exception e)
-                {
-                    Toast.makeText(context, Baskit.getAppStr(R.string.msg_general_error), Toast.LENGTH_SHORT).show();
-                }
+                Log.e("AddSupermarketAlertDialog", "Failed adding supermarket", e);
+
+                Toast.makeText(context, Baskit.getAppStr(R.string.msg_general_error), Toast.LENGTH_SHORT).show();
+
+                btnAdd.setEnabled(true);
             }
         });
+    }
+
+    public void show()
+    {
+        if (ad == null || ad.isShowing())
+        {
+            return;
+        }
+
+        Context dialogContext = ad.getContext();
+
+        if (dialogContext instanceof Activity)
+        {
+            Activity dialogActivity = (Activity) dialogContext;
+
+            if (dialogActivity.isFinishing() || dialogActivity.isDestroyed())
+            {
+                return;
+            }
+        }
+
+        ad.show();
+    }
+
+    public void dismiss()
+    {
+        if (ad != null && ad.isShowing())
+        {
+            ad.dismiss();
+        }
     }
 }
