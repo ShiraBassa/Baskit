@@ -53,7 +53,25 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
     {
         if (itemVariants != null)
         {
-            itemVariants.sort(Comparator.comparingDouble(ItemVariant::getPrice));
+            itemVariants.removeIf(variant -> variant == null || variant.getSupermarket() == null);
+
+            itemVariants.sort((a, b) ->
+            {
+                double priceA = a != null ? a.getPrice() : Double.MAX_VALUE;
+                double priceB = b != null ? b.getPrice() : Double.MAX_VALUE;
+
+                if (Double.isNaN(priceA) || Double.isInfinite(priceA))
+                {
+                    priceA = Double.MAX_VALUE;
+                }
+
+                if (Double.isNaN(priceB) || Double.isInfinite(priceB))
+                {
+                    priceB = Double.MAX_VALUE;
+                }
+
+                return Double.compare(priceA, priceB);
+            });
         }
     }
 
@@ -94,8 +112,26 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
         }
 
         ItemVariant variant = itemVariants.get(position);
+
+        if (variant == null)
+        {
+            return;
+        }
+
         Supermarket supermarket = variant.getSupermarket();
+
+        if (supermarket == null)
+        {
+            return;
+        }
+
         double price = variant.getPrice();
+
+        if (Double.isNaN(price) || Double.isInfinite(price))
+        {
+            price = 0.0;
+        }
+
         ItemInfo matchedInfo = variant.getInfo();
 
         if (matchedInfo != null)
@@ -105,12 +141,12 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
 
             String variationText = "";
 
-            if (company != null && !company.isEmpty())
+            if (company != null && !company.isBlank())
             {
                 variationText += company;
             }
 
-            if (measure != null && !measure.isEmpty())
+            if (measure != null && !measure.isBlank())
             {
                 if (!variationText.isEmpty()) variationText += " | ";
                 variationText += measure;
@@ -131,7 +167,13 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
             holder.tvVariation.setVisibility(View.GONE);
         }
 
-        holder.tvSupermarketName.setText(supermarket.getDecodedSupermarket());
+        String supermarketName = supermarket.getDecodedSupermarket();
+
+        holder.tvSupermarketName.setText(
+                supermarketName != null && !supermarketName.isBlank()
+                        ? supermarketName
+                        : Baskit.getAppStr(R.string.unknown_supermarket)
+        );
 
         if (apiHandler.singleSectionInSupermarkets(supermarket))
         {
@@ -139,7 +181,15 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
         }
         else
         {
-            holder.tvSectionName.setText(supermarket.getDecodedSection());
+            String sectionName = supermarket.getDecodedSection();
+
+            holder.tvSectionName.setText(
+                    sectionName != null && !sectionName.isBlank()
+                            ? sectionName
+                            : Baskit.getAppStr(R.string.unknown_section)
+            );
+
+            holder.tvSectionName.setVisibility(View.VISIBLE);
         }
 
         holder.tvPrice.setText(Baskit.getTotalDisplayString(price, true, false, false));
@@ -157,6 +207,11 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
 
             ItemVariant clickedVariant = itemVariants.get(pos);
 
+            if (clickedVariant == null)
+            {
+                return;
+            }
+
             if (selectedVariant != null && selectedVariant.equals(clickedVariant))
             {
                 ItemVariant previous = selectedVariant;
@@ -164,7 +219,7 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
 
                 int previousIndex = itemVariants.indexOf(previous);
 
-                if (previousIndex != -1)
+                if (previousIndex >= 0 && previousIndex < itemVariants.size())
                 {
                     notifyItemChanged(previousIndex);
                 }
@@ -181,7 +236,7 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
 
             int previousIndex = itemVariants.indexOf(previous);
 
-            if (previousIndex != -1)
+            if (previousIndex >= 0 && previousIndex < itemVariants.size())
             {
                 notifyItemChanged(previousIndex);
             }
@@ -204,7 +259,7 @@ public class ItemViewPricesAdapter extends RecyclerView.Adapter<ItemViewPricesAd
     @SuppressLint("NotifyDataSetChanged")
     public void setSelectedPosition(int position)
     {
-        if (position >= 0 && position < itemVariants.size())
+        if (itemVariants != null && position >= 0 && position < itemVariants.size())
         {
             this.selectedVariant = itemVariants.get(position);
         }

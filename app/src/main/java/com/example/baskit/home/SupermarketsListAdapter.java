@@ -32,7 +32,7 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
     public SupermarketsListAdapter(Context context, Map<String, ArrayList<String>> supermarkets)
     {
         this.context = context;
-        this.supermarkets = supermarkets;
+        this.supermarkets = supermarkets != null ? supermarkets : new java.util.HashMap<>();
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder
@@ -65,17 +65,35 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, @SuppressLint("RecyclerView") int position)
     {
-        String supermarketName;
+        if (position < 0 || position >= getItemCount())
+        {
+            return;
+        }
 
-        supermarketName = new ArrayList<>(supermarkets.keySet()).get(position);
+        String supermarketName;
+        ArrayList<String> supermarketKeys = new ArrayList<>(supermarkets.keySet());
+
+        if (position >= supermarketKeys.size())
+        {
+            return;
+        }
+
+        supermarketName = supermarketKeys.get(position);
+
+        if (supermarketName == null)
+        {
+            supermarketName = Baskit.getAppStr(R.string.unknown_supermarket);
+        }
 
         if (holder.sectionsAdapter == null)
         {
             holder.sectionsAdapter = new SectionsListAdapter(context, supermarketName,
-                    supermarkets.get(supermarketName), (clickedSupermarketName, clickedSectionName) ->
+                    supermarkets.get(supermarketName) != null
+                            ? supermarkets.get(supermarketName)
+                            : new ArrayList<>(),
+                    (clickedSupermarketName, clickedSectionName) ->
                     {
                         SupermarketsListAdapter.this.onSectionClick(clickedSupermarketName, clickedSectionName);
-
                         notifyDataSetChanged();
                     }
             );
@@ -85,13 +103,20 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
         else
         {
             holder.sectionsAdapter.updateData(
-                    supermarkets.get(supermarketName),
+                    supermarkets.get(supermarketName) != null
+                            ? supermarkets.get(supermarketName)
+                            : new ArrayList<>(),
                     supermarketName
             );
         }
 
         holder.sectionsAdapter.updateSelectedSection(selectedSupermarketName, selectedSectionName);
-        holder.tvSupermarketName.setText(Baskit.decodeKey(supermarketName));
+        String decodedName = Baskit.decodeKey(supermarketName);
+        holder.tvSupermarketName.setText(
+                decodedName != null && !decodedName.isBlank()
+                        ? decodedName
+                        : Baskit.getAppStr(R.string.unknown_supermarket)
+        );
     }
 
     @Override
@@ -109,7 +134,18 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
 
     public void updateData(Map<String, ArrayList<String>> newSupermarkets)
     {
-        this.supermarkets = newSupermarkets;
+        this.supermarkets = newSupermarkets != null
+                ? newSupermarkets
+                : new java.util.HashMap<>();
+
+        if (selectedSupermarketName != null &&
+                !this.supermarkets.containsKey(selectedSupermarketName))
+        {
+            selectedSupermarketName = null;
+            selectedSectionName = null;
+        }
+
+        notifyDataSetChanged();
     }
 
     public String getSelectedSupermarketName()
@@ -158,7 +194,7 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
         {
             this.context = context;
             this.supermarketName = supermarketName;
-            this.sections = sections;
+            this.sections = sections != null ? sections : new ArrayList<>();
             this.listener = onSupermarketClickListener;
         }
 
@@ -196,7 +232,16 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
         @Override
         public void onBindViewHolder(@NonNull SectionsListAdapter.ViewHolder holder, int position)
         {
+            if (position < 0 || position >= sections.size())
+            {
+                return;
+            }
             String sectionName = sections.get(position);
+
+            if (sectionName == null)
+            {
+                sectionName = Baskit.getAppStr(R.string.unknown_section);
+            }
             boolean isSelected = sectionName.equals(selectedSection)
                     && supermarketName.equals(selectedSupermarket);
 
@@ -207,6 +252,10 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
                 int adapterPos = holder.getAdapterPosition();
 
                 if (adapterPos == RecyclerView.NO_POSITION) {
+                    return;
+                }
+                if (adapterPos < 0 || adapterPos >= sections.size())
+                {
                     return;
                 }
 
@@ -234,7 +283,12 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
                 }
             });
 
-            holder.tvSectionName.setText(Baskit.decodeKey(sectionName));
+            String decodedSection = Baskit.decodeKey(sectionName);
+            holder.tvSectionName.setText(
+                    decodedSection != null && !decodedSection.isBlank()
+                            ? decodedSection
+                            : Baskit.getAppStr(R.string.unknown_section)
+            );
         }
 
         @Override
@@ -252,8 +306,14 @@ public class SupermarketsListAdapter extends RecyclerView.Adapter<SupermarketsLi
 
         public void updateData(ArrayList<String> sections, String supermarketName)
         {
-            this.sections = sections;
+            this.sections = sections != null ? sections : new ArrayList<>();
             this.supermarketName = supermarketName;
+            if (selectedPosition >= this.sections.size())
+            {
+                selectedPosition = RecyclerView.NO_POSITION;
+            }
+
+            notifyDataSetChanged();
         }
 
     }

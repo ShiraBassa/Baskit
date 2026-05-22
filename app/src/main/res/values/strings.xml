@@ -97,6 +97,10 @@
     <string name="unnamed_list">Unnamed List</string>
     <string name="unnamed_category">Unnamed Category</string>
     <string name="unknown_user">Unknown User</string>
+    <string name="unknown_supermarket">Unknown Supermarket</string>
+    <string name="unknown_section">Unknown Section</string>
+    <string name="unnamed_item">Unnamed Item</string>
+    <string name="unknown_city">Unknown City</string>
     <string name="msg_connect_to_wifi">Please connect to WiFi</string>
     <string name="msg_try_again">Please try again later</string>
 

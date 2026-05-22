@@ -92,6 +92,10 @@
     <string name="unnamed_list">רשימה ללא שם</string>
     <string name="unnamed_category">קטגוריה ללא שם</string>
     <string name="unknown_user">משתמש לא ידוע</string>
+    <string name="unknown_supermarket">סופרמרקט לא ידוע</string>
+    <string name="unknown_section">סניף לא ידוע</string>
+    <string name="unnamed_item">פריט ללא שם</string>
+    <string name="unknown_city">עיר לא ידועה</string>
     <string name="msg_connect_to_wifi">נא התחבר ל-WiFi או לרשת סלולרית</string>
     <string name="msg_try_again">אנא נסה שוב מאוחר יותר</string>
 

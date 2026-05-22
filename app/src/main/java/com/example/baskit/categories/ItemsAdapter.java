@@ -46,8 +46,18 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
         this.activity = activity;
         this.context = context;
 
+        if (items == null)
+        {
+            return;
+        }
+
         for (Item item : items)
         {
+            if (item == null)
+            {
+                continue;
+            }
+
             addItem(item);
         }
     }
@@ -92,11 +102,33 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
     @Override
     public void onBindViewHolder(ViewHolder holder, int position)
     {
+        if (position < 0 || position >= items.size())
+        {
+            return;
+        }
+
+        if (activity != null && (activity.isFinishing() || activity.isDestroyed()))
+        {
+            return;
+        }
+
         Item item = items.get(position);
+
+        if (item == null)
+        {
+            return;
+        }
+
         holder.itemViewAlertDialog = new ItemViewAlertDialog(activity, context, upperClassFns, item, true);
         holder.itemView.setOnDragListener(null);
 
-        holder.tvName.setText(item.getDecodedName());
+        String decodedName = item.getDecodedName();
+
+        holder.tvName.setText(
+                decodedName != null && !decodedName.isBlank()
+                        ? decodedName
+                        : Baskit.getAppStr(R.string.unnamed_item)
+        );
 
         int quantity = item.getQuantity();
         holder.tvQuantity.setText(String.valueOf(quantity));
@@ -114,7 +146,16 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
 
         if (!item.isUnassignedToSupermarket())
         {
-            holder.tvPrice.setText(Baskit.getTotalDisplayString(item.getTotal(), item.isPriceKnown(), false, false));
+            double total = item.getTotal();
+
+            if (Double.isNaN(total) || Double.isInfinite(total))
+            {
+                total = 0.0;
+            }
+
+            holder.tvPrice.setText(
+                    Baskit.getTotalDisplayString(total, item.isPriceKnown(), false, false)
+            );
             holder.tvPrice.setTextColor(Baskit.getAppColor(context, androidx.appcompat.R.attr.colorPrimary));
             holder.tvPrice.setVisibility(View.VISIBLE);
         }
@@ -145,23 +186,41 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
 
     private void setItemButtons(ViewHolder holder, Item item)
     {
+        if (holder == null || item == null)
+        {
+            return;
+        }
+
         holder.btnUp.setOnClickListener(v ->
         {
             int currPosition = holder.getAdapterPosition();
             if (currPosition == RecyclerView.NO_POSITION) return;
+
+            if (activity != null && (activity.isFinishing() || activity.isDestroyed()))
+            {
+                return;
+            }
 
             item.setQuantity(item.raiseQuantity());
             holder.tvQuantity.setText(String.valueOf(item.getQuantity()));
             holder.btnDown.setColorFilter(Baskit.getAppColor(context, android.R.attr.colorPrimary));
             holder.btnDown.setAlpha(1f);
 
-            upperClassFns.updateItemCategory(item);
+            if (upperClassFns != null)
+            {
+                upperClassFns.updateItemCategory(item);
+            }
         });
 
         holder.btnDown.setOnClickListener(v ->
         {
-            int currPosition = holder.getAdapterPosition(); // always current
-            if (currPosition == RecyclerView.NO_POSITION) return; // safety
+            int currPosition = holder.getAdapterPosition();
+            if (currPosition == RecyclerView.NO_POSITION) return;
+
+            if (activity != null && (activity.isFinishing() || activity.isDestroyed()))
+            {
+                return;
+            }
 
             if (item.getQuantity() <= 0)
             {
@@ -183,12 +242,27 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
                 }
 
                 holder.tvQuantity.setText(String.valueOf(item.getQuantity()));
-                upperClassFns.updateItemCategory(item);
+                if (upperClassFns != null)
+                {
+                    upperClassFns.updateItemCategory(item);
+                }
             }
         });
 
         holder.btnCheckBox.setOnClickListener(v ->
         {
+            int currPosition = holder.getAdapterPosition();
+
+            if (currPosition == RecyclerView.NO_POSITION)
+            {
+                return;
+            }
+
+            if (activity != null && (activity.isFinishing() || activity.isDestroyed()))
+            {
+                return;
+            }
+
             item.setChecked(!item.isChecked());
 
             if (item.isChecked())
@@ -202,15 +276,35 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
                 holder.itemView.setAlpha(0.98f);
             }
 
-            upperClassFns.updateItemCategory(item);
+            if (upperClassFns != null)
+            {
+                upperClassFns.updateItemCategory(item);
+            }
         });
 
-        holder.tvName.setOnClickListener(v -> holder.itemViewAlertDialog.show(item));
+        holder.tvName.setOnClickListener(v ->
+        {
+            if (holder.itemViewAlertDialog == null)
+            {
+                return;
+            }
+
+            if (activity != null && (activity.isFinishing() || activity.isDestroyed()))
+            {
+                return;
+            }
+
+            holder.itemViewAlertDialog.show(item);
+        });
     }
 
     @SuppressLint("NotifyDataSetChanged")
     public void addItem(Item item)
     {
+        if (item == null)
+        {
+            return;
+        }
         if (!items.contains(item))
         {
             items.add(item);
@@ -221,6 +315,10 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
 
     public void removeItem(Item item)
     {
+        if (item == null)
+        {
+            return;
+        }
         int position = items.indexOf(item);
 
         // Remove from adapter
@@ -228,16 +326,25 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
         {
             items.remove(position);
             notifyItemRemoved(position);
+            notifyItemRangeChanged(position, items.size());
         }
 
         if (upperClassFns != null)
         {
             upperClassFns.removeItemCategory(item);
+            upperClassFns.updateCategory();
         }
     }
 
     private void sortItems()
     {
-        items.sort(Comparator.comparing(Item::getId));
+        items.removeIf(item -> item == null || item.getId() == null);
+        items.sort((a, b) ->
+        {
+            String idA = a != null ? a.getId() : "";
+            String idB = b != null ? b.getId() : "";
+
+            return idA.compareTo(idB);
+        });
     }
 }

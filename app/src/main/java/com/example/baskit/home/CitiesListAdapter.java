@@ -26,7 +26,7 @@ public class CitiesListAdapter extends RecyclerView.Adapter<CitiesListAdapter.Vi
     public CitiesListAdapter(Context context, ArrayList<String> cities)
     {
         this.context = context;
-        this.cities = cities;
+        this.cities = cities != null ? cities : new ArrayList<>();
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder
@@ -53,22 +53,40 @@ public class CitiesListAdapter extends RecyclerView.Adapter<CitiesListAdapter.Vi
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, @SuppressLint("RecyclerView") int position)
     {
+        if (position < 0 || position >= cities.size())
+        {
+            return;
+        }
+
         String city = cities.get(position);
+
+        if (city == null)
+        {
+            city = Baskit.getAppStr(R.string.unknown_city);
+        }
+
         holder.tvCity.setText(city);
         holder.itemView.setActivated(selectedPosition == position);
         holder.itemView.setSelected(selectedPosition == position);
 
         holder.itemView.setOnClickListener(v ->
         {
+            int adapterPosition = holder.getAdapterPosition();
+
+            if (adapterPosition == RecyclerView.NO_POSITION)
+            {
+                return;
+            }
+
             int previousPosition = selectedPosition;
 
-            if (selectedPosition == position)
+            if (selectedPosition == adapterPosition)
             {
                 selectedPosition = RecyclerView.NO_POSITION;
             }
             else
             {
-                selectedPosition = position;
+                selectedPosition = adapterPosition;
             }
 
             if (previousPosition != RecyclerView.NO_POSITION)
@@ -86,14 +104,34 @@ public class CitiesListAdapter extends RecyclerView.Adapter<CitiesListAdapter.Vi
 
     public String getSelectedCity()
     {
-        if (selectedPosition == RecyclerView.NO_POSITION) return null;
+        if (cities == null || cities.isEmpty())
+        {
+            return null;
+        }
+
+        if (selectedPosition == RecyclerView.NO_POSITION)
+        {
+            return null;
+        }
+
+        if (selectedPosition < 0 || selectedPosition >= cities.size())
+        {
+            return null;
+        }
+
         return cities.get(selectedPosition);
     }
 
     @SuppressLint("NotifyDataSetChanged")
     public void updateData(ArrayList<String> newCities)
     {
-        this.cities = newCities;
+        this.cities = newCities != null ? newCities : new ArrayList<>();
+
+        if (selectedPosition >= this.cities.size())
+        {
+            selectedPosition = RecyclerView.NO_POSITION;
+        }
+
         notifyDataSetChanged();
     }
 }

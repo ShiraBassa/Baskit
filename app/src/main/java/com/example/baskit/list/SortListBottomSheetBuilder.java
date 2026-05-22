@@ -21,9 +21,11 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import android.util.Log;
 
 public class SortListBottomSheetBuilder
 {
+    private static BottomSheetDialog activeDialog;
     public interface ApplyListener
     {
         void onApplyCheapest();
@@ -38,7 +40,43 @@ public class SortListBottomSheetBuilder
             ArrayList<Supermarket> supermarkets,
             ApplyListener listener)
     {
+        if (activity == null || activity.isFinishing() || activity.isDestroyed())
+        {
+            return;
+        }
+        if (activeDialog != null && activeDialog.isShowing())
+        {
+            return;
+        }
+
+        if (entity == null)
+        {
+            return;
+        }
+
+        if (variants == null)
+        {
+            variants = new HashMap<>();
+        }
+
+        if (supermarkets == null)
+        {
+            supermarkets = new ArrayList<>();
+        }
+
+        final Map<String, ArrayList<ItemVariant>> finalVariants = variants;
+        final ArrayList<Supermarket> finalSupermarkets = supermarkets;
+
         BottomSheetDialog dialog = new BottomSheetDialog(activity);
+        activeDialog = dialog;
+        dialog.setDismissWithAnimation(true);
+        dialog.setOnDismissListener(d ->
+        {
+            if (activeDialog == dialog)
+            {
+                activeDialog = null;
+            }
+        });
         @SuppressLint("InflateParams") View view = activity.getLayoutInflater().inflate(R.layout.bottom_sheet_sort_list, null);
         dialog.setContentView(view);
 
@@ -48,96 +86,178 @@ public class SortListBottomSheetBuilder
 
         LinearLayout supermarketContainer = view.findViewById(R.id.supermarkets_container);
 
-        new Thread(() ->
+        Thread sortPreviewThread = new Thread(() ->
         {
             Map<Supermarket, Double> totals = new HashMap<>();
             Map<Supermarket, Boolean> allKnown = new HashMap<>();
 
-            SortableEntity cheapestPreview = entity.copy();
-            cheapestPreview.setCheapestVariants(variants);
-
-            for (Supermarket sm : supermarkets)
+            try
             {
-                SortableEntity preview = entity.copy();
-                preview.setSupermarketsVariants(sm, variants);
+                SortableEntity cheapestPreview = entity.copy();
+                cheapestPreview.setCheapestVariants(finalVariants);
 
-                totals.put(sm, preview.getTotal());
-                allKnown.put(sm, preview.allPricesKnown());
-            }
-
-            activity.runOnUiThread(() ->
-            {
-                cheapestTvSupermarket.setText(Baskit.getAppStr(R.string.cheapests));
-                cheapestTvPrice.setText(
-                        Baskit.getTotalDisplayString(
-                                cheapestPreview.getTotal(),
-                                cheapestPreview.allPricesKnown(),
-                                false,
-                                false
-                        )
-                );
-
-                cheapestLayout.setOnClickListener(v ->
+                for (Supermarket sm : finalSupermarkets)
                 {
-                    listener.onApplyCheapest();
-                    dialog.dismiss();
-                });
+                    if (sm == null)
+                    {
+                        continue;
+                    }
+                    SortableEntity preview = entity.copy();
+                    preview.setSupermarketsVariants(sm, finalVariants);
 
-                supermarketContainer.removeAllViews();
+                    totals.put(sm, preview.getTotal());
+                    allKnown.put(sm, preview.allPricesKnown());
+                }
 
-                LayoutInflater inflater = LayoutInflater.from(activity);
-
-                ArrayList<Map.Entry<Supermarket, Double>> entries = new ArrayList<>(totals.entrySet());
-                entries.sort(Comparator.comparingDouble(Map.Entry::getValue));
-
-                for (Map.Entry<Supermarket, Double> entry : entries)
+                if (activity.isFinishing() || activity.isDestroyed())
                 {
-                    Supermarket sm = entry.getKey();
-                    double total = entry.getValue();
+                    return;
+                }
 
-                    View supermarketView = inflater.inflate(
-                            R.layout.sort_list_supermarket,
-                            supermarketContainer,
-                            false
-                    );
+                activity.runOnUiThread(() ->
+                {
+                    if (activity.isFinishing() || activity.isDestroyed())
+                    {
+                        return;
+                    }
 
-                    TextView name = supermarketView.findViewById(R.id.tv_supermarket);
-                    TextView price = supermarketView.findViewById(R.id.tv_price);
+                    if (!dialog.isShowing())
+                    {
+                        return;
+                    }
 
-                    name.setText(sm.toString());
-                    price.setText(
+                    cheapestTvSupermarket.setText(Baskit.getAppStr(R.string.cheapests));
+                    double cheapestTotal = cheapestPreview.getTotal();
+
+                    if (Double.isNaN(cheapestTotal) || Double.isInfinite(cheapestTotal))
+                    {
+                        cheapestTotal = 0.0;
+                    }
+                    cheapestTvPrice.setText(
                             Baskit.getTotalDisplayString(
-                                    total,
-                                    Boolean.TRUE.equals(allKnown.get(sm)),
+                                    cheapestTotal,
+                                    cheapestPreview.allPricesKnown(),
                                     false,
                                     false
                             )
                     );
 
-                    boolean allPricesKnownForSm = Boolean.TRUE.equals(allKnown.get(sm));
+                    cheapestLayout.setOnClickListener(v ->
+                    {
+                        if (listener != null)
+                        {
+                            listener.onApplyCheapest();
+                        }
 
-                    if (!allPricesKnownForSm)
-                    {
-                        price.setAlpha(0.72f);
-                        name.setAlpha(0.78f);
-                    }
-                    else
-                    {
-                        price.setAlpha(1f);
-                        name.setAlpha(1f);
-                    }
-
-                    supermarketView.setOnClickListener(v ->
-                    {
-                        listener.onApplySupermarket(sm);
                         dialog.dismiss();
                     });
 
-                    supermarketView.setClipToOutline(false);
-                    supermarketContainer.addView(supermarketView);
-                }
-            });
-        }).start();
+                    supermarketContainer.removeAllViews();
+
+                    LayoutInflater inflater = LayoutInflater.from(activity);
+
+                    ArrayList<Map.Entry<Supermarket, Double>> entries = new ArrayList<>(totals.entrySet());
+                    entries.removeIf(entry -> entry == null || entry.getKey() == null);
+
+                    entries.sort((a, b) ->
+                    {
+                        double valueA = a != null && a.getValue() != null ? a.getValue() : Double.MAX_VALUE;
+                        double valueB = b != null && b.getValue() != null ? b.getValue() : Double.MAX_VALUE;
+
+                        if (Double.isNaN(valueA) || Double.isInfinite(valueA))
+                        {
+                            valueA = Double.MAX_VALUE;
+                        }
+
+                        if (Double.isNaN(valueB) || Double.isInfinite(valueB))
+                        {
+                            valueB = Double.MAX_VALUE;
+                        }
+
+                        return Double.compare(valueA, valueB);
+                    });
+
+                    for (Map.Entry<Supermarket, Double> entry : entries)
+                    {
+                        if (entry == null)
+                        {
+                            continue;
+                        }
+                        Supermarket sm = entry.getKey();
+                        double total = entry.getValue();
+
+                        if (Double.isNaN(total) || Double.isInfinite(total))
+                        {
+                            total = 0.0;
+                        }
+
+                        View supermarketView = inflater.inflate(
+                                R.layout.sort_list_supermarket,
+                                supermarketContainer,
+                                false
+                        );
+
+                        TextView name = supermarketView.findViewById(R.id.tv_supermarket);
+                        TextView price = supermarketView.findViewById(R.id.tv_price);
+
+                        String supermarketText = sm.toString();
+
+                        name.setText(
+                                supermarketText != null && !supermarketText.isBlank()
+                                        ? supermarketText
+                                        : Baskit.getAppStr(R.string.unknown_supermarket)
+                        );
+                        price.setText(
+                                Baskit.getTotalDisplayString(
+                                        total,
+                                        Boolean.TRUE.equals(allKnown.get(sm)),
+                                        false,
+                                        false
+                                )
+                        );
+
+                        boolean allPricesKnownForSm = Boolean.TRUE.equals(allKnown.get(sm));
+
+                        if (!allPricesKnownForSm)
+                        {
+                            price.setAlpha(0.72f);
+                            name.setAlpha(0.78f);
+                        }
+                        else
+                        {
+                            price.setAlpha(1f);
+                            name.setAlpha(1f);
+                        }
+
+                        supermarketView.setOnClickListener(v ->
+                        {
+                            if (listener != null)
+                            {
+                                listener.onApplySupermarket(sm);
+                            }
+
+                            dialog.dismiss();
+                        });
+
+                        supermarketView.setClipToOutline(false);
+                        supermarketContainer.addView(supermarketView);
+                    }
+                });
+            }
+            catch (Exception e)
+            {
+                Log.e("SortListBottomSheet", "Failed building sort preview", e);
+                return;
+            }
+        });
+
+        sortPreviewThread.setName("SortListPreview");
+        sortPreviewThread.start();
+
+        if (activity.isFinishing() || activity.isDestroyed())
+        {
+            return;
+        }
 
         dialog.show();
 

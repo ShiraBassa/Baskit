@@ -63,6 +63,10 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
                                 ItemsAdapter.UpperClassFunctions upperClassFns, ArrayList<Supermarket> supermarkets)
     {
         this.category = category;
+        if (category == null)
+        {
+            throw new IllegalArgumentException("Category cannot be null");
+        }
         this.activity = activity;
         this.context = context;
         this.upperClassFns = new ItemsAdapter.UpperClassFunctions()
@@ -89,6 +93,10 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
             @Override
             public void collapseAllSupermarkets()
             {
+                if (expandedStates == null)
+                {
+                    return;
+                }
                 expandedStates.replaceAll((s, v) -> false);
 
                 draggable = true;
@@ -99,6 +107,10 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
             @Override
             public void expandAllSupermarkets()
             {
+                if (expandedStates == null)
+                {
+                    return;
+                }
                 expandedStates.replaceAll((s, v) -> true);
 
                 draggable = false;
@@ -111,7 +123,11 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
 
         this.listener = (draggedItem, from, to) ->
         {
-            if (itemsBySupermarket.get(from) != null)
+            if (draggedItem == null || to == null || itemsBySupermarket == null)
+            {
+                return;
+            }
+            if (from != null && itemsBySupermarket.get(from) != null)
             {
                 Objects.requireNonNull(itemsBySupermarket.get(from)).remove(draggedItem);
             }
@@ -132,6 +148,7 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
             }
 
             Objects.requireNonNull(itemsBySupermarket.get(to)).add(draggedItem);
+            draggedItem.setChecked(false);
             rebuildDisplaySupermarkets();
             notifyDataSetChanged();
 
@@ -144,12 +161,25 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
 
     private void restart()
     {
+        if (baseSupermarkets == null)
+        {
+            supermarkets = new ArrayList<>();
+            itemsBySupermarket = new HashMap<>();
+            expandedStates = new HashMap<>();
+            supermarketSectionCounts = new HashMap<>();
+            return;
+        }
+
         itemsBySupermarket = new HashMap<>();
         expandedStates = new HashMap<>();
         supermarketSectionCounts = new HashMap<>();
 
         for (Supermarket supermarket : baseSupermarkets)
         {
+            if (supermarket == null)
+            {
+                continue;
+            }
             itemsBySupermarket.put(supermarket, new ArrayList<>());
             expandedStates.put(supermarket, true);
         }
@@ -162,18 +192,39 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
 
     private void rebuildDisplaySupermarkets()
     {
+        if (itemsBySupermarket == null)
+        {
+            supermarkets = new ArrayList<>();
+            return;
+        }
         ArrayList<Supermarket> nonEmpty = new ArrayList<>();
         ArrayList<Supermarket> empty = new ArrayList<>();
 
         // reset section counts
-        supermarketSectionCounts.clear();
+        if (supermarketSectionCounts == null)
+        {
+            supermarketSectionCounts = new HashMap<>();
+        }
+        else
+        {
+            supermarketSectionCounts.clear();
+        }
 
         for (Supermarket sm : itemsBySupermarket.keySet())
         {
+            if (sm == null)
+            {
+                continue;
+            }
             ArrayList<Item> list = itemsBySupermarket.get(sm);
 
             // count sections per supermarket name
             String name = sm.getSupermarket();
+
+            if (name == null)
+            {
+                name = Baskit.getAppStr(R.string.unknown_supermarket);
+            }
             supermarketSectionCounts.put(
                     name,
                     supermarketSectionCounts.getOrDefault(name, 0) + 1
@@ -199,8 +250,16 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
     @SuppressLint("NotifyDataSetChanged")
     private void sortByExisting()
     {
+        if (category == null || category.getItems() == null)
+        {
+            return;
+        }
         for (Item item : category.getItems())
         {
+            if (item == null)
+            {
+                continue;
+            }
             Supermarket supermarket = item.getSupermarket();
             ArrayList<Item> targetList;
 
@@ -259,8 +318,21 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, @SuppressLint("RecyclerView") int position)
     {
+        if (position < 0 || position >= supermarkets.size())
+        {
+            return;
+        }
+
+        if (activity.isFinishing() || activity.isDestroyed())
+        {
+            return;
+        }
         holder.itemView.setOnDragListener(null);
         Supermarket supermarket = supermarkets.get(position);
+        if (supermarket == null)
+        {
+            return;
+        }
 
         boolean isChosenSupermarket = false;
 
@@ -277,15 +349,14 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
         {
             for (Supermarket base : baseSupermarkets)
             {
-                if (base.getSupermarket().equals(supermarket.getSupermarket()))
+                if (base != null &&
+                        Objects.equals(base.getSupermarket(), supermarket.getSupermarket()))
                 {
                     isChosenSupermarket = true;
                     break;
                 }
             }
 
-            // If this section does NOT belong to chosen supermarkets,
-            // always show full "supermarket - section"
             if (!isChosenSupermarket)
             {
                 holder.tvSupermarket.setText(supermarket.toString());
@@ -311,6 +382,10 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
         }
 
         ArrayList<Item> items = itemsBySupermarket.get(supermarket);
+        if (items == null)
+        {
+            items = new ArrayList<>();
+        }
         SupermarketItemsAdapter supermarketsAdapter = new SupermarketItemsAdapter(items, activity, context, upperClassFns);
 
         holder.recyclerItems.setLayoutManager(new LinearLayoutManager(holder.itemView.getContext()));
@@ -321,7 +396,7 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
         holder.recyclerItems.setVisibility(isExpanded ? View.VISIBLE : View.GONE);
         holder.btnExpand.setRotation(isExpanded ? 180 : 0);
 
-        if (ifFinishedSupermarket(Objects.requireNonNull(items)))
+        if (ifFinishedSupermarket(items))
         {
             holder.tvSupermarket.setAlpha(0.55f);
             holder.btnExpand.setAlpha(0.55f);
@@ -334,6 +409,10 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
 
         holder.btnExpand.setOnClickListener(v ->
         {
+            if (expandedStates == null)
+            {
+                return;
+            }
             expandedStates.put(supermarket, !isExpanded);
             notifyItemChanged(position);
         });
@@ -382,7 +461,8 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
             switch (event.getAction())
             {
                 case DragEvent.ACTION_DRAG_STARTED:
-                    if (!containsSupermarket(draggedItem, supermarkets.get(position)))
+                    if (draggedItem != null &&
+                            !containsSupermarket(draggedItem, supermarkets.get(position)))
                     {
                         holder.itemView.setBackgroundColor(
                                 Baskit.getAppColor(context, com.google.android.material.R.attr.colorErrorContainer));
@@ -405,7 +485,8 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
                     break;
 
                 case DragEvent.ACTION_DRAG_ENTERED:
-                    if (containsSupermarket(draggedItem, supermarkets.get(position)))
+                    if (draggedItem != null &&
+                            containsSupermarket(draggedItem, supermarkets.get(position)))
                     {
                         holder.itemView.setBackgroundColor(getAppColor(context, com.google.android.material.R.attr.colorSecondaryContainer));
                         holder.itemView.setAlpha(0.96f);
@@ -414,7 +495,8 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
                     break;
 
                 case DragEvent.ACTION_DRAG_EXITED:
-                    if (containsSupermarket(draggedItem, supermarkets.get(position)))
+                    if (draggedItem != null &&
+                            containsSupermarket(draggedItem, supermarkets.get(position)))
                     {
                         holder.itemView.setBackgroundColor(Color.TRANSPARENT);
                         holder.itemView.setAlpha(1f);
@@ -424,6 +506,10 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
 
                 case DragEvent.ACTION_DROP:
 
+                    if (draggedItem == null)
+                    {
+                        break;
+                    }
                     if (containsSupermarket(draggedItem, supermarket))
                     {
                         if (fromSupermarket == null || !fromSupermarket.equals(supermarket))
@@ -452,6 +538,10 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
                         ogVariant.setVisibility(View.VISIBLE);
                     }
 
+                    if (upperClassFns == null)
+                    {
+                        break;
+                    }
                     upperClassFns.expandAllSupermarkets();
                     holder.itemView.setBackgroundColor(Color.TRANSPARENT);
                     holder.itemView.setAlpha(1f);
@@ -471,6 +561,10 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
 
     private boolean isSingleSectionCurrently(Supermarket current)
     {
+        if (current == null)
+        {
+            return true;
+        }
         if (supermarketSectionCounts == null) return true;
 
         String name = current.getSupermarket();
@@ -481,6 +575,10 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
 
     private boolean containsSupermarket(Item item, Supermarket supermarket)
     {
+        if (item == null || supermarket == null)
+        {
+            return false;
+        }
         if (supermarket == unassigned_supermarket)
         {
             return true;
@@ -502,6 +600,10 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
 
     public void updateItems(ArrayList<Item> newItems)
     {
+        if (newItems == null)
+        {
+            newItems = new ArrayList<>();
+        }
         this.category.setItemsFromFlat(newItems);
 
         restart();
@@ -510,8 +612,16 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
 
     private boolean ifFinishedSupermarket(ArrayList<Item> items)
     {
+        if (items == null || items.isEmpty())
+        {
+            return false;
+        }
         for (Item item : items)
         {
+            if (item == null)
+            {
+                continue;
+            }
             if (!item.isChecked())
             {
                 return false;
@@ -537,9 +647,17 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
         @Override
         public void onBindViewHolder(@NonNull ItemsAdapter.ViewHolder holder, int position)
         {
+            if (position < 0 || position >= items.size())
+            {
+                return;
+            }
             super.onBindViewHolder(holder, position);
 
             Item ogItem = items.get(position);
+            if (ogItem == null)
+            {
+                return;
+            }
             Supermarket from = ogItem.getSupermarket();
             ImageView dragHandle = holder.itemView.findViewById(R.id.drag_handle);
 
@@ -563,10 +681,24 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
                 if (ogItem.isChecked()) return false;
 
                 ViewGroup rootLayout = activity.findViewById(android.R.id.content);
+                if (rootLayout == null)
+                {
+                    return false;
+                }
 
+                if (holder.itemView.getWidth() <= 0 || holder.itemView.getHeight() <= 0)
+                {
+                    holder.itemView.setDrawingCacheEnabled(false);
+                    return false;
+                }
                 holder.itemView.setDrawingCacheEnabled(true);
                 android.graphics.Bitmap bitmap = android.graphics.Bitmap.createBitmap(holder.itemView.getDrawingCache());
                 holder.itemView.setDrawingCacheEnabled(false);
+                if (bitmap == null)
+                {
+                    holder.itemView.setDrawingCacheEnabled(false);
+                    return false;
+                }
 
                 ImageView ghostView = new ImageView(context);
                 ghostView.setImageBitmap(bitmap);
