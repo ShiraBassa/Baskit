@@ -261,10 +261,12 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
             supermarkets = new ArrayList<>();
             return;
         }
-        ArrayList<Supermarket> nonEmpty = new ArrayList<>();
-        ArrayList<Supermarket> empty = new ArrayList<>();
 
-        // reset section counts
+        ArrayList<Supermarket> nonEmptyBase = new ArrayList<>();
+        ArrayList<Supermarket> emptyBase = new ArrayList<>();
+        ArrayList<Supermarket> dynamicNonEmpty = new ArrayList<>();
+        ArrayList<Supermarket> dynamicEmpty = new ArrayList<>();
+
         if (supermarketSectionCounts == null)
         {
             supermarketSectionCounts = new HashMap<>();
@@ -274,41 +276,91 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
             supermarketSectionCounts.clear();
         }
 
-        for (Supermarket sm : itemsBySupermarket.keySet())
+        for (Supermarket supermarket : baseSupermarkets)
         {
-            if (sm == null)
+            if (supermarket == null)
             {
                 continue;
             }
-            ArrayList<Item> list = itemsBySupermarket.get(sm);
 
-            // count sections per supermarket name
-            String name = sm.getSupermarket();
+            ArrayList<Item> items = itemsBySupermarket.get(supermarket);
+
+            String name = supermarket.getSupermarket();
 
             if (name == null)
             {
                 name = Baskit.getAppStr(R.string.unknown_supermarket);
             }
+
             supermarketSectionCounts.put(
                     name,
                     supermarketSectionCounts.getOrDefault(name, 0) + 1
             );
 
-            if (list != null && !list.isEmpty())
+            if (items != null && !items.isEmpty())
             {
-                nonEmpty.add(sm);
+                nonEmptyBase.add(supermarket);
             }
             else
             {
-                empty.add(sm);
+                emptyBase.add(supermarket);
             }
         }
 
-        ArrayList<Supermarket> result = new ArrayList<>();
-        result.addAll(nonEmpty);
-        result.addAll(empty);
+        for (Map.Entry<Supermarket, ArrayList<Item>> entry : itemsBySupermarket.entrySet())
+        {
+            Supermarket supermarket = entry.getKey();
 
-        this.supermarkets = result;
+            if (supermarket == null ||
+                    supermarket == unassigned_supermarket ||
+                    baseSupermarkets.contains(supermarket))
+            {
+                continue;
+            }
+
+            ArrayList<Item> items = entry.getValue();
+
+            String name = supermarket.getSupermarket();
+
+            if (name == null)
+            {
+                name = Baskit.getAppStr(R.string.unknown_supermarket);
+            }
+
+            supermarketSectionCounts.put(
+                    name,
+                    supermarketSectionCounts.getOrDefault(name, 0) + 1
+            );
+
+            if (items != null && !items.isEmpty())
+            {
+                dynamicNonEmpty.add(supermarket);
+            }
+            else
+            {
+                dynamicEmpty.add(supermarket);
+            }
+        }
+
+        ArrayList<Item> unassignedItems = itemsBySupermarket.get(unassigned_supermarket);
+
+        ArrayList<Supermarket> ordered = new ArrayList<>();
+
+        ordered.addAll(nonEmptyBase);
+        ordered.addAll(dynamicNonEmpty);
+        ordered.addAll(emptyBase);
+        ordered.addAll(dynamicEmpty);
+
+        if (unassignedItems != null && !unassignedItems.isEmpty())
+        {
+            ordered.add(unassigned_supermarket);
+        }
+        else
+        {
+            ordered.add(unassigned_supermarket);
+        }
+
+        supermarkets = ordered;
     }
 
     private String buildItemsSignature(ArrayList<Item> items)
