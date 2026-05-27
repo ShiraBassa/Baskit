@@ -27,56 +27,78 @@ public abstract class MasterActivity extends AppCompatActivity
     private final Set<String> runningRequests =
             Collections.synchronizedSet(new HashSet<>());
 
+    private boolean hasStartedHealthCheck = false;
+    private boolean hasFinishedFirstHealthCheck = false;
+
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState)
-    {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         dialogs = new ConnectionDialogs(this);
         swipeHandler = new EdgeSwipeHandler(this);
 
-        Baskit.onlineLive.observe(this, online ->
+        Runnable refreshConnectionUi = () ->
         {
-            boolean isOnline = online != null && online;
-
-            if (!isOnline)
+            if (isFinishing() || isDestroyed())
             {
-                dialogs.showOffline();
-                dialogs.hideServerDown();
+                return;
             }
-            else
-            {
-                dialogs.hideOffline();
 
-                if (isFinishing() || isDestroyed()) return;
-
-                flushPendingActions();
-            }
-        });
-
-        Baskit.serverAliveLive.observe(this, isUp ->
-        {
+            Boolean online = Baskit.onlineLive.getValue();
             Boolean checking = Baskit.serverCheckingLive.getValue();
+            Boolean serverUp = Baskit.serverAliveLive.getValue();
 
-            if (checking != null && checking)
+            boolean hasInternet = online != null && online;
+            boolean isChecking = Boolean.TRUE.equals(checking);
+
+            if (!hasInternet)
+            {
+                dialogs.hideServerDown();
+                dialogs.showOffline();
+                return;
+            }
+
+            dialogs.hideOffline();
+
+            Boolean latestOnline = Baskit.onlineLive.getValue();
+            if (latestOnline == null || !latestOnline)
+            {
+                dialogs.hideServerDown();
+                dialogs.showOffline();
+                return;
+            }
+
+            if (isChecking)
+            {
+                hasStartedHealthCheck = true;
+                return;
+            }
+
+            if (hasStartedHealthCheck)
+            {
+                hasFinishedFirstHealthCheck = true;
+            }
+
+            if (!hasFinishedFirstHealthCheck)
             {
                 dialogs.hideServerDown();
                 return;
             }
 
-            if (isUp == null) return;
-
-            if (!isUp)
+            if (Boolean.FALSE.equals(serverUp))
             {
                 dialogs.showServerDown();
             }
             else
             {
                 dialogs.hideServerDown();
-
                 flushPendingActions();
             }
-        });
+        };
+
+        Baskit.onlineLive.observe(this, unused -> refreshConnectionUi.run());
+        Baskit.serverAliveLive.observe(this, unused -> refreshConnectionUi.run());
+        Baskit.serverCheckingLive.observe(this, unused -> refreshConnectionUi.run());
 
         if (disableSystemBack())
         {
@@ -288,14 +310,42 @@ public abstract class MasterActivity extends AppCompatActivity
         public void showOffline()
         {
             if (!canShowDialog()) return;
-            if (offlineDialog == null || !offlineDialog.isShowing())
-            {
-                offlineDialog = new AlertDialog.Builder(context)
-                        .setTitle(Baskit.getAppStr(R.string.auth_no_connection))
-                        .setMessage(Baskit.getAppStr(R.string.msg_connect_to_wifi))
-                        .setCancelable(false)
-                        .create();
 
+            if (serverDownDialog != null && serverDownDialog.isShowing())
+            {
+                serverDownDialog.dismiss();
+                serverDownDialog = null;
+            }
+
+            if (offlineDialog != null)
+            {
+                if (offlineDialog.isShowing())
+                {
+                    return;
+                }
+
+                offlineDialog.dismiss();
+                offlineDialog = null;
+            }
+
+            Activity activity = (Activity) context;
+
+            if (activity.isFinishing() || activity.isDestroyed())
+            {
+                return;
+            }
+
+            offlineDialog = new AlertDialog.Builder(activity)
+                    .setTitle(Baskit.getAppStr(R.string.auth_no_connection))
+                    .setMessage(Baskit.getAppStr(R.string.msg_connect_to_wifi))
+                    .setCancelable(false)
+                    .create();
+
+            offlineDialog.setCancelable(false);
+            offlineDialog.setCanceledOnTouchOutside(false);
+
+            if (!offlineDialog.isShowing())
+            {
                 offlineDialog.show();
             }
         }
@@ -312,14 +362,42 @@ public abstract class MasterActivity extends AppCompatActivity
         public void showServerDown()
         {
             if (!canShowDialog()) return;
-            if (serverDownDialog == null || !serverDownDialog.isShowing())
-            {
-                serverDownDialog = new AlertDialog.Builder(context)
-                        .setTitle(Baskit.getAppStr(R.string.auth_server_unavailable))
-                        .setMessage(Baskit.getAppStr(R.string.msg_try_again))
-                        .setCancelable(false)
-                        .create();
 
+            if (offlineDialog != null && offlineDialog.isShowing())
+            {
+                offlineDialog.dismiss();
+                offlineDialog = null;
+            }
+
+            if (serverDownDialog != null)
+            {
+                if (serverDownDialog.isShowing())
+                {
+                    return;
+                }
+
+                serverDownDialog.dismiss();
+                serverDownDialog = null;
+            }
+
+            Activity activity = (Activity) context;
+
+            if (activity.isFinishing() || activity.isDestroyed())
+            {
+                return;
+            }
+
+            serverDownDialog = new AlertDialog.Builder(activity)
+                    .setTitle(Baskit.getAppStr(R.string.auth_server_unavailable))
+                    .setMessage(Baskit.getAppStr(R.string.msg_try_again))
+                    .setCancelable(false)
+                    .create();
+
+            serverDownDialog.setCancelable(false);
+            serverDownDialog.setCanceledOnTouchOutside(false);
+
+            if (!serverDownDialog.isShowing())
+            {
                 serverDownDialog.show();
             }
         }

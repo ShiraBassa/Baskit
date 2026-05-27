@@ -1,0 +1,1389 @@
+@startuml
+class com.example.baskit.main_components.Item {
+# String id
+# String baseName
+# double price
+# int quantity
+# boolean checked
+# Supermarket supermarket
+# String company
+# Double weight
+# String unit
+# String category
+- {static} String ID_PREFIX
++ String getCompany()
++ void setCompany(String)
++ Double getWeight()
++ void setWeight(Double)
++ String getUnit()
++ void setUnit(String)
++ String getCategory()
++ void setCategory(String)
++ String getBaseName()
++ void setBaseName(String)
++ double getPrice()
++ void setPrice(double)
++ int getQuantity()
++ void setQuantity(int)
++ boolean isChecked()
++ void setChecked(boolean)
++ String getId()
++ void setId(String)
++ Supermarket getSupermarket()
++ void setSupermarket(Supermarket)
++ String getDecodedName()
++ double getTotal()
++ {static} boolean isFullId(String)
++ String getAbsoluteId()
++ {static} String getFullId(String)
++ int raiseQuantity()
++ int lowerQuantity()
++ String toString()
++ Item clone()
++ boolean isPriceKnown()
++ boolean isUnassignedToSupermarket()
++ void setUnchosen()
++ void fillInfo(ItemInfo)
++ void fillVariant(ItemVariant)
++ ItemVariant getCheapestVariant(ArrayList<ItemVariant>)
++ void setCheapestVariant(ArrayList<ItemVariant>)
++ ItemVariant getSupermarketVariant(Supermarket,ArrayList<ItemVariant>)
++ void setSupermarketVariant(Supermarket,ArrayList<ItemVariant>)
++ ItemInfo getInfo()
++ ItemVariant getVariant()
++ boolean isVariantOf(ItemVariant)
++ boolean isVariantOf(ItemVariant,Supermarket)
++ boolean isIdenticalVariantOf(ItemVariant)
+}
+
+
+class com.example.baskit.main_components.Item$ItemInfo {
+- String code
+- String baseName
+- String company
+- Double weight
+- String unit
+- String category
++ String getCode()
++ void setCode(String)
++ String getBaseName()
++ void setBaseName(String)
++ String getCompany()
++ void setCompany(String)
++ Double getWeight()
++ String getWeightStr()
++ void setWeight(Double)
++ String getUnit()
++ void setUnit(String)
++ String getCategory()
++ void setCategory(String)
++ boolean equals(Object)
++ int hashCode()
++ String getFullMeasureStr()
+}
+
+
+class com.example.baskit.main_components.Item$ItemVariant {
+- Supermarket supermarket
+- double price
+- ItemInfo info
++ Supermarket getSupermarket()
++ void setSupermarket(Supermarket)
++ double getPrice()
++ void setPrice(double)
++ ItemInfo getInfo()
++ void setInfo(ItemInfo)
++ boolean equals(Object)
++ int hashCode()
+}
+
+
+class com.example.baskit.ExampleInstrumentedTest {
++ void useAppContext()
+}
+
+class com.example.baskit.main_components.Supermarket {
+- String supermarket
+- String section
++ String getSupermarket()
++ void setSupermarket(String)
++ String getSection()
++ void setSection(String)
++ String getDecodedSupermarket()
++ String getDecodedSection()
++ {static} ArrayList<Supermarket> getSupermarketsFromStrings(Map<String,ArrayList<String>>)
++ {static} Map<String,ArrayList<String>> getStringsFromSupermarkets(ArrayList<Supermarket>)
++ String toString()
++ Supermarket clone()
++ boolean equals(Object)
++ int hashCode()
+}
+
+
+class com.example.baskit.online_components.FBRefs {
+# {static} FirebaseAuth refAuth
++ {static} FirebaseDatabase FBDB
++ {static} DatabaseReference refUsers
++ {static} DatabaseReference refLists
+}
+
+class com.example.baskit.Baskit {
++ {static} String SERVER_URL
++ {static} int HOME_GRID_NUM_BOXES
++ {static} Supermarket UNASSIGNED_SUPERMARKET
++ {static} String UNKNOWN_CATEGORY
+- {static} Baskit instance
++ {static} MutableLiveData<Boolean> onlineLive
++ {static} MutableLiveData<Boolean> serverAliveLive
++ {static} MutableLiveData<Boolean> serverCheckingLive
+- android.os.Handler serverHandler
+- java.util.concurrent.ExecutorService serverBg
+- boolean serverPollingRunning
+- Runnable serverPollingRunnable
++ void onCreate()
++ {static} Context getContext()
++ {static} boolean isOnline(Context)
++ {static} int getAppColor(Context,int)
++ {static} int getAppColor(Context,int,int)
++ {static} String getAppStr(int)
+- {static} String getTotalDisplayString(Double,boolean,boolean)
++ {static} String getTotalDisplayString(Double,boolean,boolean,boolean)
++ {static} boolean isLayoutLeft()
++ {static} boolean isLayoutRight()
++ {static} String encodeKey(String)
++ {static} String decodeKey(String)
++ {static} boolean isValidUserName(String,boolean)
+- void startServerPolling()
+- void stopServerPolling()
+}
+
+
+class com.example.baskit.home.AddSupermarketAlertDialog {
+~ Map<String,ArrayList<String>> choices
+~ ArrayList<String> cities
+~ ArrayList<String> unchosen_stores
+~ Map<String,ArrayList<String>> unchosen_branches
+~ ArrayList<String> supermarkets
+~ ArrayList<String> sections
+~ boolean runInBackground
+~ APIHandler apiHandler
+~ AlertDialog.Builder adb
+~ LinearLayout adLayout
+~ AlertDialog ad
+~ Button btnAdd
+~ Spinner spinnerSupermarkets
+~ TextView tvEmpty
+~ Activity activity
+~ Context context
+~ Consumer<Supermarket> onSubmit
+- void init()
+- void getAPIInfo()
+- void setSpinners()
+- void setButton()
++ void show()
++ void dismiss()
+}
+
+
+class com.example.baskit.categories.ItemViewAlertDialog {
+~ Item item
+~ ArrayList<ItemVariant> variants
+~ ArrayList<ItemVariant> allVariants
+~ ArrayList<ItemInfo> currentVariations
+~ boolean showQuantity
+- {static} int MAX_QUANTITY
+~ APIHandler apiHandler
+~ ChipGroup chipGroupWeights
+~ ChipGroup chipGroupCompanies
+~ AlertDialog.Builder adb
+~ AlertDialog adItemView
+~ RecyclerView recyclerSupermarkets
+~ ItemViewPricesAdapter pricesAdapter
+~ TextView adTvQuantity
+~ TextView adTvItemName
+~ Button adBtnSave
+~ ImageButton adBtnCancel
+~ ImageButton adBtnUp
+~ ImageButton adBtnDown
+~ LinearLayout adLayout
+~ LinearLayout adLoutQuantityWhole
+~ ProgressBar adProgressLoading
++ void show(Item)
+- void applyVariationFilter()
++ void dismiss()
+}
+
+
+class com.example.baskit.categories.ItemViewAlertDialog$VariationsManager {
+~ ArrayList<ItemInfo> currentVariations
+~ ChipGroup chipGroupWeights
+~ ChipGroup chipGroupCompanies
+~ Context context
+~ Runnable applyVariationFilter
++ void setupVariationFilters()
+}
+
+
+class com.example.baskit.sqlite.ItemInfoEntity {
++ String itemCode
++ String company
++ double weight
++ String unit
++ String category
++ String baseName
+}
+
+class com.example.baskit.main_components.User {
+# String id
+# String email
+# String name
+# ArrayList<String> listIDs
++ String getId()
++ void setId(String)
++ String getEmail()
++ void setEmail(String)
++ String getName()
++ void setName(String)
++ ArrayList<String> getListIDs()
++ void setListIDs(ArrayList<String>)
++ void addList(String)
++ void removeList(String)
+}
+
+
+class com.example.baskit.sqlite.ItemPricesEntity {
++ int id
++ String itemCode
++ String store
++ String branch
++ double price
+}
+
+class com.example.baskit.online_components.FirebaseAuthHandler {
+- {static} User user
++ {static} String token
+- APIHandler apiHandler
+- FirebaseDBHandler dbHandler
+- AIHandler aiHandler
+- {static} FirebaseAuthHandler instance
+- AtomicBoolean authRunning
++ {static} FirebaseAuthHandler getInstance()
++ {static} void resetInstance()
+- void postSuccess(AuthCallback)
+- void postError(AuthCallback,String,ErrorType)
+- void postError(AuthCallback,ErrorType)
++ void checkCurrUser(AuthCallback)
++ void signInOrSignUp(String,String,AuthCallback)
+- void signIn(String,String,AuthCallback)
++ User getUser()
++ void logOut()
++ void changeUserName(String)
++ void createList(String,Activity,Consumer<List>)
++ void duplicateList(List,Consumer<List>)
+}
+
+
+enum com.example.baskit.online_components.ErrorType {
++  GENERAL
++  EMAIL
++  PASSWORD
++  NOT_LOGGED
++  SERVER
+}
+
+interface com.example.baskit.online_components.FirebaseAuthHandler$AuthCallback {
+~ void onAuthSuccess()
+~ void onAuthError(String,ErrorType)
+~ void onAuthError(ErrorType)
+}
+
+class com.example.baskit.BuildConfig {
++ {static} boolean DEBUG
++ {static} String APPLICATION_ID
++ {static} String BUILD_TYPE
++ {static} int VERSION_CODE
++ {static} String VERSION_NAME
++ {static} String Gemini_API_Key
+}
+
+class com.example.baskit.online_components.FirebaseDBHandler {
+- {static} FirebaseDBHandler instance
++ {static} FirebaseDBHandler getInstance()
++ ValueEventListener listenToUserName(User,Consumer<String>)
++ ValueEventListener listenToListNames(User,Consumer<ArrayList<String>>)
++ ValueEventListener listenToList(String,GetListCallback)
++ ValueEventListener listenToCategory(List,String,Consumer<Category>)
++ ValueEventListener listenForRequests(List,Consumer<ArrayList<Request>>)
++ void removeUserNameListener(User,ValueEventListener)
++ void removeListNamesListener(User,ValueEventListener)
++ void removeListListener(String,ValueEventListener)
++ void removeCategoryListener(String,String,ValueEventListener)
++ void removeRequestsListener(String,ValueEventListener)
++ void changeUserName(User,String)
++ void getListNames(User,Consumer<ArrayList<String>>)
++ void getList(String,GetListCallback)
++ void removeList(String)
++ void removeList(List)
++ void addList(List,User)
++ void updateList(List)
++ void finishList(List)
++ void removeItems(String)
++ void removeItems(List)
++ void leaveList(List,User)
++ void renameList(String,String)
++ void renameList(List,String)
+- List parseListSnapshot(String,DataSnapshot)
++ String getUniqueId()
++ void addCategory(List,Category)
++ void removeCategory(List,Category)
++ void updateCategory(List,Category)
++ void finishCategory(List,Category)
++ void addItem(List,String,Item,DBCallback)
++ void removeItem(List,Category,Item)
++ void removeItem(List,Category,String)
++ void removeItem(List,String,Item)
++ void sendJoinRequest(String,User,Context)
++ void acceptRequest(List,Request)
++ void declineRequest(List,Request)
+- void removeRequest(List,Request)
+}
+
+
+interface com.example.baskit.online_components.FirebaseDBHandler$GetListCallback {
+~ void onListFetched(List)
+~ void onError()
+}
+
+interface com.example.baskit.online_components.FirebaseDBHandler$DBCallback {
+~ void onComplete()
+~ void onFailure(Exception)
+}
+
+class com.example.baskit.SQLite.ItemPricesDao_Impl {
+- RoomDatabase __db
+- EntityInsertionAdapter<ItemPricesEntity> __insertionAdapterOfItemPricesEntity
+- SharedSQLiteStatement __preparedStmtOfClearAll
++ void insertAll(List<ItemPricesEntity>)
++ void clearAll()
++ List<ItemPricesEntity> getAll()
++ {static} List<Class<?>> getRequiredConverters()
+}
+
+
+class com.example.baskit.online_components.AIHandler {
+- GenerativeModel gemini
+- {static} AIHandler instance
+- AtomicBoolean requestRunning
++ {static} AIHandler getInstance()
++ void getListSuggestions(String,Activity,Consumer<ArrayList<String>>)
++ String createListSuggestionsPrompt(String)
++ void sendTextPrompt(Activity,String,Consumer<String>)
+- void failedRequest(Activity,Consumer<String>)
+}
+
+
+abstract class com.example.baskit.MasterActivity {
+- ConnectionDialogs dialogs
+- EdgeSwipeHandler swipeHandler
+- java.util.Queue<Runnable> pendingActions
+- java.util.concurrent.ExecutorService bg
+- Set<String> runningRequests
+# void onCreate(Bundle)
+# void onDestroy()
++ void startActivity(Intent)
++ void startActivity(Intent,Bundle)
++ void finish()
++ void runWhenServerActive(Runnable)
++ void runProtectedRequest(String,View,Runnable)
+- void flushPendingActions()
++ boolean dispatchTouchEvent(MotionEvent)
+# boolean enableSwipeBack()
+# boolean disableSystemBack()
+}
+
+
+class com.example.baskit.MasterActivity$ConnectionDialogs {
+- Context context
+- AlertDialog offlineDialog
+- AlertDialog serverDownDialog
+- boolean canShowDialog()
++ void showOffline()
++ void hideOffline()
++ void showServerDown()
++ void hideServerDown()
+}
+
+
+class com.example.baskit.MasterActivity$EdgeSwipeHandler {
+- Activity activity
+- float downX
+- boolean tracking
+- boolean dragging
++ boolean swipeFinishing
+- android.view.VelocityTracker velocityTracker
+- int edgePx()
++ boolean handle(MotionEvent)
+- void recycleVelocity()
+}
+
+
+class com.example.baskit.list.ShareListAlertDialog {
+~ List list
+~ FirebaseDBHandler dbHandler
+~ ValueEventListener requestsListener
+~ ShareListRequestsAdapter requestsAdapter
+~ AlertDialog ad
+~ androidx.appcompat.app.AlertDialog.Builder adb
+~ LinearLayout adLayout
+~ TextView tvListName
+~ Button btnCopyLink
+~ RecyclerView recyclerRequests
+~ MasterActivity activity
+- void setButton()
++ void show()
+- String createLink()
+- void copyLink(String)
++ void dismiss()
+}
+
+
+class com.example.baskit.list.ShareListAlertDialog$ShareListRequestsAdapter {
+- ArrayList<Request> requests
+- UpperClassFunctions upperClassFns
++ ViewHolder onCreateViewHolder(ViewGroup,int)
++ void onBindViewHolder(ViewHolder,int)
++ int getItemCount()
++ void updateRequests(ArrayList<Request>)
+}
+
+
+interface com.example.baskit.list.ShareListAlertDialog$ShareListRequestsAdapter$UpperClassFunctions {
+~ void acceptRequest(Request)
+~ void declineRequest(Request)
+}
+
+class com.example.baskit.list.ShareListAlertDialog$ShareListRequestsAdapter$ViewHolder {
+# TextView tvUsername
+# Button btnAccept
+# Button btnDecline
+}
+
+class com.example.baskit.test.BuildConfig {
++ {static} boolean DEBUG
++ {static} String APPLICATION_ID
++ {static} String BUILD_TYPE
++ {static} String Gemini_API_Key
+}
+
+class com.example.baskit.SQLite.AppDatabase_Impl {
+- ItemPricesDao _itemPricesDao
+- ItemCategoryDao _itemCategoryDao
+- GroupsDao _groupsDao
+- ItemInfoDao _itemInfoDao
+# SupportSQLiteOpenHelper createOpenHelper(DatabaseConfiguration)
+# InvalidationTracker createInvalidationTracker()
++ void clearAllTables()
+# Map<Class<?>,List<Class<?>>> getRequiredTypeConverters()
++ Set<Class<? extends AutoMigrationSpec>> getRequiredAutoMigrationSpecs()
++ List<Migration> getAutoMigrations(Map<Class<? extends AutoMigrationSpec>,AutoMigrationSpec>)
++ ItemPricesDao itemPricesDao()
++ ItemCategoryDao itemCategoryDao()
++ GroupsDao groupDao()
++ ItemInfoDao itemInfoDao()
+}
+
+
+class com.example.baskit.ExampleUnitTest {
++ void addition_isCorrect()
+}
+
+class com.example.baskit.sqlite.ItemInfoDao_Impl {
+- RoomDatabase __db
+- EntityInsertAdapter<ItemInfoEntity> __insertAdapterOfItemInfoEntity
+- EntityDeleteOrUpdateAdapter<ItemInfoEntity> __updateAdapterOfItemInfoEntity
++ void insert(ItemInfoEntity)
++ void insertAll(List<ItemInfoEntity>)
++ void update(ItemInfoEntity)
++ List<ItemInfoEntity> getAll()
++ void clearAll()
++ {static} List<Class<?>> getRequiredConverters()
+}
+
+
+class com.example.baskit.categories.CategoryItemsAdapter {
+- Category category
+- ArrayList<Supermarket> baseSupermarkets
+- ArrayList<Supermarket> supermarkets
+- Map<Supermarket,ArrayList<Item>> itemsBySupermarket
+- Map<Supermarket,Boolean> expandedStates
+- Map<String,Integer> supermarketSectionCounts
+- boolean draggable
+- String lastItemsSignature
+- {static} Supermarket unassigned_supermarket
+- Activity activity
+- Context context
+- ItemsAdapter.UpperClassFunctions upperClassFns
+- SupermarketItemsAdapter.OnItemMovedListener listener
+- void restart()
+- void rebuildDisplaySupermarkets()
+- String buildItemsSignature(ArrayList<Item>)
+- void sortByExisting()
++ ViewHolder onCreateViewHolder(ViewGroup,int)
++ void onBindViewHolder(ViewHolder,int)
++ int getItemCount()
+- boolean isSingleSectionCurrently(Supermarket)
+- boolean containsSupermarket(Item,Supermarket)
++ void updateItems(ArrayList<Item>)
+- boolean ifFinishedSupermarket(ArrayList<Item>)
+}
+
+
+class com.example.baskit.categories.CategoryItemsAdapter$SupermarketDiffCallback {
+- ArrayList<Supermarket> oldList
+- ArrayList<Supermarket> newList
++ int getOldListSize()
++ int getNewListSize()
++ boolean areItemsTheSame(int,int)
++ boolean areContentsTheSame(int,int)
+}
+
+
+class com.example.baskit.categories.CategoryItemsAdapter$ViewHolder {
+# TextView tvSupermarket
+# ImageButton btnExpand
+# RecyclerView recyclerItems
+# SupermarketItemsAdapter adapter
+# ItemTouchHelper itemTouchHelper
+}
+
+class com.example.baskit.categories.CategoryItemsAdapter$SupermarketItemsAdapter {
++ void updateItems(ArrayList<Item>)
++ void onBindViewHolder(ItemsAdapter.ViewHolder,int)
+}
+
+interface com.example.baskit.categories.CategoryItemsAdapter$SupermarketItemsAdapter$OnItemMovedListener {
+~ void onItemMoved(Item,Supermarket,Supermarket)
+}
+
+class com.example.baskit.categories.CategoryItemsAdapter$SupermarketItemsAdapter$ItemDiffCallback {
+- ArrayList<Item> oldList
+- ArrayList<Item> newList
++ int getOldListSize()
++ int getNewListSize()
++ boolean areItemsTheSame(int,int)
++ boolean areContentsTheSame(int,int)
+}
+
+
+class com.example.baskit.sqlite.AppDatabase_Impl {
+- ItemPricesDao _itemPricesDao
+- GroupsDao _groupsDao
+- ItemInfoDao _itemInfoDao
+# RoomOpenDelegate createOpenDelegate()
+# InvalidationTracker createInvalidationTracker()
++ void clearAllTables()
+# Map<Class<?>,List<Class<?>>> getRequiredTypeConverters()
++ Set<Class<? extends AutoMigrationSpec>> getRequiredAutoMigrationSpecs()
++ List<Migration> getAutoMigrations(Map<Class<? extends AutoMigrationSpec>,AutoMigrationSpec>)
++ ItemPricesDao itemPricesDao()
++ GroupsDao groupDao()
++ ItemInfoDao itemInfoDao()
+}
+
+
+class com.example.baskit.main_components.Category {
+- String name
+- boolean finished
+- ArrayList<Item> items
++ void setFinished(boolean)
++ boolean isFinished()
++ String getName()
++ void setName(String)
++ ArrayList<Item> getItems()
++ void setItems(Map<String,Item>)
++ void setItems(ArrayList<Item>)
++ void setItemsFromFlat(ArrayList<Item>)
++ int countUnchecked()
++ void updateFinished()
++ ArrayList<Item> getRemainedItems()
++ void addItem(Item)
++ void removeItem(String)
++ void removeVariants(String)
++ double getTotal()
++ boolean allPricesKnown()
++ ArrayList<String> toItemNames()
++ boolean isEmpty()
++ void setCheapestVariants(Map<String,ArrayList<ItemVariant>>)
++ void setSupermarketsVariants(Supermarket,Map<String,ArrayList<ItemVariant>>)
++ SortableEntity copy()
++ String toString()
+}
+
+
+class com.example.baskit.sqlite.GroupsEntity {
++ String baseName
++ String structureJson
++ String getBaseName()
++ String getStructureJson()
+}
+
+
+class com.example.baskit.categories.ItemViewPricesAdapter {
+- ItemVariant selectedVariant
+- ArrayList<ItemVariant> itemVariants
+- APIHandler apiHandler
+- Context context
+- OnSupermarketClickListener listener
+- void sortVariants()
++ ViewHolder onCreateViewHolder(ViewGroup,int)
++ void onBindViewHolder(ViewHolder,int)
++ int getItemCount()
++ void setSelectedPosition(int)
+}
+
+
+interface com.example.baskit.categories.ItemViewPricesAdapter$OnSupermarketClickListener {
+~ void onSupermarketClick(ItemVariant)
+}
+
+class com.example.baskit.categories.ItemViewPricesAdapter$ViewHolder {
+# TextView tvSupermarketName
+# TextView tvSectionName
+# TextView tvPrice
+# TextView tvVariation
+}
+
+class com.example.baskit.login.LoginActivity {
+~ boolean homeStarted
+~ ActivityResultLauncher<Intent> signUpLauncher
+~ FirebaseAuthHandler authHandler
+~ Button btnSubmit
+~ EditText etEmail
+# void onCreate(Bundle)
+- void init()
+- void setButtons()
+- void disableButtons()
+- void enableButtons()
+- void startLogin()
+- void finishLogin()
++ void onAuthSuccess()
++ void onAuthError(String,FirebaseAuthHandler.ErrorType)
+}
+
+
+interface com.example.baskit.main_components.SortableEntity {
+~ double getTotal()
+~ boolean allPricesKnown()
+~ void setCheapestVariants(Map<String,ArrayList<ItemVariant>>)
+~ void setSupermarketsVariants(Supermarket,Map<String,ArrayList<ItemVariant>>)
+~ SortableEntity copy()
+}
+
+class com.example.baskit.list.PlanListActivity {
+~ List list
+~ String listId
+~ double oldTotal
+~ String categoryName
+~ boolean initialized
+~ boolean listListenerAttached
+~ boolean uiInitialized
+~ int colorChosen
+~ FirebaseDBHandler dbHandler
+~ APIHandler apiHandler
+~ PlanListItemsAdapter itemsAdapter
+~ ImageButton btnCancel
+~ Button btnSave
+~ TextView tvListName
+~ RecyclerView recyclerItems
+# void onCreate(Bundle)
+# void onResume()
++ boolean onOptionsItemSelected(android.view.MenuItem)
+- void createInit()
+- void resumeInit()
+- void displayTotalDif()
++ void finish()
+- void setButtons()
+}
+
+
+interface com.example.baskit.list.PlanListActivity$TriConsumer {
+~ void accept(T,U,V)
+}
+
+class com.example.baskit.list.PlanListActivity$PlanListItemsAdapter {
+- List list
+- String categoryName
+- Supermarket selectedSupermarket
+- ArrayList<Supermarket> baseSupermarkets
+- ArrayList<Supermarket> supermarkets
+- Map<Supermarket,ArrayList<Item>> itemsBySupermarket
+- Map<Supermarket,Boolean> expandedStates
+- Map<String,Integer> supermarketSectionCounts
+- int colorBase
+- int colorChosen
+- Supermarket unassigned_supermarket
+- Activity activity
+- Context context
+- ItemsAdapter.UpperClassFunctions upperClassFns
+- TriConsumer<Item,Supermarket,Supermarket> listener
+- void restart()
+- void rebuildDisplaySupermarkets()
+- void sortByExisting()
+- void updateItemVariant(Item,Supermarket)
++ ViewHolder onCreateViewHolder(ViewGroup,int)
++ void onBindViewHolder(ViewHolder,int)
++ int getItemCount()
+- boolean isSingleSectionCurrently(Supermarket)
+}
+
+
+class com.example.baskit.list.PlanListActivity$PlanListItemsAdapter$ViewHolder {
+# TextView tvSupermarket
+# ImageButton btnExpand
+# RecyclerView recyclerItems
+}
+
+class com.example.baskit.list.PlanListActivity$PlanListItemsAdapter$SupermarketItemsAdapterPlan {
+- Supermarket supermarket
+- int colorBase
+- int colorUnavailable
+- int colorChosen
+- TriConsumer<Item,Supermarket,Supermarket> onItemMovedListener
++ void onBindViewHolder(ViewHolder,int)
+- void setItemButtons(ViewHolder,Item)
+- void showItemPriceDif(ViewHolder,Item,double)
+- double getPrice(Item,Supermarket)
+}
+
+
+class com.example.baskit.categories.CategoryActivity {
+~ List list
+~ Category category
+~ Map<String,ArrayList<String>> groups
+~ ArrayList<Supermarket> supermarkets
+~ FirebaseDBHandler dbHandler
+~ APIHandler apiHandler
+~ boolean initialized
+~ ValueEventListener listListener
+~ ValueEventListener categoryListener
+~ AddItemFragment addItemFragment
+~ RecyclerView recyclerItems
+~ CategoryItemsAdapter itemsAdapter
+~ TextView tvListName
+~ ImageButton btnFinished
+~ Button btnSortList
+# void onCreate(Bundle)
+# void onResume()
+- void init()
+# void onDestroy()
+- void setButtons()
++ boolean onOptionsItemSelected(android.view.MenuItem)
++ void addItem(Item)
+- void showSortBottomSheet()
+}
+
+
+class com.example.baskit.home.SupermarketsListAdapter {
+- String selectedSupermarketName
+- Map<String,ArrayList<String>> supermarkets
+- Context context
+- BiConsumer<String,String> listener
++ ViewHolder onCreateViewHolder(ViewGroup,int)
++ void onBindViewHolder(ViewHolder,int)
++ int getItemCount()
++ void updateData(Map<String,ArrayList<String>>)
++ String getSelectedSupermarketName()
++ String getSelectedSectionName()
+- void onSectionClick(String,String)
+}
+
+
+class com.example.baskit.home.SupermarketsListAdapter$ViewHolder {
+~ TextView tvSupermarketName
+~ RecyclerView recyclerSections
+~ SectionsListAdapter sectionsAdapter
+}
+
+class com.example.baskit.home.SupermarketsListAdapter$SectionsListAdapter {
+- int selectedPosition
+- String selectedSupermarket
+- String selectedSection
+- String supermarketName
+- ArrayList<String> sections
+- Context context
+- BiConsumer<String,String> listener
++ void updateSelectedSection(String,String)
++ SectionsListAdapter.ViewHolder onCreateViewHolder(ViewGroup,int)
++ void onBindViewHolder(SectionsListAdapter.ViewHolder,int)
++ int getItemCount()
++ void updateData(ArrayList<String>,String)
+}
+
+
+class com.example.baskit.home.SupermarketsListAdapter$SectionsListAdapter$ViewHolder {
+# TextView tvSectionName
+}
+
+class com.example.baskit.online_components.APIHandler {
+- Map<String,Map<String,Map<String,Double>>> cachedItemPrices
+- Map<String,ArrayList<String>> cachedGroups
+- Map<String,ItemInfo> cachedItemInfos
+- ArrayList<Supermarket> supermarkets
+- OkHttpClient client
+- ExecutorService dbExecutor
+- ExecutorService networkExecutor
+- {static} String firebaseToken
+- {static} APIHandler instance
+- AtomicBoolean preloadRunning
++ {static} APIHandler getInstance()
++ void resetInstance()
++ boolean isServerActive()
++ void reset()
+- String getRaw(String)
+- void postRaw(String,String)
+- Map<String,Map<String,Double>> parsePriceResponse(String)
++ boolean login(String)
++ void preload()
+- Map<String,Map<String,Map<String,Double>>> loadItemPricesFromDB()
+- Map<String,ArrayList<String>> loadGroupsFromDB()
+- Map<String,ItemInfo> loadItemInfosFromDB()
+- void updateAllCache()
+- void saveItemPricesToDB(Map<String,Map<String,Map<String,Double>>>)
+- void saveGroupsToDB(Map<String,ArrayList<String>>)
+- void saveItemInfosToDB(Map<String,ItemInfo>)
++ void updateSupermarkets()
++ ArrayList<Supermarket> getUpdatedSupermarkets()
+- Map<String,Map<String,Map<String,Double>>> getItemPricesFromAPI()
+- Map<String,ArrayList<String>> getGroupsFromAPI()
+- Map<String,ItemInfo> getItemInfosFromAPI()
++ ArrayList<String> getAllCities()
++ ArrayList<String> getCities()
++ ArrayList<String> getStores()
+- Map<String,ArrayList<String>> getChoices()
++ Map<String,ArrayList<String>> getAllBranches(ArrayList<String>)
++ ItemInfo getItemInfo(String)
++ Map<String,ItemInfo> getItemInfos()
++ ArrayList<String> getGroup(String)
++ Map<String,ArrayList<String>> getGroups()
+- String getItemCategoryByName(String)
++ ArrayList<Supermarket> getSupermarkets()
++ String getItemCategory(Item)
++ Map<String,Map<String,Double>> getItemPricesByCode(String)
++ void setCities(ArrayList<String>)
++ void setBranches(Map<String,ArrayList<String>>)
++ boolean singleSectionInSupermarkets(Supermarket)
++ ArrayList<ItemVariant> buildVariant(Item)
++ Map<String,ArrayList<ItemVariant>> buildVariants(ArrayList<Item>)
+}
+
+
+class com.example.baskit.login.SignUpActivity {
+~ User user
+~ String username
+~ ArrayList<String> cities
+~ Map<String,ArrayList<String>> choices
+~ FirebaseAuthHandler authHandler
+~ APIHandler apiHandler
+~ CitiesListAdapter citiesAdapter
+~ SupermarketsListAdapter supermarketsAdapter
+~ EditText etUsername
+~ RecyclerView recyclerCities
+~ Button btnAddCity
+~ View loadingOverlay
+# void onCreate(Bundle)
+- void init()
+- void setButton()
+- void updateSupermarketButtonState()
+- void setLoading(boolean)
+- void submit()
+}
+
+
+interface com.example.baskit.sqlite.GroupsDao {
+~ void insertAll(List<GroupsEntity>)
+~ List<GroupsEntity> getAll()
+~ void clearAll()
+}
+
+class com.example.baskit.list.ListActivity {
+~ List list
+~ String listId
+~ boolean initialized
+~ boolean listListenerAttached
+~ boolean uiInitialized
+~ ValueEventListener listListener
+~ Map<String,ArrayList<String>> groups
+~ Map<String,Category> categories
+~ FirebaseDBHandler dbHandler
+~ APIHandler apiHandler
+~ FirebaseAuthHandler authHandler
+~ AddItemFragment addItemFragment
+~ ShareListAlertDialog shareAlertDialog
+~ TextView tvListName
+~ ImageButton btnBack
+~ View shareListDot
+~ RecyclerView categoriesRecycler
+~ CategoryAdapter categoryAdapter
+~ Button btnSortList
+~ ImageButton btnAddItem
+# void onCreate(Bundle)
+# void onResume()
+- void createInit()
+- void resumeInit()
+# void onDestroy()
+- void setButtons()
+- void refreshWithNewList(List)
++ void addItem(Item)
+- void showSortBottomSheet()
+}
+
+
+class com.example.baskit.list.ListActivity$CategoryAdapter {
+- String listId
+- ArrayList<Category> categories
+- Context context
+- String lastDataSignature
++ CategoryAdapter.ViewHolder onCreateViewHolder(android.view.ViewGroup,int)
++ void onBindViewHolder(CategoryAdapter.ViewHolder,int)
++ int getItemCount()
+~ void update(ArrayList<Category>)
+- String buildDataSignature(ArrayList<Category>)
+}
+
+
+class com.example.baskit.list.ListActivity$CategoryAdapter$ViewHolder {
+~ TextView tvName
+~ TextView tvCount
+~ TextView tvPrice
+~ LinearLayout loutInfo
+}
+
+class com.example.baskit.sqlite.GroupsDao_Impl {
+- RoomDatabase __db
+- EntityInsertAdapter<GroupsEntity> __insertAdapterOfGroupsEntity
++ void insertAll(List<GroupsEntity>)
++ List<GroupsEntity> getAll()
++ void clearAll()
++ {static} List<Class<?>> getRequiredConverters()
+}
+
+
+class com.example.baskit.home.HomeActivity {
+~ User user
+~ String inviteCode
+~ FirebaseAuthHandler authHandler
+~ FirebaseDBHandler dbHandler
+~ ValueEventListener userNameListener
+~ ValueEventListener listNamesListener
+~ AlertDialog.Builder adb
+~ LinearLayout adLayout
+~ AlertDialog adCreateList
+~ Button adBtnCreate
+~ MaterialButton btnCreateList
+~ ImageButton adBtnCancel
+~ EditText adEtName
+~ TextView tvTitle
+~ RecyclerView listsRecycler
+~ GridAdapter listsGridAdapter
+~ MaterialCardView emptyListsContainer
+- ActivityResultLauncher<Intent> loginLauncher
+# void onCreate(Bundle)
+# void onResume()
+# boolean enableSwipeBack()
+# boolean disableSystemBack()
+- void init()
+- void setButtons()
+# void onDestroy()
+- void createAddListAlertDialog()
+- void openListScreen(String)
+- void sendJoinRequest(String)
+}
+
+
+class com.example.baskit.home.HomeActivity$GridAdapter {
+- ArrayList<String> listNames
+- Context context
+- GridAdapter.OnItemClickListener listener
++ GridAdapter.GridViewHolder onCreateViewHolder(ViewGroup,int)
++ void onBindViewHolder(GridAdapter.GridViewHolder,int)
++ int getItemCount()
++ void updateList(ArrayList<String>)
+}
+
+
+interface com.example.baskit.home.HomeActivity$GridAdapter$OnItemClickListener {
+~ void onItemClick(int)
+}
+
+class com.example.baskit.home.HomeActivity$GridAdapter$GridViewHolder {
++ Button button
+}
+
+class com.example.baskit.home.SettingsActivity {
+~ Map<String,ArrayList<String>> choices
+~ ArrayList<String> cities
+~ FirebaseAuthHandler authHandler
+~ APIHandler apiHandler
+~ SupermarketsListAdapter supermarketsAdapter
+~ CitiesListAdapter citiesAdapter
+~ Button btnChangeUsername
+~ EditText etUsername
+~ ImageButton btnHome
+~ Button btnAddSupermarket
+~ RecyclerView recyclerSupermarkets
+~ View loadingOverlay
+# void onCreate(Bundle)
+- void init()
+- void setButtons()
+- void updateSupermarketButtonState()
++ void removeCity(String,Runnable)
++ void addSupermarketSection(Supermarket,Runnable)
++ void removeSupermarketSection(Supermarket,Runnable)
+- void setLoading(boolean)
+}
+
+
+class com.example.baskit.list.AddItemFragment {
+~ Item selectedItem
+~ ArrayList<String> allItemNames
+~ ArrayList<String> masterItemNames
+~ ArrayList<String> decodedItemNames
+~ ArrayList<String> decodedItemNamesLower
+~ ChipGroup chipGroupWeights
+~ ChipGroup chipGroupCompanies
+~ ArrayList<ItemInfo> currentVariations
+~ ArrayList<String> listItemNames
+~ ArrayList<String> itemSuggestions
+~ Map<String,ArrayList<String>> groups
+~ APIHandler apiHandler
+~ ItemViewPricesAdapter pricesAdapter
+~ View fragmentView
+~ TextView tvQuantity
+~ ImageButton btnCancel
+~ Button btnAddItem
+~ LinearLayout infoLayout
+~ ProgressBar progressBar
+~ AutoCompleteTextView searchItem
+~ RecyclerView recyclerSupermarkets
+~ MasterActivity activity
+~ Context context
+~ Consumer<Item> addItemConsumer
++ View onCreateView(LayoutInflater,ViewGroup,Bundle)
++ void onStart()
++ void onDestroyView()
+- void init()
+- void setupAutocomplete()
+- void loadItemVariations(String)
+- void applyVariationFilter()
+- void hideKeyboard()
+- void setupButtons()
+- void loadSupermarketPricesForVariations(ArrayList<ItemInfo>)
++ void startProgressBar()
++ void endProgressBar()
++ void updateData(ArrayList<String>)
+- boolean isBadItemName(String)
+}
+
+
+class com.example.baskit.list.ScoredItem {
+~ String item
+~ int score
+}
+
+class com.example.baskit.home.AddCityAlertDialog {
+~ ArrayList<String> city_choices
+~ ArrayList<String> unchosen_cities
+~ AlertDialog.Builder adb
+~ AlertDialog ad
+~ Button btnAdd
+~ TextView tvEmpty
+~ Spinner spinnerCities
+~ LinearLayout adLayout
+~ Context context
+~ Consumer<ArrayList<String>> onSubmit
+- void setSpinner()
+- void setButton()
++ void show()
++ void dismiss()
+}
+
+
+interface com.example.baskit.sqlite.ItemPricesDao {
+~ void insertAll(List<ItemPricesEntity>)
+~ List<ItemPricesEntity> getAll()
+~ void clearAll()
+}
+
+class com.example.baskit.BuildConfig {
++ {static} boolean DEBUG
++ {static} String APPLICATION_ID
++ {static} String BUILD_TYPE
++ {static} int VERSION_CODE
++ {static} String VERSION_NAME
++ {static} String Gemini_API_Key
+}
+
+class com.example.baskit.categories.ItemsAdapter {
+# ArrayList<Item> items
+# Activity activity
+# Context context
+# UpperClassFunctions upperClassFns
++ ViewHolder onCreateViewHolder(ViewGroup,int)
++ void onBindViewHolder(ViewHolder,int)
++ int getItemCount()
+- void setItemButtons(ViewHolder,Item)
++ void addItem(Item)
++ void removeItem(Item)
+- void sortItems()
+}
+
+
+interface com.example.baskit.categories.ItemsAdapter$UpperClassFunctions {
+~ void updateItemCategory(Item)
+~ void removeItemCategory(Item)
+~ void updateCategory()
+~ void collapseAllSupermarkets()
+~ void expandAllSupermarkets()
+}
+
+class com.example.baskit.categories.ItemsAdapter$ViewHolder {
++ TextView tvName
++ TextView tvQuantity
++ TextView tvPrice
++ ImageButton btnUp
++ ImageButton btnDown
++ ImageButton btnCheckBox
++ ImageButton dragHandle
++ ItemViewAlertDialog itemViewAlertDialog
++ View spacer
+}
+
+class com.example.baskit.SQLite.ItemInfoDao_Impl {
+- RoomDatabase __db
+- EntityInsertionAdapter<ItemInfoEntity> __insertionAdapterOfItemInfoEntity
+- SharedSQLiteStatement __preparedStmtOfClearAll
++ void insert(ItemInfoEntity)
++ void insertAll(List<ItemInfoEntity>)
++ void clearAll()
++ List<ItemInfoEntity> getAll()
++ {static} List<Class<?>> getRequiredConverters()
+}
+
+
+class com.example.baskit.SQLite.GroupsDao_Impl {
+- RoomDatabase __db
+- EntityInsertionAdapter<GroupsEntity> __insertionAdapterOfGroupsEntity
+- SharedSQLiteStatement __preparedStmtOfClearAll
++ void insertAll(List<GroupsEntity>)
++ void clearAll()
++ List<GroupsEntity> getAll()
++ {static} List<Class<?>> getRequiredConverters()
+}
+
+
+interface com.example.baskit.sqlite.ItemInfoDao {
+~ List<ItemInfoEntity> getAll()
+~ void insert(ItemInfoEntity)
+~ void insertAll(List<ItemInfoEntity>)
+~ void update(ItemInfoEntity)
+~ void clearAll()
+}
+
+class com.example.baskit.home.CitiesListAdapter {
+- int selectedPosition
+- ArrayList<String> cities
+- Context context
++ ViewHolder onCreateViewHolder(ViewGroup,int)
++ void onBindViewHolder(ViewHolder,int)
++ int getItemCount()
++ String getSelectedCity()
++ void updateData(ArrayList<String>)
+}
+
+
+class com.example.baskit.home.CitiesListAdapter$ViewHolder {
+~ TextView tvCity
+}
+
+class com.example.baskit.SQLite.ItemCategoryDao_Impl {
+- RoomDatabase __db
+- EntityInsertionAdapter<ItemCategory> __insertionAdapterOfItemCategory
+- SharedSQLiteStatement __preparedStmtOfClearAll
++ void insert(ItemCategory)
++ void insertAll(List<ItemCategory>)
++ void clearAll()
++ List<ItemCategory> getAll()
++ {static} List<Class<?>> getRequiredConverters()
+}
+
+
+abstract class com.example.baskit.sqlite.AppDatabase {
+- {static} AppDatabase INSTANCE
+- {static} Migration MIGRATION_4_5
++ {abstract}ItemPricesDao itemPricesDao()
++ {abstract}GroupsDao groupDao()
++ {abstract}ItemInfoDao itemInfoDao()
++ {static} AppDatabase getDatabase(Context)
+}
+
+
+class com.example.baskit.sqlite.ItemPricesDao_Impl {
+- RoomDatabase __db
+- EntityInsertAdapter<ItemPricesEntity> __insertAdapterOfItemPricesEntity
++ void insertAll(List<ItemPricesEntity>)
++ List<ItemPricesEntity> getAll()
++ void clearAll()
++ {static} List<Class<?>> getRequiredConverters()
+}
+
+
+class com.example.baskit.main_components.List {
+- String id
+- String name
+- ArrayList<String> userIDs
+- Map<String,Category> categories
+- ArrayList<Request> requests
+~ ArrayList<String> itemSuggestions
++ String getId()
++ void setId(String)
++ String getName()
++ void setName(String)
++ ArrayList<String> getUserIDs()
++ void setUserIDs(ArrayList<String>)
++ Map<String,Category> getCategories()
++ void setCategories(Map<String,Category>)
++ ArrayList<Request> getRequests()
++ void setRequests(ArrayList<Request>)
++ ArrayList<String> getItemSuggestions()
++ void setItemSuggestions(ArrayList<String>)
++ void addRequest(Request)
++ void removeRequest(Request)
++ void addUser(String)
++ void removeUser(String)
++ void addCategory(Category)
++ void updateCategory(Category)
++ Category getCategory(String)
++ boolean hasCategory(String)
++ void removeCategory(String)
++ void removeCategory(Category)
++ ArrayList<Item> getItems()
++ ArrayList<Item> getRemainedItems()
++ ArrayList<String> toItemNames()
++ void removeAllItems()
++ double getTotal()
++ boolean allPricesKnown()
++ boolean isEmpty()
++ void setCheapestVariants(Map<String,ArrayList<ItemVariant>>)
++ void setSupermarketsVariants(Supermarket,Map<String,ArrayList<ItemVariant>>)
++ SortableEntity copy()
+}
+
+
+class com.example.baskit.main_components.List$Request {
+- String userID
+- String username
++ String getUserID()
++ void setUserID(String)
++ String getUsername()
++ void setUsername(String)
+}
+
+
+class com.example.baskit.list.SortListBottomSheetBuilder {
+- {static} BottomSheetDialog activeDialog
++ {static} void show(AppCompatActivity,SortableEntity,Map<String,ArrayList<ItemVariant>>,ArrayList<Supermarket>,ApplyListener)
+}
+
+
+interface com.example.baskit.list.SortListBottomSheetBuilder$ApplyListener {
+~ void onApplyCheapest()
+~ void onApplySupermarket(Supermarket)
+}
+
+
+
+com.example.baskit.main_components.Cloneable <|.. com.example.baskit.main_components.Item
+com.example.baskit.main_components.Item +.. com.example.baskit.main_components.Item$ItemInfo
+com.example.baskit.main_components.Item +.. com.example.baskit.main_components.Item$ItemVariant
+com.example.baskit.main_components.Cloneable <|.. com.example.baskit.main_components.Supermarket
+android.app.Application <|-- com.example.baskit.Baskit
+com.example.baskit.categories.ItemViewAlertDialog +.. com.example.baskit.categories.ItemViewAlertDialog$VariationsManager
+com.example.baskit.online_components.FirebaseAuthHandler +.. com.example.baskit.online_components.FirebaseAuthHandler$AuthCallback
+com.example.baskit.online_components.FirebaseDBHandler +.. com.example.baskit.online_components.FirebaseDBHandler$GetListCallback
+com.example.baskit.online_components.FirebaseDBHandler +.. com.example.baskit.online_components.FirebaseDBHandler$DBCallback
+com.example.baskit.SQLite.ItemPricesDao <|.. com.example.baskit.SQLite.ItemPricesDao_Impl
+androidx.appcompat.app.AppCompatActivity <|-- com.example.baskit.MasterActivity
+com.example.baskit.MasterActivity +.. com.example.baskit.MasterActivity$ConnectionDialogs
+com.example.baskit.MasterActivity +.. com.example.baskit.MasterActivity$EdgeSwipeHandler
+com.example.baskit.list.ShareListAlertDialog +.. com.example.baskit.list.ShareListAlertDialog$ShareListRequestsAdapter
+com.example.baskit.list.Adapter <|-- com.example.baskit.list.ShareListAlertDialog$ShareListRequestsAdapter
+com.example.baskit.list.ShareListAlertDialog$ShareListRequestsAdapter +.. com.example.baskit.list.ShareListAlertDialog$ShareListRequestsAdapter$UpperClassFunctions
+com.example.baskit.list.ShareListAlertDialog$ShareListRequestsAdapter +.. com.example.baskit.list.ShareListAlertDialog$ShareListRequestsAdapter$ViewHolder
+com.example.baskit.list.ViewHolder <|-- com.example.baskit.list.ShareListAlertDialog$ShareListRequestsAdapter$ViewHolder
+com.example.baskit.SQLite.AppDatabase <|-- com.example.baskit.SQLite.AppDatabase_Impl
+com.example.baskit.sqlite.ItemInfoDao <|.. com.example.baskit.sqlite.ItemInfoDao_Impl
+com.example.baskit.categories.Adapter <|-- com.example.baskit.categories.CategoryItemsAdapter
+com.example.baskit.categories.CategoryItemsAdapter +.. com.example.baskit.categories.CategoryItemsAdapter$SupermarketDiffCallback
+com.example.baskit.categories.Callback <|-- com.example.baskit.categories.CategoryItemsAdapter$SupermarketDiffCallback
+com.example.baskit.categories.CategoryItemsAdapter +.. com.example.baskit.categories.CategoryItemsAdapter$ViewHolder
+com.example.baskit.categories.ViewHolder <|-- com.example.baskit.categories.CategoryItemsAdapter$ViewHolder
+com.example.baskit.categories.CategoryItemsAdapter +.. com.example.baskit.categories.CategoryItemsAdapter$SupermarketItemsAdapter
+com.example.baskit.categories.ItemsAdapter <|-- com.example.baskit.categories.CategoryItemsAdapter$SupermarketItemsAdapter
+com.example.baskit.categories.CategoryItemsAdapter$SupermarketItemsAdapter +.. com.example.baskit.categories.CategoryItemsAdapter$SupermarketItemsAdapter$OnItemMovedListener
+com.example.baskit.categories.CategoryItemsAdapter$SupermarketItemsAdapter +.. com.example.baskit.categories.CategoryItemsAdapter$SupermarketItemsAdapter$ItemDiffCallback
+com.example.baskit.categories.Callback <|-- com.example.baskit.categories.CategoryItemsAdapter$SupermarketItemsAdapter$ItemDiffCallback
+com.example.baskit.sqlite.AppDatabase <|-- com.example.baskit.sqlite.AppDatabase_Impl
+com.example.baskit.main_components.SortableEntity <|.. com.example.baskit.main_components.Category
+com.example.baskit.categories.Adapter <|-- com.example.baskit.categories.ItemViewPricesAdapter
+com.example.baskit.categories.ItemViewPricesAdapter +.. com.example.baskit.categories.ItemViewPricesAdapter$OnSupermarketClickListener
+com.example.baskit.categories.ItemViewPricesAdapter +.. com.example.baskit.categories.ItemViewPricesAdapter$ViewHolder
+com.example.baskit.categories.ViewHolder <|-- com.example.baskit.categories.ItemViewPricesAdapter$ViewHolder
+com.example.baskit.login.AuthCallback <|.. com.example.baskit.login.LoginActivity
+com.example.baskit.MasterActivity <|-- com.example.baskit.login.LoginActivity
+com.example.baskit.MasterActivity <|-- com.example.baskit.list.PlanListActivity
+com.example.baskit.list.PlanListActivity +.. com.example.baskit.list.PlanListActivity$TriConsumer
+com.example.baskit.list.PlanListActivity +.. com.example.baskit.list.PlanListActivity$PlanListItemsAdapter
+com.example.baskit.list.Adapter <|-- com.example.baskit.list.PlanListActivity$PlanListItemsAdapter
+com.example.baskit.list.PlanListActivity$PlanListItemsAdapter +.. com.example.baskit.list.PlanListActivity$PlanListItemsAdapter$ViewHolder
+com.example.baskit.list.ViewHolder <|-- com.example.baskit.list.PlanListActivity$PlanListItemsAdapter$ViewHolder
+com.example.baskit.list.PlanListActivity$PlanListItemsAdapter +.. com.example.baskit.list.PlanListActivity$PlanListItemsAdapter$SupermarketItemsAdapterPlan
+com.example.baskit.list.ItemsAdapter <|-- com.example.baskit.list.PlanListActivity$PlanListItemsAdapter$SupermarketItemsAdapterPlan
+com.example.baskit.MasterActivity <|-- com.example.baskit.categories.CategoryActivity
+com.example.baskit.home.Adapter <|-- com.example.baskit.home.SupermarketsListAdapter
+com.example.baskit.home.SupermarketsListAdapter +.. com.example.baskit.home.SupermarketsListAdapter$ViewHolder
+com.example.baskit.home.ViewHolder <|-- com.example.baskit.home.SupermarketsListAdapter$ViewHolder
+com.example.baskit.home.SupermarketsListAdapter +.. com.example.baskit.home.SupermarketsListAdapter$SectionsListAdapter
+com.example.baskit.home.Adapter <|-- com.example.baskit.home.SupermarketsListAdapter$SectionsListAdapter
+com.example.baskit.home.SupermarketsListAdapter$SectionsListAdapter +.. com.example.baskit.home.SupermarketsListAdapter$SectionsListAdapter$ViewHolder
+com.example.baskit.home.ViewHolder <|-- com.example.baskit.home.SupermarketsListAdapter$SectionsListAdapter$ViewHolder
+com.example.baskit.MasterActivity <|-- com.example.baskit.login.SignUpActivity
+com.example.baskit.MasterActivity <|-- com.example.baskit.list.ListActivity
+com.example.baskit.list.ListActivity +.. com.example.baskit.list.ListActivity$CategoryAdapter
+com.example.baskit.list.Adapter <|-- com.example.baskit.list.ListActivity$CategoryAdapter
+com.example.baskit.list.ListActivity$CategoryAdapter +.. com.example.baskit.list.ListActivity$CategoryAdapter$ViewHolder
+com.example.baskit.list.ViewHolder <|-- com.example.baskit.list.ListActivity$CategoryAdapter$ViewHolder
+com.example.baskit.sqlite.GroupsDao <|.. com.example.baskit.sqlite.GroupsDao_Impl
+com.example.baskit.MasterActivity <|-- com.example.baskit.home.HomeActivity
+com.example.baskit.home.HomeActivity +.. com.example.baskit.home.HomeActivity$GridAdapter
+com.example.baskit.home.Adapter <|-- com.example.baskit.home.HomeActivity$GridAdapter
+com.example.baskit.home.HomeActivity$GridAdapter +.. com.example.baskit.home.HomeActivity$GridAdapter$OnItemClickListener
+com.example.baskit.home.HomeActivity$GridAdapter +.. com.example.baskit.home.HomeActivity$GridAdapter$GridViewHolder
+com.example.baskit.home.ViewHolder <|-- com.example.baskit.home.HomeActivity$GridAdapter$GridViewHolder
+com.example.baskit.MasterActivity <|-- com.example.baskit.home.SettingsActivity
+androidx.fragment.app.DialogFragment <|-- com.example.baskit.list.AddItemFragment
+com.example.baskit.categories.Adapter <|-- com.example.baskit.categories.ItemsAdapter
+com.example.baskit.categories.ItemsAdapter +.. com.example.baskit.categories.ItemsAdapter$UpperClassFunctions
+com.example.baskit.categories.ItemsAdapter +.. com.example.baskit.categories.ItemsAdapter$ViewHolder
+com.example.baskit.categories.ViewHolder <|-- com.example.baskit.categories.ItemsAdapter$ViewHolder
+com.example.baskit.SQLite.ItemInfoDao <|.. com.example.baskit.SQLite.ItemInfoDao_Impl
+com.example.baskit.SQLite.GroupsDao <|.. com.example.baskit.SQLite.GroupsDao_Impl
+com.example.baskit.home.Adapter <|-- com.example.baskit.home.CitiesListAdapter
+com.example.baskit.home.CitiesListAdapter +.. com.example.baskit.home.CitiesListAdapter$ViewHolder
+com.example.baskit.home.ViewHolder <|-- com.example.baskit.home.CitiesListAdapter$ViewHolder
+com.example.baskit.SQLite.ItemCategoryDao <|.. com.example.baskit.SQLite.ItemCategoryDao_Impl
+androidx.room.RoomDatabase <|-- com.example.baskit.sqlite.AppDatabase
+com.example.baskit.sqlite.ItemPricesDao <|.. com.example.baskit.sqlite.ItemPricesDao_Impl
+com.example.baskit.main_components.SortableEntity <|.. com.example.baskit.main_components.List
+com.example.baskit.main_components.List +.. com.example.baskit.main_components.List$Request
+com.example.baskit.list.SortListBottomSheetBuilder +.. com.example.baskit.list.SortListBottomSheetBuilder$ApplyListener
+@enduml

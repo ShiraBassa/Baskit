@@ -29,8 +29,8 @@ public class Baskit extends Application
 
     private static Baskit instance;
 
-    public static final MutableLiveData<Boolean> onlineLive = new MutableLiveData<>(true);
-    public static final MutableLiveData<Boolean> serverAliveLive = new MutableLiveData<>(true);
+    public static final MutableLiveData<Boolean> onlineLive = new MutableLiveData<>(false);
+    public static final MutableLiveData<Boolean> serverAliveLive = new MutableLiveData<>(false);
     public static final MutableLiveData<Boolean> serverCheckingLive = new MutableLiveData<>(false);
     private final android.os.Handler serverHandler = new android.os.Handler(android.os.Looper.getMainLooper());
     private final java.util.concurrent.ExecutorService serverBg = java.util.concurrent.Executors.newSingleThreadExecutor();
@@ -51,17 +51,28 @@ public class Baskit extends Application
         {
             ConnectivityManager.NetworkCallback networkCallback = new ConnectivityManager.NetworkCallback() {
                 @Override
-                public void onAvailable(@NonNull Network network) {
+                public void onAvailable(@NonNull Network network)
+                {
+                    boolean online = isOnline(Baskit.this);
+
+                    onlineLive.postValue(online);
+
+                    if (online && serverPollingRunnable != null)
+                    {
+                        serverHandler.removeCallbacks(serverPollingRunnable);
+                        serverHandler.post(serverPollingRunnable);
+                    }
+                }
+
+                @Override
+                public void onLost(@NonNull Network network)
+                {
                     onlineLive.postValue(isOnline(Baskit.this));
                 }
 
                 @Override
-                public void onLost(@NonNull Network network) {
-                    onlineLive.postValue(isOnline(Baskit.this));
-                }
-
-                @Override
-                public void onCapabilitiesChanged(@NonNull Network network, @NonNull NetworkCapabilities caps) {
+                public void onCapabilitiesChanged(@NonNull Network network, @NonNull NetworkCapabilities caps)
+                {
                     onlineLive.postValue(isOnline(Baskit.this));
                 }
             };
@@ -276,8 +287,14 @@ public class Baskit extends Application
             {
                 if (!isOnline(Baskit.this))
                 {
-                    stopServerPolling();
                     serverAliveLive.postValue(false);
+                    serverCheckingLive.postValue(false);
+
+                    if (serverPollingRunning)
+                    {
+                        serverHandler.postDelayed(this, 5000);
+                    }
+
                     return;
                 }
 
@@ -299,7 +316,10 @@ public class Baskit extends Application
                     serverAliveLive.postValue(up);
                     serverCheckingLive.postValue(false);
 
-                    serverHandler.postDelayed(this, 5000);
+                    if (serverPollingRunning)
+                    {
+                        serverHandler.postDelayed(this, 5000);
+                    }
                 });
             }
         };
@@ -318,5 +338,6 @@ public class Baskit extends Application
 
         serverCheckingLive.postValue(false);
         serverPollingRunnable = null;
+        serverAliveLive.postValue(false);
     }
 }
