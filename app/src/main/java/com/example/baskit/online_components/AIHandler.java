@@ -41,6 +41,11 @@ public class AIHandler
         );
     }
 
+    public static synchronized void resetInstance()
+    {
+        instance = null;
+    }
+
     public static synchronized AIHandler getInstance()
     {
         if (instance == null)

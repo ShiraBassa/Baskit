@@ -94,6 +94,11 @@ public class List implements SortableEntity
         this.userIDs = userIDs != null ? userIDs : new ArrayList<>();
     }
 
+    public boolean hasUser(String userID)
+    {
+        return this.userIDs != null && this.userIDs.contains(userID);
+    }
+
     public Map<String, Category> getCategories() {
         if (categories == null)
         {

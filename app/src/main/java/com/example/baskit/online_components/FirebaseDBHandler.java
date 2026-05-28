@@ -55,6 +55,11 @@ public class FirebaseDBHandler
     }
 
 
+    public static synchronized void resetInstance()
+    {
+        instance = null;
+    }
+
     public static synchronized FirebaseDBHandler getInstance()
     {
         if (instance == null)

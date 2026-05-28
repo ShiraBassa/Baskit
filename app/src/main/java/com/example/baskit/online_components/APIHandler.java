@@ -68,11 +68,42 @@ public class APIHandler
         return instance;
     }
 
-    public synchronized void resetInstance()
+    public static synchronized void resetInstance()
     {
+        try
+        {
+            AppDatabase db = AppDatabase.getDatabase(Baskit.getContext());
+
+            db.clearAllTables();
+        }
+        catch (Exception e)
+        {
+            Log.e("API Reset", "Failed clearing database", e);
+        }
+
         firebaseToken = null;
+
+        if (instance != null)
+        {
+            try
+            {
+                instance.cachedItemPrices = null;
+                instance.cachedGroups = null;
+                instance.cachedItemInfos = null;
+                instance.supermarkets = null;
+
+                instance.preloadRunning.set(false);
+
+                instance.dbExecutor.shutdownNow();
+                instance.networkExecutor.shutdownNow();
+            }
+            catch (Exception e)
+            {
+                Log.e("API Reset", "Failed clearing executors/cache", e);
+            }
+        }
+
         instance = null;
-        instance = new APIHandler();
     }
 
     public boolean isServerActive()

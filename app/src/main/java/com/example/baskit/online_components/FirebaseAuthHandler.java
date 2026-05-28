@@ -564,9 +564,17 @@ public class FirebaseAuthHandler
     public void logOut()
     {
         refAuth.signOut();
+
         token = null;
+        user = null;
+
+        authRunning.set(false);
+
+        FirebaseDBHandler.resetInstance();
+        APIHandler.resetInstance();
+        AIHandler.resetInstance();
+
         resetInstance();
-        apiHandler.resetInstance();
     }
 
     public void changeUserName(String username)

@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.baskit.online_components.APIHandler;
 import com.example.baskit.Baskit;
+import com.example.baskit.online_components.FirebaseAuthHandler;
 import com.example.baskit.online_components.FirebaseDBHandler;
 import com.example.baskit.list.AddItemFragment;
 import com.example.baskit.list.PlanListActivity;
@@ -45,6 +46,7 @@ public class CategoryActivity extends MasterActivity
 
     final FirebaseDBHandler dbHandler = FirebaseDBHandler.getInstance();
     final APIHandler apiHandler = APIHandler.getInstance();
+    final FirebaseAuthHandler authHandler = FirebaseAuthHandler.getInstance();
 
     boolean initialized = true;
 
@@ -129,6 +131,15 @@ public class CategoryActivity extends MasterActivity
                             {
                                 finish();
                             }
+                            return;
+                        }
+
+                        // Current user no longer belongs to this list
+                        if (authHandler.getUser() != null &&
+                                authHandler.getUser().getId() != null &&
+                                !newList.hasUser(authHandler.getUser().getId()))
+                        {
+                            finish();
                             return;
                         }
 

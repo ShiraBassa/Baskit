@@ -469,8 +469,17 @@ public class ListActivity extends MasterActivity
 
         ListActivity.this.list = newList;
 
-        // The list is null
+        // The list no longer exists
         if (newList == null)
+        {
+            finish();
+            return;
+        }
+
+        // Current user no longer belongs to this list
+        if (authHandler.getUser() != null &&
+                authHandler.getUser().getId() != null &&
+                !newList.hasUser(authHandler.getUser().getId()))
         {
             finish();
             return;

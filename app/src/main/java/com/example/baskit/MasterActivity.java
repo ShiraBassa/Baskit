@@ -3,6 +3,8 @@ package com.example.baskit;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
+import android.os.Handler;
+import android.os.Looper;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.Nullable;
@@ -29,6 +31,10 @@ public abstract class MasterActivity extends AppCompatActivity
 
     private boolean hasStartedHealthCheck = false;
     private boolean hasFinishedFirstHealthCheck = false;
+    private long offlineDetectedAt = -1L;
+    private static final long OFFLINE_GRACE_MS = 1200L;
+    private final Handler offlineHandler = new Handler(Looper.getMainLooper());
+    private boolean offlineRecheckScheduled = false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -36,6 +42,8 @@ public abstract class MasterActivity extends AppCompatActivity
 
         dialogs = new ConnectionDialogs(this);
         swipeHandler = new EdgeSwipeHandler(this);
+
+        final Runnable[] refreshHolder = new Runnable[1];
 
         Runnable refreshConnectionUi = () ->
         {
@@ -53,16 +61,77 @@ public abstract class MasterActivity extends AppCompatActivity
 
             if (!hasInternet)
             {
+                if (offlineDetectedAt < 0)
+                {
+                    offlineDetectedAt = System.currentTimeMillis();
+
+                    if (!offlineRecheckScheduled)
+                    {
+                        offlineRecheckScheduled = true;
+
+                        offlineHandler.postDelayed(() ->
+                        {
+                            offlineRecheckScheduled = false;
+
+                            if (!isFinishing() && !isDestroyed() && refreshHolder[0] != null)
+                            {
+                                refreshHolder[0].run();
+                            }
+                        }, OFFLINE_GRACE_MS);
+                    }
+
+                    return;
+                }
+
+                long offlineDuration = System.currentTimeMillis() - offlineDetectedAt;
+
+                if (offlineDuration < OFFLINE_GRACE_MS)
+                {
+                    return;
+                }
+
                 dialogs.hideServerDown();
                 dialogs.showOffline();
                 return;
             }
 
+            offlineDetectedAt = -1L;
+            offlineRecheckScheduled = false;
+            offlineHandler.removeCallbacksAndMessages(null);
             dialogs.hideOffline();
 
             Boolean latestOnline = Baskit.onlineLive.getValue();
             if (latestOnline == null || !latestOnline)
             {
+                if (offlineDetectedAt < 0)
+                {
+                    offlineDetectedAt = System.currentTimeMillis();
+
+                    if (!offlineRecheckScheduled)
+                    {
+                        offlineRecheckScheduled = true;
+
+                        offlineHandler.postDelayed(() ->
+                        {
+                            offlineRecheckScheduled = false;
+
+                            if (!isFinishing() && !isDestroyed() && refreshHolder[0] != null)
+                            {
+                                refreshHolder[0].run();
+                            }
+                        }, OFFLINE_GRACE_MS);
+                    }
+
+                    return;
+                }
+
+                long offlineDuration = System.currentTimeMillis() - offlineDetectedAt;
+
+                if (offlineDuration < OFFLINE_GRACE_MS)
+                {
+                    return;
+                }
+
                 dialogs.hideServerDown();
                 dialogs.showOffline();
                 return;
@@ -96,6 +165,8 @@ public abstract class MasterActivity extends AppCompatActivity
             }
         };
 
+        refreshHolder[0] = refreshConnectionUi;
+
         Baskit.onlineLive.observe(this, unused -> refreshConnectionUi.run());
         Baskit.serverAliveLive.observe(this, unused -> refreshConnectionUi.run());
         Baskit.serverCheckingLive.observe(this, unused -> refreshConnectionUi.run());
@@ -115,6 +186,8 @@ public abstract class MasterActivity extends AppCompatActivity
     {
         super.onDestroy();
 
+        offlineDetectedAt = -1L;
+        offlineHandler.removeCallbacksAndMessages(null);
         dialogs.hideOffline();
         dialogs.hideServerDown();
         pendingActions.clear();

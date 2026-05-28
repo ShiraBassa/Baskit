@@ -135,12 +135,7 @@ public class ShareListAlertDialog
             {
                 return;
             }
-
-            activity.runProtectedRequest(
-                    "copy_invite_link_" + (list != null ? list.getId() : "unknown"),
-                    btnCopyLink,
-                    () -> copyLink(createLink())
-            );
+            copyLink(createLink());
         });
     }
 
@@ -192,20 +187,6 @@ public class ShareListAlertDialog
         clipboard.setPrimaryClip(clip);
 
         Toast.makeText(activity, Baskit.getAppStr(R.string.msg_link_copied), Toast.LENGTH_SHORT).show();
-    }
-
-    public void dismiss()
-    {
-        if (requestsListener != null && list != null)
-        {
-            dbHandler.removeRequestsListener(list.getId(), requestsListener);
-            requestsListener = null;
-        }
-
-        if (ad != null && ad.isShowing())
-        {
-            ad.dismiss();
-        }
     }
 
     public static class ShareListRequestsAdapter extends RecyclerView.Adapter<ShareListRequestsAdapter.ViewHolder>
