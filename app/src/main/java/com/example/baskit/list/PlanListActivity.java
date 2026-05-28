@@ -41,6 +41,7 @@ import java.util.function.BiConsumer;
 public class PlanListActivity extends MasterActivity
 {
     List list;
+    List originalList;
     String listId;
     double oldTotal;
     String categoryName;
@@ -159,6 +160,7 @@ public class PlanListActivity extends MasterActivity
                             return;
                         }
 
+                        PlanListActivity.this.originalList = new List(newList);
                         PlanListActivity.this.list = new List(newList);
 
                         oldTotal = list.getTotal();
@@ -269,15 +271,6 @@ public class PlanListActivity extends MasterActivity
     @Override
     public void finish()
     {
-        if (list != null)
-        {
-            runProtectedRequest(
-                    "update_plan_list_" + list.getId(),
-                    btnSave,
-                    () -> dbHandler.updateList(list)
-            );
-        }
-
         super.finish();
     }
 
@@ -287,14 +280,31 @@ public class PlanListActivity extends MasterActivity
                 runProtectedRequest(
                         "close_plan",
                         btnCancel,
-                        () -> runOnUiThread(this::finish)
+                        () ->
+                        {
+                            if (originalList != null)
+                            {
+                                list = new List(originalList);
+                            }
+
+                            runOnUiThread(this::finish);
+                        }
                 ));
 
         btnSave.setOnClickListener(v ->
                 runProtectedRequest(
                         "save_plan",
                         btnSave,
-                        () -> runOnUiThread(this::finish)
+                        () ->
+                        {
+                            if (list != null)
+                            {
+                                dbHandler.updateList(list);
+                                originalList = new List(list);
+                            }
+
+                            runOnUiThread(this::finish);
+                        }
                 ));
     }
 
@@ -872,7 +882,13 @@ public class PlanListActivity extends MasterActivity
                     if (variant != null)
                     {
                         double price = variant.getPrice();
-                        return Double.isNaN(price) ? 0.0 : price;
+
+                        if (Double.isNaN(price))
+                        {
+                            return 0.0;
+                        }
+
+                        return price * Math.max(item.getQuantity(), 1);
                     }
                 }
 

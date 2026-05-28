@@ -164,7 +164,9 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
             holder.tvPrice.setVisibility(View.GONE);
         }
 
-        if (item.isChecked())
+        boolean checked = item.isChecked();
+
+        if (checked)
         {
             holder.btnCheckBox.setImageResource(R.drawable.ic_check_box_checked);
             holder.itemView.setAlpha(0.58f);
@@ -174,6 +176,16 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
             holder.btnCheckBox.setImageResource(R.drawable.ic_check_box_unchecked);
             holder.itemView.setAlpha(0.98f);
         }
+
+        holder.btnUp.setEnabled(!checked);
+        holder.btnDown.setEnabled(!checked);
+        holder.tvName.setEnabled(!checked);
+        holder.dragHandle.setEnabled(!checked);
+
+        holder.btnUp.setAlpha(checked ? 0.45f : 1f);
+        holder.btnDown.setAlpha(checked ? 0.45f : 1f);
+        holder.tvName.setAlpha(checked ? 0.7f : 1f);
+        holder.dragHandle.setAlpha(checked ? 0.35f : 1f);
 
         setItemButtons(holder, item);
     }
@@ -195,6 +207,7 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
         {
             int currPosition = holder.getAdapterPosition();
             if (currPosition == RecyclerView.NO_POSITION) return;
+            if (item.isChecked()) return;
 
             if (activity != null && (activity.isFinishing() || activity.isDestroyed()))
             {
@@ -219,6 +232,7 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
         {
             int currPosition = holder.getAdapterPosition();
             if (currPosition == RecyclerView.NO_POSITION) return;
+            if (item.isChecked()) return;
 
             if (activity != null && (activity.isFinishing() || activity.isDestroyed()))
             {
