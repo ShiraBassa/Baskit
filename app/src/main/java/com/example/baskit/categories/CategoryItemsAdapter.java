@@ -40,6 +40,7 @@ import java.util.Objects;
 public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdapter.ViewHolder>
 {
     private final Category category;
+    private final ArrayList<Supermarket> stableSupermarketOrder = new ArrayList<>();
 
     private final ArrayList<Supermarket> baseSupermarkets;
     private ArrayList<Supermarket> supermarkets;
@@ -49,7 +50,6 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
     private Map<String, Integer> supermarketSectionCounts;
 
     private boolean draggable = false;
-    private String lastItemsSignature = "";
     private static final Supermarket unassigned_supermarket = Baskit.UNASSIGNED_SUPERMARKET;
 
     private final Activity activity;
@@ -121,6 +121,7 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
 
         this.baseSupermarkets = supermarkets != null ? new ArrayList<>(supermarkets) : new ArrayList<>();
         this.supermarkets = new ArrayList<>(this.baseSupermarkets);
+        stableSupermarketOrder.addAll(this.baseSupermarkets);
 
         this.listener = (draggedItem, from, to) ->
         {
@@ -262,11 +263,6 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
             return;
         }
 
-        ArrayList<Supermarket> nonEmptyBase = new ArrayList<>();
-        ArrayList<Supermarket> emptyBase = new ArrayList<>();
-        ArrayList<Supermarket> dynamicNonEmpty = new ArrayList<>();
-        ArrayList<Supermarket> dynamicEmpty = new ArrayList<>();
-
         if (supermarketSectionCounts == null)
         {
             supermarketSectionCounts = new HashMap<>();
@@ -296,15 +292,6 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
                     name,
                     supermarketSectionCounts.getOrDefault(name, 0) + 1
             );
-
-            if (items != null && !items.isEmpty())
-            {
-                nonEmptyBase.add(supermarket);
-            }
-            else
-            {
-                emptyBase.add(supermarket);
-            }
         }
 
         for (Map.Entry<Supermarket, ArrayList<Item>> entry : itemsBySupermarket.entrySet())
@@ -331,77 +318,50 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
                     name,
                     supermarketSectionCounts.getOrDefault(name, 0) + 1
             );
-
-            if (items != null && !items.isEmpty())
+            if (!stableSupermarketOrder.contains(supermarket))
             {
-                dynamicNonEmpty.add(supermarket);
-            }
-            else
-            {
-                dynamicEmpty.add(supermarket);
+                stableSupermarketOrder.add(supermarket);
             }
         }
-
-        ArrayList<Item> unassignedItems = itemsBySupermarket.get(unassigned_supermarket);
 
         ArrayList<Supermarket> ordered = new ArrayList<>();
 
-        ordered.addAll(nonEmptyBase);
-        ordered.addAll(dynamicNonEmpty);
-        ordered.addAll(emptyBase);
-        ordered.addAll(dynamicEmpty);
-
-        if (unassignedItems != null && !unassignedItems.isEmpty())
+        for (Supermarket supermarket : stableSupermarketOrder)
         {
-            ordered.add(unassigned_supermarket);
-        }
-        else
-        {
-            ordered.add(unassigned_supermarket);
-        }
-
-        supermarkets = ordered;
-    }
-
-    private String buildItemsSignature(ArrayList<Item> items)
-    {
-        if (items == null)
-        {
-            return "";
-        }
-
-        StringBuilder builder = new StringBuilder();
-
-        for (Item item : items)
-        {
-            if (item == null)
+            if (supermarket == null)
             {
                 continue;
             }
 
-            builder.append(item.getAbsoluteId())
-                    .append('|')
-                    .append(item.getBaseName())
-                    .append('|')
-                    .append(item.getQuantity())
-                    .append('|')
-                    .append(item.isChecked())
-                    .append('|');
-
-            Supermarket supermarket = item.getSupermarket();
-
-            if (supermarket != null)
+            if (!itemsBySupermarket.containsKey(supermarket))
             {
-                builder.append(supermarket.toString());
+                continue;
             }
 
-            builder.append('|')
-                    .append(item.getPrice())
-                    .append(';');
+            ordered.add(supermarket);
         }
 
-        return builder.toString();
+        for (Map.Entry<Supermarket, ArrayList<Item>> entry : itemsBySupermarket.entrySet())
+        {
+            Supermarket supermarket = entry.getKey();
+
+            if (supermarket == null
+                    || supermarket == unassigned_supermarket
+                    || ordered.contains(supermarket))
+            {
+                continue;
+            }
+
+            ordered.add(supermarket);
+            stableSupermarketOrder.add(supermarket);
+        }
+
+        ordered.remove(unassigned_supermarket);
+        ordered.add(unassigned_supermarket);
+
+        supermarkets = ordered;
     }
+
 
     @SuppressLint("NotifyDataSetChanged")
     private void sortByExisting()
@@ -452,18 +412,7 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
             }
         }
 
-        ArrayList<Supermarket> oldSupermarkets =
-                new ArrayList<>(supermarkets != null
-                        ? supermarkets
-                        : new ArrayList<>());
-
         rebuildDisplaySupermarkets();
-
-        DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(
-                new SupermarketDiffCallback(oldSupermarkets, supermarkets)
-        );
-
-        diffResult.dispatchUpdatesTo(this);
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder
@@ -614,7 +563,9 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
         }
         if (holder.adapter != null)
         {
-            holder.adapter.updateItems(items);
+            holder.adapter.items.clear();
+            holder.adapter.items.addAll(items);
+            holder.adapter.notifyDataSetChanged();
         }
 
         Boolean expanded = expandedStates.get(supermarket);
@@ -797,24 +748,17 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
         return false;
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     public void updateItems(ArrayList<Item> newItems)
     {
         ArrayList<Item> safeItems =
                 newItems != null ? newItems : new ArrayList<>();
 
-        String newSignature = buildItemsSignature(safeItems);
-
-        if (newSignature.equals(lastItemsSignature))
-        {
-            return;
-        }
-
-        lastItemsSignature = newSignature;
-
         this.category.setItemsFromFlat(safeItems);
 
         restart();
         sortByExisting();
+        notifyDataSetChanged();
     }
 
     private boolean ifFinishedSupermarket(ArrayList<Item> items)
@@ -846,79 +790,10 @@ public class CategoryItemsAdapter extends RecyclerView.Adapter<CategoryItemsAdap
             void onItemMoved(Item item, Supermarket from, Supermarket to);
         }
 
-        private static class ItemDiffCallback extends DiffUtil.Callback
-        {
-            private final ArrayList<Item> oldList;
-            private final ArrayList<Item> newList;
-
-            public ItemDiffCallback(ArrayList<Item> oldList,
-                                    ArrayList<Item> newList)
-            {
-                this.oldList = oldList != null ? oldList : new ArrayList<>();
-                this.newList = newList != null ? newList : new ArrayList<>();
-            }
-
-            @Override
-            public int getOldListSize()
-            {
-                return oldList.size();
-            }
-
-            @Override
-            public int getNewListSize()
-            {
-                return newList.size();
-            }
-
-            @Override
-            public boolean areItemsTheSame(int oldItemPosition,
-                                           int newItemPosition)
-            {
-                Item oldItem = oldList.get(oldItemPosition);
-                Item newItem = newList.get(newItemPosition);
-
-                if (oldItem == null || newItem == null)
-                {
-                    return false;
-                }
-
-                return Objects.equals(
-                        oldItem.getAbsoluteId(),
-                        newItem.getAbsoluteId()
-                );
-            }
-
-            @Override
-            public boolean areContentsTheSame(int oldItemPosition,
-                                              int newItemPosition)
-            {
-                Item oldItem = oldList.get(oldItemPosition);
-                Item newItem = newList.get(newItemPosition);
-
-                return Objects.equals(oldItem, newItem);
-            }
-        }
 
         public SupermarketItemsAdapter(ArrayList<Item> items, Activity activity, Context context, UpperClassFunctions upperClassFns)
         {
             super(items, upperClassFns, activity, context);
-        }
-
-        public void updateItems(ArrayList<Item> newItems)
-        {
-            ArrayList<Item> safeNewItems =
-                    newItems != null ? newItems : new ArrayList<>();
-
-            ArrayList<Item> oldItems = new ArrayList<>(this.items);
-
-            DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(
-                    new ItemDiffCallback(oldItems, safeNewItems)
-            );
-
-            this.items.clear();
-            this.items.addAll(safeNewItems);
-
-            diffResult.dispatchUpdatesTo(this);
         }
 
         @Override

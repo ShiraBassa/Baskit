@@ -203,6 +203,9 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
 
             item.setQuantity(item.raiseQuantity());
             holder.tvQuantity.setText(String.valueOf(item.getQuantity()));
+            holder.tvPrice.setText(
+                    Baskit.getTotalDisplayString(item.getTotal(), item.isPriceKnown(), false, false)
+            );
             holder.btnDown.setColorFilter(Baskit.getAppColor(context, android.R.attr.colorPrimary));
             holder.btnDown.setAlpha(1f);
 
@@ -242,6 +245,10 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>
                 }
 
                 holder.tvQuantity.setText(String.valueOf(item.getQuantity()));
+                holder.tvPrice.setText(
+                        Baskit.getTotalDisplayString(item.getTotal(), item.isPriceKnown(), false, false)
+                );
+
                 if (upperClassFns != null)
                 {
                     upperClassFns.updateItemCategory(item);

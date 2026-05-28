@@ -255,7 +255,7 @@ public class Item implements Cloneable
     @Override
     public String toString()
     {
-        return baseName != null ? getBaseName() : "";
+        return getDecodedName();
     }
 
     @Exclude
@@ -570,7 +570,20 @@ public class Item implements Cloneable
                 (unit == null && vUnit == null) ||
                         (unit != null && unit.equals(vUnit));
 
-        return sameWeight && sameUnit;
+        String currentBase =
+                getDecodedName() != null
+                        ? getDecodedName().trim()
+                        : "";
+
+        String variantBase =
+                info.getBaseName() != null
+                        ? Baskit.decodeKey(info.getBaseName()).trim()
+                        : "";
+
+        boolean sameBaseName =
+                currentBase.equalsIgnoreCase(variantBase);
+
+        return sameBaseName && sameWeight && sameUnit;
     }
 
     @Exclude
@@ -603,7 +616,20 @@ public class Item implements Cloneable
                 (unit == null && vUnit == null) ||
                         (unit != null && unit.equals(vUnit));
 
-        return sameWeight && sameUnit;
+        String currentBase =
+                getDecodedName() != null
+                        ? getDecodedName().trim()
+                        : "";
+
+        String variantBase =
+                info.getBaseName() != null
+                        ? Baskit.decodeKey(info.getBaseName()).trim()
+                        : "";
+
+        boolean sameBaseName =
+                currentBase.equalsIgnoreCase(variantBase);
+
+        return sameBaseName && sameWeight && sameUnit;
     }
 
     @Exclude
@@ -721,12 +747,8 @@ public class Item implements Cloneable
 
             ItemInfo other = (ItemInfo) obj;
 
-            if (baseName == null && other.baseName == null)
-            {
-                return true;
-            }
-
-            return Objects.equals(baseName, other.baseName) &&
+            return Objects.equals(code, other.code) &&
+                    Objects.equals(baseName, other.baseName) &&
                     Objects.equals(company, other.company) &&
                     Objects.equals(weight, other.weight) &&
                     Objects.equals(unit, other.unit) &&
@@ -736,7 +758,7 @@ public class Item implements Cloneable
         @Override
         public int hashCode()
         {
-            return java.util.Objects.hash(baseName, company, weight, unit, category);
+            return java.util.Objects.hash(code, baseName, company, weight, unit, category);
         }
 
         public String getFullMeasureStr()
@@ -790,7 +812,8 @@ public class Item implements Cloneable
             this.price = price;
         }
 
-        public ItemInfo getInfo() {
+        public ItemInfo getInfo()
+        {
             return info;
         }
 

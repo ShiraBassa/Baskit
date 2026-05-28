@@ -199,8 +199,11 @@ public class ItemViewAlertDialog
                         if (item.isIdenticalVariantOf(variant))
                         {
                             pricesAdapter.setSelectedPosition(i);
-                            item.setPrice(variant.getPrice());
-                            item.fillInfo(variant.getInfo());
+                            item.fillVariant(variant);
+
+                            recyclerSupermarkets.scrollToPosition(i);
+                            pricesAdapter.notifyItemChanged(i);
+
                             break;
                         }
                     }
@@ -339,21 +342,7 @@ public class ItemViewAlertDialog
         adBtnUp.setClickable(true);
         adBtnDown.setClickable(true);
         adBtnDown.setVisibility(View.VISIBLE);
-
-        String title = item.getDecodedName();
-
-        if (item.getWeight() != null && item.getUnit() != null
-                && !item.getUnit().isEmpty())
-        {
-            title += " • " + item.getWeight() + " " + item.getUnit();
-        }
-
-        if (item.getCompany() != null && !item.getCompany().isEmpty())
-        {
-            title += " • " + item.getCompany();
-        }
-
-        adTvItemName.setText(title);
+        adTvItemName.setText(item.toString());
 
         if (showQuantity)
         {
@@ -380,8 +369,11 @@ public class ItemViewAlertDialog
                 if (item.isIdenticalVariantOf(variant))
                 {
                     pricesAdapter.setSelectedPosition(i);
-                    item.setPrice(variant.getPrice());
-                    item.fillInfo(variant.getInfo());
+                    item.fillVariant(variant);
+
+                    recyclerSupermarkets.scrollToPosition(i);
+                    pricesAdapter.notifyItemChanged(i);
+
                     break;
                 }
             }

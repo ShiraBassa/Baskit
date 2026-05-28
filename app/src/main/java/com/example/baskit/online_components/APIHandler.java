@@ -265,6 +265,7 @@ public class APIHandler
         {
             return;
         }
+
         supermarkets = getUpdatedSupermarkets();
 
         cachedItemPrices = loadItemPricesFromDB();
