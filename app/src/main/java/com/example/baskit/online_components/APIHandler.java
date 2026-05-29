@@ -132,9 +132,9 @@ public class APIHandler
 
     public void reset() throws JSONException, IOException
     {
-        cachedItemPrices = null;
-        cachedGroups = null;
-        cachedItemInfos = null;
+        cachedItemPrices = new HashMap<>();
+        cachedGroups = new HashMap<>();
+        cachedItemInfos = new HashMap<>();
 
         preload();
     }
@@ -297,45 +297,68 @@ public class APIHandler
             return;
         }
 
-        supermarkets = getUpdatedSupermarkets();
-
-        cachedItemPrices = loadItemPricesFromDB();
-        cachedGroups = loadGroupsFromDB();
-        cachedItemInfos = loadItemInfosFromDB();
-
-        if (cachedItemPrices.isEmpty() || cachedGroups.isEmpty() || cachedItemInfos.isEmpty())
+        try
         {
-            try
+            supermarkets = getUpdatedSupermarkets();
+
+            cachedItemPrices = loadItemPricesFromDB();
+            cachedGroups = loadGroupsFromDB();
+            cachedItemInfos = loadItemInfosFromDB();
+
+            if (cachedItemPrices.isEmpty() || cachedGroups.isEmpty() || cachedItemInfos.isEmpty())
             {
-                updateAllCache();
-            }
-            catch (Exception e)
-            {
-                Log.e("API Preload", Objects.requireNonNull(e.getMessage()));
-            }
-        }
-        else
-        {
-            try
-            {
-                networkExecutor.execute(() ->
+                try
                 {
-                    try
-                    {
-                        updateAllCache();
-                    }
-                    catch (Exception e)
-                    {
-                        Log.e("API Background Refresh", Objects.requireNonNull(e.getMessage()));
-                    }
-                });
+                    updateAllCache();
+                }
+                catch (Exception e)
+                {
+                    Log.e("API Preload", Objects.requireNonNull(e.getMessage()));
+                }
+                finally
+                {
+                    preloadRunning.set(false);
+                }
             }
-            catch (Exception e)
+            else
             {
-                Log.e("API load new data", Objects.requireNonNull(e.getMessage()));
+                try
+                {
+                    networkExecutor.execute(() ->
+                    {
+                        try
+                        {
+                            updateAllCache();
+                        }
+                        catch (Exception e)
+                        {
+                            Log.e("API Background Refresh",
+                                    Objects.requireNonNull(e.getMessage()));
+                        }
+                        finally
+                        {
+                            preloadRunning.set(false);
+                        }
+                    });
+                }
+                catch (Exception e)
+                {
+                    preloadRunning.set(false);
+                    Log.e("API load new data",
+                            Objects.requireNonNull(e.getMessage()));
+                }
             }
         }
-        preloadRunning.set(false);
+        catch (Exception e)
+        {
+            preloadRunning.set(false);
+            throw e;
+        }
+    }
+
+    public AtomicBoolean getPreloadRunning()
+    {
+        return preloadRunning;
     }
 
     private Map<String, Map<String, Map<String, Double>>> loadItemPricesFromDB()
@@ -870,6 +893,11 @@ public class APIHandler
 
         for (String code : group)
         {
+            if (cachedItemInfos == null)
+            {
+                return Baskit.UNKNOWN_CATEGORY;
+            }
+
             ItemInfo info = cachedItemInfos.get(code);
 
             if (info == null)
@@ -901,6 +929,7 @@ public class APIHandler
 
         String itemCode = item.getAbsoluteId();
         String itemName = item.getDecodedName();
+
         if ((itemCode == null  || itemCode.isEmpty()) &&
                 (itemName == null || itemName.isEmpty()))
         {
@@ -911,6 +940,11 @@ public class APIHandler
 
         if (itemCode != null && !itemCode.isEmpty())
         {
+            if (cachedItemInfos == null)
+            {
+                return Baskit.UNKNOWN_CATEGORY;
+            }
+
             ItemInfo cachedInfo = cachedItemInfos.get(itemCode);
 
             if (cachedInfo != null)
@@ -962,7 +996,9 @@ public class APIHandler
         }
 
         // Update embedded item info cache
-        ItemInfo info = cachedItemInfos.get(itemCode);
+        ItemInfo info = cachedItemInfos != null
+                ? cachedItemInfos.get(itemCode)
+                : null;
 
         if (info != null)
         {
@@ -980,6 +1016,12 @@ public class APIHandler
         {
             return new HashMap<>();
         }
+
+        if (cachedItemPrices == null)
+        {
+            return new HashMap<>();
+        }
+
         Map<String, Map<String, Double>> prices = cachedItemPrices.get(itemCode);
 
         if (prices != null && !prices.isEmpty())

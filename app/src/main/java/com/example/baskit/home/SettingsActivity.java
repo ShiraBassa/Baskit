@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @SuppressWarnings({"CallToPrintStackTrace", "deprecation"})
 public class SettingsActivity extends MasterActivity
@@ -246,36 +247,8 @@ public class SettingsActivity extends MasterActivity
                         {
                             setLoading(true);
                             runWhenServerActive(() -> addSupermarketSection(supermarket, () ->
-                                    new Thread(() ->
-                                    {
-                                        try
-                                        {
-                                            apiHandler.reset();
-
-                                            choices = Supermarket.getStringsFromSupermarkets(apiHandler.getUpdatedSupermarkets());
-                                            cities = apiHandler.getCities();
-
-                                            if (isFinishing() || isDestroyed())
-                                            {
-                                                return;
-                                            }
-                                            SettingsActivity.this.runOnUiThread(() ->
-                                            {
-                                                supermarketsAdapter.updateData(choices);
-                                                supermarketsAdapter.notifyDataSetChanged();
-
-                                                citiesAdapter.updateData(cities);
-                                                citiesAdapter.notifyDataSetChanged();
-
-                                                setLoading(false);
-                                            });
-                                        }
-                                        catch (Exception e)
-                                        {
-                                            Log.e("SettingsActivity", "Full refresh after add failed", e);
-                                            SettingsActivity.this.runOnUiThread(() -> setLoading(false));
-                                        }
-                                    }).start()));
+                                    waitForPreloadThenRefresh()
+                            ));
                         },
                         true,
                         cities,
@@ -309,38 +282,8 @@ public class SettingsActivity extends MasterActivity
                     btnRemoveSupermarket,
                     () -> removeSupermarketSection(
                             new Supermarket(supermarketName, sectionName),
-                            () ->
-                            {
-                                try
-                                {
-                                    apiHandler.reset();
-
-                                    choices = Supermarket.getStringsFromSupermarkets(apiHandler.getUpdatedSupermarkets());
-                                    cities = apiHandler.getCities();
-
-                                    runOnUiThread(() ->
-                                    {
-                                        if (isFinishing() || isDestroyed())
-                                        {
-                                            return;
-                                        }
-
-                                        supermarketsAdapter.updateData(choices);
-                                        supermarketsAdapter.notifyDataSetChanged();
-
-                                        citiesAdapter.updateData(cities);
-                                        citiesAdapter.notifyDataSetChanged();
-
-                                        setLoading(false);
-                                    });
-                                }
-                                catch (Exception e)
-                                {
-                                    Log.e("SettingsActivity", "Full refresh after remove failed", e);
-
-                                    runOnUiThread(() -> setLoading(false));
-                                }
-                            })
+                            () -> waitForPreloadThenRefresh()
+                    )
             );
         });
 
@@ -550,6 +493,48 @@ public class SettingsActivity extends MasterActivity
         {
             Log.e("Remove supermarket", Objects.requireNonNull(e.getMessage()));
         }
+    }
+
+    private void waitForPreloadThenRefresh()
+    {
+        new Thread(() ->
+        {
+            try
+            {
+                AtomicBoolean preloadRunning = apiHandler.getPreloadRunning();
+
+                while (preloadRunning.get())
+                {
+                    Thread.sleep(100);
+                }
+
+                choices = Supermarket.getStringsFromSupermarkets(apiHandler.getUpdatedSupermarkets());
+                cities = apiHandler.getCities();
+
+                runOnUiThread(() ->
+                {
+                    if (isFinishing() || isDestroyed())
+                    {
+                        return;
+                    }
+
+                    supermarketsAdapter.updateData(choices);
+                    supermarketsAdapter.notifyDataSetChanged();
+
+                    citiesAdapter.updateData(cities);
+                    citiesAdapter.notifyDataSetChanged();
+
+                    updateSupermarketButtonState();
+                    setLoading(false);
+                });
+            }
+            catch (Exception e)
+            {
+                Log.e("SettingsActivity", "Refresh after preload failed", e);
+
+                runOnUiThread(() -> setLoading(false));
+            }
+        }).start();
     }
 
     private void setLoading(boolean loading)
